@@ -3367,7 +3367,6 @@ function Invoke-Core {
         try {
             if (Get-Command "Get-MpPreference" -ErrorAction Ignore) {
                 if (Get-Command "Get-NetFirewallRule" -ErrorAction Ignore) {
-                    Write-Log -Level Warn "Firewall now"
                     if ($Global:MinerFirewalls -eq $null) {
                         $Global:MinerFirewalls = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
                         foreach( $AppWall in Get-NetFirewallApplicationFilter ) {
