@@ -1214,10 +1214,10 @@ function Get-EthDAGSizes {
     foreach ( $Coin in $Session.GlobalCoinsDB.Keys ) {
         $Coin = $Coin -replace "-.+$"
         if (-not $Session.GlobalEthDAGSizes.$Coin) { continue }
-        $CoinData = $Session.GlobalCoinsDB.$Coin
-        if (-not $SingleAlgos.Contains($CoinData.Algo)) { continue }
-        if ($CoinData.Name -match "testnet") { continue }
-        if ($CoinData.Algo -notmatch $Global:RegexAlgoHasDAGSize) { continue }
+        $Algo = $Session.GlobalCoinsDB.$Coin.Algo
+        if (-not $SingleAlgos.Contains($Algo)) { continue }
+        if ($Algo -notmatch $Global:RegexAlgoHasDAGSize) { continue }
+        if ($Session.GlobalCoinsDB.$Coin.Name -match "testnet") { continue }
         
         if (-not $Session.GlobalAlgorithms2EthDagSizes.PSObject.Properties[$Algo]) {
             $Session.GlobalAlgorithms2EthDagSizes | Add-Member $Algo $Session.GlobalEthDAGSizes.$Coin -Force
