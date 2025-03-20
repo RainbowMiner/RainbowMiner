@@ -2562,7 +2562,14 @@ function Invoke-Core {
 
         Write-Log "Selecting best pool for each algorithm. "
         $SortedPools = [System.Collections.Generic.List[PSCustomObject]]::new()
-        $NewPools | Sort-Object -Descending {$_.Exclusive -and -not $_.Idle}, {$Session.Config.Pools."$($_.Name)".FocusWallet -and $Session.Config.Pools."$($_.Name)".FocusWallet.Count -gt 0 -and $Session.Config.Pools."$($_.Name)".FocusWallet -icontains $_.Currency}, {$LockMiners -and $Session.LockMiners.Pools -icontains "$($_.Name)-$($_.Algorithm0)-$($_.CoinSymbol)"}, {$_.PostBlockMining}, {$Pools_PriceCmp["$($_.Name)-$($_.Algorithm0)-$($_.CoinSymbol)"]}, {$_.Region -eq $Session.Config.Region}, {$ix = $Session.Config.DefaultPoolRegion.IndexOf($_.Region);[int]($ix -ge 0)*(100-$ix)}, {$_.SSL -eq $Session.Config.Pools."$($_.Name)".SSL} | Foreach-Object { [void]$SortedPools.Add($_) }
+        $NewPools | Sort-Object @{Expression={$_.Exclusive -and -not $_.Idle}; Descending=$true}, 
+                                @{Expression={$Session.Config.Pools."$($_.Name)".FocusWallet -and $Session.Config.Pools."$($_.Name)".FocusWallet.Count -gt 0 -and $Session.Config.Pools."$($_.Name)".FocusWallet -icontains $_.Currency}; Descending=$true},
+                                @{Expression={$LockMiners -and $Session.LockMiners.Pools -icontains "$($_.Name)-$($_.Algorithm0)-$($_.CoinSymbol)"}; Descending=$true},
+                                @{Expression={$_.PostBlockMining}; Descending=$true},
+                                @{Expression={$Pools_PriceCmp["$($_.Name)-$($_.Algorithm0)-$($_.CoinSymbol)"]}; Descending=$true},
+                                @{Expression={$_.Region -eq $Session.Config.Region}; Descending=$true},
+                                @{Expression={$ix = $Session.Config.DefaultPoolRegion.IndexOf($_.Region);[int]($ix -ge 0)*(100-$ix)}; Descending=$true},
+                                @{Expression={$_.SSL -eq $Session.Config.Pools."$($_.Name)".SSL}; Descending=$true} | Foreach-Object { [void]$SortedPools.Add($_) }
 
         $NewPoolAlgorithms = @($NewPools | Foreach-Object {$_.Algorithm.ToLower()} | Select-Object -Unique)
 
@@ -3821,6 +3828,33 @@ function Invoke-Core {
                 if ($BestMiners2) {$BestMiners2 = @($BestMiners2 | Where {$_.Profit -gt $Session.Config.ProfitabilityLevel -or $_.IsExclusiveMiner -or $_.IsLocked})}
             }
             $Check_Profitability = $true
+        }
+
+        if ($Session.Config.MiningMode -eq "combo") {
+            $Exclusive_Device_Names = [System.Collections.Generic.List[string[]]]::new()
+            foreach ( $Miner in $BestMiners ) {
+                if ($Miner.DeviceModel -ne "CPU" -and ($Miner.IsExclusiveMiner -or $Miner.IsLocked)) {
+                    [void]$Exclusive_Device_Names.Add([string[]]$Miner.DeviceName)
+                }
+            }
+            if ($Exclusive_Device_Names.Count) {
+                foreach ( $devNames in $Exclusive_Device_Names ) {
+                    $BestMiners = @($BestMiners | Where-Object {$_.DeviceModel -notmatch "-" -or -not (Test-Intersect $devNames $_.DeviceName) -or -not (Compare-Object $devNames $_.DeviceName)})
+                }
+            }
+            if ($NoCPUMining) {
+                $Exclusive_Device_Names = [System.Collections.Generic.List[string[]]]::new()
+                foreach ( $Miner in $BestMiners2 ) {
+                    if ($Miner.DeviceModel -ne "CPU" -and ($Miner.IsExclusiveMiner -or $Miner.IsLocked)) {
+                        [void]$Exclusive_Device_Names.Add([string[]]$Miner.DeviceName)
+                    }
+                }
+                if ($Exclusive_Device_Names.Count) {
+                    foreach ( $devNames in $Exclusive_Device_Names ) {
+                        $BestMiners2 = @($BestMiners2 | Where-Object {$_.DeviceModel -notmatch "-" -or -not (Test-Intersect $devNames $_.DeviceName) -or -not (Compare-Object $devNames $_.DeviceName)})
+                    }
+                }
+            }
         }
 
         if ($NoCPUMining) {
