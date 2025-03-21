@@ -254,7 +254,8 @@ $(function() {
                         }
     
                         $.each(common,function(key,val) {
-                            if (typeof result.Config[key] === "undefined" || (key == "DataWindow" && result.Setup.Yiimp) || key == "BalancesKeepAlive") return
+                            var isYiimp = typeof result.Setup !== "undefined" && result.Setup != null && result.Setup.Yiimp
+                            if (typeof result.Config[key] === "undefined" || (key == "DataWindow" && isYiimp) || key == "BalancesKeepAlive") return
 
                             var rec = {
                                 key:key,
@@ -286,7 +287,7 @@ $(function() {
                         $.each(result.Config,function(key,val) {
                             if (typeof common[key] !== "undefined") return
  
-                            var hasSetupField = typeof result.Setup !== "undefined" && typeof result.Setup.SetupFields !== "undefined" && typeof result.Setup.Fields[key] !== "undefined"
+                            var hasSetupField = typeof result.Setup !== "undefined" && result.Setup != null && typeof result.Setup.SetupFields !== "undefined" && typeof result.Setup.Fields[key] !== "undefined"
 
                             if (!hasSetupField && (key.length <= 5 || key.match(/-Params$/))) {
                                 if (key.match(/-Params$/)) {
