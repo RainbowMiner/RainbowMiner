@@ -14,4 +14,8 @@
     Region="US"
     SSL="0"
     EthMode=""
+    ProfitUrl=""
+    ProfitValue=""
+    ProfitFactor=""
+    ProfitCurrency=""
 }

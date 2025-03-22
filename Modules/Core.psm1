@@ -1528,11 +1528,15 @@ function Invoke-Core {
                     $UPool = $_
 
                     ([ordered]@{
-                        Enable        = Get-Yes $UPool.Enable
-                        SSL           = Get-Yes $UPool.SSL
-                        PoolFee       = [double]"$($Upool.PoolFee -replace ",","." -replace "[^\d\.]")"
-                        Currency      = "$(if ($UPool.Currency) {$UPool.Currency} else {$UPool.CoinSymbol})".ToUpper()
-                        CoinSymbol    = "$(if ($UPool.CoinSymbol) {$UPool.CoinSymbol} else {$UPool.Currency})".ToUpper()
+                        Enable         = Get-Yes $UPool.Enable
+                        SSL            = Get-Yes $UPool.SSL
+                        PoolFee        = [double]"$($Upool.PoolFee -replace ",","." -replace "[^\d\.]")"
+                        Currency       = "$(if ($UPool.Currency) {$UPool.Currency} else {$UPool.CoinSymbol})".Trim().ToUpper()
+                        CoinSymbol     = "$($UPool.CoinSymbol)".Trim().ToUpper()
+                        ProfitUrl      = "$($Upool.ProfitUrl)".Trim()
+                        ProfitValue    = "$($Upool.ProfitValue)".Trim()
+                        ProfitFactor   = "$($Upool.ProfitFactor)".Trim()
+                        ProfitCurrency = "$($UPool.ProfitCurrency)".Trim().ToUpper()
                     }).GetEnumerator() | Foreach-Object {
                         if ([bool]$UPool.PSObject.Properties["$($_.Name)"]) {
                             $UPool."$($_.Name)" = $_.Value
@@ -1541,7 +1545,7 @@ function Invoke-Core {
                         }
                     }
 
-                    foreach ($q in @("CoinSymbol","Currency","Host")) {
+                    foreach ($q in @("Currency","Host")) {
                         if ("$($UPool.$q)" -eq "") {$UPool.Enable = $false;Break}
                     }
                     $UPool
