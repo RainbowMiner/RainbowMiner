@@ -58,6 +58,7 @@ $Session.Config.Userpools | Where-Object {$_.Name -eq $Name -and $_.Enable -and 
 
     if (-not $InfoOnly) {
         try {
+            $Request = $null
             if ($_.ProfitUrl) {
                 if (-not $ProfitData.ContainsKey($_.ProfitUrl)) {
                     $ProfitData[$_.ProfitUrl] = Invoke-RestMethodAsync $_.ProfitUrl -cycletime 120 -tag $Name
@@ -96,11 +97,11 @@ $Session.Config.Userpools | Where-Object {$_.Name -eq $Name -and $_.Enable -and 
 
             if ($Profit) {
                 if ($_.ProfitFactor) {
+                    $val = $null
                     if ($_.ProfitFactor -match "^[0-9\+\-\.,E]+$") {
                         $val = $_.ProfitFactor -replace ",","."
                         $val = [double]$val
-                    } else {
-                        $val = $null
+                    } elseif ($Request) {
                         foreach ($data in $_.ProfitFactor -split "\.") {
                             $Pool_Params.GetEnumerator() | Foreach-Object {
                                 $data = $data.Replace("`$$($_.Name)",$_.Value)
@@ -118,7 +119,7 @@ $Session.Config.Userpools | Where-Object {$_.Name -eq $Name -and $_.Enable -and 
                             }
                         }
                         $val = [double]$val
-                        if ($data -eq "mbtc_mh_factor") { $val /= 1e6 }
+                        if ($data -eq "mbtc_mh_factor") { $val *= 1e6 }
                     }
                     $Profit = if ($val) {$Profit / $val} else {0}
                 }
