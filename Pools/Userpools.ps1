@@ -57,8 +57,8 @@ $Session.Config.Userpools | Where-Object {$_.Name -eq $Name -and $_.Enable -and 
     $Profit = 0
 
     if (-not $InfoOnly) {
-        if ($_.ProfitUrl) {
-            try {
+        try {
+            if ($_.ProfitUrl) {
                 if (-not $ProfitData.ContainsKey($_.ProfitUrl)) {
                     $ProfitData[$_.ProfitUrl] = Invoke-RestMethodAsync $_.ProfitUrl -cycletime 120 -tag $Name
                 }
@@ -86,18 +86,26 @@ $Session.Config.Userpools | Where-Object {$_.Name -eq $Name -and $_.Enable -and 
                         }
                         $Profit = [double]$val
                     }
-
-                    if ($_.ProfitFactor) {
-                        $Profit *= [double]$_.ProfitFactor
-                    }
-                    $cur = if ($_.ProfitCurrency -ne "") {$_.ProfitCurrency} else {$_.Currency}
-                    if ($cur -ne "BTC") {
-                        $Profit = if ($Global:Rates.$cur) {$Profit/[double]$Global:Rates.$cur} else {0}
-                    }
                 }
-            } catch {
-                Write-Log -Level Warn "$($LogString): $($_.Exception.Message)"
+            } elseif ($_.ProfitValue) {
+                $val = $_.ProfitValue -replace ",","." -replace "[^0-9\+\-\.E]+"
+                if ($val -ne "") {
+                    $Profit = [double]$val
+                }
             }
+
+            if ($Profit) {
+                if ($_.ProfitFactor) {
+                    $Profit *= [double]$_.ProfitFactor
+                }
+                $cur = if ($_.ProfitCurrency -ne "") {$_.ProfitCurrency} else {$_.Currency}
+                if ($cur -ne "BTC") {
+                    $Profit = if ($Global:Rates.$cur) {$Profit/[double]$Global:Rates.$cur} else {0}
+                }
+            }
+        } catch {
+            Write-Log -Level Warn "$($LogString): $($_.Exception.Message)"
+            $Profit = 0
         }
 
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)$(if($Pool_Params["CoinSymbol"]) {"_$($Pool_Params["CoinSymbol"])"})_Profit" -Value $Profit -Duration $StatSpan -ChangeDetection $false -Quiet
