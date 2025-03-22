@@ -96,7 +96,15 @@ $Session.Config.Userpools | Where-Object {$_.Name -eq $Name -and $_.Enable -and 
 
             if ($Profit) {
                 if ($_.ProfitFactor) {
-                    $Profit *= [double]$_.ProfitFactor
+                    $val = $_.ProfitFactor -replace ",","." -replace "[^0-9\+\-\.E]+"
+                    $Profit *= [double]$val
+                }
+                if ($_.ProfitDivisor) {
+                    $val = $_.ProfitDivisor -replace ",","." -replace "[^0-9\+\-\.E]+"
+                    $val = [double]$val
+                    if ($val) {
+                        $Profit /= $val
+                    }
                 }
                 $cur = if ($_.ProfitCurrency -ne "") {$_.ProfitCurrency} else {$_.Currency}
                 if ($cur -ne "BTC") {

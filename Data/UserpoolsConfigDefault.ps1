@@ -17,5 +17,6 @@
     ProfitUrl=""
     ProfitValue=""
     ProfitFactor=""
+    ProfitDivisor=""
     ProfitCurrency=""
 }

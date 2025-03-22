@@ -1536,6 +1536,7 @@ function Invoke-Core {
                         ProfitUrl      = "$($Upool.ProfitUrl)".Trim()
                         ProfitValue    = "$($Upool.ProfitValue)".Trim()
                         ProfitFactor   = "$($Upool.ProfitFactor)".Trim()
+                        ProfitDivisor  = "$($Upool.ProfitDivisor)".Trim()
                         ProfitCurrency = "$($UPool.ProfitCurrency)".Trim().ToUpper()
                     }).GetEnumerator() | Foreach-Object {
                         if ([bool]$UPool.PSObject.Properties["$($_.Name)"]) {
