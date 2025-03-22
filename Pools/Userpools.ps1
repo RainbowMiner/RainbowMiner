@@ -96,15 +96,31 @@ $Session.Config.Userpools | Where-Object {$_.Name -eq $Name -and $_.Enable -and 
 
             if ($Profit) {
                 if ($_.ProfitFactor) {
-                    $val = $_.ProfitFactor -replace ",","." -replace "[^0-9\+\-\.E]+"
-                    $Profit *= [double]$val
-                }
-                if ($_.ProfitDivisor) {
-                    $val = $_.ProfitDivisor -replace ",","." -replace "[^0-9\+\-\.E]+"
-                    $val = [double]$val
-                    if ($val) {
-                        $Profit /= $val
+                    if ($_.ProfitFactor -match "^[0-9\+\-\.,E]+$") {
+                        $val = $_.ProfitFactor -replace ",","."
+                        $val = [double]$val
+                    } else {
+                        $val = $null
+                        foreach ($data in $_.ProfitFactor -split "\.") {
+                            $Pool_Params.GetEnumerator() | Foreach-Object {
+                                $data = $data.Replace("`$$($_.Name)",$_.Value)
+                            }
+                            if ($data -match '^(.+)\[([^\]]+)\]$') {
+                                $val = if ($val -ne $null) {$val."$($Matches[1])"} else {$Request."$($Matches[1])"}
+                                $arrp = $Matches[2].Split("=",2)
+                                if ($arrp[0] -match '^\d+$') {
+                                    $val = $val[[int]$arrp[0]]
+                                } else {
+                                    $val = $val | ?{$_."$($arrp[0])" -eq $arrp[1]}
+                                }
+                            } else {
+                                $val = if ($val -ne $null) {$val.$data} else {$Request.$data}
+                            }
+                        }
+                        $val = [double]$val
+                        if ($data -eq "mbtc_mh_factor") { $val /= 1e6 }
                     }
+                    $Profit = if ($val) {$Profit / $val} else {0}
                 }
                 $cur = if ($_.ProfitCurrency -ne "") {$_.ProfitCurrency} else {$_.Currency}
                 if ($cur -ne "BTC") {
