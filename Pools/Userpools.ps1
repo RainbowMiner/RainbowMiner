@@ -69,6 +69,7 @@ $Session.Config.Userpools | Where-Object {$_.Name -eq $Name -and $_.Enable -and 
         TimeSinceLast = $null
         Blocks24h     = $null
         Difficulty    = $null
+        PoolFee       = 0
     }
 
     if (-not $InfoOnly) {
@@ -97,7 +98,7 @@ $Session.Config.Userpools | Where-Object {$_.Name -eq $Name -and $_.Enable -and 
             } elseif ($_.Profit -match "^(#3|api3|3|apiurl3$)") {
                 $Pool_Values.Profit = [double]$Request.api3
             } else {
-                foreach ($fld in @("Profit","ProfitFactor","Hashrate","Difficulty","Workers","TimeSinceLast","Blocks24h")) {
+                foreach ($fld in @("Profit","ProfitFactor","Hashrate","Difficulty","Workers","TimeSinceLast","Blocks24h","PoolFee")) {
                     $apifld = $_.$fld
                     if ($apifld) {
                         $val = $null
@@ -174,7 +175,7 @@ $Session.Config.Userpools | Where-Object {$_.Name -eq $Name -and $_.Enable -and 
         SSL           = $_.SSL
         WTM           = $Pool_Values.Profit -eq 0
         Updated       = (Get-Date).ToUniversalTime()
-        PoolFee       = $_.PoolFee
+        PoolFee       = $Pool_Values.PoolFee
         Workers       = if ($_.SoloMining) {$null} else {$Pool_Values.Workers}
         Hashrate      = if ($_.SoloMining -or $Pool_Values.Hashrate -eq $null) {$null} else {$Stat.HashRate_Live}
         TSL           = if ($_.SoloMining) {$null} else {$Pool_Values.TimeSinceLast}
