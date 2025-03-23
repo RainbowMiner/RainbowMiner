@@ -14,14 +14,14 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 0.75
 $Cuda = "11.0"
-$Version = "0.42.4"
+$Version = "0.42.5"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.42.4-wildrigmulti/wildrig-multi-linux-0.42.4.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.42.5-wildrigmulti/wildrig-multi-linux-0.42.5.tar.xz"
 } else {
     $Path = ".\Bin\GPU-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.42.4-wildrigmulti/wildrig-multi-windows-0.42.4.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.42.5-wildrigmulti/wildrig-multi-windows-0.42.5.zip"
 }
 
 #removed aergo, bcd, blake2b-btcc, blake2b-glt, blake3, dedal, glt family algorithms, lyra2tdc, lyra2v3, lyra2vc0ban, phi5, rwahash, x7, xevan
