@@ -150,7 +150,7 @@ $Session.Config.Userpools | Where-Object {$_.Name -eq $Name -and $_.Enable -and 
         Hashrate      = if ($_.SoloMining -or $Pool_Values.Hashrate -eq $null) {$null} else {$Stat.HashRate_Live}
         TSL           = if ($_.SoloMining) {$null} else {$Pool_Values.TimeSinceLast}
         BLK           = if ($_.SoloMining -or $Pool_Values.Blocks24h -eq $null) {$null} else {$Stat.BlockRate_Average}
-        Difficulty    = $Stat.Diff_Average
+        Difficulty    = if ($Pool_Values.Difficulty -eq $null) {$null} else {$Stat.Diff_Average}
         SoloMining    = $_.SoloMining
         EthMode       = "$(if ($_.EthMode) {$_.EthMode} else {$Pool_EthProxy})"
         Name          = $Name
