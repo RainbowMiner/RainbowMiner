@@ -147,9 +147,9 @@ $Session.Config.Userpools | Where-Object {$_.Name -eq $Name -and $_.Enable -and 
         Updated       = (Get-Date).ToUniversalTime()
         PoolFee       = $_.PoolFee
         Workers       = if ($_.SoloMining) {$null} else {$Pool_Values.Workers}
-        Hashrate      = if ($_.SoloMining) {$null} else {$Stat.HashRate_Live}
+        Hashrate      = if ($_.SoloMining -or $Pool_Values.Hashrate -eq $null) {$null} else {$Stat.HashRate_Live}
         TSL           = if ($_.SoloMining) {$null} else {$Pool_Values.TimeSinceLast}
-        BLK           = if ($_.SoloMining) {$null} else {$Stat.BlockRate_Average}
+        BLK           = if ($_.SoloMining -or $Pool_Values.Blocks24h -eq $null) {$null} else {$Stat.BlockRate_Average}
         Difficulty    = $Stat.Diff_Average
         SoloMining    = $_.SoloMining
         EthMode       = "$(if ($_.EthMode) {$_.EthMode} else {$Pool_EthProxy})"
