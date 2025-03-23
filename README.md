@@ -1355,58 +1355,72 @@ Integrate your own pool or other pools of choice via `.\Config\userpools.config.
 Notes:
 - Each Currency/Coin/Algorithm/Region combination needs an own entry
 - Every unique pool name will automatically get an config entry in pools.config.txt
-- Price and profit calculations will be done via WhatToMine
-- Hashrate/Workers/Blocktimes are currently not supported
+- Price and profit calculations will be done either via WhatToMine or if you provide an API url and description
+- Hashrate/Workers/Blocktimes/Difficulty are supported if you provide an API url and description
 - Don't forget to add your custom pool's name to `"PoolName"` in config.txt!
 
-#### Example for flexpool.io:
+#### Example for xvg-pool.com:
 
-add in pools.config.txt
-
-
-    {
-      "Enable": "1",
-      "Name": "Flexpool",
-      "PoolFee": "0",
-      "Algorithm": "",
-      "CoinName": "",
-      "CoinSymbol": "ETC",
-      "Currency": "ETC",
-      "Protocol": "stratum+tcp",
-      "Host": "eu.flexpool.io",
-      "Port": "4444",
-      "User": "$Wallet.$WorkerName",
-      "Pass": "x",
-      "Region": "EU",
-      "SSL": "0",
-      "EthMode": ""
-    },
+add in userpools.config.txt
 
 
-in config.txt, add the Flexpool to the "PoolName" list:
+  {
+    "Enable": "1",
+    "Name": "XvgPool",
+    "PoolFee": "api1.x17.fees",
+    "Algorithm": "X17",
+    "CoinName": "Verge",
+    "CoinSymbol": "XVG",
+    "Currency": "XVG",
+    "Protocol": "stratum+tcp",
+    "Host": "mining.xvg-pool.com",
+    "Port": "6851",
+    "User": "$Wallet.$WorkerName",
+    "Pass": "c=XVG5",
+    "Region": "US",
+    "SSL": "0",
+    "Worker": "$WorkerName",
+    "EthMode": "",
+    "APIUrl1": "https://xvg-pool.com/api/status",
+    "APIUrl2": "https://xvg-pool.com/api/currencies",
+    "APIUrl3": "",
+    "Profit": "api1.x17.estimate_current",
+    "ProfitFactor": "api1.x17.mbtc_mh_factor",
+    "ProfitCurrency": "BTC",
+    "Hashrate": "api1.x17.hashrate",
+    "Workers": "api1.x17.workers",
+    "TimeSinceLast": "api2.XVG5.timesincelast",
+    "Blocks24h": "api2.XVG5.24h_blocks",
+    "Difficulty": "api2.XVG5.difficulty",
+    "SoloMining": "0"
+  }
 
-    "PoolName": "Nicehash,ZergPoolCoins,Flexpool",
+
+in config.txt, add the XvgPool to the "PoolName" list:
+
+    "PoolName": "Nicehash,ZergPoolCoins,XvgPool",
 
 #### Mandatory parameters:
 
 - **Enable** = set to "1", to enable your new entry [default=0]
 - **Name** = name of the pool, every unique name will automatically get an own entry in pools.config.txt
-- **CoinSymbol** = coin, that will be mined
 - **Currency** = coin, that will be paid, determines the wallet address. Each currency will have an entry in pools.config.txt
 - **Host** = stratum server address, without `stratum+tcp://`, just my.server.name
 - **Port** = stratum server port
 
-Remark: if CoinSymbol equals Currency, only one of the two needs to be set. 
+Remark: if CoinSymbol is set and Currency is empty, Currency will be set to CoinSymbol
 
 #### Optional parameters:
 
 - **User** = exact syntax for the user parameter for the miners, variables possible, see remarks below [default=$Wallet.$WorkerName]
 - **Pass** = specific pool password, variables possible, see remarks below [default=x]
+- **CoinSymbol** = coin, that will be mined
+- **Algorithm** = if CoinSymbol is not set or is not in our database, explicitly setup the algorithm here.
+- **CoinName** = if CoinSymbol is not in our database, explicitly setup the coin's name here.
 - **Protocol** = setup your own protocol, if it differs from the default [default=stratum+tcp / stratum+ssl]
-- **PoolFee** = pool fee in percent (e.g. 1 for one percent) [default=0]
+- **PoolFee** = pool fee in percent (e.g. 1 for one percent) [default=0] --> API!
 - **SSL** = set to "1" if the stratum wants SSL [default=0]
-- **Algorithm** = if your coin is not in our database, explicitly setup the algorithm here.
-- **CoinName** = if your coin is not in our database, explicitly setup the coin's name here.
+- **SoloMining** = set to "1" if this is a solo mining pool [default=0]
 - **Region** = setup the stratum server's home region [default=US]
 - **EthMode** = setup the stratum/proxy mining mode for Ethash, Kawpow, Progpow pools [default=ethproxy for Ethash, stratum for KawPow]
   - "ethproxy"
@@ -1414,14 +1428,44 @@ Remark: if CoinSymbol equals Currency, only one of the two needs to be set.
   - "qtminer"
   - "minerproxy"
   - "stratum"
+- **Profit** = value for **Currency** per **Hashrate** per **Day** (total_profit_per_day = Profit * Hashrate / ProfitFactor) --> API!
+- **ProfitFactor** = divisor to for profit calculation [default=1] --> API!
+- **ProfitCurrency** = set the **Profit**'s currency, if it differs from **Currency** --> API!
+- **Hashrate** = current hashrate on the pool --> API!
+- **Workers** = number of workers on the pool --> API!
+- **TimeSinceLast** = time since last block found in seconds --> API!
+- **Blocks24h** = number of blocks found in the past 24 hours  --> API!
+- **Difficulty** = current difficulty for that algorithm (needed for SoloMining) --> API!
 
-Remark: the following variables will be automatically replaced in parameters **User** and **Pass**:
+
+#### API (can be used for all parameters marked with **--> API!**)
+
+- **APIUrl1** = set to a valid API url
+- **APIUrl2** = set to a valid API url
+- **APIUrl3** = set to a valid API url
+
+Instead of setting a static value (number) for the API parameters, you can address the request results of one of the API urls. To declare which of the API urls contains a value, start the path with "api1", "api2" or "api3". If you ommit this, "api1" will be used automatically.
+The APIs need to return valid JSON (with one exception, see below). To describe the path to the values, the following syntax need to be used:
+- apiN.name1.name2. ... until you reach the value
+- if there are arrays inside the JSON, you can select the next path step with brackets:
+  - apiN.name1[M].name2. ... to select the object number M in the array name1
+  - apiN.name1[name2=value2].name3. ... to select the object in array name1, that has parameter name2 set to "value2"
+
+For **Profit** there is an exception: in case one of the API urls directly returns a number for profit, set Profit to
+- "#" or "#1" for the direct value of API url 1
+- "#2" for the direct value of API url 2
+- "#3" for the direct value of API url 3
+
+For **ProfitFactor** there is a special case: if the ProfitFactor path contains "mbtc_mh_factor", the ProfitFactor will be multiplicated by 1e6 (=1000000)
+
+Remark: the following variables will be automatically replaced in parameters **User**, **Pass** and all **--> API!**
 
 - `$Wallet` will be replaced with your currency's wallet (as defined in pools.config.txt)
 - `$WorkerName` will be replaced with your rig's workername (or the value in pools.config.txt)
-- `$CoinSymbol` will be replaced with the CoinSymbol
-- `$Currency` will be replaced with the Currency
-
+- `$CoinSymbol` will be replaced with the CoinSymbol from userpools.config.txt
+- `$Currency` will be replaced with the Currency from userpools.config.txt
+- `$Password will be replaced with Password from pools.config.txt
+- `$Params will be replaced with "Params-<Currency>" from pools.config.txt
 
 ### Config\miners.config.txt
 
