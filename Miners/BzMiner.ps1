@@ -131,10 +131,10 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
         $ZilParams2 = ""
         $ZilParams3 = ""
 
-        if ($Miner_Vendor -ne "INTEL" -and $Session.Config.Pools.CrazyPool.EnableBzminerDual -and $Pools.ZilliqaCP) {
-            if ($ZilWallet = $Pools.ZilliqaCP.Wallet) {
-                $ZilParams2 = "--a2 zil --w2 $($Pools.ZilliqaCP.User) --p2 $($Pools.ZilliqaCP.Protocol)://$($Pools.ZilliqaCP.Host):$($Pools.ZilliqaCP.Port) --oc_enable2 0 "
-                $ZilParams3 = "--a3 zil --w3 $($Pools.ZilliqaCP.User) --p3 $($Pools.ZilliqaCP.Protocol)://$($Pools.ZilliqaCP.Host):$($Pools.ZilliqaCP.Port) --oc_enable3 0 "
+        if ($Miner_Vendor -ne "INTEL" -and $Pools.ZilliqaDual) {
+            if ($ZilWallet = $Pools.ZilliqaDual.Wallet) {
+                $ZilParams2 = "--a2 zil --w2 $($Pools.ZilliqaDual.User) --p2 $($Pools.ZilliqaDual.Protocol)://$($Pools.ZilliqaDual.Host):$($Pools.ZilliqaDual.Port) --oc_enable2 0 "
+                $ZilParams3 = "--a3 zil --w3 $($Pools.ZilliqaDual.User) --p3 $($Pools.ZilliqaDual.Protocol)://$($Pools.ZilliqaDual.Host):$($Pools.ZilliqaDual.Port) --oc_enable3 0 "
             }
         }
 

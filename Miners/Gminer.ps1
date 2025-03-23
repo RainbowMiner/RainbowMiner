@@ -105,9 +105,9 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
         $ZilParams = ""
 
-        if ($Session.Config.Pools.CrazyPool.EnableGminerDual -and $Pools.ZilliqaCP) {
-            if ($ZilWallet = $Pools.ZilliqaCP.Wallet) {
-                $ZilParams = " --zilserver $($Pools.ZilliqaCP.Protocol)://$($Pools.ZilliqaCP.Host):$($Pools.ZilliqaCP.Port) --ziluser $($Pools.ZilliqaCP.User)"
+        if ($Pools.ZilliqaDual) {
+            if ($ZilWallet = $Pools.ZilliqaDual.Wallet) {
+                $ZilParams = " --zilserver $($Pools.ZilliqaDual.Protocol)://$($Pools.ZilliqaDual.Host):$($Pools.ZilliqaDual.Port) --ziluser $($Pools.ZilliqaDual.User)"
             }
         }
 

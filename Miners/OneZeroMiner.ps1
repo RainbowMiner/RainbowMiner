@@ -52,9 +52,9 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
         $Miner_Model = $_.Model
         $Miner_Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)" | Where-Object {$_.Model -eq $Miner_Model}
 
-        $ZilParams = if ($Miner_Vendor -eq "NVIDIA" -and $Session.Config.Pools.CrazyPool.EnableOneZeroMinerDual -and $Pools.ZilliqaCP) {
-            if ($ZilWallet = $Pools.ZilliqaCP.Wallet) {
-                " --a2 zil --w2 $($Pools.ZilliqaCP.User)$(if ($Pools.ZilliqaCP.Pass) {" --p2 $($Pools.ZilliqaCP.Pass)"}) --o2 $($Pools.ZilliqaCP.Protocol)://$($Pools.ZilliqaCP.Host):$($Pools.ZilliqaCP.Port) "
+        $ZilParams = if ($Miner_Vendor -eq "NVIDIA" -and $Pools.ZilliqaDual) {
+            if ($ZilWallet = $Pools.ZilliqaDual.Wallet) {
+                " --a2 zil --w2 $($Pools.ZilliqaDual.User)$(if ($Pools.ZilliqaDual.Pass) {" --p2 $($Pools.ZilliqaDual.Pass)"}) --o2 $($Pools.ZilliqaDual.Protocol)://$($Pools.ZilliqaDual.Host):$($Pools.ZilliqaDual.Port) "
             }
         }
 

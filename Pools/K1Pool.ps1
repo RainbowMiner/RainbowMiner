@@ -71,13 +71,13 @@ $Pools_Request | Where-Object {$_.name -notmatch "solo$" -and ($Wallets."$($_.sy
     foreach ($Pool_Region in $_.stratum.PSObject.Properties.Name) {
         foreach ($Pool_Host_Data in $_.stratum.$Pool_Region) {
             [PSCustomObject]@{
-                Algorithm     = $Pool_Algorithm_Norm
-                Algorithm0    = $Pool_Algorithm_Norm
+                Algorithm     = "$(if ($Pool_Currency -eq "ZIL") {"ZilliqaDual"} else {$Pool_Algorithm_Norm})"
+                Algorithm0    = "$(if ($Pool_Currency -eq "ZIL") {"ZilliqaDual"} else {$Pool_Algorithm_Norm})"
                 CoinName      = $Pool_CoinName
                 CoinSymbol    = $Pool_Currency
                 Currency      = $Pool_Currency
-                Price         = 0
-                StablePrice   = 0
+                Price         = if ($Pool_Currency -eq "ZIL") {1e-15} else {0}
+                StablePrice   = if ($Pool_Currency -eq "ZIL") {1e-15} else {0}
                 MarginOfError = 0
                 Protocol      = "stratum+$(if ($Pool_Host_Data.ssl) {"ssl"} else {"tcp"})"
                 Host          = "$($Pool_Host_Data.host)"
@@ -92,7 +92,7 @@ $Pools_Request | Where-Object {$_.name -notmatch "solo$" -and ($Wallets."$($_.sy
                 Hashrate      = $Stat.HashRate_Live
                 TSL           = $Pool_TSL
                 BLK           = $Stat.BlockRate_Average
-                WTM           = $true
+                WTM           = $Pool_Currency -ne "ZIL"
                 EthMode       = $Pool_EthProxy
                 Name          = $Name
                 Penalty       = 0
@@ -106,6 +106,6 @@ $Pools_Request | Where-Object {$_.name -notmatch "solo$" -and ($Wallets."$($_.sy
                 Worker        = "{workername:$Worker}"
                 Email         = $Email
             }
-         }
+            }
     }
 }

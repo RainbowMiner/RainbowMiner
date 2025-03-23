@@ -180,11 +180,11 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
         $ZilParams2   = ""
         $ZilParams3   = ""
 
-        if ($Session.Config.Pools.CrazyPool.EnableRigelDual -and $Pools.ZilliqaCP) {
-            if ($ZilWallet = $Pools.ZilliqaCP.Wallet) {
+        if ($Pools.ZilliqaDual) {
+            if ($ZilWallet = $Pools.ZilliqaDual.Wallet) {
                 $ZilAlgorithm = "+zil"
-                $ZilParams2   = " -o [2]$($Pools.ZilliqaCP.Protocol)://$($Pools.ZilliqaCP.Host):$($Pools.ZilliqaCP.Port) -u [2]$($Pools.ZilliqaCP.User)$(if ($Pools.ZilliqaCP.Worker -and $Pools.ZilliqaCP.User -eq $Pools.ZilliqaCP.Wallet) {" -w [2]$($Pools.ZilliqaCP.Worker)"}) --zil-countdown"
-                $ZilParams3   = " -o [3]$($Pools.ZilliqaCP.Protocol)://$($Pools.ZilliqaCP.Host):$($Pools.ZilliqaCP.Port) -u [3]$($Pools.ZilliqaCP.User)$(if ($Pools.ZilliqaCP.Worker -and $Pools.ZilliqaCP.User -eq $Pools.ZilliqaCP.Wallet) {" -w [3]$($Pools.ZilliqaCP.Worker)"}) --zil-countdown"
+                $ZilParams2   = " -o [2]$($Pools.ZilliqaDual.Protocol)://$($Pools.ZilliqaDual.Host):$($Pools.ZilliqaDual.Port) -u [2]$($Pools.ZilliqaDual.User)$(if ($Pools.ZilliqaDual.Worker -and $Pools.ZilliqaDual.User -eq $Pools.ZilliqaDual.Wallet) {" -w [2]$($Pools.ZilliqaDual.Worker)"}) --zil-countdown"
+                $ZilParams3   = " -o [3]$($Pools.ZilliqaDual.Protocol)://$($Pools.ZilliqaDual.Host):$($Pools.ZilliqaDual.Port) -u [3]$($Pools.ZilliqaDual.User)$(if ($Pools.ZilliqaDual.Worker -and $Pools.ZilliqaDual.User -eq $Pools.ZilliqaDual.Wallet) {" -w [3]$($Pools.ZilliqaDual.Worker)"}) --zil-countdown"
             }
         }
 

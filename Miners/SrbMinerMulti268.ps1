@@ -127,10 +127,10 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
 
         $ZilParams    = ""
 
-        if ($Miner_Vendor -ne "CPU" -and $Session.Config.Pools.CrazyPool.EnableSrbMinerMultiDual -and $Pools.ZilliqaCP) {
-            if ($ZilWallet = $Pools.ZilliqaCP.Wallet) {
+        if ($Miner_Vendor -ne "CPU" -and $Pools.ZilliqaDual) {
+            if ($ZilWallet = $Pools.ZilliqaDual.Wallet) {
                             
-                $ZilMiner_Protocol = Switch ($Pools.ZilliqaCP.EthMode) {
+                $ZilMiner_Protocol = Switch ($Pools.ZilliqaDual.EthMode) {
                     "ethproxy"         {" --zil-esm 0"}
                     "minerproxy"       {" --zil-esm 1"}
 					"ethstratum"       {" --zil-esm 2"}
@@ -139,7 +139,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
 					"ethstratumnh"     {" --zil-esm 2"}
 					default            {""}
 				}
-                $ZilParams = " --zil-enable --zil-pool $($Pools.ZilliqaCP.Host):$($Pools.ZilliqaCP.Port) --zil-wallet $($Pools.ZilliqaCP.User)$($ZilMiner_Protocol)"
+                $ZilParams = " --zil-enable --zil-pool $($Pools.ZilliqaDual.Host):$($Pools.ZilliqaDual.Port) --zil-wallet $($Pools.ZilliqaDual.User)$($ZilMiner_Protocol)"
             }
         }       
 

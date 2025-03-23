@@ -117,9 +117,9 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
             $ZilParams = ""
 
-            if ($Miner_Vendor -ne "CPU" -and $Session.Config.Pools.Crazypool.EnableTTminerDual -and $Pools.ZilliqaCP) {
-                if ($ZilWallet = $Pools.ZilliqaCP.Wallet) {
-                    $ZilParams = " -cZ ZIL$(if ($Pools.ZilliqaCP.Worker -and $Pools.ZilliqaCP.User -notmatch "{workername" -and $Pools.ZilliqaCP.Pass -notmatch "{workername") {" -wZ $($Pools.ZilliqaCP.Worker)"}) -PZ $(if ($Pools.ZilliqaCP.SSL) {"ssl://"})$($Pools.ZilliqaCP.User)$(if ($Pools.ZilliqaCP.Pass) {":$($Pools.ZilliqaCP.Pass)"})@$($Pools.ZilliqaCP.Host):$($Pools.ZilliqaCP.Port)"
+            if ($Miner_Vendor -ne "CPU" -and $Pools.ZilliqaDual) {
+                if ($ZilWallet = $Pools.ZilliqaDual.Wallet) {
+                    $ZilParams = " -cZ ZIL$(if ($Pools.ZilliqaDual.Worker -and $Pools.ZilliqaDual.User -notmatch "{workername" -and $Pools.ZilliqaDual.Pass -notmatch "{workername") {" -wZ $($Pools.ZilliqaDual.Worker)"}) -PZ $(if ($Pools.ZilliqaDual.SSL) {"ssl://"})$($Pools.ZilliqaDual.User)$(if ($Pools.ZilliqaDual.Pass) {":$($Pools.ZilliqaDual.Pass)"})@$($Pools.ZilliqaDual.Host):$($Pools.ZilliqaDual.Port)"
                 }
             }
 
