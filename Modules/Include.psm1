@@ -299,6 +299,31 @@ function Confirm-Version {
     $Global:GlobalVersion
 }
 
+function Get-ValueFromRequest {
+    param($Request, [string]$Value, [hashtable]$Params = @{})
+
+    $val = $null
+    foreach ($data in $Value -split "\.") {
+        if ($Params.Count) {
+            foreach ($param in $Params.GetEnumerator()) {
+                $data = $data.Replace("`$$($param.Name)",$param.Value)
+            }
+        }
+        if ($data -match '^(.+)\[([^\]]+)\]$') {
+            $val = if ($val -ne $null) {$val."$($Matches[1])"} else {$Request."$($Matches[1])"}
+            $arrp = $Matches[2].Split("=",2)
+            if ($arrp[0] -match '^\d+$') {
+                $val = $val[[int]$arrp[0]]
+            } else {
+                $val = $val | ?{$_."$($arrp[0])" -eq $arrp[1]}
+            }
+        } else {
+            $val = if ($val -ne $null) {$val.$data} else {$Request.$data}
+        }
+    }
+    $val
+}
+
 function Get-PoolPayoutCurrencies {
     param($Pool)
     if (-not (Test-Path Variable:Global:GlobalPoolFields)) {

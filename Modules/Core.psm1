@@ -1530,13 +1530,19 @@ function Invoke-Core {
                     ([ordered]@{
                         Enable         = Get-Yes $UPool.Enable
                         SSL            = Get-Yes $UPool.SSL
+                        SoloMining     = Get-Yes $UPool.SoloMining
                         PoolFee        = [double]"$($Upool.PoolFee -replace ",","." -replace "[^\d\.]")"
                         Currency       = "$(if ($UPool.Currency) {$UPool.Currency} else {$UPool.CoinSymbol})".Trim().ToUpper()
                         CoinSymbol     = "$($UPool.CoinSymbol)".Trim().ToUpper()
-                        ProfitUrl      = "$($Upool.ProfitUrl)".Trim()
-                        ProfitValue    = "$($Upool.ProfitValue)".Trim()
+                        APIUrl         = "$($Upool.APIUrl)".Trim()
+                        Profit         = "$($Upool.Profit)".Trim()
                         ProfitFactor   = "$($Upool.ProfitFactor)".Trim()
                         ProfitCurrency = "$($UPool.ProfitCurrency)".Trim().ToUpper()
+                        Hashrate       = "$($Upool.Hashrate)".Trim()
+                        Workers        = "$($Upool.Workers)".Trim()
+                        TimeSinceLast  = "$($Upool.TimeSinceLast)".Trim()
+                        Blocks24h      = "$($Upool.Blocks24h)".Trim()
+                        Difficulty     = "$($Upool.Difficulty)".Trim()
                     }).GetEnumerator() | Foreach-Object {
                         if ([bool]$UPool.PSObject.Properties["$($_.Name)"]) {
                             $UPool."$($_.Name)" = $_.Value

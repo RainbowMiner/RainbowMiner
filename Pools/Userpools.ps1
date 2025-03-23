@@ -15,7 +15,7 @@ param(
     [String]$Password = ""
 )
 
-$ProfitData = @{}
+$Pool_ProfitData = @{}
 
 $Session.Config.Userpools | Where-Object {$_.Name -eq $Name -and $_.Enable -and ($Wallets."$($_.Currency)" -or $InfoOnly)} | ForEach-Object {
 
@@ -54,86 +54,72 @@ $Session.Config.Userpools | Where-Object {$_.Name -eq $Name -and $_.Enable -and 
     $Pool_Pass     = "$(if ($_.Pass) {$_.Pass} else {"x"})"
     $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
 
-    $Profit = 0
+    $Pool_Values = [PSCustomObject]@{
+        Profit        = 0
+        ProfitFactor  = 1
+        Hashrate      = $null
+        Workers       = $null
+        TimeSinceLast = $null
+        Blocks24h     = $null
+        Difficulty    = $null
+    }
 
     if (-not $InfoOnly) {
         try {
             $Request = $null
-            if ($_.ProfitUrl) {
-                if (-not $ProfitData.ContainsKey($_.ProfitUrl)) {
-                    $ProfitData[$_.ProfitUrl] = Invoke-RestMethodAsync $_.ProfitUrl -cycletime 120 -tag $Name
+            if ($_.APIUrl) {
+                if (-not $Pool_ProfitData.ContainsKey($_.APIUrl)) {
+                    $Pool_ProfitData[$_.APIUrl] = Invoke-RestMethodAsync $_.APIUrl -cycletime 120 -tag $Name
                 }
-                if ($ProfitData[$_.ProfitUrl]) {
-                    $Request = $ProfitData[$_.ProfitUrl]
-                    if ($_.ProfitValue -eq "#") {
-                        $Profit = [double]$Request
-                    } else {
-                        $val = $null
-                        foreach ($data in $_.ProfitValue -split "\.") {
-                            $Pool_Params.GetEnumerator() | Foreach-Object {
-                                $data = $data.Replace("`$$($_.Name)",$_.Value)
-                            }
-                            if ($data -match '^(.+)\[([^\]]+)\]$') {
-                                $val = if ($val -ne $null) {$val."$($Matches[1])"} else {$Request."$($Matches[1])"}
-                                $arrp = $Matches[2].Split("=",2)
-                                if ($arrp[0] -match '^\d+$') {
-                                    $val = $val[[int]$arrp[0]]
-                                } else {
-                                    $val = $val | ?{$_."$($arrp[0])" -eq $arrp[1]}
-                                }
-                            } else {
-                                $val = if ($val -ne $null) {$val.$data} else {$Request.$data}
-                            }
-                        }
-                        $Profit = [double]$val
-                    }
-                }
-            } elseif ($_.ProfitValue) {
-                $val = $_.ProfitValue -replace ",","." -replace "[^0-9\+\-\.E]+"
-                if ($val -ne "") {
-                    $Profit = [double]$val
+                if ($Pool_ProfitData[$_.APIUrl]) {
+                    $Request = $Pool_ProfitData[$_.APIUrl]
                 }
             }
 
-            if ($Profit) {
-                if ($_.ProfitFactor) {
-                    $val = $null
-                    if ($_.ProfitFactor -match "^[0-9\+\-\.,E]+$") {
-                        $val = $_.ProfitFactor -replace ",","."
-                        $val = [double]$val
-                    } elseif ($Request) {
-                        foreach ($data in $_.ProfitFactor -split "\.") {
-                            $Pool_Params.GetEnumerator() | Foreach-Object {
-                                $data = $data.Replace("`$$($_.Name)",$_.Value)
-                            }
-                            if ($data -match '^(.+)\[([^\]]+)\]$') {
-                                $val = if ($val -ne $null) {$val."$($Matches[1])"} else {$Request."$($Matches[1])"}
-                                $arrp = $Matches[2].Split("=",2)
-                                if ($arrp[0] -match '^\d+$') {
-                                    $val = $val[[int]$arrp[0]]
-                                } else {
-                                    $val = $val | ?{$_."$($arrp[0])" -eq $arrp[1]}
-                                }
-                            } else {
-                                $val = if ($val -ne $null) {$val.$data} else {$Request.$data}
-                            }
+            if ($_.Profit -eq "#") {
+                $Pool_Values.Profit = [double]$Request
+            } else {
+                foreach ($fld in @("Profit","ProfitFactor","Hashrate","Difficulty","Workers","TimeSinceLast","Blocks24h")) {
+                    if ($_.$fld) {
+                        $val = $null
+                        if ($_.$fld -match "^[0-9\+\-\.,E]+$") {
+                            $val = $_.$fld -replace ",","."
+                        } elseif ($Request) {
+                            $val = Get-ValueFromRequest -Request $Request -Value $_.$fld -Params $Pool_Params
                         }
-                        $val = [double]$val
-                        if ($data -eq "mbtc_mh_factor") { $val *= 1e6 }
+                        if ($val -ne $null) {
+                            $Pool_Values.$fld = [double]$val
+                        }
                     }
-                    $Profit = if ($val) {$Profit / $val} else {0}
                 }
+            }
+
+            if ($_.SoloMining) {
+                $Pool_Values.Profit = 0
+            }
+
+            if ($Pool_Values.Profit) {
+                if ($Pool_Values.ProfitFactor) {
+                    if ($_.ProfitFactor -match "mbtc_mh_factor") {
+                        $Pool_Values.ProfitFactor *= 1e6
+                    }
+                    $Pool_Values.Profit /= $Pool_Values.ProfitFactor
+                } else {
+                    $Pool_Values.Profit = 0
+                }
+
                 $cur = if ($_.ProfitCurrency -ne "") {$_.ProfitCurrency} else {$_.Currency}
                 if ($cur -ne "BTC") {
-                    $Profit = if ($Global:Rates.$cur) {$Profit/[double]$Global:Rates.$cur} else {0}
+                    $Pool_Values.Profit = if ($Global:Rates.$cur) {$Pool_Values.Profit/[double]$Global:Rates.$cur} else {0}
                 }
             }
+
         } catch {
             Write-Log -Level Warn "$($LogString): $($_.Exception.Message)"
-            $Profit = 0
+            $Pool_Values.Profit = 0
         }
 
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)$(if($Pool_Params["CoinSymbol"]) {"_$($Pool_Params["CoinSymbol"])"})_Profit" -Value $Profit -Duration $StatSpan -ChangeDetection $false -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)$(if($Pool_Params["CoinSymbol"]) {"_$($Pool_Params["CoinSymbol"])"})_Profit" -Value $Pool_Values.Profit -Duration $StatSpan -Hashrate $Pool_Values.Hashrate -BlockRate $Pool_Values.Blocks24h -Difficulty $Pool_Values.Difficulty -ChangeDetection $false -Quiet
     }
 
     $Pool_Params.GetEnumerator() | Foreach-Object {
@@ -147,9 +133,9 @@ $Session.Config.Userpools | Where-Object {$_.Name -eq $Name -and $_.Enable -and 
         CoinName      = "$(if ($Pool_Coin) {$Pool_Coin.Name} elseif ($_.CoinName) {$_.CoinName} else {$_.CoinSymbol})"
         CoinSymbol    = $Pool_Params["CoinSymbol"]
         Currency      = $Pool_Params["Currency"]
-        Price         = if ($Profit) {$Stat.$StatAverage} else {0}
-        StablePrice   = if ($Profit) {$Stat.$StatAverageStable} else {0}
-        MarginOfError = if ($Profit) {$Stat.Week_Fluctuation} else {0}
+        Price         = if ($Pool_Values.Profit) {$Stat.$StatAverage} else {0}
+        StablePrice   = if ($Pool_Values.Profit) {$Stat.$StatAverageStable} else {0}
+        MarginOfError = if ($Pool_Values.Profit) {$Stat.Week_Fluctuation} else {0}
         Protocol      = "$(if ($_.Protocol) {$_.Protocol} else {"stratum+$(if ($_.SSL) {"ssl"} else {"tcp"})"})"
         Host          = $_.Host
         Port          = $_.Port
@@ -157,9 +143,15 @@ $Session.Config.Userpools | Where-Object {$_.Name -eq $Name -and $_.Enable -and 
         Pass          = $Pool_Pass
         Region        = "$(if ($_.Region) {Get-Region $_.Region} else {"US"})"
         SSL           = $_.SSL
-        WTM           = $Profit -eq 0
+        WTM           = $Pool_Values.Profit -eq 0
         Updated       = (Get-Date).ToUniversalTime()
         PoolFee       = $_.PoolFee
+        Workers       = if ($_.SoloMining) {$null} else {$Pool_Values.Workers}
+        Hashrate      = if ($_.SoloMining) {$null} else {$Stat.HashRate_Live}
+        TSL           = if ($_.SoloMining) {$null} else {$Pool_Values.TimeSinceLast}
+        BLK           = if ($_.SoloMining) {$null} else {$Stat.BlockRate_Average}
+        Difficulty    = $Stat.Diff_Average
+        SoloMining    = $_.SoloMining
         EthMode       = "$(if ($_.EthMode) {$_.EthMode} else {$Pool_EthProxy})"
         Name          = $Name
         Penalty       = 0
@@ -175,4 +167,4 @@ $Session.Config.Userpools | Where-Object {$_.Name -eq $Name -and $_.Enable -and 
     }
 }
 
-$ProfitData = $null
+$Pool_ProfitData = $null
