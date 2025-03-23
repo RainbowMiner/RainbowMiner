@@ -1464,8 +1464,8 @@ Remark: the following variables will be automatically replaced in parameters **U
 - `$WorkerName` will be replaced with your rig's workername (or the value in pools.config.txt)
 - `$CoinSymbol` will be replaced with the CoinSymbol from userpools.config.txt
 - `$Currency` will be replaced with the Currency from userpools.config.txt
-- `$Password will be replaced with Password from pools.config.txt
-- `$Params will be replaced with "Params-<Currency>" from pools.config.txt
+- `$Password` will be replaced with Password from pools.config.txt
+- `$Params` will be replaced with "Params-<Currency>" from pools.config.txt
 
 ### Config\miners.config.txt
 
