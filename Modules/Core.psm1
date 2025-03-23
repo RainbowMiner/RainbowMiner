@@ -1534,7 +1534,9 @@ function Invoke-Core {
                         PoolFee        = [double]"$($Upool.PoolFee -replace ",","." -replace "[^\d\.]")"
                         Currency       = "$(if ($UPool.Currency) {$UPool.Currency} else {$UPool.CoinSymbol})".Trim().ToUpper()
                         CoinSymbol     = "$($UPool.CoinSymbol)".Trim().ToUpper()
-                        APIUrl         = "$($Upool.APIUrl)".Trim()
+                        APIUrl1        = "$($Upool.APIUrl1)".Trim()
+                        APIUrl2        = "$($Upool.APIUrl2)".Trim()
+                        APIUrl3        = "$($Upool.APIUrl3)".Trim()
                         Profit         = "$($Upool.Profit)".Trim()
                         ProfitFactor   = "$($Upool.ProfitFactor)".Trim()
                         ProfitCurrency = "$($UPool.ProfitCurrency)".Trim().ToUpper()

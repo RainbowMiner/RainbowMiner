@@ -17,6 +17,13 @@ param(
 
 $Pool_ProfitData = @{}
 
+$map = @{
+    'api1' = 'api1'; '1' = 'api1'; 'apiurl1' = 'api1'
+    'api2' = 'api2'; '2' = 'api2'; 'apiurl2' = 'api2'
+    'api3' = 'api3'; '3' = 'api3'; 'apiurl3' = 'api3'
+}
+
+
 $Session.Config.Userpools | Where-Object {$_.Name -eq $Name -and $_.Enable -and ($Wallets."$($_.Currency)" -or $InfoOnly)} | ForEach-Object {
 
     $Pool_Params = [ordered]@{
@@ -66,26 +73,48 @@ $Session.Config.Userpools | Where-Object {$_.Name -eq $Name -and $_.Enable -and 
 
     if (-not $InfoOnly) {
         try {
-            $Request = $null
-            if ($_.APIUrl) {
-                if (-not $Pool_ProfitData.ContainsKey($_.APIUrl)) {
-                    $Pool_ProfitData[$_.APIUrl] = Invoke-RestMethodAsync $_.APIUrl -cycletime 120 -tag $Name
-                }
-                if ($Pool_ProfitData[$_.APIUrl]) {
-                    $Request = $Pool_ProfitData[$_.APIUrl]
+            $Request = [PSCustomObject]@{api1=$null; api2=$null; api3=$null}
+            foreach ($api in @(1,2,3)) {
+                try {
+                    $apiurl = $_."APIUrl$api"
+                    if ($apiurl) {
+                        if (-not $Pool_ProfitData.ContainsKey($apiurl)) {
+                            $Pool_ProfitData[$apiurl] = Invoke-RestMethodAsync $apiurl -cycletime 120 -tag $Name
+                        }
+                        if ($Pool_ProfitData[$apiurl]) {
+                            $Request."api$api" = $Pool_ProfitData[$apiurl]
+                        }
+                    }
+                } catch {
+                    Write-Log -Level Warn "$($LogString): $apiurl $($_.Exception.Message)"
                 }
             }
 
-            if ($_.Profit -eq "#") {
-                $Pool_Values.Profit = [double]$Request
+            if ($_.Profit -match "^(#|#1|api1|1|apiurl1)$") {
+                $Pool_Values.Profit = [double]$Request.api1
+            } elseif ($_.Profit -match "^(#2|api2|2|apiurl2)$") {
+                $Pool_Values.Profit = [double]$Request.api2
+            } elseif ($_.Profit -match "^(#3|api3|3|apiurl3$)") {
+                $Pool_Values.Profit = [double]$Request.api3
             } else {
                 foreach ($fld in @("Profit","ProfitFactor","Hashrate","Difficulty","Workers","TimeSinceLast","Blocks24h")) {
-                    if ($_.$fld) {
+                    $apifld = $_.$fld
+                    if ($apifld) {
                         $val = $null
-                        if ($_.$fld -match "^[0-9\+\-\.,E]+$") {
-                            $val = $_.$fld -replace ",","."
-                        } elseif ($Request) {
-                            $val = Get-ValueFromRequest -Request $Request -Value $_.$fld -Params $Pool_Params
+                        if ($apifld -match "^[0-9\+\-\.,E]+$") {
+                            $val = $apifld -replace ",","."
+                        } else {
+                            if ($apifld -match '^(api1|api2|api3|1|2|3|apiurl1|apiurl2|apiurl3)\.') {
+                                $apiN   = $map[$matches[1]]
+                                $apifld = $apifld -replace "^[^\.]+",$apiN
+                            } else {
+                                $apiN   = "api1"
+                                $apifld = "api1.$($apifld)"
+                            }
+
+                            if ($Request.$apiN) {
+                                $val = Get-ValueFromRequest -Request $Request -Value $apifld -Params $Pool_Params
+                            }
                         }
                         if ($val -ne $null) {
                             $Pool_Values.$fld = [double]$val
