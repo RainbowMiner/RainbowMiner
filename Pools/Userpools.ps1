@@ -91,11 +91,11 @@ $Session.Config.Userpools | Where-Object {$_.Name -eq $Name -and $_.Enable -and 
                 }
             }
 
-            if ($_.Profit -match "^(#|#1|api1|1|apiurl1)$") {
+            if ($_.Profit -eq "#" -or $_.Profit -eq "#1") {
                 $Pool_Values.Profit = [double]$Request.api1
-            } elseif ($_.Profit -match "^(#2|api2|2|apiurl2)$") {
+            } elseif ($_.Profit -eq "#2") {
                 $Pool_Values.Profit = [double]$Request.api2
-            } elseif ($_.Profit -match "^(#3|api3|3|apiurl3$)") {
+            } elseif ($_.Profit  -eq "#3") {
                 $Pool_Values.Profit = [double]$Request.api3
             } else {
                 foreach ($fld in @("Profit","ProfitFactor","Hashrate","Difficulty","Workers","TimeSinceLast","Blocks24h","PoolFee")) {
