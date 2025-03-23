@@ -1364,36 +1364,36 @@ Notes:
 add in userpools.config.txt
 
 
-  {
-    "Enable": "1",
-    "Name": "XvgPool",
-    "PoolFee": "api1.x17.fees",
-    "Algorithm": "X17",
-    "CoinName": "Verge",
-    "CoinSymbol": "XVG",
-    "Currency": "XVG",
-    "Protocol": "stratum+tcp",
-    "Host": "mining.xvg-pool.com",
-    "Port": "6851",
-    "User": "$Wallet.$WorkerName",
-    "Pass": "c=XVG5",
-    "Region": "US",
-    "SSL": "0",
-    "Worker": "$WorkerName",
-    "EthMode": "",
-    "APIUrl1": "https://xvg-pool.com/api/status",
-    "APIUrl2": "https://xvg-pool.com/api/currencies",
-    "APIUrl3": "",
-    "Profit": "api1.x17.estimate_current",
-    "ProfitFactor": "api1.x17.mbtc_mh_factor",
-    "ProfitCurrency": "BTC",
-    "Hashrate": "api1.x17.hashrate",
-    "Workers": "api1.x17.workers",
-    "TimeSinceLast": "api2.XVG5.timesincelast",
-    "Blocks24h": "api2.XVG5.24h_blocks",
-    "Difficulty": "api2.XVG5.difficulty",
-    "SoloMining": "0"
-  }
+    {
+      "Enable": "1",
+      "Name": "XvgPool",
+      "PoolFee": "api1.x17.fees",
+      "Algorithm": "X17",
+      "CoinName": "Verge",
+      "CoinSymbol": "XVG",
+      "Currency": "XVG",
+      "Protocol": "stratum+tcp",
+      "Host": "mining.xvg-pool.com",
+      "Port": "6851",
+      "User": "$Wallet.$WorkerName",
+      "Pass": "c=XVG5",
+      "Region": "US",
+      "SSL": "0",
+      "Worker": "$WorkerName",
+      "EthMode": "",
+      "APIUrl1": "https://xvg-pool.com/api/status",
+      "APIUrl2": "https://xvg-pool.com/api/currencies",
+      "APIUrl3": "",
+      "Profit": "api1.x17.estimate_current",
+      "ProfitFactor": "api1.x17.mbtc_mh_factor",
+      "ProfitCurrency": "BTC",
+      "Hashrate": "api1.x17.hashrate",
+      "Workers": "api1.x17.workers",
+      "TimeSinceLast": "api2.XVG5.timesincelast",
+      "Blocks24h": "api2.XVG5.24h_blocks",
+      "Difficulty": "api2.XVG5.difficulty",
+      "SoloMining": "0"
+    }
 
 
 in config.txt, add the XvgPool to the "PoolName" list:
