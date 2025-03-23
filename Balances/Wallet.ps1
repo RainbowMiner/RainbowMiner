@@ -115,21 +115,8 @@ foreach ($Wallet_Data in $Wallets_Data) {
                         }
                         $val
                     } else {
-                        $val = $null
-                        $Wallet_Data.balance -replace "{w}",$Wallet_Address -split "\." | Foreach-Object {
-                            if ($_ -match '^(.+)\[([^\]]+)\]$') {
-                                $val = if ($val -ne $null) {$val."$($Matches[1])"} else {$Request."$($Matches[1])"}
-                                $arrp = $Matches[2].Split("=",2)
-                                if ($arrp[0] -match '^\d+$') {
-                                    $val = $val[[int]$arrp[0]]
-                                } else {
-                                    $val = $val | ?{$_."$($arrp[0])" -eq $arrp[1]}
-                                }
-                            } else {
-                                $val = if ($val -ne $null) {$val.$_} else {$Request.$_}
-                            }
-                        }
-                        $val
+                        $Value = $Wallet_Data.balance -replace "{w}",$Wallet_Address
+                        Get-ValueFromRequest -Request $Request -Value $Value
                     }
                 }
             }
