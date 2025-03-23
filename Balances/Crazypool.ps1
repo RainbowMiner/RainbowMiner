@@ -9,14 +9,15 @@ param(
 
 $Pools_Data = @(
     [PSCustomObject]@{rpc = "etc.crazypool.org";  symbol = "ETC";  port = @(7000,7777);   fee = 1; region = $Pool_Regions; region_prefix = "etc-"}
-    [PSCustomObject]@{rpc = "ethw.crazypool.org"; symbol = "ETHW"; port = @(3333,5555);   fee = 1; region = $Pool_Regions; region_prefix = "ethw-"}
-    [PSCustomObject]@{rpc = "kas.crazypool.org";  symbol = "KAS";  port = @(25101);       fee = 1; region = $Pool_Regions; region_prefix = "kas-"}
     [PSCustomObject]@{rpc = "lrs.crazypool.org";  symbol = "LRS";  port = @(25001,26001); fee = 1; region = $Pool_Regions; region_prefix = "lrs-"}
     [PSCustomObject]@{rpc = "octa.crazypool.org"; symbol = "OCTA"; port = @(5225,5885);   fee = 1; region = $Pool_Regions; region_prefix = "octa-"}
-    #[PSCustomObject]@{rpc = "pac.crazypool.org";  symbol = "PAC";  port = @();            fee = 1; region = $Pool_Regions; region_prefix = "pac-"}
-    [PSCustomObject]@{rpc = "sdr.crazypool.org";  symbol = "SDR";  port = @(25101);       fee = 1; region = $Pool_Regions; region_prefix = "sdr-"}
-    [PSCustomObject]@{rpc = "zil.crazypool.org";  symbol = "ZIL";  port = @(5005,5995);   fee = 1; region = $Pool_Regions; region_prefix = "zil-"}
     [PSCustomObject]@{rpc = "zth.crazypool.org";  symbol = "ZTH";  port = @(25002,26002); fee = 1; region = $Pool_Regions; region_prefix = "zth-"}
+
+    #[PSCustomObject]@{rpc = "ethw.crazypool.org"; symbol = "ETHW"; port = @(3333,5555);   fee = 1; region = $Pool_Regions; region_prefix = "ethw-"}
+    #[PSCustomObject]@{rpc = "kas.crazypool.org";  symbol = "KAS";  port = @(25101);       fee = 1; region = $Pool_Regions; region_prefix = "kas-"}
+    #[PSCustomObject]@{rpc = "pac.crazypool.org";  symbol = "PAC";  port = @();            fee = 1; region = $Pool_Regions; region_prefix = "pac-"}
+    #[PSCustomObject]@{rpc = "sdr.crazypool.org";  symbol = "SDR";  port = @(25101);       fee = 1; region = $Pool_Regions; region_prefix = "sdr-"}
+    #[PSCustomObject]@{rpc = "zil.crazypool.org";  symbol = "ZIL";  port = @(5005,5995);   fee = 1; region = $Pool_Regions; region_prefix = "zil-"}
 )
 
 $Count = 0
