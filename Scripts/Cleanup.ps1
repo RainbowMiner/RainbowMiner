@@ -2077,9 +2077,104 @@ try {
 
     if (Test-Path ".\Data\minerinfo.json") {Remove-Item ".\Data\minerinfo.json" -Force -ErrorAction Ignore; $ChangesTotal++}
 
+    $sourceFile = ".\Stats\Balances\Earnings.csv"
+    $archiveFile = ".\Stats\Balances\Earnings_Archive.csv"
+    $tempFile    = "$sourceFile.tmp"
+
+    $cutoffDate = (Get-Date).AddYears(-1)
+
+    $reader = $null
+    $archiveWriter = $null
+    $tempWriter = $null
+
+    $archive_error = $false
+
+    try {
+        $reader = [System.IO.StreamReader]::new($sourceFile)
+
+        $archiveExists = Test-Path $archiveFile
+        $archiveWriter = [System.IO.StreamWriter]::new($archiveFile, $true)
+
+        $tempWriter = [System.IO.StreamWriter]::new($tempFile, $false)
+
+        $header = $reader.ReadLine()
+        if (-not $header) {
+            throw "Source file appears to be empty."
+        }
+
+        $tempWriter.WriteLine($header)
+
+        if (-not $archiveExists) {
+            $archiveWriter.WriteLine($header)
+        }
+
+        $lineNumber = 1
+        while (!$reader.EndOfStream) {
+            $lineNumber++
+            $line = $reader.ReadLine()
+
+            if ([string]::IsNullOrWhiteSpace($line)) { continue }
+
+            $columns = $line -split '","'
+            $columns[0] = $columns[0].Trim('"')
+            $columns[-1] = $columns[-1].TrimEnd('"')
+
+            $dateStr = $columns[1]
+            [DateTime]$parsedDate = [DateTime]::MinValue
+            $success = [datetime]::TryParseExact(
+                $dateStr,
+                'MM/dd/yyyy HH:mm:ss',
+                [System.Globalization.CultureInfo]::InvariantCulture,
+                [System.Globalization.DateTimeStyles]::None,
+                [ref]$parsedDate
+            )
+
+            if (-not $success) {
+                $tempWriter.WriteLine($line)
+                continue
+            }
+
+            if ($parsedDate -lt $cutoffDate) {
+                $archiveWriter.WriteLine($line)
+            } else {
+                $tempWriter.WriteLine($line)
+            }
+        }
+    }
+    catch {
+        Write-Warning "Create Earnings_Archive.csv failed $($_.Exception.Message)"
+        $archive_error = $true
+    }
+    finally {
+        if ($reader)        { $reader.Close() }
+        if ($archiveWriter) { $archiveWriter.Close() }
+        if ($tempWriter)    { $tempWriter.Close() }
+
+        if (-not $archive_error -and (Test-Path $tempFile)) {
+            try {
+                Move-Item -Force -Path $tempFile -Destination $sourceFile
+                $ChangesTotal++
+            }
+            catch {
+                Write-Warning "Failed to overwrite Earnings.csv file $($_.Exception.Message)"
+            }
+        }
+        else {
+            if (Test-Path $tempFile) {
+                try {
+                    Remove-Item $tempFile -Force
+                } catch {
+                    Write-Warning "Failed to remove Earnings.csv.tmp file $($_.Exception.Message)"
+                }
+            }
+        }
+
+        $reader = $archiveWriter = $tempWriter = $null
+    }
+
     Write-Output "SUCCESS: Cleaned $ChangesTotal elements"
 }
 catch {
-    Write-Output "WARNING: Cleanup failed $($_.Exception.Message)"
+    Write-Warning "Cleanup failed $($_.Exception.Message)"
 }
 
