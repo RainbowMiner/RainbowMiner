@@ -1531,7 +1531,7 @@ function Invoke-Core {
                         Enable         = Get-Yes $UPool.Enable
                         SSL            = Get-Yes $UPool.SSL
                         SoloMining     = Get-Yes $UPool.SoloMining
-                        PoolFee        = [double]"$($Upool.PoolFee -replace ",","." -replace "[^\d\.]")"
+                        PoolFee        = "$($Upool.PoolFee)".Trim()
                         Currency       = "$(if ($UPool.Currency) {$UPool.Currency} else {$UPool.CoinSymbol})".Trim().ToUpper()
                         CoinSymbol     = "$($UPool.CoinSymbol)".Trim().ToUpper()
                         APIUrl1        = "$($Upool.APIUrl1)".Trim()
