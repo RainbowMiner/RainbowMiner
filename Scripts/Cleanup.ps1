@@ -2081,7 +2081,7 @@ try {
     $archiveFile = ".\Stats\Balances\Earnings_Archive.csv"
     $tempFile    = "$sourceFile.tmp"
 
-    $cutoffDate = (Get-Date).AddYears(-1)
+    $cutoffDate = (Get-Date).AddMonths(-3)
 
     $reader = $null
     $archiveWriter = $null
