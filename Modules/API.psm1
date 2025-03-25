@@ -45,6 +45,7 @@
     $Global:APIClients   = [System.Collections.ArrayList]::Synchronized((New-Object System.Collections.ArrayList))
     $Global:APIListeners = [System.Collections.ArrayList]@()
     $Global:APIAccessDB  = [System.Collections.Hashtable]::Synchronized(@{})
+    $Global:APICacheDB   = [System.Collections.Hashtable]::Synchronized(@{})
 
     # Setup runspacepool to launch the API webserver in separate threads
     $initialSessionState = [Management.Automation.Runspaces.InitialSessionState]::CreateDefault()
@@ -55,6 +56,7 @@
     [void]$initialSessionState.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('AsyncLoader', $AsyncLoader, $null))
     [void]$initialSessionState.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('APIClients', $APIClients, $null))
     [void]$initialSessionState.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('APIAccessDB', $APIAccessDB, $null))
+    [void]$initialSessionState.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('APICacheDB', $APICacheDB, $null))
     if (Initialize-HttpClient) {
         [void]$initialSessionState.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new("GlobalHttpClient", $Global:GlobalHttpClient, $null))
     }

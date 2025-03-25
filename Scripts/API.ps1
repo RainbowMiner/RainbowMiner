@@ -12,9 +12,6 @@ $BasePath = Join-Path $PWD "web"
 
 Set-OsFlags
 
-$GCStopWatch = [System.Diagnostics.StopWatch]::New()
-$GCStopWatch.Start()
-
 $EnableFixBigInt = (Get-Command "Invoke-GetUrlAsync").parameters.fixbigint -ne $null
 
 While ($APIHttpListener.IsListening -and -not $API.Stop) {
@@ -895,39 +892,116 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
         "/earnings" {
             $Data = ""
             if (Test-Path "Stats\Balances\Earnings.csv") {
-                $Earnings = @(Import-Csv "Stats\Balances\Earnings.csv" | Foreach-Object {
-                    $Rate = $Rates."$($_.Currency)"
-                    [PSCustomObject]@{
-                        Date = if ($Parameters.as_csv) {[DateTime]$_.Date} else {([DateTime]$_.Date).ToString("yyyy-MM-dd HH:mm:ss")}
-                        Date_UTC = if ($Parameters.as_csv) {[DateTime]$_.Date_UTC} else {([DateTime]$_.Date_UTC).ToString("yyyy-MM-dd HH:mm:ss")}
-                        PoolName = $_.PoolName
-                        Currency = $_.Currency
-                        Balance  = [Decimal]$_.Balance
-                        Paid     = [Decimal]$_.Paid
-                        Earnings = [Decimal]$_.Earnings
-                        Value    = [Decimal]$_.Value
-                        Balance_BTC = [Decimal]$(if ($Rate) {$_.Balance / $Rate} else {0})
-                        Paid_BTC = [Decimal]$(if ($Rate) {$_.Paid / $Rate} else {0})
-                        Earnings_BTC = [Decimal]$(if ($Rate) {$_.Earnings / $Rate} else {0})
-                        Value_BTC = [Decimal]$(if ($Rate) {$_.Value / $Rate} else {0})
+
+                $reader = $null
+                try {
+                    $APIData = $null
+                    if ($APICacheDB.ContainsKey("earnings")) {
+                        $APIData = $APICacheDB["earnings"]
                     }
-                } | Select-Object)
+                    if (-not $APIData -or $APIData.LastWrite -lt (Get-ChildItem "Stats\Balances\Earnings.csv" -File).LastWriteTimeUtc) {
+                        $Earnings = [System.Collections.Generic.List[PSCustomObject]]::new()
+                        $sourceFile = "Stats\Balances\Earnings.csv"
+
+                        $reader = [System.IO.StreamReader]::new($sourceFile)
+                        $header = $reader.ReadLine()
+
+                        if (-not $header) {
+                            throw "Earnings.csv is empty."
+                        }
+
+                        $columns = $header -split ',' | Foreach-Object {$_.Trim('"')}
+
+                        while (!$reader.EndOfStream) {
+                            $line = $reader.ReadLine()
+                            $line = $line -replace "^[^`"]+" -replace "[^`"]+$"
+                            if ([string]::IsNullOrWhiteSpace($line)) { continue }
+
+                            $fields = $line -split ','
+                            if ($fields.Count -ne $columns.Count) { continue }  # skip malformed rows
+
+                            $row = @{}
+                            for ($i = 0; $i -lt $columns.Count; $i++) {
+                                $row[$columns[$i]] = $fields[$i].Trim('"')
+                            }
+
+                            $Rate = $Rates."$($row.Currency)"
+
+                            [void]$Earnings.Add([PSCustomObject]@{
+                                Date          = if ($Parameters.as_csv) {[DateTime]$row.Date} else {([DateTime]$row.Date).ToString("yyyy-MM-dd HH:mm:ss")}
+                                Date_UTC      = if ($Parameters.as_csv) {[DateTime]$row.Date_UTC} else {([DateTime]$row.Date_UTC).ToString("yyyy-MM-dd HH:mm:ss")}
+                                PoolName      = $row.PoolName
+                                Currency      = $row.Currency
+                                Balance       = [Decimal]$row.Balance
+                                Paid          = [Decimal]$row.Paid
+                                Earnings      = [Decimal]$row.Earnings
+                                Value         = [Decimal]$row.Value
+                                Balance_BTC   = [Decimal]$(if ($Rate) {$row.Balance / $Rate} else {0})
+                                Paid_BTC      = [Decimal]$(if ($Rate) {$row.Paid / $Rate} else {0})
+                                Earnings_BTC  = [Decimal]$(if ($Rate) {$row.Earnings / $Rate} else {0})
+                                Value_BTC     = [Decimal]$(if ($Rate) {$row.Value / $Rate} else {0})
+                            })
+                        }
+
+                        $CacheTime = (Get-Date).ToUniversalTime()
+                        if (-not $APIData) {
+                            $APICacheDB["earnings"] = [PSCustomObject]@{LastWrite = $CacheTime; LastAccess = $CacheTime; Data = $Earnings}
+                        } else {
+                            $APIData.LastWrite = $APIData.LastAccess = $CacheTime
+                            $APIData.Data = $null
+                            $APIData.Data = $Earnings
+                        }
+                    } else {
+                        $Earnings = $APIData.Data
+                        $APIData.LastAccess = (Get-Date).ToUniversalTime()
+                    }
+                } catch {
+                    
+                } finally {
+                    if ($reader) { $reader.Close() }
+                }
+
                 if ($Parameters.as_csv) {
                     $Data = $Earnings | ConvertTo-Csv -NoTypeInformation -UseCulture -ErrorAction Ignore
                     $Data = $Data -join "`r`n"
                     $ContentType = "text/csv"
                     $ContentFileName = "earnings_$(Get-Date -Format "yyyy-MM-dd_HHmmss").csv"
                 } else {
-                    $Filter = if ($Parameters.filter) {$Parameters.filter | ConvertFrom-Json -ErrorAction Ignore}
-                    $Sort   = if ($Parameters.sort) {$Parameters.sort} else {"Date"}
+                    $Filter = if ($Parameters.filter) { $Parameters.filter | ConvertFrom-Json -ErrorAction Ignore } else { $null }
+                    $Sort   = if ($Parameters.sort) { $Parameters.sort } else { "Date" }
                     $Order  = $Parameters.order -eq "desc"
 
                     $TotalNotFiltered = $Earnings.Count
-                    $Earnings = @($Earnings | Where-Object {-not $Filter -or -not (Compare-Object $_ $Filter -Property $Filter.PSObject.Properties.Name | Measure-Object).Count} | Sort-Object -Property $Sort -Descending:$Order | Select-Object)
+
+                    # Filter manually if filter exists
+                    if ($Filter) {
+                        $filtered = [System.Collections.Generic.List[PSObject]]::new()
+                        foreach ($item in $Earnings) {
+                            $match = $true
+                            foreach ($prop in $Filter.PSObject.Properties.Name) {
+                                if ($item.$prop -ne $Filter.$prop) {
+                                    $match = $false
+                                    break
+                                }
+                            }
+                            if ($match) { $filtered.Add($item) }
+                        }
+                        $Earnings = $filtered
+                    }
+
                     $Total = $Earnings.Count
+
+                    $Earnings = $Earnings | Sort-Object -Property $Sort -Descending:$Order
+
+                    # Apply paging
                     if ($Parameters.limit) {
-                        $Earnings = @($Earnings | Select-Object -Skip ([int]$Parameters.offset) -First ([int]$Parameters.limit))
-                    } 
+                        $Earnings = $Earnings | Select-Object -Skip ([int]$Parameters.offset) -First ([int]$Parameters.limit)
+                    }
+                    if (-not $Earnings.Count) {
+                        $Earnings = @()
+                    } elseif ($Earnings.Count -eq 1) {
+                        $Earnings = @($Earnings)
+                    }
 
                     $Data = [PSCustomObject]@{
                         total = $Total
@@ -935,9 +1009,10 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         rows = $Earnings
                     } | ConvertTo-Json -Depth 10
                 }
+
+                $reader = $Earnings = $SourceFile = $header = $columns = $line = $row = $Filter = $Sort = $Order = $TotalNotFiltered = $filtered = $item = $null
+                Remove-Variable -Name reader, Earnings, SourceFile, header, columns, line, row, Filter, Sort, Order, TotalNotFiltered, filtered, item -ErrorAction Ignore
             }
-            $Earnings = $Filter = $Order = $Rate = $Sort = $TotalNotFiltered = $null
-            Remove-Variable -Name Earnings, Filter, Order, Rate, Sort, TotalNotFiltered -ErrorAction Ignore
             Break
         }
         "/sessionvars" {           
@@ -1856,10 +1931,14 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
     $Context = $null
     $task = $null
 
-    if ($GCStopWatch.Elapsed.TotalSeconds -gt 120) {
-        [System.GC]::Collect()
-        $GCStopWatch.Restart()
+    $CacheDate = (Get-Date).AddMinutes(-30).ToUniversalTime()
+    foreach ( $cached in $APICacheDB.Keys ) {
+        if ($APICacheDB.ContainsKey($cached) -and $APICacheDB[$cached].LastAccess -lt $CacheDate) {
+            $APICacheDB.Remove($cached)
+        }
     }
+    $CacheDate = $null
+    $cached = $null
 }
 
 if ($API.Debug) {Stop-Transcript}
