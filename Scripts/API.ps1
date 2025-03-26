@@ -12,6 +12,9 @@ $BasePath = Join-Path $PWD "web"
 
 Set-OsFlags
 
+$GCStopWatch = [System.Diagnostics.StopWatch]::New()
+$GCStopWatch.Start()
+
 $EnableFixBigInt = (Get-Command "Invoke-GetUrlAsync").parameters.fixbigint -ne $null
 
 While ($APIHttpListener.IsListening -and -not $API.Stop) {
@@ -1939,6 +1942,11 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
     }
     $CacheDate = $null
     $cached = $null
+
+    if ($GCStopWatch.Elapsed.TotalSeconds -gt 120) {
+        [System.GC]::Collect()
+        $GCStopWatch.Restart()
+    }
 }
 
 if ($API.Debug) {Stop-Transcript}
