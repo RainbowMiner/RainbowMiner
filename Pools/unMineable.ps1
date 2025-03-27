@@ -46,16 +46,16 @@ $Pools_Data = @(
     [PSCustomObject]@{algo = "ethash";     port = @(3333,4444); ethproxy = "ethstratumnh"; rpc = "ethash";     divisor = 1e6; mh = 5e3; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "ethashb3";   port = @(3333,4444); ethproxy = $null;          rpc = "ethashb3";   divisor = 1;   mh = 1e12; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "fishhash";   port = @(3333,4444); ethproxy = "stratum";      rpc = "fishhash";   divisor = 1;   mh = 1e9; region = @("us","ca","eu","asia")}
-    [PSCustomObject]@{algo = "karlsenhashv2"; port = @(3333,4444); ethproxy = $null;         rpc = "karlsenhash"; divisor = 1;  mh = 1e9; region = @("us","ca","eu","asia")}
+    [PSCustomObject]@{algo = "karlsenhashv2"; port = @(3333,4444); ethproxy = $null;         rpc = "karlsenhash"; divisor = 1;  mh = 1e9; region = @("us","ca","eu","asia"); rewardalgo = "karlsenhash"}
     [PSCustomObject]@{algo = "kawpow";     port = @(3333,4444); ethproxy = "stratum";      rpc = "kp";         divisor = 1e6; mh = 100; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "kheavyhash"; port = @(3333,4444); ethproxy = $null;          rpc = "kheavyhash"; divisor = 1;   mh = 1e9; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "nexapow";    port = @(3333,4444); ethproxy = $null;          rpc = "nexapow";    divisor = 1;   mh = 1e9; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "octopus";    port = @(3333,4444); ethproxy = $null;          rpc = "octopus";    divisor = 1;   mh = 1e9; region = @("us","ca","eu","asia")}
-    [PSCustomObject]@{algo = "pyrinhashv2";  port = @(3333,4444); ethproxy = $null;          rpc = "pyrinhash";  divisor = 1;   mh = 1e9; region = @("us","ca","eu","asia")}
+    [PSCustomObject]@{algo = "pyrinhashv2";  port = @(3333,4444); ethproxy = $null;          rpc = "pyrinhash";  divisor = 1;   mh = 1e9; region = @("us","ca","eu","asia"); rewardalgo = "pyrinhash"}
     [PSCustomObject]@{algo = "randomx";    port = @(3333,4444); ethproxy = $null;          rpc = "rx";         divisor = 1;   mh = 5e4; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "sha512256d"; port = @(3333,4444); ethproxy = $null;          rpc = "sha512256d"; divisor = 1;   mh = 1e9; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "ghostrider"; port = @(3333,4444); ethproxy = $null;          rpc = "ghostrider"; divisor = 1;   mh = 5e4; region = @("us","ca","eu","asia")}
-    [PSCustomObject]@{algo = "xelishashv2";port = @(3333,4444); ethproxy = $null;          rpc = "xelishash";  divisor = 1;   mh = 1e4; region = @("us","ca","eu","asia")}
+    [PSCustomObject]@{algo = "xelishashv2";port = @(3333,4444); ethproxy = $null;          rpc = "xelishash";  divisor = 1;   mh = 1e4; region = @("us","ca","eu","asia"); rewardalgo = "xelishash"}
     [PSCustomObject]@{algo = "zelhash";    port = @(3333,4444); ethproxy = $null;          rpc = "zelhash";    divisor = 1;   mh = 100; region = @("us","ca","eu","asia")}
 
     #[PSCustomObject]@{algo = "dynexsolve"; port = @(3333,4444); ethproxy = $null;          rpc = "dynexsolve"; divisor = 1;   mh = 1e4; region = @("us","ca","eu","asia")}
@@ -165,7 +165,7 @@ $Pools_Data | ForEach-Object {
         if (-not $InfoOnly) {
             $Pool_ProfitRequest = [PSCustomObject]@{}
             try {
-                $Pool_ProfitRequest = Invoke-RestMethodAsync "https://api.unminable.com/v3/calculate/reward" -tag $Name -delay 100 -cycletime 120 -body @{algo=$Pool_RewardAlgo;coin=$Pool_Currency;mh=$_.mh}
+                $Pool_ProfitRequest = Invoke-RestMethodAsync "https://api.unminable.com/v3/calculate/reward" -tag $Name -cycletime 240 -body @{algo=$Pool_RewardAlgo;coin=$Pool_Currency;mh=$_.mh}
             } catch {
                 Write-Log -Level Warn "Pool profit API ($Name) has failed for coin $($Pool_Currency). "
             }
