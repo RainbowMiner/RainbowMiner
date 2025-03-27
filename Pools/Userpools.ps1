@@ -147,6 +147,9 @@ $Session.Config.Userpools | Where-Object {$_.Name -eq $Name -and $_.Enable -and 
         } catch {
             Write-Log -Level Warn "$($LogString): $($_.Exception.Message)"
             $Pool_Values.Profit = 0
+        } finally {
+            $Request.api1 = $Request.api2 = $Request.api3 = $null
+            $Request = $null
         }
 
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)$(if($Pool_Params["CoinSymbol"]) {"_$($Pool_Params["CoinSymbol"])"})_Profit" -Value $Pool_Values.Profit -Duration $StatSpan -Hashrate $Pool_Values.Hashrate -BlockRate $Pool_Values.Blocks24h -Difficulty $Pool_Values.Difficulty -ChangeDetection $false -Quiet
@@ -197,4 +200,9 @@ $Session.Config.Userpools | Where-Object {$_.Name -eq $Name -and $_.Enable -and 
     }
 }
 
-$Pool_ProfitData = $null
+if ($Pool_ProfitData) {
+    $Pool_ProfitData.Keys | Foreach-Object {
+        $Pool_ProfitData[$_] = $null
+    }
+    $Pool_ProfitData  = $null
+}
