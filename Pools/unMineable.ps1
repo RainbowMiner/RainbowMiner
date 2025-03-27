@@ -20,14 +20,14 @@ param(
 $Pool_CoinsRequest = [PSCustomObject]@{}
 
 try {
-    $Pool_CoinsRequest = Invoke-RestMethodAsync "https://api.unmineable.com/v3/coins" -tag $Name -cycletime 21600
+    $Pool_CoinsRequest = Invoke-RestMethodAsync "https://api.unmineable.com/v4/coin" -tag $Name -cycletime 21600
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
 
-if (-not $Pool_CoinsRequest.coins) {
+if (-not $Pool_CoinsRequest.success) {
     Write-Log -Level Warn "Pool API ($Name) returned nothing. "
     return
 }
@@ -149,7 +149,7 @@ $Pool_Referrals = [PSCustomObject]@{
     ZRX = "yfq7-zx60"
 }
 
-$Pool_Currencies = $Pool_CoinsRequest.coins | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly}
+$Pool_Currencies = $Pool_CoinsRequest.data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly}
 
 $Pools_Data | ForEach-Object {
     $Pool_RewardAlgo = if ($_.rewardalgo) {$_.rewardalgo} else {$_.algo}
