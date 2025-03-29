@@ -174,7 +174,7 @@ $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | F
     $Miner_Model = $_.Model
     $Miner_Device = $Global:DeviceCache.DevicesByTypes.CPU | Where-Object {$_.Model -eq $Miner_Model}
 
-    $Commands | Where-Object {-not $_.NeverProfitable -or $Session.Conifg.EnableNeverprofitableAlgos} | ForEach-Object {
+    $Commands | Where-Object {-not $_.NeverProfitable -or $Session.Config.EnableNeverprofitableAlgos} | ForEach-Object {
 
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
