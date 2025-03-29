@@ -37,6 +37,8 @@ pwsh_update=false
 install_as_root=false
 install_as_user=false
 install_nv=false
+uninstall_rbm=false
+uninstall_pwsh=false
 
 # Parse arguments
 for arg in "$@"; do
@@ -44,7 +46,7 @@ for arg in "$@"; do
     -h|--help)
       cat << EOF
 
-RainbowMiner Installer v2.5
+RainbowMiner Installer v2.6
 
 Options:
   -u, --user          Install in user environment only
@@ -52,6 +54,8 @@ Options:
   -pv, --pwsh_version Show installed PowerShell version
   -pu, --pwsh_update  Update PowerShell to version ${pwsh_version}
   -nv                 Install/update NVIDIA CUDA
+  -x, --uninstall     Uninstall RainbowMiner and leave PowerShell untouched
+  -xx, --uninstallall Uninstall RainbowMiner and PowerShell
   -h, --help          Display this help page
 EOF
       exit ;;
@@ -62,8 +66,62 @@ EOF
     -r|--root) install_as_root=true ;;
     -pu|--pwsh_update) pwsh_update=true ;;
     -nv) install_nv=true ;;
+    -x|--uninstall) uninstall_rbm=true ;;
+    -xx|--uninstallall)
+      uninstall_rbm=true
+      uninstall_pwsh=true ;;
   esac
 done
+
+# Uninstall first
+if [ "$uninstall_rbm" = true ]; then
+
+  printf "Really uninstall RainbowMiner and optionally PowerShell? Enter Y or N [default=N]: "
+  read read_uninstall
+  if [ "$read_uninstall" != "Y" ] && [ "$read_uninstall" != "y" ]; then
+    echo "Aborted."
+    exit 1
+  fi
+
+  if ! is_user_root; then
+    SUDO="sudo"
+  fi
+
+  if [ "$uninstall_pwsh" = true ]; then
+    echo "Uninstalling PowerShell .."
+    INSTALL_PATH="/opt/microsoft/powershell/$pwsh_major_version"
+    BINARY_PATH="/usr/bin/pwsh"
+    [ -L "$BINARY_PATH" ] && $SUDO rm -f "$BINARY_PATH"
+    [ -d "$INSTALL_PATH" ] && $SUDO rm -rf "$INSTALL_PATH"
+  fi
+
+  echo "Uninstalling RainbowMiner .."
+  INSTALL_PATH="/opt/rainbowminer"
+  OCDAEMON_PATH="$INSTALL_PATH/bin/ocdaemon"
+  if [ -d "$INSTALL_PATH" ]; then
+    $SUDO $OCDAEMON_PATH stop
+    $SUDO $OCDAEMON_PATH uninstall
+    for cmd in amdmeminfo wolfamdctrl rbmtail; do
+      if [ -L "/usr/bin/$cmd" ]; then
+        $SUDO rm -f "/usr/bin/$cmd"
+      fi
+    done
+
+    $SUDO rm -rf "$INSTALL_PATH"
+  fi
+
+  for item in "$PWD"/* "$PWD"/.*; do
+    case "$(basename "$item")" in
+      install.sh|.|..) continue ;;
+      *) $SUDO rm -rf "$item" ;;
+    esac
+  done
+
+  echo "RainbowMiner has been uninstalled."
+  echo "You may now delete the installation folder manually: $PWD"
+
+  exit 0
+fi
 
 # Conflict check
 if [ "$install_as_root" = true ] && [ "$install_as_user" = true ]; then
