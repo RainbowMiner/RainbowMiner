@@ -13,8 +13,7 @@
     </div>
 </div>
 
-<table id="pools" class="table"
-       data-toggle="table"
+<table id="pools" class="bootstrap-table-init table"
        data-url="/totals"
        data-response-handler="formatTotals"
        data-filter-control="true"
@@ -47,77 +46,77 @@
 <!-- End of page scripts -->
 <script type="text/javascript">
 
+$(function() {
     $("table.table").on('load-success.bs.table', function (e, data) {
         sortFilterOptions(this);
     });
 
-    $(function () {
-        $('#resettotals').click(function () {
-            $('.modal-body').load('scripts/resettotals.ps1', function () {
-                $('.modal-title').text('Reset All Totals');
-                var myModal = new bootstrap.Modal(document.getElementById('myModal'));
-                myModal.show();
-            });
+    $('#resettotals').click(function () {
+        $('.modal-body').load('scripts/resettotals.ps1', function () {
+            $('.modal-title').text('Reset All Totals');
+            var myModal = new bootstrap.Modal(document.getElementById('myModal'));
+            myModal.show();
         });
     });
+});
 
-    function formatMinutes(data) {
-        return data.toFixed(2);
+function formatMinutes(data) {
+    return data.toFixed(2);
+}
+
+function formatPower(data) {
+    return data? (data/1000).toFixed(3) + " kWh" : '- kWh';
+}
+
+function formatDate(data) {
+    return new Date(data).toLocaleString();
+}
+
+function footerStyle() {
+    return {
+        classes: 'bg-primary text-white'
     }
+}
 
-    function formatPower(data) {
-        return data? (data/1000).toFixed(3) + " kWh" : '- kWh';
-    }
+function formatTotalFooter(data) { return this.field == "Pool"? "TOTAL":"&nbsp;" }
 
-    function formatDate(data) {
-        return new Date(data).toLocaleString();
-    }
+function formatEarningsFooter(data) {
+    var field = this.field
+    return formatPricesBTC(data.map(function (row) {
+        return +row[field]
+    }).reduce(function (sum, i) {
+        return sum + i
+    }, 0))
+}
 
-    function footerStyle() {
-        return {
-            classes: 'bg-primary text-white'
-        }
-    }
+function formatPowerFooter(data) {
+    var field = this.field
+    return formatPower(data.map(function (row) {
+        return +row[field]
+    }).reduce(function (sum, i) {
+        return sum + i
+    }, 0))
+}
 
-    function formatTotalFooter(data) { return this.field == "Pool"? "TOTAL":"&nbsp;" }
+function formatMinutesFooter(data) {
+    var field = this.field
+    return formatMinutes(data.map(function (row) {
+        return +row[field]
+    }).reduce(function (sum, i) {
+        return sum + i
+    }, 0))
+}
 
-    function formatEarningsFooter(data) {
-        var field = this.field
-        return formatPricesBTC(data.map(function (row) {
-            return +row[field]
-        }).reduce(function (sum, i) {
-            return sum + i
-        }, 0))
-    }
-
-    function formatPowerFooter(data) {
-        var field = this.field
-        return formatPower(data.map(function (row) {
-            return +row[field]
-        }).reduce(function (sum, i) {
-            return sum + i
-        }, 0))
-    }
-
-    function formatMinutesFooter(data) {
-        var field = this.field
-        return formatMinutes(data.map(function (row) {
-            return +row[field]
-        }).reduce(function (sum, i) {
-            return sum + i
-        }, 0))
-    }
-
-    function formatTotals(data) {
-        // This function can alter the returned data before building the table, formatting it in a way
-        // that is easier to display and manipulate in a table
+function formatTotals(data) {
+    // This function can alter the returned data before building the table, formatting it in a way
+    // that is easier to display and manipulate in a table
 
 
-        $.each(data, function (index, item) {
-            item.tPower = item.Power? parseFloat(item.Power) * 24 : null
-        });
+    $.each(data, function (index, item) {
+        item.tPower = item.Power? parseFloat(item.Power) * 24 : null
+    });
 
-        return data;
-    }
+    return data;
+}
 </script>
 <!--#include file="/parts/foot.html" -->

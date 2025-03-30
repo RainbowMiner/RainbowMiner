@@ -6,8 +6,7 @@
     "Suggested" and "Last Price" in BTC per day and "Unit" / "Rig Price" in BTC per day
 </p>
 
-<table id="mrrstats" class="table"
-        data-toggle="table"
+<table id="mrrstats" class="bootstrap-table-init table"
         data-url="/mrrstats"
         data-response-handler="formatMRRStats"
         data-filter-control="true"
@@ -39,28 +38,32 @@
 
 <!-- End of page scripts -->
 <script type="text/javascript">
+$(function() {
     $("table.table").on('load-success.bs.table', function (e, data) {
         sortFilterOptions(this);
     });
 
-    $(function () {
-        function refreshTable() {
-            if (!$("table#mrrstats tr.detail-view").length) $("table#mrrstats").bootstrapTable("refresh", { silent: true });
-            window.setTimeout(refreshTable, 600000);
-        }
-        window.setTimeout(refreshTable, 600000);
-    });
+    ConfigLoader.whenReady().then(function(cfg) {
+        const refreshTables = [
+            { selector: "table#mrrstats", interval: 600000 }
+        ];
 
-    function formatMRRStats(data) {
-        // This function can alter the returned data before building the table, formatting it in a way
-        // that is easier to display and manipulate in a table
-        $.each(data, function (index, item) {
-            item.tHashRate = (item.HashRate) ? formatHashRate(item.HashRate) : "-";
-            item.tRigs = parseInt(item.RigsRented) + parseInt(item.RigsAvail)
+        refreshTables.forEach(function(table) {
+            setInterval(function() {
+                if (!$(table.selector + " tr.detail-view").length) $(table.selector).bootstrapTable("refresh", { silent: true });
+            }, table.interval);
         });
-        return data;
-    }
+    });
+});
 
-
+function formatMRRStats(data) {
+    // This function can alter the returned data before building the table, formatting it in a way
+    // that is easier to display and manipulate in a table
+    $.each(data, function (index, item) {
+        item.tHashRate = (item.HashRate) ? formatHashRate(item.HashRate) : "-";
+        item.tRigs = parseInt(item.RigsRented) + parseInt(item.RigsAvail)
+    });
+    return data;
+}
 </script>
 <!--#include file="/parts/foot.html" -->

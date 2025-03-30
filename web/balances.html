@@ -9,8 +9,7 @@
         <a href="/balances?consolidate=1&as_csv=1" id="downloadconsolidates" class="btn btn-primary">CSV</a>
     </h5>
 
-    <table class="table"
-           data-toggle="table"
+    <table class="bootstrap-table-init table"
            data-url="/balances?consolidate=1"
            data-response-handler="formatConsolidateResponse"
            data-filter-control="true"
@@ -47,8 +46,7 @@
         Earnings by Currencies
         <a href="/balances?consolidate=1&as_csv=1" id="downloadbalances" class="btn btn-primary">CSV</a>
     </h5>
-    <table class="table"
-           data-toggle="table"
+    <table class="bootstrap-table-init table"
            data-url="/balances"
            data-response-handler="formatEarningsResponse"
            data-filter-control="true"
@@ -85,8 +83,7 @@
         Earning Events
         <a href="/earnings?as_csv=1" id="downloadearnings" class="btn btn-primary">CSV</a>
     </h5>
-    <table class="table"
-           data-toggle="table"
+    <table class="bootstrap-table-init table"
            data-url="/earnings"
            data-response-handler="formatEarningeventsResponse"
            data-filter-control="true"
@@ -120,60 +117,62 @@
 <!-- End of page scripts -->
 <script type="text/javascript">
 
+$(function() {
     $("table.table").on('load-success.bs.table', function (e, data) {
         sortFilterOptions(this);
     });
 
-    function formatPrices(data) {
-        return typeof data == "undefined" || data < 1e-10? "-" : data.toFixed(8);
+});
+
+function formatPrices(data) {
+    return typeof data == "undefined" || data < 1e-10? "-" : data.toFixed(8);
+}
+
+function formatDateStr(data) {
+    return typeof data == "undefined" ? "-" : '<nobr>' + data.split(/ /).join('</nobr> <nobr>') + '</nobr>';
+}
+
+function formatConsolidateResponse(data) {
+    // This function can alter the returned data before building the table, formatting it in a way
+    // that is easier to display and manipulate in a table
+    $.each(data, function (index, item) {
+    });
+    return data;
+}
+
+function footerStyle() {
+    return {
+        classes: 'bg-primary text-white'
     }
+}
 
-    function formatDateStr(data) {
-        return typeof data == "undefined" ? "-" : '<nobr>' + data.split(/ /).join('</nobr> <nobr>') + '</nobr>';
-    }
+function formatTotalFooter(data) { return "TOTAL" }
 
-    function formatConsolidateResponse(data) {
-        // This function can alter the returned data before building the table, formatting it in a way
-        // that is easier to display and manipulate in a table
-        $.each(data, function (index, item) {
-        });
-        return data;
-    }
+function formatEarningsFooter(data) {
+    var field = this.field
+    return formatPricesBTC(data.map(function (row) {
+        return +row[field]
+    }).reduce(function (sum, i) {
+        return sum + i
+    }, 0))
+}
 
-    function footerStyle() {
-        return {
-            classes: 'bg-primary text-white'
-        }
-    }
+function formatEarningsResponse(data) {
+    // This function can alter the returned data before building the table, formatting it in a way
+    // that is easier to display and manipulate in a table
+    $.each(data, function (index, item) {
+        item.teName = item.Name;
+        item.teCurrency = item.Currency;
+    });
+    return data;
+}
 
-    function formatTotalFooter(data) { return "TOTAL" }
-
-    function formatEarningsFooter(data) {
-        var field = this.field
-        return formatPricesBTC(data.map(function (row) {
-            return +row[field]
-        }).reduce(function (sum, i) {
-            return sum + i
-        }, 0))
-    }
-
-    function formatEarningsResponse(data) {
-        // This function can alter the returned data before building the table, formatting it in a way
-        // that is easier to display and manipulate in a table
-        $.each(data, function (index, item) {
-            item.teName = item.Name;
-            item.teCurrency = item.Currency;
-        });
-        return data;
-    }
-
-    function formatEarningeventsResponse(data) {
-        // This function can alter the returned data before building the table, formatting it in a way
-        // that is easier to display and manipulate in a table
-        $.each(data, function (index, item) {
-        });
-        return data;
-    }
-
+function formatEarningeventsResponse(data) {
+    // This function can alter the returned data before building the table, formatting it in a way
+    // that is easier to display and manipulate in a table
+    $.each(data, function (index, item) {
+    });
+    return data;
+}
 </script>
 <!--#include file="/parts/foot.html" -->

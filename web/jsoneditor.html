@@ -34,94 +34,96 @@
 var editor = null;
 
 $(function() {
+    ConfigLoader.whenReady().then(function(cfg) {
 
-    $("#jsonEditor").hide()
-    $("#json-input").hide()
+        $("#jsonEditor").hide()
+        $("#json-input").hide()
 
-    $("#select--ConfigName").change(function (event) {
-        var name = $("#select--ConfigName").val()
+        $("#select--ConfigName").change(function (event) {
+            var name = $("#select--ConfigName").val()
 
-        $("#json-input").empty()
-        $("#json-display").empty()
+            $("#json-input").empty()
+            $("#json-display").empty()
 
-        if (name.slice(-1)=='-') {
-            $("#jsonEditor").hide()
-        }
-        else {
-            $.ajax({
-                url: '/loadconfigjson',
-                data: {ConfigName: name},
-                success: function (result) {
-                    if (result.Success) {
-                        try {
-                            var data = JSON.parse(result.Data);
-                            $("#json-input").val(result.Data);
-                            editor = new JsonEditor('#json-display', data, {defaultCollapsed:true,rootCollapsable:false});
-                            $("#jsonEditor").show();
-                        } catch (ex) {
-                            alert('Wrong JSON Format: ' + ex);
+            if (name.slice(-1)=='-') {
+                $("#jsonEditor").hide()
+            }
+            else {
+                $.ajax({
+                    url: '/loadconfigjson',
+                    data: {ConfigName: name},
+                    success: function (result) {
+                        if (result.Success) {
+                            try {
+                                var data = JSON.parse(result.Data);
+                                $("#json-input").val(result.Data);
+                                editor = new JsonEditor('#json-display', data, {defaultCollapsed:true,rootCollapsable:false});
+                                $("#jsonEditor").show();
+                            } catch (ex) {
+                                alert('Wrong JSON Format: ' + ex);
+                            }
                         }
                     }
-                }
-            })
-        }
-    });
-
-    $("#formConfig").submit(function (event) {
-        // Stop form from submitting normally
-        event.preventDefault();
-
-        try {
-            var text = editor.text()
-            var data = JSON.parse(text)
-            $("#json-input").val(text)
-        } catch (ex) {
-            var err = ""+ex;
-            var pos = err.match(/position\s+(\d+)/);
-            if (pos) {
-                pos = parseInt(pos[1])
-                var min = pos - 30;
-                var max = pos + 30;
-                if (min < 0) {
-                    max -= min;
-                    min=0;
-                }
-                if (max > text.length) {
-                    max = text.length;
-                }
-                var eleft = Math.min(10, pos-min), eright = Math.min(10,max-pos-1);
-                var epos = pos-min-eleft;
-                err += '<p><pre>' + text.substring(min,max) + "\n" + (epos>0? " ".repeat(epos):'') + (eleft>0? "-".repeat(eleft):'') + '^' + (eright>0? "-".repeat(eright):'') + '</pre></p>';
+                })
             }
-            document.querySelector('.modal-body').innerHTML = err;
-            document.querySelector('.modal-title').textContent = 'Error in JSON format';
-            var myModal = new bootstrap.Modal(document.getElementById('myModal'));
-            myModal.show();
-            return false;
-        }
-
-        if (globalconfig.IsLocked) {
-            document.querySelector('.modal-body').innerHTML = 'To be able to save, manually set parameter "APIlockConfig" to "0" in config.txt';
-            document.querySelector('.modal-title').textContent = 'Warning: config lock is enabled';
-            var myModal = new bootstrap.Modal(document.getElementById('myModal'));
-            myModal.show();
-            return false;
-        }
-        $.post("/saveconfigjson", $(this).serialize()).done(function (data) {
-            var mbody, mtitle;
-            if (data.Success) {
-                mbody = 'RainbowMiner will pick up the new configuration after the current round has ended.';
-                mtitle = 'Configuration saved!';
-            } else {
-                mbody = 'Something went wrong or the configuration is locked via APILockConfig in config.txt';
-                mtitle = 'Configuration NOT saved!';
-            }
-            document.querySelector('.modal-body').innerHTML = mbody;
-            document.querySelector('.modal-title').textContent = mtitle;
-            var myModal = new bootstrap.Modal(document.getElementById('myModal'));
-            myModal.show();
         });
-    })
+
+        $("#formConfig").submit(function (event) {
+            // Stop form from submitting normally
+            event.preventDefault();
+
+            try {
+                var text = editor.text()
+                var data = JSON.parse(text)
+                $("#json-input").val(text)
+            } catch (ex) {
+                var err = ""+ex;
+                var pos = err.match(/position\s+(\d+)/);
+                if (pos) {
+                    pos = parseInt(pos[1])
+                    var min = pos - 30;
+                    var max = pos + 30;
+                    if (min < 0) {
+                        max -= min;
+                        min=0;
+                    }
+                    if (max > text.length) {
+                        max = text.length;
+                    }
+                    var eleft = Math.min(10, pos-min), eright = Math.min(10,max-pos-1);
+                    var epos = pos-min-eleft;
+                    err += '<p><pre>' + text.substring(min,max) + "\n" + (epos>0? " ".repeat(epos):'') + (eleft>0? "-".repeat(eleft):'') + '^' + (eright>0? "-".repeat(eright):'') + '</pre></p>';
+                }
+                document.querySelector('.modal-body').innerHTML = err;
+                document.querySelector('.modal-title').textContent = 'Error in JSON format';
+                var myModal = new bootstrap.Modal(document.getElementById('myModal'));
+                myModal.show();
+                return false;
+            }
+
+            if (cfg.IsLocked) {
+                document.querySelector('.modal-body').innerHTML = 'To be able to save, manually set parameter "APIlockConfig" to "0" in config.txt';
+                document.querySelector('.modal-title').textContent = 'Warning: config lock is enabled';
+                var myModal = new bootstrap.Modal(document.getElementById('myModal'));
+                myModal.show();
+                return false;
+            }
+            $.post("/saveconfigjson", $(this).serialize()).done(function (data) {
+                var mbody, mtitle;
+                if (data.Success) {
+                    mbody = 'RainbowMiner will pick up the new configuration after the current round has ended.';
+                    mtitle = 'Configuration saved!';
+                } else {
+                    mbody = 'Something went wrong or the configuration is locked via APILockConfig in config.txt';
+                    mtitle = 'Configuration NOT saved!';
+                }
+                document.querySelector('.modal-body').innerHTML = mbody;
+                document.querySelector('.modal-title').textContent = mtitle;
+                var myModal = new bootstrap.Modal(document.getElementById('myModal'));
+                myModal.show();
+            });
+        })
+    });
 });
 </script>
 <!--#include file="/parts/foot.html" -->

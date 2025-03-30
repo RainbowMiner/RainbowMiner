@@ -82,85 +82,87 @@ $(function() {
         return false;
     });
 
-    var template = Handlebars.compile($("#coinsetup_template").html());
+    ConfigLoader.whenReady().then(function(cfg) {
+        const template = Handlebars.compile($("#coinsetup_template").html());
 
-    function loadconfig() {
-        $('#accordion').empty();
-        $.ajax({
-            url: '/loadconfig',
-            data: {ConfigName: "Coins"},
-            success: function (result) {
-                var common = {
-                    Wallet: "Enter global wallet address (optional, will substitute string \"\${{coinsymbol}}\" in pools.config.txt)",
-                    Penalty: "Enter penalty in percent. This value will decrease all reported values.",
-                    MinHashrate: "Enter minimum hashrate at a pool (units allowed, e.g. 12GH)",
-                    MinWorkers: "Enter minimum amount of workers at a pool (units allowed, e.g. 5k)",
-                    MaxTimeToFind: "Enter maximum average time to find a block (units allowed, e.h. 1h=one hour, default unit is s=seconds)",
-                    MinProfitPercent: "Enter allowed minimum profit for post block mining (in percent of best miner's profit)",
-                    EnableAutoPool: "Automatically enable \"{{coinsymbol}}\" for pools activated in pools.config.txt with EnableAutoCoin=\"1\"",
-                    PostBlockMining: "Enter timespan to force mining, after a block has been found at enabled pools (units allowed, e.h. 1h=one hour, default unit is s=seconds)",
-                    Comment: "Optionally enter a comment (e.g. name of exchange)"
-                }
+        function loadconfig() {
+            $('#accordion').empty();
+            $.ajax({
+                url: '/loadconfig',
+                data: {ConfigName: "Coins"},
+                success: function (result) {
+                    var common = {
+                        Wallet: "Enter global wallet address (optional, will substitute string \"\${{coinsymbol}}\" in pools.config.txt)",
+                        Penalty: "Enter penalty in percent. This value will decrease all reported values.",
+                        MinHashrate: "Enter minimum hashrate at a pool (units allowed, e.g. 12GH)",
+                        MinWorkers: "Enter minimum amount of workers at a pool (units allowed, e.g. 5k)",
+                        MaxTimeToFind: "Enter maximum average time to find a block (units allowed, e.h. 1h=one hour, default unit is s=seconds)",
+                        MinProfitPercent: "Enter allowed minimum profit for post block mining (in percent of best miner's profit)",
+                        EnableAutoPool: "Automatically enable \"{{coinsymbol}}\" for pools activated in pools.config.txt with EnableAutoCoin=\"1\"",
+                        PostBlockMining: "Enter timespan to force mining, after a block has been found at enabled pools (units allowed, e.h. 1h=one hour, default unit is s=seconds)",
+                        Comment: "Optionally enter a comment (e.g. name of exchange)"
+                    }
 
-                for(var i=1; i<2; i++) {
-                    var item = {
-                        title: "Enter a new coin",
-                        coinsymbol: "Newcoin",
-                        common: [{coinsymbol:"Newcoin",key:"CoinSymbol",text:"Enter a valid coin symbol (no spaces!)",value:"",type:"text"}]
-                    }
-                    $.each(common,function(key,val) {
-                        item.common.push({coinsymbol:item.coinsymbol,key:key,text:val.replace(/{{coinsymbol}}/,'???'),value:"",type:key.match(/Enable|Disable/)? "bool":"text"})
-                    })
-                    $('#accordion').append(template(item))
-                }
-                $.each(result, function( coinsymbol, data ) {
-                    var item = {
-                        title: coinsymbol,
-                        coinsymbol: coinsymbol,
-                        common: []
-                    }
-                    $.each(common,function(key,val) {
-                        if (typeof data[key] !== "undefined") {
-                            item.common.push({coinsymbol:item.coinsymbol,key:key,text:val.replace(/{{coinsymbol}}/,item.coinsymbol),value:data[key],type:key.match(/Enable|Disable/)? "bool":"text"})
+                    for(var i=1; i<2; i++) {
+                        var item = {
+                            title: "Enter a new coin",
+                            coinsymbol: "Newcoin",
+                            common: [{coinsymbol:"Newcoin",key:"CoinSymbol",text:"Enter a valid coin symbol (no spaces!)",value:"",type:"text"}]
                         }
-                    })
-                    item.common.push({coinsymbol:item.coinsymbol,key:"RemoveCoin",text:"remove coin",value:"1",type:"checkbox"})
+                        $.each(common,function(key,val) {
+                            item.common.push({coinsymbol:item.coinsymbol,key:key,text:val.replace(/{{coinsymbol}}/,'???'),value:"",type:key.match(/Enable|Disable/)? "bool":"text"})
+                        })
+                        $('#accordion').append(template(item))
+                    }
+                    $.each(result, function( coinsymbol, data ) {
+                        var item = {
+                            title: coinsymbol,
+                            coinsymbol: coinsymbol,
+                            common: []
+                        }
+                        $.each(common,function(key,val) {
+                            if (typeof data[key] !== "undefined") {
+                                item.common.push({coinsymbol:item.coinsymbol,key:key,text:val.replace(/{{coinsymbol}}/,item.coinsymbol),value:data[key],type:key.match(/Enable|Disable/)? "bool":"text"})
+                            }
+                        })
+                        item.common.push({coinsymbol:item.coinsymbol,key:"RemoveCoin",text:"remove coin",value:"1",type:"checkbox"})
                 
-                    $('#accordion').append(template(item))                
-                })
-                $('#accordion').append('<div class="accordion-item"><div class="accordion-body text-center"><button type="submit" class="btn btn-primary">Submit</button></div></div>');
-            }
-        });
-    }
-
-    loadconfig();
-
-    $("#formConfig").submit(function (event) {
-        // Stop form from submitting normally
-        event.preventDefault();
-        if (globalconfig.IsLocked) {
-            document.querySelector('.modal-body').innerHTML = 'To be able to save, manually set parameter "APIlockConfig" to "0" in config.txt';
-            document.querySelector('.modal-title').textContent = 'Warning: config lock is enabled';
-            var myModal = new bootstrap.Modal(document.getElementById('myModal'));
-            myModal.show();
-            return false;
+                        $('#accordion').append(template(item))                
+                    })
+                    $('#accordion').append('<div class="accordion-item"><div class="accordion-body text-center"><button type="submit" class="btn btn-primary">Submit</button></div></div>');
+                }
+            });
         }
-        $.post("/saveconfig", $(this).serialize()).done(function (data) {
-            var mbody, mtitle;
-            if (data.Success) {
-                mbody = 'RainbowMiner will pick up the new configuration after the current round has ended.';
-                mtitle = 'Configuration saved!';
-            } else {
-                mbody = 'Something went wrong or the configuration is locked via APILockConfig in config.txt';
-                mtitle = 'Configuration NOT saved!';
+
+        loadconfig();
+
+        $("#formConfig").submit(function (event) {
+            // Stop form from submitting normally
+            event.preventDefault();
+            if (cfg.IsLocked) {
+                document.querySelector('.modal-body').innerHTML = 'To be able to save, manually set parameter "APIlockConfig" to "0" in config.txt';
+                document.querySelector('.modal-title').textContent = 'Warning: config lock is enabled';
+                var myModal = new bootstrap.Modal(document.getElementById('myModal'));
+                myModal.show();
+                return false;
             }
-            document.querySelector('.modal-body').innerHTML = mbody;
-            document.querySelector('.modal-title').textContent = mtitle;
-            var myModal = new bootstrap.Modal(document.getElementById('myModal'));
-            myModal.show();
-            loadconfig();
+            $.post("/saveconfig", $(this).serialize()).done(function (data) {
+                var mbody, mtitle;
+                if (data.Success) {
+                    mbody = 'RainbowMiner will pick up the new configuration after the current round has ended.';
+                    mtitle = 'Configuration saved!';
+                } else {
+                    mbody = 'Something went wrong or the configuration is locked via APILockConfig in config.txt';
+                    mtitle = 'Configuration NOT saved!';
+                }
+                document.querySelector('.modal-body').innerHTML = mbody;
+                document.querySelector('.modal-title').textContent = mtitle;
+                var myModal = new bootstrap.Modal(document.getElementById('myModal'));
+                myModal.show();
+                loadconfig();
+            });
         });
-    })
+    });
 });
 </script>
 <!--#include file="/parts/foot.html" -->

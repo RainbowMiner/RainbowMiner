@@ -50,7 +50,7 @@ function setButtonColors() {
 }
 
 $(function () {
-    var template = Handlebars.compile($("#miner_template").html());
+    const template = Handlebars.compile($("#miner_template").html());
 
     (function updateConsole() {
         $.ajax({

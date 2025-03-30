@@ -9,8 +9,7 @@
     </div>
 </div>
 
-<table id="miners" class="table"
-  data-toggle="table"
+<table id="miners" class="bootstrap-table-init table"
   data-url="/activity"
   data-response-handler="formatActivity"
   data-filter-control="true"
@@ -50,76 +49,78 @@
 <!-- End of page scripts -->
 <script type="text/javascript">
 
+$(function() {
     $("table.table").on('load-success.bs.table', function (e, data) {
         sortFilterOptions(this);
     });
+});
 
-    function colorStatus(row, index) {
-        return { classes: row.Crashed? (row.Crashed == 1? "Offline":"Paused"):"Standard" };
-    }
+function colorStatus(row, index) {
+    return { classes: row.Crashed? (row.Crashed == 1? "Offline":"Paused"):"Standard" };
+}
 
-    function formatActivity(data) {
-        // This function can alter the returned data before building the table, formatting it in a way
-        // that is easier to display and manipulate in a table
-        $.each(data, function (index, item) {
+function formatActivity(data) {
+    // This function can alter the returned data before building the table, formatting it in a way
+    // that is easier to display and manipulate in a table
+    $.each(data, function (index, item) {
             
-            if (item.Crashed) {
-                item.tStatus = item.Crashed == 1 ? "crash" : "wd";
-            } else {
-                item.tStatus = "ok";
-            }
-            // Format the algorithm(s)
-            var algorithms = new Array();
-            var ratios = new Array();
-            for (var i = 0; i < item.Algorithm.length; i++) {
-                algorithms.push(formatAlgorithm(item.Algorithm[i]));
-                ratios.push(typeof item.Ratio != "undefined"? (Math.round(parseFloat(item.Ratio[i]) * 10000)/100) + ' %' : '-.-- %');
-            }
-            item.tAlgorithms = algorithms.join(",");
-            item.tPool = item.Pool.join(",");
-            item.tRatio = ratios.join(",");
+        if (item.Crashed) {
+            item.tStatus = item.Crashed == 1 ? "crash" : "wd";
+        } else {
+            item.tStatus = "ok";
+        }
+        // Format the algorithm(s)
+        var algorithms = new Array();
+        var ratios = new Array();
+        for (var i = 0; i < item.Algorithm.length; i++) {
+            algorithms.push(formatAlgorithm(item.Algorithm[i]));
+            ratios.push(typeof item.Ratio != "undefined"? (Math.round(parseFloat(item.Ratio[i]) * 10000)/100) + ' %' : '-.-- %');
+        }
+        item.tAlgorithms = algorithms.join(",");
+        item.tPool = item.Pool.join(",");
+        item.tRatio = ratios.join(",");
 
-            // Format the speed(s)
-            if (Array.isArray(item.Speed)) {
-                item.tPrimarySpeed = item.Speed[0];
-                item.tSecondarySpeed = item.Speed[1];
-            } else {
-                item.tPrimarySpeed = item.Speed;
-            }
+        // Format the speed(s)
+        if (Array.isArray(item.Speed)) {
+            item.tPrimarySpeed = item.Speed[0];
+            item.tSecondarySpeed = item.Speed[1];
+        } else {
+            item.tPrimarySpeed = item.Speed;
+        }
 
-            // Format the device(s)
-            item.tDevices = item.Device.toString();
-            item.Name = item.Name.split(/\-/)[0];
+        // Format the device(s)
+        item.tDevices = item.Device.toString();
+        item.Name = item.Name.split(/\-/)[0];
 
-            // Format the Profile(s)
-            var tOC = new Array();
-            if (item.OCP) {
-                if (item.OCmode == "msia") {
-                    tOC.push("MSIA" + item.OCP);
-                } else if (item.OCmode == "ocp") {
-                    var cnt = item.Device.length;
-                    $.each(item.Device, function (ix, dev) {
-                        if (dev != "CPU" && item.OCP[dev]) {
-                            if (cnt == 1) { tOC.push(item.OCP[dev]); }
-                            else {
-                                tOC.push(dev + "=" + item.OCP[dev]);
-                            }
+        // Format the Profile(s)
+        var tOC = new Array();
+        if (item.OCP) {
+            if (item.OCmode == "msia") {
+                tOC.push("MSIA" + item.OCP);
+            } else if (item.OCmode == "ocp") {
+                var cnt = item.Device.length;
+                $.each(item.Device, function (ix, dev) {
+                    if (dev != "CPU" && item.OCP[dev]) {
+                        if (cnt == 1) { tOC.push(item.OCP[dev]); }
+                        else {
+                            tOC.push(dev + "=" + item.OCP[dev]);
                         }
-                    });
-                }
+                    }
+                });
             }
-            if (!tOC.length) { tOC.push("-"); }
-            item.tOC = tOC.join('<br />');
+        }
+        if (!tOC.length) { tOC.push("-"); }
+        item.tOC = tOC.join('<br />');
 
-            var powerdraw = item.TotalPowerDraw? parseFloat(item.TotalPowerDraw) : 0;
-            var profit    = item.TotalProfit ? parseFloat(item.TotalProfit)*1e8 : 0;
-            item.tPowerDraw = item.TotalPowerDraw? Math.round(powerdraw*1000)/1000 + ' kWh':'-.---';
-            item.tProfit = item.TotalProfit ? Math.round(profit*100)/100 + ' sat' : '-.--';
-            item.tActive = Math.round(parseFloat(item.Active) * 100) / 100;
-            item.tEff = item.TotalProfit && item.TotalPowerDraw && powerdraw && item.tActive > 1.0 ? Math.round(profit / powerdraw * 100) / 100 : '-.--';
-            item.tDonation = item.Donation ? 'for dev':'for you';
-        });
-        return data;
-    }
+        var powerdraw = item.TotalPowerDraw? parseFloat(item.TotalPowerDraw) : 0;
+        var profit    = item.TotalProfit ? parseFloat(item.TotalProfit)*1e8 : 0;
+        item.tPowerDraw = item.TotalPowerDraw? Math.round(powerdraw*1000)/1000 + ' kWh':'-.---';
+        item.tProfit = item.TotalProfit ? Math.round(profit*100)/100 + ' sat' : '-.--';
+        item.tActive = Math.round(parseFloat(item.Active) * 100) / 100;
+        item.tEff = item.TotalProfit && item.TotalPowerDraw && powerdraw && item.tActive > 1.0 ? Math.round(profit / powerdraw * 100) / 100 : '-.--';
+        item.tDonation = item.Donation ? 'for dev':'for you';
+    });
+    return data;
+}
 </script>
 <!--#include file="/parts/foot.html" -->

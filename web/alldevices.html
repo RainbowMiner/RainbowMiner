@@ -3,8 +3,7 @@
   <h1 id="title" data-navbaractive="navalldevices" class="h2">All Devices</h1>
 </div>
 <p>These are all selectable devices (GPUs and CPUs) detected by RainbowMiner.</p>
-<table id="devices" class="table"
-  data-toggle="table"
+<table id="devices" class="bootstrap-table-init table"
   data-url="/alldevices"
   data-response-handler="formatDevices"
   data-cache="false"
@@ -31,10 +30,10 @@
 
 <!-- End of page scripts -->
 <script type="text/javascript">
-  function formatDevices(data) {
-  // This function can alter the returned data before building the table, formatting it in a way
-  // that is easier to display and manipulate in a table
-  $.each(data, function(index, item) {
+function formatDevices(data) {
+    // This function can alter the returned data before building the table, formatting it in a way
+    // that is easier to display and manipulate in a table
+    $.each(data, function(index, item) {
         // Format the device(s)
         if (item.OpenCL) {
             item.tMemory = typeof item.OpenCL.GlobalMemSize !== "undefined" ? item.OpenCL.GlobalMemSize * 1.0 : -1
@@ -46,9 +45,9 @@
             item.tCores = item.Data.Cores ? item.Data.Cores + "/" + item.Data.Threads : "N/A"
         }
 
-      item.tClock = typeof (item.Data.Clock) !== "undefined" ? Number(item.Data.Clock) : -1
-  });
-  return data;
+        item.tClock = typeof (item.Data.Clock) !== "undefined" ? Number(item.Data.Clock) : -1
+    });
+    return data;
 }
 
 function formatDevicesClock(value) {

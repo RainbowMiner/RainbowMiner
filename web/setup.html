@@ -1009,148 +1009,150 @@ function update_miningheatcontrol() {
 }
 
 $(function() {
-    $.ajax({
-        url: '/userconfig', success: function (result) {
-            $("input.form-control,select.form-select,input.form-range").each(function(index) {
-                var conf = $(this).attr('id').replace(/^input/, "")
-                var res = result[conf];
-                if (typeof res == "boolean") { res = res? 1:0 }
-                else if (conf == "RunMode" || conf == "MiningMode") { res = res.toLowerCase(); }
-                $(this).val(res)
-            })
-            update_miningheatcontrol()
-            var pools = new Array(), excludepools = new Array()
-            $.each(result.Pools, function (key, data) {
-                var checked = result.PoolName.some(item => item.toLowerCase() === key.toLowerCase())? " checked":"";
-                var aesym = (typeof globalconfig.AutoexPools[key] !== "undefined")? ' <svg class="crypto-symbol"><use href="#'+globalconfig.AutoexPools[key]+'-symbol"/></svg>':'';
-                pools.push('<div class="form-check form-check-inline"><input type="checkbox" class="form-check-input" id="pool' + key + '" name="PoolName[]" value="'+key+'"' + checked + '><label class="form-check-label" for="pool' + key + '">' + key + aesym + '</label></div>')
-                checked = result.ExcludePoolName.some(item => item.toLowerCase() === key.toLowerCase())? " checked":"";
-                excludepools.push('<div class="form-check form-check-inline"><input type="checkbox" class="form-check-input" id="excludepool' + key + '" name="ExcludePoolName[]" value="' + key + '"' + checked + '><label class="form-check-label" for="excludepool' + key + '">' + key + aesym + '</label></div>')
-            })
-            $("#pools").html(pools.join(''));
-            $("#excludepools").html(excludepools.join(''));
+    ConfigLoader.whenReady().then(function(cfg) {
+        $.ajax({
+            url: '/userconfig', success: function (result) {
+                $("input.form-control,select.form-select,input.form-range").each(function(index) {
+                    var conf = $(this).attr('id').replace(/^input/, "")
+                    var res = result[conf];
+                    if (typeof res == "boolean") { res = res? 1:0 }
+                    else if (conf == "RunMode" || conf == "MiningMode") { res = res.toLowerCase(); }
+                    $(this).val(res)
+                })
+                update_miningheatcontrol()
+                var pools = new Array(), excludepools = new Array()
+                $.each(result.Pools, function (key, data) {
+                    var checked = result.PoolName.some(item => item.toLowerCase() === key.toLowerCase())? " checked":"";
+                    var aesym = (typeof cfg.AutoexPools[key] !== "undefined")? ' <svg class="crypto-symbol"><use href="#'+cfg.AutoexPools[key]+'-symbol"/></svg>':'';
+                    pools.push('<div class="form-check form-check-inline"><input type="checkbox" class="form-check-input" id="pool' + key + '" name="PoolName[]" value="'+key+'"' + checked + '><label class="form-check-label" for="pool' + key + '">' + key + aesym + '</label></div>')
+                    checked = result.ExcludePoolName.some(item => item.toLowerCase() === key.toLowerCase())? " checked":"";
+                    excludepools.push('<div class="form-check form-check-inline"><input type="checkbox" class="form-check-input" id="excludepool' + key + '" name="ExcludePoolName[]" value="' + key + '"' + checked + '><label class="form-check-label" for="excludepool' + key + '">' + key + aesym + '</label></div>')
+                })
+                $("#pools").html(pools.join(''));
+                $("#excludepools").html(excludepools.join(''));
 
-            var serverconfigname = new Array();
-            $.each(new Array("algorithms","coins","config","miners","ocprofiles","pools","scheduler"), function (key, data) {
-                var checked = result.ServerConfigName.some(item => item.toLowerCase() === data.toLowerCase())? " checked":"";
-                serverconfigname.push('<div class="form-check form-check-inline"><input type="checkbox" class="form-check-input" id="serverconfig' + data + '" name="ServerConfigName[]" value="'+data+'"' + checked + '><label class="form-check-label" for="serverconfig' + data + '">' + data + '</label></div>')
-            })
-            $("#serverconfigname").html(serverconfigname.join(''));
+                var serverconfigname = new Array();
+                $.each(new Array("algorithms","coins","config","miners","ocprofiles","pools","scheduler"), function (key, data) {
+                    var checked = result.ServerConfigName.some(item => item.toLowerCase() === data.toLowerCase())? " checked":"";
+                    serverconfigname.push('<div class="form-check form-check-inline"><input type="checkbox" class="form-check-input" id="serverconfig' + data + '" name="ServerConfigName[]" value="'+data+'"' + checked + '><label class="form-check-label" for="serverconfig' + data + '">' + data + '</label></div>')
+                })
+                $("#serverconfigname").html(serverconfigname.join(''));
 
-            $("#inputAPIauth").change(function() {
-            if ($(this).val()=="1") {
-                $(".is--auth").show();
-            } else {
-                $(".is--auth").hide();
+                $("#inputAPIauth").change(function() {
+                    if ($(this).val()=="1") {
+                        $(".is--auth").show();
+                    } else {
+                        $(".is--auth").hide();
+                    }
+                });
+                $("#inputRunMode").change(function() {
+                    if ($(this).val()=="client") {
+                        $(".is--client").show();
+                    } else {
+                        $(".is--client").hide();
+                    }
+                });
+                $("#inputEnableServerConfig").change(function() {
+                    if ($("#inputRunMode").val()=="client" && $(this).val()=="1") {
+                        $(".is--serverconfig").show();
+                    } else {
+                        $(".is--serverconfig").hide();
+                    }
+                });
+                $("#inputEnableMinerStatus").change(function() {
+                    if ($(this).val()=="1") {
+                        $(".is--reporting").show();
+                    } else {
+                        $(".is--reporting").hide();
+                    }
+                });
+                $("#inputEnableOCProfiles").change(function() {
+                    if ($(this).val()=="1") {
+                        $(".is--ocprofiles").show();
+                    } else {
+                        $(".is--ocprofiles").hide();
+                    }
+                });
+                $("#inputEnableFastlaneBenchmark").change(function() {
+                    if ($(this).val()=="1") {
+                        $(".is--fastlane").show();
+                    } else {
+                        $(".is--fastlane").hide();
+                    }
+                });
+                $("input[type=checkbox][name='DeviceName[]'][value='CPU']").change(function() {
+                    if (this.checked && !$("input[type=checkbox][name='ExcludeDeviceName[]'][value='CPU']").is(':checked')) {
+                        $('.is--cpu').show();
+                    } else {
+                        $('.is--cpu').hide();
+                    }
+                });
+                $("input[type=checkbox][name='ExcludeDeviceName[]'][value='CPU']").change(function() {
+                    if (!this.checked && $("input[type=checkbox][name='DeviceName[]'][value='CPU']").is(':checked')) {
+                        $('.is--cpu').show();
+                    } else {
+                        $('.is--cpu').hide();
+                    }
+                });
+                $("#inputAPIauth").trigger("change");
+                $("#inputRunMode").trigger("change");
+                $("#inputEnableServerConfig").trigger("change");
+                $("#inputEnableMinerStatus").trigger("change");
+                $("#inputEnableOCProfiles").trigger("change");
+                $("#inputEnableFastlaneBenchmark").trigger("change");
             }
-            });
-            $("#inputRunMode").change(function() {
-            if ($(this).val()=="client") {
-                $(".is--client").show();
-            } else {
-                $(".is--client").hide();
-            }
-            });
-            $("#inputEnableServerConfig").change(function() {
-            if ($("#inputRunMode").val()=="client" && $(this).val()=="1") {
-                $(".is--serverconfig").show();
-            } else {
-                $(".is--serverconfig").hide();
-            }
-            });
-            $("#inputEnableMinerStatus").change(function() {
-            if ($(this).val()=="1") {
-                $(".is--reporting").show();
-            } else {
-                $(".is--reporting").hide();
-            }
-            });
-            $("#inputEnableOCProfiles").change(function() {
-            if ($(this).val()=="1") {
-                $(".is--ocprofiles").show();
-            } else {
-                $(".is--ocprofiles").hide();
-            }
-            });
-            $("#inputEnableFastlaneBenchmark").change(function() {
-            if ($(this).val()=="1") {
-                $(".is--fastlane").show();
-            } else {
-                $(".is--fastlane").hide();
-            }
-            });
-            $("input[type=checkbox][name='DeviceName[]'][value='CPU']").change(function() {
-                if (this.checked && !$("input[type=checkbox][name='ExcludeDeviceName[]'][value='CPU']").is(':checked')) {
-                    $('.is--cpu').show();
-                } else {
-                    $('.is--cpu').hide();
-                }
-            });
-            $("input[type=checkbox][name='ExcludeDeviceName[]'][value='CPU']").change(function() {
-                if (!this.checked && $("input[type=checkbox][name='DeviceName[]'][value='CPU']").is(':checked')) {
-                    $('.is--cpu').show();
-                } else {
-                    $('.is--cpu').hide();
-                }
-            });
-            $("#inputAPIauth").trigger("change");
-            $("#inputRunMode").trigger("change");
-            $("#inputEnableServerConfig").trigger("change");
-            $("#inputEnableMinerStatus").trigger("change");
-            $("#inputEnableOCProfiles").trigger("change");
-            $("#inputEnableFastlaneBenchmark").trigger("change");
-        }
-    });
-    $.ajax({
-        url: '/getdeviceconfig', success: function (result) {
-            var devices = new Array(), excludedevices = new Array(), cpuenabled = false, cpudisabled = false, maxthreads = 0
-            $.each(result, function (key, data) {
-                devices.push('<div class="form-check form-check-inline"><input type="checkbox" class="form-check-input" id="device' + key + '" name="DeviceName[]" value="'+data.Name+'"' + (data.Selected? ' checked':'') + '><label class="form-check-label" for="device' + key + '">' + data.Name + '</label></div>')
-                excludedevices.push('<div class="form-check form-check-inline"><input type="checkbox" class="form-check-input" id="excludedevice' + key + '" name="ExcludeDeviceName[]" value="'+data.Name+'"' + (data.Excluded? ' checked':'') + '><label class="form-check-label" for="excludedevice' + key + '">' + data.Name + '</label></div>')
-                if (data.Name == 'CPU') {
-                    if (data.Selected) cpuenabled = true;
-                    if (data.Excluded) cpudisabled = true;
-                    maxthreads = data.Threads;
-                }
-            })
-            $("#devices").html(devices.join(''));
-            $("#excludedevices").html(excludedevices.join(''));
-            if (cpuenabled && !cpudisabled)
-                $('.is--cpu').show();
-            else 
-                $('.is--cpu').hide();
-            $('#inputCPUMiningThreads').attr('max',maxthreads);
-        }
-    });
-    $("#formConfig").submit(function (event) {
-        // Stop form from submitting normally
-        event.preventDefault();
-        if (globalconfig.IsLocked) {
-            document.querySelector('.modal-body').innerHTML = 'To be able to save, manually set parameter "APIlockConfig" to "0" in config.txt';
-            document.querySelector('.modal-title').textContent = 'Warning: config lock is enabled';
-            var myModal = new bootstrap.Modal(document.getElementById('myModal'));
-            myModal.show();
-            return false;
-        } else if ($("#inputAPIlockConfig").val() == "1") {
-            if (!confirm("Warning: you are about to lock the config.\nYou will have to manually set parameter \"APIlockConfig\" to \"0\" in config.txt to reset this.\n\nDo you really want to proceed?"))
-            return false;
-        }
-        $.post("/saveconfig", $(this).serialize()).done(function (data) {
-            var mbody, mtitle;
-            if (data.Success) {
-                mbody = 'RainbowMiner will pick up the new configuration after the current round has ended.';
-                mtitle = 'Configuration saved!';
-            } else {
-                mbody = 'Something went wrong or the configuration is locked via APILockConfig in config.txt';
-                mtitle = 'Configuration NOT saved!';
-            }
-            document.querySelector('.modal-body').innerHTML = mbody;
-            document.querySelector('.modal-title').textContent = mtitle;
-            var myModal = new bootstrap.Modal(document.getElementById('myModal'));
-            myModal.show();
         });
-    })
-    $("#inputMiningHeatControl").change(update_miningheatcontrol);
+        $.ajax({
+            url: '/getdeviceconfig', success: function (result) {
+                var devices = new Array(), excludedevices = new Array(), cpuenabled = false, cpudisabled = false, maxthreads = 0
+                $.each(result, function (key, data) {
+                    devices.push('<div class="form-check form-check-inline"><input type="checkbox" class="form-check-input" id="device' + key + '" name="DeviceName[]" value="'+data.Name+'"' + (data.Selected? ' checked':'') + '><label class="form-check-label" for="device' + key + '">' + data.Name + '</label></div>')
+                    excludedevices.push('<div class="form-check form-check-inline"><input type="checkbox" class="form-check-input" id="excludedevice' + key + '" name="ExcludeDeviceName[]" value="'+data.Name+'"' + (data.Excluded? ' checked':'') + '><label class="form-check-label" for="excludedevice' + key + '">' + data.Name + '</label></div>')
+                    if (data.Name == 'CPU') {
+                        if (data.Selected) cpuenabled = true;
+                        if (data.Excluded) cpudisabled = true;
+                        maxthreads = data.Threads;
+                    }
+                })
+                $("#devices").html(devices.join(''));
+                $("#excludedevices").html(excludedevices.join(''));
+                if (cpuenabled && !cpudisabled)
+                    $('.is--cpu').show();
+                else 
+                    $('.is--cpu').hide();
+                $('#inputCPUMiningThreads').attr('max',maxthreads);
+            }
+        });
+        $("#formConfig").submit(function (event) {
+            // Stop form from submitting normally
+            event.preventDefault();
+            if (cfg.IsLocked) {
+                document.querySelector('.modal-body').innerHTML = 'To be able to save, manually set parameter "APIlockConfig" to "0" in config.txt';
+                document.querySelector('.modal-title').textContent = 'Warning: config lock is enabled';
+                var myModal = new bootstrap.Modal(document.getElementById('myModal'));
+                myModal.show();
+                return false;
+            } else if ($("#inputAPIlockConfig").val() == "1") {
+                if (!confirm("Warning: you are about to lock the config.\nYou will have to manually set parameter \"APIlockConfig\" to \"0\" in config.txt to reset this.\n\nDo you really want to proceed?"))
+                return false;
+            }
+            $.post("/saveconfig", $(this).serialize()).done(function (data) {
+                var mbody, mtitle;
+                if (data.Success) {
+                    mbody = 'RainbowMiner will pick up the new configuration after the current round has ended.';
+                    mtitle = 'Configuration saved!';
+                } else {
+                    mbody = 'Something went wrong or the configuration is locked via APILockConfig in config.txt';
+                    mtitle = 'Configuration NOT saved!';
+                }
+                document.querySelector('.modal-body').innerHTML = mbody;
+                document.querySelector('.modal-title').textContent = mtitle;
+                var myModal = new bootstrap.Modal(document.getElementById('myModal'));
+                myModal.show();
+            });
+        })
+        $("#inputMiningHeatControl").change(update_miningheatcontrol);
+    });
 });
 </script>
 <!--#include file="/parts/foot.html" -->

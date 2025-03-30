@@ -4,8 +4,7 @@
 </div>
 
 <h3 id="h-miners" class="h-selector">Running Miners on <span class="workername"></span> <a href="#" id="pauseminers" class="btn btn-primary">Pause / Restart</a> <a href="#" id="lockminers" class="btn btn-primary">Lock / Unlock</a> <a href="#" id="reboot" class="btn btn-danger">Reboot</a></h3>
-<table id="miners" class="table mb-4"
-       data-toggle="table"
+<table id="miners" class="bootstrap-table-init table mb-4"
        data-url="/runningminers"
        data-response-handler="formatRunningMiners"
        data-sort-order="desc"
@@ -38,8 +37,7 @@
 
 <div id="remoteworkersandminers">
     <h3 class="mt-4 h-selector" id="h-remoteworkers">Remote Workers <a href="#" id="resetworkers" class="btn btn-primary">Delete Offline Workers</a></h3>
-    <table id="remoteworkers" class="table mb-4"
-           data-toggle="table"
+    <table id="remoteworkers" class="bootstrap-table-init table mb-4"
            data-url="/remoteminers"
            data-response-handler="formatRemoteWorkers"
            data-sort-order="desc"
@@ -66,8 +64,7 @@
     </table>
 
     <h3 id="h-remoteminers" class="mt-4 h-selector">Remote Miners</h3>
-    <table id="remoteminers" class="table mb-4"
-           data-toggle="table"
+    <table id="remoteminers" class="bootstrap-table-init table mb-4"
            data-url="/remoteminers?mode=miners"
            data-response-handler="formatRemoteMiners"
            data-sort-order="asc"
@@ -103,8 +100,7 @@
 
 <div id="devicestatus">
     <h3 class="mt-4 h-selector" id="h-devices">Device Status</h3>
-    <table id="devices" class="table"
-           data-toggle="table"
+    <table id="devices" class="bootstrap-table-init table"
            data-url="/devices"
            data-response-handler="formatDevices"
            data-cache="false"
@@ -182,8 +178,9 @@
 
 <script type="text/javascript">
 $(function () {
-    var template = Handlebars.compile($("#poolbalance_template").html());
-    var sysinfo_template = Handlebars.compile($("#sysinfo_template").html());
+    const template = Handlebars.compile($("#poolbalance_template").html());
+    const sysinfo_template = Handlebars.compile($("#sysinfo_template").html());
+
     $("#pauseminers").click(function (event) {
         event.stopPropagation()
         $.ajax({
@@ -255,85 +252,6 @@ $(function () {
         window.localStorage.setItem($(this).attr("id"), visible ? "hide" : "show");
     });
 
-    (function updatePoolBalances() {
-        $.ajax({
-            url: '/balances?add_total=1&add_wallets=1&add_btc=1', success: function (result) {
-                //console.log(result);
-                $("#balanceboxes--pools").empty();
-                $("#balanceboxes--wallets").empty();
-                $("#balanceboxes--total").empty();
-                var boxes = [], boxes_ix = {}, total_earnings = 0;
-                $.each(result, function (index, item) {
-                    var properties = Object.keys(item);
-                    var currencies = properties.filter((properties) => properties.startsWith("Value in "));
-                    var balance = properties.filter((properties) => properties.startsWith("Balance "));
-                    var basecur = [];
-
-                    if (boxes_ix[item.Name] === undefined) {
-                        boxes_ix[item.Name] = boxes.length;
-                        if (item.BaseName == "Total") {
-                            boxes.push({ basename: item.BaseName, name: "Total Balance", balances: {}, invalues: {}, digits: {}, total: true, invalues_strings: [] });
-                        } else if (item.BaseName == "TotalPools") {
-                            boxes.push({ basename: item.BaseName, name: "Total Balance From Pools", balances: {}, invalues: {}, digits: {}, total: true, invalues_strings: [] });
-                        } else if (item.BaseName == "TotalWallets") {
-                            boxes.push({ basename: item.BaseName, name: "Total Balance From Wallets", balances: {}, invalues: {}, digits: {}, total: true, invalues_strings: [] });
-                        } else {
-                            boxes.push({ basename: item.BaseName, name: item.Name, balances: {}, invalues: {}, digits: {}, earnings: 0, invalues_strings: [] });
-                        }
-                    }
-
-                    if (item.BaseName != "Wallet" && item.Name.substr(0,1) != "*") {
-                        var avg_earnings = Number(item.Earnings_Avg_BTC);
-                        total_earnings += avg_earnings;
-                        boxes[boxes_ix[item.Name]]["earnings"] += avg_earnings;
-                    }
-
-                    $.each(balance, function (cindex, currency) {
-                        var name = currency.replace("Balance (", "").replace(")", "");
-                        item[currency] = item[currency].replace(tDecimalSeparator, "").replace(nDecimalSeparator, ".")
-                        var csplit = item[currency].split(".");
-                        var digits = boxes[boxes_ix[item.Name]]["digits"][name] = item[currency] === "-" ? -1 : (csplit.length < 2 ? 0 : csplit[1].length);
-                        if (digits != -1) { item[currency] = Number(item[currency]) }
-                        if (boxes[boxes_ix[item.Name]]["balances"][name] === undefined) { boxes[boxes_ix[item.Name]]["balances"][name] = item[currency]; basecur.push(name); }
-                        else if (digits != -1) {
-                            if (boxes[boxes_ix[item.Name]]["balances"][name] === "-") boxes[boxes_ix[item.Name]]["balances"][name] = 0.0;
-                            boxes[boxes_ix[item.Name]]["balances"][name] += Number(item[currency]);
-                        }
-                    });
-
-                    $.each(currencies, function (cindex, currency) {
-                        var name = currency.replace("Value in ", "");
-                        item[currency] = item[currency].replace(tDecimalSeparator, "").replace(nDecimalSeparator, ".")
-                        var csplit = item[currency].split(".");
-                        var digits = boxes[boxes_ix[item.Name]]["digits"][name] = item[currency] === "-" ? -1 : (csplit.length < 2 ? 0 : csplit[1].length);
-
-                        if (digits != -1) { item[currency] = Number(item[currency]) }
-                        if (boxes[boxes_ix[item.Name]]["invalues"][name] === undefined) { boxes[boxes_ix[item.Name]]["invalues"][name] = item[currency]; }
-                        else if (digits != -1) {
-                            if (boxes[boxes_ix[item.Name]]["invalues"][name] === "-") boxes[boxes_ix[item.Name]]["invalues"][name] = 0.0;
-                            boxes[boxes_ix[item.Name]]["invalues"][name] += Number(item[currency]);
-                        }
-                    });
-                });
-                $.each(boxes, function (index, item) {
-                    $.each(item["balances"], function (bindex, bitem) { if (item["digits"][bindex] != -1) item["balances"][bindex] = bindex == "BTC" ? formatPricesBTC(bitem).replace('&nbsp;', ' ') : bitem.toFixed(item["digits"][bindex]); });
-                    $.each(item["invalues"], function (bindex, bitem) {
-                        if (item["digits"][bindex] != -1) {
-                            item["invalues"][bindex] = "" + (bindex == "BTC" ? formatPricesBTC(bitem).replace('&nbsp;', ' ') : bitem.toFixed(item["digits"][bindex]));
-                            item.invalues_strings.push(item["invalues"][bindex] + (item["invalues"][bindex].split(" ").length == 1 ? " " : '') + bindex);
-                        }
-                    });
-                    item.earnings = formatPricesBTC(item.total ? total_earnings : item.earnings).replace('&nbsp;', ' ');
-                    var add_to_id = ""
-                    if (item["basename"] == "Wallet" || item["basename"] == "TotalWallets") {add_to_id = "#balanceboxes--wallets"}
-                    else if (item["basename"] == "Total") {add_to_id = "#balanceboxes--total"}
-                    else {add_to_id = "#balanceboxes--pools"}
-                    $(add_to_id).append(template(item));
-                });
-                window.setTimeout(updatePoolBalances, 60000);
-            }
-        });
-    })();
     (function updateStatus() {
         $.ajax({
             url: '/status', success: function (result) {
@@ -348,6 +266,7 @@ $(function () {
             }
         });
     })();
+
     (function updateSysinfo() {
         $.ajax({
             url: '/sysinfo', success: function (result) {
@@ -367,36 +286,116 @@ $(function () {
             }
         });
     })();
-    function refreshTable() {
-        $("table#miners").bootstrapTable("refresh", { silent: true });
-        $("table#devices").bootstrapTable("refresh", { silent: true });
-        window.setTimeout(refreshTable, 10000);
-    }
-    window.setTimeout(refreshTable, 10000);
-    function refreshTableRemoteWorkers() {
-        $("table#remoteworkers").bootstrapTable("refresh", { silent: true });
-        window.setTimeout(refreshTableRemoteWorkers, 60000);
-    }
-    window.setTimeout(refreshTableRemoteWorkers, 60000);
-    function refreshTableRemoteMiners() {
-        $("table#remoteminers").bootstrapTable("refresh", { silent: true });
-        window.setTimeout(refreshTableRemoteMiners, 60000);
-    }
-    window.setTimeout(refreshTableRemoteMiners, 60000);
 
-    /*
-    const $table = $('table#remoteworkers');
-    $table.on('post-body.bs.table', (e) => {
-      const $trs = $(e.currentTarget).find('tbody tr')
-      $.each($trs, function (key, tr) {
-      	$table.bootstrapTable('expandRow', $(tr).data('index'));  
-    	})
-    })
-    */
+    ConfigLoader.whenReady().then(function(cfg) {
+
+        function updatePoolBalances() {
+            $.ajax({
+                url: '/balances?add_total=1&add_wallets=1&add_btc=1',
+                success: function (result) {
+                    // Clear and rebuild balance boxes
+                    $("#balanceboxes--pools").empty();
+                    $("#balanceboxes--wallets").empty();
+                    $("#balanceboxes--total").empty();
+
+                    var boxes = [], boxes_ix = {}, total_earnings = 0;
+                    $.each(result, function (index, item) {
+                        var properties = Object.keys(item);
+                        var currencies = properties.filter((properties) => properties.startsWith("Value in "));
+                        var balance = properties.filter((properties) => properties.startsWith("Balance "));
+                        var basecur = [];
+
+                        if (boxes_ix[item.Name] === undefined) {
+                            boxes_ix[item.Name] = boxes.length;
+                            if (item.BaseName == "Total") {
+                                boxes.push({ basename: item.BaseName, name: "Total Balance", balances: {}, invalues: {}, digits: {}, total: true, invalues_strings: [] });
+                            } else if (item.BaseName == "TotalPools") {
+                                boxes.push({ basename: item.BaseName, name: "Total Balance From Pools", balances: {}, invalues: {}, digits: {}, total: true, invalues_strings: [] });
+                            } else if (item.BaseName == "TotalWallets") {
+                                boxes.push({ basename: item.BaseName, name: "Total Balance From Wallets", balances: {}, invalues: {}, digits: {}, total: true, invalues_strings: [] });
+                            } else {
+                                boxes.push({ basename: item.BaseName, name: item.Name, balances: {}, invalues: {}, digits: {}, earnings: 0, invalues_strings: [] });
+                            }
+                        }
+
+                        if (item.BaseName != "Wallet" && item.Name.substr(0,1) != "*") {
+                            var avg_earnings = Number(item.Earnings_Avg_BTC);
+                            total_earnings += avg_earnings;
+                            boxes[boxes_ix[item.Name]]["earnings"] += avg_earnings;
+                        }
+
+                        $.each(balance, function (cindex, currency) {
+                            var name = currency.replace("Balance (", "").replace(")", "");
+                            item[currency] = item[currency].replace(tDecimalSeparator, "").replace(nDecimalSeparator, ".")
+                            var csplit = item[currency].split(".");
+                            var digits = boxes[boxes_ix[item.Name]]["digits"][name] = item[currency] === "-" ? -1 : (csplit.length < 2 ? 0 : csplit[1].length);
+                            if (digits != -1) { item[currency] = Number(item[currency]) }
+                            if (boxes[boxes_ix[item.Name]]["balances"][name] === undefined) { boxes[boxes_ix[item.Name]]["balances"][name] = item[currency]; basecur.push(name); }
+                            else if (digits != -1) {
+                                if (boxes[boxes_ix[item.Name]]["balances"][name] === "-") boxes[boxes_ix[item.Name]]["balances"][name] = 0.0;
+                                boxes[boxes_ix[item.Name]]["balances"][name] += Number(item[currency]);
+                            }
+                        });
+
+                        $.each(currencies, function (cindex, currency) {
+                            var name = currency.replace("Value in ", "");
+                            item[currency] = item[currency].replace(tDecimalSeparator, "").replace(nDecimalSeparator, ".")
+                            var csplit = item[currency].split(".");
+                            var digits = boxes[boxes_ix[item.Name]]["digits"][name] = item[currency] === "-" ? -1 : (csplit.length < 2 ? 0 : csplit[1].length);
+
+                            if (digits != -1) { item[currency] = Number(item[currency]) }
+                            if (boxes[boxes_ix[item.Name]]["invalues"][name] === undefined) { boxes[boxes_ix[item.Name]]["invalues"][name] = item[currency]; }
+                            else if (digits != -1) {
+                                if (boxes[boxes_ix[item.Name]]["invalues"][name] === "-") boxes[boxes_ix[item.Name]]["invalues"][name] = 0.0;
+                                boxes[boxes_ix[item.Name]]["invalues"][name] += Number(item[currency]);
+                            }
+                        });
+                    });
+                    $.each(boxes, function (index, item) {
+                        $.each(item["balances"], function (bindex, bitem) { if (item["digits"][bindex] != -1) item["balances"][bindex] = bindex == "BTC" ? formatPricesBTC(bitem).replace('&nbsp;', ' ') : bitem.toFixed(item["digits"][bindex]); });
+                        $.each(item["invalues"], function (bindex, bitem) {
+                            if (item["digits"][bindex] != -1) {
+                                item["invalues"][bindex] = "" + (bindex == "BTC" ? formatPricesBTC(bitem).replace('&nbsp;', ' ') : bitem.toFixed(item["digits"][bindex]));
+                                item.invalues_strings.push(item["invalues"][bindex] + (item["invalues"][bindex].split(" ").length == 1 ? " " : '') + bindex);
+                            }
+                        });
+                        item.earnings = formatPricesBTC(item.total ? total_earnings : item.earnings).replace('&nbsp;', ' ');
+                        var add_to_id = ""
+                        if (item["basename"] == "Wallet" || item["basename"] == "TotalWallets") {add_to_id = "#balanceboxes--wallets"}
+                        else if (item["basename"] == "Total") {add_to_id = "#balanceboxes--total"}
+                        else {add_to_id = "#balanceboxes--pools"}
+                        $(add_to_id).append(template(item));
+                    });
+
+                    window.setTimeout(updatePoolBalances, 60000);
+                }
+            });
+        }
+
+        updatePoolBalances();
+
+        const refreshTables = [
+            { selector: "table#miners", interval: 10000 },
+            { selector: "table#devices", interval: 10000 },
+            { selector: "table#remoteworkers", interval: 60000 },
+            { selector: "table#remoteminers", interval: 60000 }
+        ];
+
+        refreshTables.forEach(function(table) {
+            setInterval(function() {
+                if (!$(table.selector + " tr.detail-view").length) {
+                    $(table.selector).bootstrapTable("refresh", { silent: true });
+                }
+            }, table.interval);
+        });
+    });
+
 });
 
 function formatRunningMiners(data) {
     var selcur = getSelectedCurrency()
+
+    const cfg = ConfigLoader.getConfig();
 
     $("#runningminers_profit_currency").html(selcur.currency);
 
@@ -455,9 +454,9 @@ function formatRunningMiners(data) {
 
         // Format the Profile(s)
         var tOC = new Array();
-        if (globalconfig.OCmode == "msia") {
-        if (item.MSIAprofile) { tOC.push("MSIA" + item.MSIAprofile); }
-        } else if (globalconfig.OCmode == "ocp") {
+        if (cfg.OCmode == "msia") {
+            if (item.MSIAprofile) { tOC.push("MSIA" + item.MSIAprofile); }
+        } else if (cfg.OCmode == "ocp") {
             var devices = item.DeviceModel.toString().split(/\-/);
             var cnt = devices.length
             $.each(devices, function (ix, dev) {

@@ -24,7 +24,7 @@
 
 <script type="text/javascript">
 $(function () {
-    var template = Handlebars.compile($("#machines_template").html());
+    const template = Handlebars.compile($("#machines_template").html());
 
     (function updateMachines() {
         $.ajax({

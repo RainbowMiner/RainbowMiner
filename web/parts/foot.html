@@ -4,32 +4,32 @@
   </body>
 <script type="text/javascript">
 
-    function setTheme(val) {
-        if (val == "dark") {
-            document.documentElement.setAttribute('data-bs-theme', val);
-        } else {
-            document.documentElement.setAttribute('data-bs-theme', 'light');
-        }
-        setCookie("rbm-theme", val, -1);
-        theme = val;
+function setTheme(val) {
+    if (val == "dark") {
+        document.documentElement.setAttribute('data-bs-theme', val);
+    } else {
+        document.documentElement.setAttribute('data-bs-theme', 'light');
     }
+    setCookie("rbm-theme", val, -1);
+    theme = val;
+}
 
-    function updateProfitHead() {
-        var profit = $("#profit").attr("btc");
-        var earnings = $("#earnings").attr("btc");
+function updateProfitHead() {
+    var profit = $("#profit").attr("btc");
+    var earnings = $("#earnings").attr("btc");
 
-        selected_currency.currency = $("#profit_currency option:selected").val();
-        selected_currency.rate     = parseFloat($("#profit_currency option:selected").attr("rate"));
+    selected_currency.currency = $("#profit_currency option:selected").val();
+    selected_currency.rate     = parseFloat($("#profit_currency option:selected").attr("rate"));
 
-        if (selected_currency.currency == "BTC" || selected_currency.currency == "mBTC" || selected_currency.currency == "sat") {
-            $("#profit").html(formatBTC(profit,selected_currency.currency));
-            $("#earnings").html(formatBTC(earnings,selected_currency.currency));
-        } else {
-            $("#profit").html((parseFloat(profit) * selected_currency.rate).toFixed(2));
-            $("#earnings").html((parseFloat(earnings) * selected_currency.rate).toFixed(2));
-        }
-        window.localStorage.setItem("currency", selected_currency.currency);
+    if (selected_currency.currency == "BTC" || selected_currency.currency == "mBTC" || selected_currency.currency == "sat") {
+        $("#profit").html(formatBTC(profit,selected_currency.currency));
+        $("#earnings").html(formatBTC(earnings,selected_currency.currency));
+    } else {
+        $("#profit").html((parseFloat(profit) * selected_currency.rate).toFixed(2));
+        $("#earnings").html((parseFloat(earnings) * selected_currency.rate).toFixed(2));
     }
+    window.localStorage.setItem("currency", selected_currency.currency);
+}
 
 $(function () {
     // Set the active sidebar item
@@ -118,10 +118,16 @@ $(function () {
                     
                 $("#power").html(power + powerunit + (poweroffset>0? "<small>+"+poweroffset.toFixed(0)+"W</small>":''));
 
-                if (globalconfig && globalconfig.Version) {
-                    $('.powerprice span').text(result.PowerPrice + (globalconfig.PowerPriceCurrency ? ' ' + globalconfig.PowerPriceCurrency : ''));
-                    if (globalconfig.UsePowerPrice) { $('.powerprice').show() } else { $('.powerprice').hide() }
-                }
+                ConfigLoader.whenReady().then(function(cfg) {
+                    if (cfg.Version) {
+                        $('.powerprice span').text(result.PowerPrice + (cfg.PowerPriceCurrency ? ' ' + cfg.PowerPriceCurrency : ''));
+                        if (cfg.UsePowerPrice) {
+                            $('.powerprice').show();
+                        } else {
+                            $('.powerprice').hide();
+                        }
+                    }
+                });
 
                 updateProfitHead();
 
@@ -131,28 +137,29 @@ $(function () {
     })();
 
     (function q() {
-        if (!globalconfig || !globalconfig.Version) { setTimeout(q, 1000); return }
-        $('.workername').text(globalconfig.WorkerName)
-        var version = formatVersion(globalconfig.Version)
-        remoteversion = formatVersion(globalconfig.RemoteVersion)
-        $('#version').text('v' + version)
-        if (version < remoteversion) {
-            $('#updatelink').attr({ "title": 'Show info about release v' + remoteversion, "href": globalconfig.ManualURI }).text('v' + remoteversion)
-            $('#updatemsg-inner').show()
-        } else {
-            $('#updatemsg-inner').hide()
-        }
-        if(globalconfig.IsLinux) {
-            $(".is--linux").show()
-        } else {
-            $(".is--linux").hide()
-        }
-        if (typeof globalconfig.IsServer !== "undefined" && globalconfig.IsServer) {
-            $('a#navnetwork').closest('li').show()
-        } else {
-            $('a#navnetwork').closest('li').hide()
-        }
-        setTimeout(q, 600000);
+        ConfigLoader.whenReady().then(function(cfg) {
+            $('.workername').text(cfg.WorkerName)
+            var version = formatVersion(cfg.Version)
+            remoteversion = formatVersion(cfg.RemoteVersion)
+            $('#version').text('v' + version)
+            if (version < remoteversion) {
+                $('#updatelink').attr({ "title": 'Show info about release v' + remoteversion, "href": cfg.ManualURI }).text('v' + remoteversion)
+                $('#updatemsg-inner').show()
+            } else {
+                $('#updatemsg-inner').hide()
+            }
+            if(cfg.IsLinux) {
+                $(".is--linux").show()
+            } else {
+                $(".is--linux").hide()
+            }
+            if (typeof cfg.IsServer !== "undefined" && cfg.IsServer) {
+                $('a#navnetwork').closest('li').show()
+            } else {
+                $('a#navnetwork').closest('li').hide()
+            }
+            setTimeout(q, 600000);
+        });
     })();
 
     (function r() {
@@ -161,6 +168,27 @@ $(function () {
     })();
 
     $('[data-toggle="tooltip"]').tooltip();
+
+    ConfigLoader.whenReady().then(function(cfg) {
+        $('#loading-msg').hide();
+        $('.bootstrap-table-init').each(function() {
+            var $table = $(this);
+            $table.bootstrapTable();
+
+            $table.find('th[data-sortable="true"]').each(function () {
+                var $th = $(this);
+                $th.off('click'); // remove previous handlers (if any)
+                $th.on('click', function () {
+                    var field = $th.data('field');
+                    var currentOrder = $th.hasClass('asc') ? 'desc' : 'asc';
+                    $table.bootstrapTable('refreshOptions', {
+                        sortName: field,
+                        sortOrder: currentOrder
+                    });
+                });
+            });
+        });
+    });
 });
   
 </script>

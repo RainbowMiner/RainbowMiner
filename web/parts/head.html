@@ -5,42 +5,100 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" integrity="sha384-tViUnnbYAV00FLIhhi3v/dWt3Jxw4gZQcNoSCxCIFNJVCx7/D55/wXsrNIRANwdD" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.5/dist/bootstrap-table.min.css" integrity="sha384-fuVQAFcapNt186pSM9/Ah9HzxyJ82xlqLcRuQmASn5PGL6aTtF/hcSCqKnKu/rDQ" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.5/dist/extensions/filter-control/bootstrap-table-filter-control.css" integrity="sha384-4Glx18jZ0Un+yDG6KUpYJ/af8hkssJ02jRASuFv23gfCl0mTXaVMPI9cB4cn3GvE" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-table@1.24.1/dist/bootstrap-table.min.css" integrity="sha384-tfNXB2/2SVNPdzoqPNMSl0hXmUVBnwOL4odQANKVfu66tA4jFcF+5Ch4nu1LtZAc" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-table@1.24.1/dist/extensions/filter-control/bootstrap-table-filter-control.css" integrity="sha384-4Glx18jZ0Un+yDG6KUpYJ/af8hkssJ02jRASuFv23gfCl0mTXaVMPI9cB4cn3GvE" crossorigin="anonymous">
 
     <link rel="stylesheet" href="/css/dashboard.css" />
     <link rel="stylesheet" href="/js/extensions/json-editor/jquery.json-viewer.css" />
 
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js" integrity="sha384-1H217gwSVyLSIfaLxHbE7dRb3v4mYCKbpQvzx0cegeju1MVsGrX5xXxAvs/HgeFs" crossorigin="anonymous"></script>
-    <script src="/js/extensions/json-editor/jquery.json-viewer.js"></script>
-    <script src="/js/extensions/json-editor/jquery.json-editor.js"></script>
-    <script src="/js/utilities-1.8.js"></script>
-    <script>
-        var theme = getCookie("rbm-theme");
-        $('#themecss').attr("href", '/css/theme-' + (theme!=""? theme:"light") + '.css');
-    </script>
+
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.5/dist/bootstrap-table.min.js" integrity="sha384-XzG6fkTWfBdkqo/0fud7EdAH6saZWQH46UMq/cFc++2Xkhy5+98u/N2UJQ/lM3Q+" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.5/dist/extensions/auto-refresh/bootstrap-table-auto-refresh.js" integrity="sha384-rl1d2uFLFg0Td49B9N5PTHM5UBZ3aSIskNRiGFopLqLeEH8xrkgQDD8ApT3ODtS6" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.5/dist/extensions/filter-control/bootstrap-table-filter-control.js" integrity="sha384-LlnY0s6dgHfx5K2Xw4o3ziZTNRH4pwiCiRvzdWO5l1MctR+6wcZgEObDZYt6Xb3T" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.5/dist/extensions/export/bootstrap-table-export.js" integrity="sha384-IXCw6ilqS1pJJOLzEfq7PE8HThCz0/7EWAkOanc/QtLkC3l3UGv9HBrBkSv8smgN" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.24.1/dist/bootstrap-table.min.js" integrity="sha384-FosO0uRIBBE+YnU4QBFaUk9aMjP2twHyeirpW+jjfqBlKU1Kp576zfju1cWNkx3g" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.24.1/dist/extensions/auto-refresh/bootstrap-table-auto-refresh.js" integrity="sha384-Tb/JOIxveRwCDk4VeMhGsPxgUgBnbsKmkYO0r/zA5NXGCPm5fJZMrUVBzxTEKaJ/" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.24.1/dist/extensions/filter-control/bootstrap-table-filter-control.js" integrity="sha384-5JMvHn3Gwa8mYelgKGCIj6k3rcCaTqmic8jmkc3yr0KrEESDejyltaAFX92nxfH8" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.24.1/dist/extensions/export/bootstrap-table-export.js" integrity="sha384-hymxEjpICaOt6GWxGXIxvvSwEkIOmTmptOtqleFP1M/La/SSej90gKRta35BDmWL" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/handlebars@4.7.8/dist/handlebars.js" integrity="sha384-QUhmvCKocyfe+3p0uc73Hq5wMpUERuIahFAsyHXwZ01QxtaILhVpAYsJLeFnuNhY" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js" integrity="sha384-J08i8An/QeARD9ExYpvphB8BsyOj3Gh2TSh1aLINKO3L0cMSH2dN3E22zFoXEi0Q" crossorigin="anonymous"></script>
     <script defer src="https://use.fontawesome.com/releases/v5.10.2/js/all.js" integrity="sha384-QMu+Y+eu45Nfr9fmFOlw8EqjiUreChmoQ7k7C1pFNO8hEbGv9yzsszTmz+RzwyCh" crossorigin="anonymous"></script>
+
+    <script src="/js/extensions/json-editor/jquery.json-viewer.js"></script>
+    <script src="/js/extensions/json-editor/jquery.json-editor.js"></script>
+    <script src="/js/utilities-1.9.js"></script>
+
+    <script>
+        $.fn.bootstrapTable.autoInit = false;
+        var theme = getCookie("rbm-theme");
+        $('#themecss').attr("href", '/css/theme-' + (theme!=""? theme:"light") + '.css');
+    </script>
+
     <!-- script src="/js/bootstrap-table-contextmenu.js"></script -->
     <title>RainbowMiner Local Dashboard</title>
     <link href="/images/favicon.ico" rel="icon" type="image/x-icon" />
+
     <script>
-        globalconfig = null, nDecimalSeparator = ".", tDecimalSeparator = ",", selected_currency = {currency:null,rate:0};
-        (function conf() {
-        $.getJSON("/info", function (data) {
-        if (!data.Version) { setTimeout(conf, 1000); return }
-        nDecimalSeparator = data.DecSep;
-        tDecimalSeparator = nDecimalSeparator == "." ? "," : "."
-        globalconfig = data
-        setTimeout(conf, 300000);
-        })
+        var selected_currency = { currency: null, rate: 0 };
+
+        const ConfigLoader = (function () {
+            let config = null;
+            let ready = false;
+            let resolvePromise, rejectPromise;
+            const configPromise = new Promise((resolve, reject) => {
+                resolvePromise = resolve;
+                rejectPromise = reject;
+            });
+
+            const MAX_ATTEMPTS = 10;
+            const RETRY_DELAY_MS = 1000;
+            const REFRESH_INTERVAL_MS = 300000;
+
+            function loadConfig(attempt) {
+                fetch("/info")
+                .then(response => {
+                    if (!response.ok) throw new Error("Server responded with error");
+                    return response.json();
+                })
+                .then(data => {
+                    if (!data.Version) {
+                        if (attempt < MAX_ATTEMPTS) {
+                            setTimeout(() => loadConfig(attempt + 1), RETRY_DELAY_MS);
+                        } else {
+                            rejectPromise("Failed to load config: Version missing after " + MAX_ATTEMPTS + " attempts.");
+                            console.error("ConfigLoader error: Version missing in /info response.");
+                        }
+                        return;
+                    }
+
+                    config = data;
+
+                    // Optional globals
+                    window.nDecimalSeparator = config.DecSep;
+                    window.tDecimalSeparator = config.DecSep === "." ? "," : ".";
+
+                    ready = true;
+
+                    resolvePromise(config);
+                    setTimeout(() => loadConfig(1), REFRESH_INTERVAL_MS); // Periodic refresh
+                })
+                .catch(error => {
+                    if (attempt < MAX_ATTEMPTS) {
+                        console.warn("Retrying to fetch /info... attempt", attempt + 1);
+                        setTimeout(() => loadConfig(attempt + 1), RETRY_DELAY_MS);
+                    } else {
+                        rejectPromise("Failed to fetch /info after " + MAX_ATTEMPTS + " attempts.");
+                        console.error("ConfigLoader error:", error);
+                    }
+                });
+            }
+
+            loadConfig(1);
+
+            return {
+                getConfig: () => config,
+                isReady: () => ready,
+                whenReady: () => configPromise
+            };
         })();
     </script>
 </head>
@@ -338,3 +396,5 @@
                         </div>
                     </div>
                 </div>
+
+                <div id="loading-msg">Loading settings...</div>

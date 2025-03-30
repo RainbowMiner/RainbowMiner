@@ -11,8 +11,7 @@
     </div>
 </div>
 
-<table id="mrrcontrol" class="table"
-       data-toggle="table"
+<table id="mrrcontrol" class="bootstrap-table-init table"
        data-url="/mrrcontrol"
        data-filter-control="false"
        data-filter-show-clear="false"
@@ -35,8 +34,7 @@
     </thead>
 </table>
 
-<table id="mrrrigs" class="table"
-       data-toggle="table"
+<table id="mrrrigs" class="bootstrap-table-init table"
        data-url="/mrrrigs"
        data-response-handler="formatMRRRigs"
        data-filter-control="true"
@@ -72,6 +70,7 @@
 <!-- End of page scripts -->
 <script type="text/javascript">
 
+$(function() {
     $("table.table").on('load-success.bs.table', function (e, data) {
         sortFilterOptions(this);
     });
@@ -91,26 +90,30 @@
         })
     });
 
-    $(function () {
-        function refreshTable() {
-            if (!$("table#mrrrigs tr.detail-view").length) $("table#mrrrigs").bootstrapTable("refresh", { silent: true });
-            window.setTimeout(refreshTable, 600000);
-        }
-        window.setTimeout(refreshTable, 600000);
-    });
+    ConfigLoader.whenReady().then(function(cfg) {
+        const refreshTables = [
+            { selector: "table#mrrrigs", interval: 600000 }
+        ];
 
-    function formatMRRRigs(data) {
-        // This function can alter the returned data before building the table, formatting it in a way
-        // that is easier to display and manipulate in a table
-        $.each(data, function (index, item) {
-            item.tHashRate = (item.HashRate) ? formatHashRate(item.HashRate) : "-";
-            item.tHashRateAdv = (item.HashRateAdv) ? formatHashRate(item.HashRateAdv) : "-";
-            item.tModifier = (item.Modifier != '0') ? item.Modifier + " %" : "-";
-            item.tRigs = parseInt(item.RigsRented) + parseInt(item.RigsAvail)
-            item.tHours = "" + item.MinHours + "-" + item.MaxHours + " h";
+        refreshTables.forEach(function(table) {
+            setInterval(function() {
+                if (!$(table.selector + " tr.detail-view").length) $(table.selector).bootstrapTable("refresh", { silent: true });
+            }, table.interval);
         });
-        return data;
-    }
+    });
+});
 
+function formatMRRRigs(data) {
+    // This function can alter the returned data before building the table, formatting it in a way
+    // that is easier to display and manipulate in a table
+    $.each(data, function (index, item) {
+        item.tHashRate = (item.HashRate) ? formatHashRate(item.HashRate) : "-";
+        item.tHashRateAdv = (item.HashRateAdv) ? formatHashRate(item.HashRateAdv) : "-";
+        item.tModifier = (item.Modifier != '0') ? item.Modifier + " %" : "-";
+        item.tRigs = parseInt(item.RigsRented) + parseInt(item.RigsAvail)
+        item.tHours = "" + item.MinHours + "-" + item.MaxHours + " h";
+    });
+    return data;
+}
 </script>
 <!--#include file="/parts/foot.html" -->

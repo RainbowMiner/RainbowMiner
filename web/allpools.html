@@ -2,8 +2,7 @@
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
   <h1 id="title" data-navbaractive="navallpools" class="h2">All Pools</h1>
 </div>
-<table id="pools" class="table"
-  data-toggle="table"
+<table id="pools" class="bootstrap-table-init table"
   data-url="/allpools"
   data-response-handler="formatPools"
   data-filter-control="true"
@@ -40,6 +39,7 @@
 
 <!-- End of page scripts -->
 <script type="text/javascript">
+$(function() {
     var $table = $('table#pools')
 
     $table.on('load-success.bs.table', function (e, data) {
@@ -54,6 +54,7 @@
         })
         sortFilterOptions(this);
     })
+
     $table.on("change", "input[type='checkbox'].enable-switch", function (event) {
         event.preventDefault();
         var data = $table.bootstrapTable('getData')
@@ -69,35 +70,41 @@
         })
     })
 
-    $(function () {
-        function refreshTable() {
-            if (!$("table#pools tr.detail-view").length) $("table#pools").bootstrapTable("refresh", { silent: true });
-            window.setTimeout(refreshTable, 60000);
-        }
-        window.setTimeout(refreshTable, 60000);
+    ConfigLoader.whenReady().then(function(cfg) {
+        const refreshTables = [
+            { selector: "table#pools", interval: 60000 }
+        ];
+
+        refreshTables.forEach(function(table) {
+            setInterval(function() {
+                if (!$(table.selector + " tr.detail-view").length) $(table.selector).bootstrapTable("refresh", { silent: true });
+            }, table.interval);
+        });
     });
 
-    function formatEnable(value, item, index) {
-        return [
-                    '<div class="custom-control custom-switch">',
-                    '<input type="checkbox" class="custom-control-input enable-switch" id="switch-' + index + '"' + (value ? ' checked' : '') + '>',
-                    '<label class="custom-control-label" for="switch-' + index + '"></label>',
-                    '</div>'
-        ].join('')
-    }
+});
 
-    function formatPools(data) {
-        // This function can alter the returned data before building the table, formatting it in a way
-        // that is easier to display and manipulate in a table
-        $.each(data, function (index, item) {
-            item.tEnabled = !item.Disabled
-            item.tAlgorithm = formatAlgorithm(item.Algorithm);
-            item.tCoin = item.Name == "MiningRigRentals" ? item.CoinName : item.CoinSymbol;
-            item.tErrorRatio = typeof item.ErrorRatio != "undefined"? parseFloat(item.ErrorRatio).toFixed(3) : "-";
-            item.tWTM = typeof item.WTM != "undefined" && item.WTM? "<span class='text-success fw-bold'>&check;</span>":"";
-            if (typeof item.tCoin == "undefined" || item.tCoin == null) { item.tCoin = "" }
-        });
-        return data;
-    }
+function formatEnable(value, item, index) {
+    return [
+                '<div class="custom-control custom-switch">',
+                '<input type="checkbox" class="custom-control-input enable-switch" id="switch-' + index + '"' + (value ? ' checked' : '') + '>',
+                '<label class="custom-control-label" for="switch-' + index + '"></label>',
+                '</div>'
+    ].join('')
+}
+
+function formatPools(data) {
+    // This function can alter the returned data before building the table, formatting it in a way
+    // that is easier to display and manipulate in a table
+    $.each(data, function (index, item) {
+        item.tEnabled = !item.Disabled
+        item.tAlgorithm = formatAlgorithm(item.Algorithm);
+        item.tCoin = item.Name == "MiningRigRentals" ? item.CoinName : item.CoinSymbol;
+        item.tErrorRatio = typeof item.ErrorRatio != "undefined"? parseFloat(item.ErrorRatio).toFixed(3) : "-";
+        item.tWTM = typeof item.WTM != "undefined" && item.WTM? "<span class='text-success fw-bold'>&check;</span>":"";
+        if (typeof item.tCoin == "undefined" || item.tCoin == null) { item.tCoin = "" }
+    });
+    return data;
+}
 </script>
 <!--#include file="/parts/foot.html" -->

@@ -2,8 +2,7 @@
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
   <h1 id="title" class="h2" data-navbaractive="navactiveminers">Active Miners <span id="wtmbuttons"></span></h1>
 </div>
-<table id="miners" class="table"
-  data-toggle="table"
+<table id="miners" class="bootstrap-table-init table"
   data-url="/activeminers"
   data-response-handler="formatActiveMiners"
   data-filter-control="true"
@@ -40,111 +39,121 @@
 <!-- End of page scripts -->
 <script type="text/javascript">
 
+$(function () {
+
     $("table.table").on('load-success.bs.table', function (e, data) {
         sortFilterOptions(this);
     });
 
-    $(function () {
-        function refreshTable() {
-            if (!$("table#miners tr.detail-view").length) $("table#miners").bootstrapTable("refresh", { silent: true });
-            window.setTimeout(refreshTable, 10000);
-        }
-        window.setTimeout(refreshTable, 10000);
+    ConfigLoader.whenReady().then(function(cfg) {
+        const refreshTables = [
+            { selector: "table#miners", interval: 10000 }
+        ];
+
+        refreshTables.forEach(function(table) {
+            setInterval(function() {
+                if (!$(table.selector + " tr.detail-view").length) $(table.selector).bootstrapTable("refresh", { silent: true });
+            }, table.interval);
+        });
     });
 
-    function formatBTCEff(data) {
-        if (typeof data == "undefined" || !data) return "-";
-        var value = parseFloat(data) * 1e8;
-        return value.toFixed(2).toString();
-    }
+});
 
-    function formatName(value, item, index) {
-        var Name = item.Name.split(/\-/)[0];
-        if (item.ManualUri && item.ManualUri.toString() != '') {
-            Name = '<a href="' + item.ManualUri.toString() + '" target="_blank" title="Official miner page">' + Name + '</a>';
+function formatBTCEff(data) {
+    if (typeof data == "undefined" || !data) return "-";
+    var value = parseFloat(data) * 1e8;
+    return value.toFixed(2).toString();
+}
+
+function formatName(value, item, index) {
+    var Name = item.Name.split(/\-/)[0];
+    if (item.ManualUri && item.ManualUri.toString() != '') {
+        Name = '<a href="' + item.ManualUri.toString() + '" target="_blank" title="Official miner page">' + Name + '</a>';
+    }
+    return Name
+}
+
+function sleep(milliseconds) {
+    return new Promise(resolve => setTimeout(resolve, milliseconds));
+}
+
+function formatActiveMiners(data) {
+    // This function can alter the returned data before building the table, formatting it in a way
+    // that is easier to display and manipulate in a table
+
+    const cfg = ConfigLoader.getConfig();
+
+    var devicemodels = new Array();
+
+    $.each(data, function (index, item) {
+        // Format the algorithm(s)
+        item.tPrimaryAlgorithm = formatAlgorithm(item.Algorithm[0]);
+        item.tSecondaryAlgorithm = formatAlgorithm(item.Algorithm[1]);
+        item.tDevFee = (parseFloat(item.DevFee[item.Algorithm[0]]) ? parseFloat(item.DevFee[item.Algorithm[0]]) + ' %' : '-');
+        item.tPrimarySpeed = (item.Speed !== null && item.Speed.length)? item.Speed[0] : "-.--";
+
+        // Format the speed(s)
+        if (item.Speed !== null && item.Speed.length > 1) {
+            item.tSecondarySpeed = item.Speed[1];
+            item.tPrimaryAlgorithm += ' + ' + item.tSecondaryAlgorithm;
+            if (parseFloat(item.DevFee[item.Algorithm[1]])) {
+                item.tDevFee += '/' + parseFloat(item.DevFee[item.Algorithm[1]]) + ' %';
+            }
         }
-        return Name
-    }
 
-    function sleep(milliseconds) {
-        return new Promise(resolve => setTimeout(resolve, milliseconds));
-    }
+        // Format the device(s)
+        item.tDevices = item.DeviceModel.toString();
 
-    function formatActiveMiners(data) {
-        // This function can alter the returned data before building the table, formatting it in a way
-        // that is easier to display and manipulate in a table
+        var powerDraw = parseFloat(item.PowerDraw);
+        item.tPowerDraw = Math.round(powerDraw) + ' W';
 
-        var devicemodels = new Array();
+        item.tRevenue = parseFloat(item.Profit)
+        if (cfg.UsePowerPrice) {
+            item.tRevenue += parseFloat(item.Profit_Cost)
+        }
 
-        $.each(data, function (index, item) {
-            // Format the algorithm(s)
-            item.tPrimaryAlgorithm = formatAlgorithm(item.Algorithm[0]);
-            item.tSecondaryAlgorithm = formatAlgorithm(item.Algorithm[1]);
-            item.tDevFee = (parseFloat(item.DevFee[item.Algorithm[0]]) ? parseFloat(item.DevFee[item.Algorithm[0]]) + ' %' : '-');
-            item.tPrimarySpeed = (item.Speed !== null && item.Speed.length)? item.Speed[0] : "-.--";
+        item.tEff = 0;
+        if (powerDraw > 0) {
+            item.tEff = item.tRevenue / powerDraw;
+        }
 
-            // Format the speed(s)
-            if (item.Speed !== null && item.Speed.length > 1) {
-                item.tSecondarySpeed = item.Speed[1];
-                item.tPrimaryAlgorithm += ' + ' + item.tSecondaryAlgorithm;
-                if (parseFloat(item.DevFee[item.Algorithm[1]])) {
-                    item.tDevFee += '/' + parseFloat(item.DevFee[item.Algorithm[1]]) + ' %';
-                }
-            }
-
-            // Format the device(s)
-            item.tDevices = item.DeviceModel.toString();
-
-            var powerDraw = parseFloat(item.PowerDraw);
-            item.tPowerDraw = Math.round(powerDraw) + ' W';
-
-            item.tRevenue = parseFloat(item.Profit)
-            if (globalconfig.UsePowerPrice) {
-                item.tRevenue += parseFloat(item.Profit_Cost)
-            }
-
-            item.tEff = 0;
-            if (powerDraw > 0) {
-                item.tEff = item.tRevenue / powerDraw;
-            }
-
-            // Format the Profile(s)
-            var tOC = new Array();
-            if (globalconfig.OCmode == "msia") {
-                if (item.MSIAprofile) { tOC.push("MSIA" + item.MSIAprofile); }
-            } else if (globalconfig.OCmode == "ocp") {
-                var devices = item.DeviceModel.toString().split(/\-/);
-                var cnt = devices.length
-                $.each(devices, function (ix, dev) {
-                    if (dev != "CPU" && item.OCprofile[dev]) {
-                        if (cnt == 1) { tOC.push(item.OCprofile[dev]); }
-                        else {
-                            tOC.push(dev + "=" + item.OCprofile[dev]);
-                        }
+        // Format the Profile(s)
+        var tOC = new Array();
+        if (cfg.OCmode == "msia") {
+            if (item.MSIAprofile) { tOC.push("MSIA" + item.MSIAprofile); }
+        } else if (cfg.OCmode == "ocp") {
+            var devices = item.DeviceModel.toString().split(/\-/);
+            var cnt = devices.length
+            $.each(devices, function (ix, dev) {
+                if (dev != "CPU" && item.OCprofile[dev]) {
+                    if (cnt == 1) { tOC.push(item.OCprofile[dev]); }
+                    else {
+                        tOC.push(dev + "=" + item.OCprofile[dev]);
                     }
-                });
-            }
-            if (!tOC.length) { tOC.push("-"); }
-            item.tOC = tOC.join('<br />');
-            if (devicemodels.indexOf(item.DeviceModel)==-1) devicemodels.push(item.DeviceModel);
-        });
-
-        $.ajax({
-            url: '/getwtmurls', success: function (result) {
-                var wtmbuttons = '';
-                devicemodels.sort(function (a, b) {
-                    if (a < b) return -1;
-                    if (a > b) return 1;
-                    return 0;
                 }
-                )
-                $.each(devicemodels, function (ix,device) {
-                    wtmbuttons += '<a href="' + result[device] + '" target="_blank" class="btn btn-primary">WTM ' + device + '</a> ';
-                });
-                $('#wtmbuttons').html(wtmbuttons);
+            });
+        }
+        if (!tOC.length) { tOC.push("-"); }
+        item.tOC = tOC.join('<br />');
+        if (devicemodels.indexOf(item.DeviceModel)==-1) devicemodels.push(item.DeviceModel);
+    });
+
+    $.ajax({
+        url: '/getwtmurls', success: function (result) {
+            var wtmbuttons = '';
+            devicemodels.sort(function (a, b) {
+                if (a < b) return -1;
+                if (a > b) return 1;
+                return 0;
             }
-        });
-        return data;
-    }
+            )
+            $.each(devicemodels, function (ix,device) {
+                wtmbuttons += '<a href="' + result[device] + '" target="_blank" class="btn btn-primary">WTM ' + device + '</a> ';
+            });
+            $('#wtmbuttons').html(wtmbuttons);
+        }
+    });
+    return data;
+}
 </script>
 <!--#include file="/parts/foot.html" -->

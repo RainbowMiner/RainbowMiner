@@ -42,8 +42,7 @@
           <h5>Benchmark Status <button class="btn btn-primary" id="benchmarkselected">Benchmark selected</button></h5>
       </div>
       <div class="card-body">
-          <table id="minerstats" class="table"
-                 data-toggle="table"
+          <table id="minerstats" class="bootstrap-table-init table"
                  data-url="/minerstats"
                  data-response-handler="formatMinerstats"
                  data-filter-control="true"
@@ -113,6 +112,7 @@
 <!-- End of page scripts -->
 <script>
 
+$(function() {
     $("table.table").on('load-success.bs.table', function (e, data) {
         sortFilterOptions(this);
     });
@@ -196,65 +196,69 @@
             });
         });
     });
+});
 
-    function formatMinerstats(data) {
-        // This function can alter the returned data before building the table, formatting it in a way
-        // that is easier to display and manipulate in a table
-        $.each(data, function (index, item) {
-            item.tButton = '<button class="btn btn-default" type="button" name="benchmark" title="Start Benchmark" data-name="' + item.Name + '" data-algorithm="' + item.Algorithm + '" data-devicemodel="' + item.Devices + '"><i class="fa fa-sync"></i></button>';
-            var algo = new Array();
-            var speed = new Array();
-            var ratio = new Array();
+function formatMinerstats(data) {
+    // This function can alter the returned data before building the table, formatting it in a way
+    // that is easier to display and manipulate in a table
 
-            algo.push(formatAlgorithm(item.Algorithm));
-            speed.push(formatHashRateValue(item.Speed[0]));
-            ratio.push(item.Ratio[0] != null? Math.round(parseFloat(item.Ratio[0])*10000)/100 + ' %' : '-.-- %');
+    const cfg = ConfigLoader.getConfig();
 
-            if (item.SecondaryAlgorithm != "") {
-                algo.push(formatAlgorithm(item.SecondaryAlgorithm));
-                speed.push(formatHashRateValue(item.Speed[1]));
-                ratio.push(item.Ratio[1] != null? Math.round(parseFloat(item.Ratio[1])*10000)/100 + ' %' : '-.-- %');
-            }
+    $.each(data, function (index, item) {
+        item.tButton = '<button class="btn btn-default" type="button" name="benchmark" title="Start Benchmark" data-name="' + item.Name + '" data-algorithm="' + item.Algorithm + '" data-devicemodel="' + item.Devices + '"><i class="fa fa-sync"></i></button>';
+        var algo = new Array();
+        var speed = new Array();
+        var ratio = new Array();
 
-            item.tAlgorithm = algo.join(" / ");
-            item.tSpeed = speed.join(" / ");
-            item.tRatio = ratio.join(" / ");
+        algo.push(formatAlgorithm(item.Algorithm));
+        speed.push(formatHashRateValue(item.Speed[0]));
+        ratio.push(item.Ratio[0] != null? Math.round(parseFloat(item.Ratio[0])*10000)/100 + ' %' : '-.-- %');
 
-            // Format the device(s)
-            item.Name = item.Name.replace(/-GPU.+$/,'');
-            if (item.ManualUri && item.ManualUri.toString() != '') {
-                item.Name = '<a href="'+item.ManualUri.toString()+'" target="_blank" title="Official miner page">'+item.Name+'</a>';
-            }
-            item.tStatus = 'Ok';
-            if (item.Benchmarking) item.tStatus = 'Benchmarking';
-            else if (item.NeedsBenchmark) item.tStatus = 'Out-dated Benchmark'
-            else if (item.BenchmarkFailed) item.tStatus = 'Failed Benchmark'
+        if (item.SecondaryAlgorithm != "") {
+            algo.push(formatAlgorithm(item.SecondaryAlgorithm));
+            speed.push(formatHashRateValue(item.Speed[1]));
+            ratio.push(item.Ratio[1] != null? Math.round(parseFloat(item.Ratio[1])*10000)/100 + ' %' : '-.-- %');
+        }
 
-            item.tBenchmarked = (item.tStatus == 'Benchmarking' || !item.Benchmarked)? '-' : item.Benchmarked;
-            item.tLogFile = (typeof item.LogFile !== "undefined" && item.LogFile != "")? '<button class="btn btn-default" type="button" name="logfile" title="Show logfile '+item.LogFile+'" data-logfile="' + item.LogFile + '"><i class="fa fa-search"></i></button>' : '&nbsp;';
+        item.tAlgorithm = algo.join(" / ");
+        item.tSpeed = speed.join(" / ");
+        item.tRatio = ratio.join(" / ");
 
-            // Format the Profile(s)
-            var tOC = new Array();
-            if (globalconfig.OCmode == "msia") {
-                if (item.MSIAprofile) { tOC.push("MSIA" + item.MSIAprofile); }
-            } else if (globalconfig.OCmode == "ocp") {
-                var devices = item.DeviceModel.toString().split(/\-/);
-                var cnt = devices.length
-                $.each(devices, function (ix, dev) {
-                    if (dev != "CPU" && item.OCprofile[dev]) {
-                        if (cnt == 1) { tOC.push(item.OCprofile[dev]); }
-                        else {
-                            tOC.push(dev + "=" + item.OCprofile[dev]);
-                        }
+        // Format the device(s)
+        item.Name = item.Name.replace(/-GPU.+$/,'');
+        if (item.ManualUri && item.ManualUri.toString() != '') {
+            item.Name = '<a href="'+item.ManualUri.toString()+'" target="_blank" title="Official miner page">'+item.Name+'</a>';
+        }
+        item.tStatus = 'Ok';
+        if (item.Benchmarking) item.tStatus = 'Benchmarking';
+        else if (item.NeedsBenchmark) item.tStatus = 'Out-dated Benchmark'
+        else if (item.BenchmarkFailed) item.tStatus = 'Failed Benchmark'
+
+        item.tBenchmarked = (item.tStatus == 'Benchmarking' || !item.Benchmarked)? '-' : item.Benchmarked;
+        item.tLogFile = (typeof item.LogFile !== "undefined" && item.LogFile != "")? '<button class="btn btn-default" type="button" name="logfile" title="Show logfile '+item.LogFile+'" data-logfile="' + item.LogFile + '"><i class="fa fa-search"></i></button>' : '&nbsp;';
+
+        // Format the Profile(s)
+        var tOC = new Array();
+        if (cfg.OCmode == "msia") {
+            if (item.MSIAprofile) { tOC.push("MSIA" + item.MSIAprofile); }
+        } else if (cfg.OCmode == "ocp") {
+            var devices = item.DeviceModel.toString().split(/\-/);
+            var cnt = devices.length
+            $.each(devices, function (ix, dev) {
+                if (dev != "CPU" && item.OCprofile[dev]) {
+                    if (cnt == 1) { tOC.push(item.OCprofile[dev]); }
+                    else {
+                        tOC.push(dev + "=" + item.OCprofile[dev]);
                     }
-                });
-            }
-            if (!tOC.length) { tOC.push("-"); }
-            item.tOC = tOC.join('<br />');
+                }
+            });
+        }
+        if (!tOC.length) { tOC.push("-"); }
+        item.tOC = tOC.join('<br />');
 
-            item.tPowerDraw = Math.round(parseFloat(item.PowerDraw)) + ' W';
-        });
-        return data;
-    }
+        item.tPowerDraw = Math.round(parseFloat(item.PowerDraw)) + ' W';
+    });
+    return data;
+}
 </script>
 <!--#include file="/parts/foot.html" -->

@@ -9,8 +9,7 @@
     </div>
 </div>
 
-<table id="watchdog" class="table"
-       data-toggle="table"
+<table id="watchdog" class="bootstrap-table-init table"
        data-url="/watchdogtimers"
        data-response-handler="formatWatchdogTimers"
        data-filter-control="true"
@@ -39,6 +38,7 @@
 
 <!-- End of page scripts -->
 <script type="text/javascript">
+$(function() {
     $("table.table").on('load-success.bs.table', function (e, data) {
         sortFilterOptions(this);
     });
@@ -53,24 +53,25 @@
             }
         })
     });
+});
 
-    function formatWatchdogTimers(data) {
-        // This function can alter the returned data before building the table, formatting it in a way
-        // that is easier to display and manipulate in a table
-        $.each(data, function (index, item) {
-            item.tMinerName = item.MinerName.replace(/-.+$/, '')
-            var diff = (new Date).getTime() - (new Date(item.Kicked)).getTime()
-            var days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            diff -= days * (1000 * 60 * 60 * 24);
-            var hours = Math.floor(diff / (1000 * 60 * 60));
-            diff -= hours * (1000 * 60 * 60);
-            var mins = Math.floor(diff / (1000 * 60));
-            diff -= mins * (1000 * 60);
-            var seconds = Math.floor(diff / (1000));
-            diff -= seconds * (1000);
-            item.tKicked = (days? days+"d ":'') + (hours<10? '0':'') + hours + ':' + (mins<10? '0':'') + mins + ':' + (seconds<10? '0':'') + seconds
-        });
-        return data;
-    }
+function formatWatchdogTimers(data) {
+    // This function can alter the returned data before building the table, formatting it in a way
+    // that is easier to display and manipulate in a table
+    $.each(data, function (index, item) {
+        item.tMinerName = item.MinerName.replace(/-.+$/, '')
+        var diff = (new Date).getTime() - (new Date(item.Kicked)).getTime()
+        var days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        diff -= days * (1000 * 60 * 60 * 24);
+        var hours = Math.floor(diff / (1000 * 60 * 60));
+        diff -= hours * (1000 * 60 * 60);
+        var mins = Math.floor(diff / (1000 * 60));
+        diff -= mins * (1000 * 60);
+        var seconds = Math.floor(diff / (1000));
+        diff -= seconds * (1000);
+        item.tKicked = (days? days+"d ":'') + (hours<10? '0':'') + hours + ':' + (mins<10? '0':'') + mins + ':' + (seconds<10? '0':'') + seconds
+    });
+    return data;
+}
 </script>
 <!--#include file="/parts/foot.html" -->

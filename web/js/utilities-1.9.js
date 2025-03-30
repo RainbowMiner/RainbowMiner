@@ -198,7 +198,8 @@ function formatTSL(data) {
 }
 
 function formatAlgorithm(data) {
-    return (globalconfig && globalconfig.EnableAlgorithmMapping && globalconfig.AlgorithmMap[data]) ? globalconfig.AlgorithmMap[data] : data;
+    const cfg = ConfigLoader.getConfig();
+    return (cfg && cfg.EnableAlgorithmMapping && cfg.AlgorithmMap[data]) ? cfg.AlgorithmMap[data] : data;
 }
 
 function detailFormatter(index, row) {

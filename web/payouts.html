@@ -3,8 +3,7 @@
   <h1 id="title" data-navbaractive="navpayouts" class="h2">Pool Payouts</h1>
 </div>
 <p>Lists all pool payouts, reported by the pool-APIs (if supported)</p>
-<table id="pools" class="table"
-  data-toggle="table"
+<table id="pools" class="bootstrap-table-init table"
   data-url="/payouts"
   data-filter-control="true"
   data-filter-show-clear="true"
@@ -32,17 +31,19 @@
 
 <!-- End of page scripts -->
 <script type="text/javascript">
+$(function() {
     $("table.table").on('load-success.bs.table', function (e, data) {
         sortFilterOptions(this);
     });
+});
 
-    function formatPrices(data) {
-        return data.toFixed(10);
-    }
+function formatPrices(data) {
+    return data.toFixed(10);
+}
   
-    function formatDate(data) {
-        return timeSince(new Date(data));
-        return new Date(parseInt(data.replace(/\D/g,''))).toLocaleString();
-    }
+function formatDate(data) {
+    return timeSince(new Date(data));
+    return new Date(parseInt(data.replace(/\D/g,''))).toLocaleString();
+}
 </script>
 <!--#include file="/parts/foot.html" -->

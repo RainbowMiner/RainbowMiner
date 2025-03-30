@@ -165,142 +165,103 @@ $(function() {
         return false;
     });
 
-    var template = Handlebars.compile($("#poolsetup_template").html());
 
-    $.ajax({
-        url: '/loadconfig',
-        data: {ConfigName: "Pools", PoolName: "list"},
-        success: function (result) {
-            result.sort();
-            var add1 = '', add2 = '';
-            $.each(result, function( ix, name ) {
-                var sel = (name.slice(-1)=='*')? true:false;
-                if (sel) name = name.slice(0,-1);
-                var aesym = (typeof globalconfig.AutoexPools[name] !== "undefined")? ' <span class="crypto-symbol bitcoin-symbol">&#x20BF;</span>':'';
-                var opt = '<option value="'+name+'">'+name+aesym+'</option>';
-                if (sel) add1 += opt; else add2 += opt;
-            })
-            $("#select--PoolName").append(add1 + '<option>--------</option>' + add2);
-        }
-    });
+    ConfigLoader.whenReady().then(function(cfg) {
+        const template = Handlebars.compile($("#poolsetup_template").html());
 
-    $("#select--PoolName").change(function (event) {
-        var name = $("#select--PoolName").val()
-        if (name.slice(-1)=='-') {
-            $("#accordion").empty()
-        }
-        else {
-            $.ajax({
-                url: '/loadconfig',
-                data: {ConfigName: "Pools", PoolName: name},
-                success: function (result) {
-                    var limits = {
-                        AutoBonusExtendByHours: {min:0, max:null, step:0.001, append:"hours"},
-                        AutoBonusExtendForHours: {min:0, max:null, step:0.001, append:"hours"},
-                        AutoCreateMaxMinHours: {min:0, max:null, step:1, append:"hours"},
-                        AutoCreateMinCPUProfitBTC: {min:null, max:null, step:null, append:"BTC"},
-                        AutoCreateMinProfitPercent: {min:0, max:100, step:0.001, append:"%"},
-                        AutoExtendMaximumPercent: {min:0, max:100, step:0.001, append:"%"},
-                        AutoExtendTargetPercent: {min:0, max:100, step:0.001, append:"%"},
-                        AutoPriceModifierPercent: {min:-30, max:30, step:0.001, append:"%"},
-                        AutoUpdateMinPriceChangePercent: {min:0, max:100, step:0.001, append:"%"},
-                        MaxAllowedLuck: {min:0, max:null, step:0.001, append:null},
-                        MaxHours: {min:3, max:null, step:1, append:"hours"},
-                        MaxMarginOfError: {min:0, max:100, step:0.001, append:"%"},
-                        MinHours: {min:3, max:null, step:1, append:"hours"},
-                        Penalty: {min:0, max:100, step:0.001, append:"%"},
-                        PowerDrawFactor: {min:0, max:null, step:0.001, append:null},
-                        PriceBTC: {min:null, max:null, step:null, append:"BTC"},
-                        PriceFactorDecayPercent: {min:0, max:100, step:0.001, append:"%"},
-                        PriceFactor: {min:0, max:null, step:0.001, append:null},
-                        PriceFactorMin: {min:0, max:null, step:0.001, append:null},
-                        SwitchingHysteresis: {min:0, max:100, step:0.001, append:"%"}
-                    }
-                    var common = {
-                        Worker: "Enter the worker name (enter $WorkerName to use config.txt default)",
-                        Penalty: "Enter penalty in percent. This value will decrease all reported values.",
-                        FocusWallet: "Force mining for one or more of this pool's wallets (comma separated)",
-                        SSL: "Enable use SSL stratum connection, if available",
-                        AllowZero: "Allow mining an alogorithm, even if the pool hashrate equals 0 (not recommended, except for solo or coin mining)",
-                        EnableAutoCoin: "Automatically add currencies that are activated in coins.config.txt with EnableAutoPool=\"1\"",
-                        EnablePostBlockMining: "Enable to allow forced mining a specific currency for a timespan (defined in coins.config.txt), after a block has been found.",
-                        Algorithm: "Enter algorithms you want to mine (leave empty for all)",
-                        ExcludeAlgorithm: "Enter algorithms you do want to exclude",
-                        CoinSymbol: "Enter coins by currency-symbol, you want to mine (leave empty for all). Better alternative to \"CoinName\"",
-                        ExcludeCoinSymbol: "Enter coins by currency-symbol, you do want to exclude. Better alternative to \"ExcludeCoin\"",
-                        CoinSymbolPBM: "If EnablePostBlockMining is enabled, specify which currency is taken into account for post block mining (leave empty for all)",
-                        CoinName: "Enter coins by name, you want to mine (leave empty for all). The coin's name must be spelled exactly like it is used at the corresponding pool. It applies to the pools, that transmit the coin names, only.",
-                        ExcludeCoin: "Enter coins by name, you do want to exclude. The coin's name must be spelled exactly like it is used at the corresponding pool. It applies to the pools, that transmit the coin names, only.",
-                        MinerName: "Enter the miners you want to use (leave empty for all)",
-                        ExcludeMinerName: "Enter the miners you do want to exclude",
-                        MaxAllowedLuck: "If luck (= time_since_last_block / time_to_find_one_block) is greater than that number, increase the penalty up to 100% (0=allow any luck, leave empty to use value in config.txt)",
-                        MaxMarginOfError: "Enter the maximum allowed fluctuation of pool prices in percent",
-                        MaxTimeSinceLastBlock: "Enter allowed maximum time since last found block (units allowed, e.g. 1h=one hour, default unit is s=seconds, leave empty to use value in config.txt)",
-                        MaxTimeToFind: "Enter maximum average time to find a block (units allowed, e.g. 1h=one hour, default unit is s=seconds, leave empty for no pool limit)",
-                        Region: "Enter the stratum server's home region (leave empty to use value in config.txt)",
-                        StatAverage: "Enter which moving average is to be used for the live trendline",
-                        StatAverageStable: "Enter which moving average is to be used for the stable trendline",
-                        SwitchingHysteresis: "Prevention of pool-to-pool hopping: the higher, the less switching (in %, 0 to disable, leave empty to use global PoolSwitchingHysteresis)",
-                        DataWindow: "Enter which datawindow is to be used for this pool (leave empty for default)",
-                        BalancesKeepAlive: ""
-                    }
-                    if (result.PoolName == name) {
-                        var coins = []
-                        var item = {
-                            poolname: result.PoolName,
-                            coins: [],
-                            common: [],
-                            specific: []
+        $.ajax({
+            url: '/loadconfig',
+            data: {ConfigName: "Pools", PoolName: "list"},
+            success: function (result) {
+                result.sort();
+                var add1 = '', add2 = '';
+                $.each(result, function( ix, name ) {
+                    var sel = (name.slice(-1)=='*')? true:false;
+                    if (sel) name = name.slice(0,-1);
+                    var aesym = (typeof cfg.AutoexPools[name] !== "undefined")? ' <span class="crypto-symbol bitcoin-symbol">&#x20BF;</span>':'';
+                    var opt = '<option value="'+name+'">'+name+aesym+'</option>';
+                    if (sel) add1 += opt; else add2 += opt;
+                })
+                $("#select--PoolName").append(add1 + '<option>--------</option>' + add2);
+            }
+        });
+
+        $("#select--PoolName").change(function (event) {
+            var name = $("#select--PoolName").val()
+            if (name.slice(-1)=='-') {
+                $("#accordion").empty()
+            }
+            else {
+                $.ajax({
+                    url: '/loadconfig',
+                    data: {ConfigName: "Pools", PoolName: name},
+                    success: function (result) {
+                        var limits = {
+                            AutoBonusExtendByHours: {min:0, max:null, step:0.001, append:"hours"},
+                            AutoBonusExtendForHours: {min:0, max:null, step:0.001, append:"hours"},
+                            AutoCreateMaxMinHours: {min:0, max:null, step:1, append:"hours"},
+                            AutoCreateMinCPUProfitBTC: {min:null, max:null, step:null, append:"BTC"},
+                            AutoCreateMinProfitPercent: {min:0, max:100, step:0.001, append:"%"},
+                            AutoExtendMaximumPercent: {min:0, max:100, step:0.001, append:"%"},
+                            AutoExtendTargetPercent: {min:0, max:100, step:0.001, append:"%"},
+                            AutoPriceModifierPercent: {min:-30, max:30, step:0.001, append:"%"},
+                            AutoUpdateMinPriceChangePercent: {min:0, max:100, step:0.001, append:"%"},
+                            MaxAllowedLuck: {min:0, max:null, step:0.001, append:null},
+                            MaxHours: {min:3, max:null, step:1, append:"hours"},
+                            MaxMarginOfError: {min:0, max:100, step:0.001, append:"%"},
+                            MinHours: {min:3, max:null, step:1, append:"hours"},
+                            Penalty: {min:0, max:100, step:0.001, append:"%"},
+                            PowerDrawFactor: {min:0, max:null, step:0.001, append:null},
+                            PriceBTC: {min:null, max:null, step:null, append:"BTC"},
+                            PriceFactorDecayPercent: {min:0, max:100, step:0.001, append:"%"},
+                            PriceFactor: {min:0, max:null, step:0.001, append:null},
+                            PriceFactorMin: {min:0, max:null, step:0.001, append:null},
+                            SwitchingHysteresis: {min:0, max:100, step:0.001, append:"%"}
                         }
-    
-                        $.each(common,function(key,val) {
-                            var isYiimp = typeof result.Setup !== "undefined" && result.Setup != null && result.Setup.Yiimp
-                            if (typeof result.Config[key] === "undefined" || (key == "DataWindow" && isYiimp) || key == "BalancesKeepAlive") return
-
-                            var rec = {
-                                key:key,
-                                text:val,
-                                value:result.Config[key],
-                                type:"text",
-                                min:null,
-                                max:null,
-                                step:null,
-                                append:null,
-                                inputmode:null
+                        var common = {
+                            Worker: "Enter the worker name (enter $WorkerName to use config.txt default)",
+                            Penalty: "Enter penalty in percent. This value will decrease all reported values.",
+                            FocusWallet: "Force mining for one or more of this pool's wallets (comma separated)",
+                            SSL: "Enable use SSL stratum connection, if available",
+                            AllowZero: "Allow mining an alogorithm, even if the pool hashrate equals 0 (not recommended, except for solo or coin mining)",
+                            EnableAutoCoin: "Automatically add currencies that are activated in coins.config.txt with EnableAutoPool=\"1\"",
+                            EnablePostBlockMining: "Enable to allow forced mining a specific currency for a timespan (defined in coins.config.txt), after a block has been found.",
+                            Algorithm: "Enter algorithms you want to mine (leave empty for all)",
+                            ExcludeAlgorithm: "Enter algorithms you do want to exclude",
+                            CoinSymbol: "Enter coins by currency-symbol, you want to mine (leave empty for all). Better alternative to \"CoinName\"",
+                            ExcludeCoinSymbol: "Enter coins by currency-symbol, you do want to exclude. Better alternative to \"ExcludeCoin\"",
+                            CoinSymbolPBM: "If EnablePostBlockMining is enabled, specify which currency is taken into account for post block mining (leave empty for all)",
+                            CoinName: "Enter coins by name, you want to mine (leave empty for all). The coin's name must be spelled exactly like it is used at the corresponding pool. It applies to the pools, that transmit the coin names, only.",
+                            ExcludeCoin: "Enter coins by name, you do want to exclude. The coin's name must be spelled exactly like it is used at the corresponding pool. It applies to the pools, that transmit the coin names, only.",
+                            MinerName: "Enter the miners you want to use (leave empty for all)",
+                            ExcludeMinerName: "Enter the miners you do want to exclude",
+                            MaxAllowedLuck: "If luck (= time_since_last_block / time_to_find_one_block) is greater than that number, increase the penalty up to 100% (0=allow any luck, leave empty to use value in config.txt)",
+                            MaxMarginOfError: "Enter the maximum allowed fluctuation of pool prices in percent",
+                            MaxTimeSinceLastBlock: "Enter allowed maximum time since last found block (units allowed, e.g. 1h=one hour, default unit is s=seconds, leave empty to use value in config.txt)",
+                            MaxTimeToFind: "Enter maximum average time to find a block (units allowed, e.g. 1h=one hour, default unit is s=seconds, leave empty for no pool limit)",
+                            Region: "Enter the stratum server's home region (leave empty to use value in config.txt)",
+                            StatAverage: "Enter which moving average is to be used for the live trendline",
+                            StatAverageStable: "Enter which moving average is to be used for the stable trendline",
+                            SwitchingHysteresis: "Prevention of pool-to-pool hopping: the higher, the less switching (in %, 0 to disable, leave empty to use global PoolSwitchingHysteresis)",
+                            DataWindow: "Enter which datawindow is to be used for this pool (leave empty for default)",
+                            BalancesKeepAlive: ""
+                        }
+                        if (result.PoolName == name) {
+                            var coins = []
+                            var item = {
+                                poolname: result.PoolName,
+                                coins: [],
+                                common: [],
+                                specific: []
                             }
-
-                            if (key.match(/^Allow|Enable|Disable/)) rec.type="bool"
-                            else if (key == "SSL") rec.type="boolplus"
-                            else if (key.match(/Secret|Password/i)) rec.type="password"
-                            else if (typeof limits[key] !== "undefined") {
-                                rec.min = limits[key].min;
-                                rec.max = limits[key].max;
-                                rec.step= limits[key].step;
-                                rec.append = limits[key].append;
-                                rec.inputmode = "decimal";
-                                if (rec.min !== null || rec.max !== null || rec.step !== null) rec.type = "number"
-                            }
-
-                            item.common.push(rec)
-                        })
     
-                        $.each(result.Config,function(key,val) {
-                            if (typeof common[key] !== "undefined") return
- 
-                            var hasSetupField = typeof result.Setup !== "undefined" && result.Setup != null && typeof result.Setup.SetupFields !== "undefined" && typeof result.Setup.Fields[key] !== "undefined"
+                            $.each(common,function(key,val) {
+                                var isYiimp = typeof result.Setup !== "undefined" && result.Setup != null && result.Setup.Yiimp
+                                if (typeof result.Config[key] === "undefined" || (key == "DataWindow" && isYiimp) || key == "BalancesKeepAlive") return
 
-                            if (!hasSetupField && (key.length <= 5 || key.match(/-Params$/))) {
-                                if (key.match(/-Params$/)) {
-                                    key = key.replace(/-Params$/,"")
-                                }
-                                if (-1 == coins.indexOf(key)) {
-                                    item.coins.push({coin:key, wallet:result.Config[key], params:result.Config[key+'-Params']})
-                                    coins.push(key)
-                                }
-                            } else if (hasSetupField) {
                                 var rec = {
                                     key:key,
-                                    text:result.Setup.SetupFields[key],
+                                    text:val,
                                     value:result.Config[key],
                                     type:"text",
                                     min:null,
@@ -322,60 +283,102 @@ $(function() {
                                     if (rec.min !== null || rec.max !== null || rec.step !== null) rec.type = "number"
                                 }
 
-                                item.specific.push(rec)
-                            } else {
-                                console.log("Unrelated config field found in "+result.PoolName+": "+key)
+                                item.common.push(rec)
+                            })
+    
+                            $.each(result.Config,function(key,val) {
+                                if (typeof common[key] !== "undefined") return
+ 
+                                var hasSetupField = typeof result.Setup !== "undefined" && result.Setup != null && typeof result.Setup.SetupFields !== "undefined" && typeof result.Setup.Fields[key] !== "undefined"
+
+                                if (!hasSetupField && (key.length <= 5 || key.match(/-Params$/))) {
+                                    if (key.match(/-Params$/)) {
+                                        key = key.replace(/-Params$/,"")
+                                    }
+                                    if (-1 == coins.indexOf(key)) {
+                                        item.coins.push({coin:key, wallet:result.Config[key], params:result.Config[key+'-Params']})
+                                        coins.push(key)
+                                    }
+                                } else if (hasSetupField) {
+                                    var rec = {
+                                        key:key,
+                                        text:result.Setup.SetupFields[key],
+                                        value:result.Config[key],
+                                        type:"text",
+                                        min:null,
+                                        max:null,
+                                        step:null,
+                                        append:null,
+                                        inputmode:null
+                                    }
+
+                                    if (key.match(/^Allow|Enable|Disable/)) rec.type="bool"
+                                    else if (key == "SSL") rec.type="boolplus"
+                                    else if (key.match(/Secret|Password/i)) rec.type="password"
+                                    else if (typeof limits[key] !== "undefined") {
+                                        rec.min = limits[key].min;
+                                        rec.max = limits[key].max;
+                                        rec.step= limits[key].step;
+                                        rec.append = limits[key].append;
+                                        rec.inputmode = "decimal";
+                                        if (rec.min !== null || rec.max !== null || rec.step !== null) rec.type = "number"
+                                    }
+
+                                    item.specific.push(rec)
+                                } else {
+                                    console.log("Unrelated config field found in "+result.PoolName+": "+key)
+                                }
+                            })
+                            if (item.coins.length) {
+                                item.coins.push({coin:"", wallet:"", isNew:true})
                             }
-                        })
-                        if (item.coins.length) {
-                            item.coins.push({coin:"", wallet:"", isNew:true})
-                        }
 
-                        $("#accordion").html(template(item))
+                            $("#accordion").html(template(item))
 
-                        var frst = "collapseCoins"
-                        if (item.coins.length) $("#config--Coins").show()
-                        else {
-                            $("#config--Coins").hide()
-                            frst = "collapseCommon"
+                            var frst = "collapseCoins"
+                            if (item.coins.length) $("#config--Coins").show()
+                            else {
+                                $("#config--Coins").hide()
+                                frst = "collapseCommon"
+                            }
+                            if (item.specific.length) $("#config--Specific").show()
+                            else {
+                                $("#config--Specific").hide()
+                            }
+                            $("#"+frst).addClass("show")
                         }
-                        if (item.specific.length) $("#config--Specific").show()
-                        else {
-                            $("#config--Specific").hide()
-                        }
-                        $("#"+frst).addClass("show")
                     }
-                }
-            })
-        }
-    });
-
-    $("#formConfig").submit(function (event) {
-        // Stop form from submitting normally
-        event.preventDefault();
-        if (globalconfig.IsLocked) {
-            document.querySelector('.modal-body').innerHTML = 'To be able to save, manually set parameter "APIlockConfig" to "0" in config.txt';
-            document.querySelector('.modal-title').textContent = 'Warning: config lock is enabled';
-            var myModal = new bootstrap.Modal(document.getElementById('myModal'));
-            myModal.show();
-            return false;
-        }
-        $.post("/saveconfig", $(this).serialize()).done(function (data) {
-            var mbody, mtitle;
-            $("#select--PoolName").trigger("change");
-            if (data.Success) {
-                mbody = 'RainbowMiner will pick up the new configuration after the current round has ended.';
-                mtitle = 'Configuration saved!';
-            } else {
-                mbody = 'Something went wrong or the configuration is locked via APILockConfig in config.txt';
-                mtitle = 'Configuration NOT saved!';
+                })
             }
-            document.querySelector('.modal-body').innerHTML = mbody;
-            document.querySelector('.modal-title').textContent = mtitle;
-            var myModal = new bootstrap.Modal(document.getElementById('myModal'));
-            myModal.show();
         });
-    })
+
+        $("#formConfig").submit(function (event) {
+            // Stop form from submitting normally
+            event.preventDefault();
+            if (cfg.IsLocked) {
+                document.querySelector('.modal-body').innerHTML = 'To be able to save, manually set parameter "APIlockConfig" to "0" in config.txt';
+                document.querySelector('.modal-title').textContent = 'Warning: config lock is enabled';
+                var myModal = new bootstrap.Modal(document.getElementById('myModal'));
+                myModal.show();
+                return false;
+            }
+            $.post("/saveconfig", $(this).serialize()).done(function (data) {
+                var mbody, mtitle;
+                $("#select--PoolName").trigger("change");
+                if (data.Success) {
+                    mbody = 'RainbowMiner will pick up the new configuration after the current round has ended.';
+                    mtitle = 'Configuration saved!';
+                } else {
+                    mbody = 'Something went wrong or the configuration is locked via APILockConfig in config.txt';
+                    mtitle = 'Configuration NOT saved!';
+                }
+                document.querySelector('.modal-body').innerHTML = mbody;
+                document.querySelector('.modal-title').textContent = mtitle;
+                var myModal = new bootstrap.Modal(document.getElementById('myModal'));
+                myModal.show();
+            });
+        });
+    });
 });
 </script>
 <!--#include file="/parts/foot.html" -->
