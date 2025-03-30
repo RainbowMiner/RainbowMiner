@@ -23,7 +23,6 @@ $map = @{
     'api3' = 'api3'; '3' = 'api3'; 'apiurl3' = 'api3'
 }
 
-
 $Session.Config.Userpools | Where-Object {$_.Name -eq $Name -and $_.Enable -and ($Wallets."$($_.Currency)" -or $InfoOnly)} | ForEach-Object {
 
     $Pool_Params = [ordered]@{
@@ -200,9 +199,7 @@ $Session.Config.Userpools | Where-Object {$_.Name -eq $Name -and $_.Enable -and 
     }
 }
 
-if ($Pool_ProfitData) {
-    $Pool_ProfitData.Keys | Foreach-Object {
-        $Pool_ProfitData[$_] = $null
-    }
-    $Pool_ProfitData  = $null
+if ($Pool_ProfitData.Count) {
+    $Pool_ProfitData.Clear()
 }
+$Pool_ProfitData  = $null
