@@ -1935,13 +1935,13 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
     $task = $null
 
     $CacheDate = (Get-Date).AddMinutes(-30).ToUniversalTime()
-    foreach ( $cached in $APICacheDB.Keys ) {
-        if ($APICacheDB.ContainsKey($cached) -and $APICacheDB[$cached].LastAccess -lt $CacheDate) {
-            $APICacheDB.Remove($cached)
+    foreach ($key in @($APICacheDB.Keys)) {
+        if ($APICacheDB.ContainsKey($key) -and $APICacheDB[$key].LastAccess -lt $CacheDate) {
+            [void]$APICacheDB.Remove($key)
         }
     }
     $CacheDate = $null
-    $cached = $null
+    $key = $null
 
     if ($GCStopWatch.Elapsed.TotalSeconds -gt 120) {
         [System.GC]::Collect()
