@@ -2215,42 +2215,48 @@ function Invoke-Core {
 
         foreach ($Pool in $AvailablePools) {
             if (-not $ServerPools -or $Pool -eq "MiningRigRentals") {
-                if (
-                    (
-                        $Session.Config.Pools.$Pool -and 
-                        ($Session.Config.PoolName.Count -eq 0 -or $Session.Config.PoolName -contains $Pool) -and 
-                        ($Session.Config.ExcludePoolName.Count -eq 0 -or $Session.Config.ExcludePoolName -notcontains $Pool)
-                    ) -or (
-                        $Pool -eq "Userpools" -and $Session.Config.Userpools
-                    )
-                ) {
-                    if ($Session.RoundCounter -eq 0) { Write-Host ".. loading $Pool " -NoNewline }
-                    $StopWatch.Restart()
+                try {
+                    if (
+                        (
+                            $Session.Config.Pools.$Pool -and 
+                            ($Session.Config.PoolName.Count -eq 0 -or $Session.Config.PoolName -contains $Pool) -and 
+                            ($Session.Config.ExcludePoolName.Count -eq 0 -or $Session.Config.ExcludePoolName -notcontains $Pool)
+                        ) -or (
+                            $Pool -eq "Userpools" -and $Session.Config.Userpools
+                        )
+                    ) {
+                        if ($Session.RoundCounter -eq 0) { Write-Host ".. loading $Pool " -NoNewline }
+                        $StopWatch.Restart()
 
-                    if ($Pool -eq "Userpools") {
-                        foreach ($UserPool in $Session.Config.Userpools) {
-                            $UserPool_Name = $UserPool.Name
-                            if ($UserPool.Name -and -not $SelectedPoolNames.Contains($UserPool_Name) -and -not $ServerPoolNames.Contains($UserPool_Name)) {
-                                $Pool_Parameters = @{ StatSpan = $RoundSpan; InfoOnly = $false; Name = $UserPool_Name }
-                                foreach ($Property in $Session.Config.Pools.$UserPool_Name.PSObject.Properties) {
-                                    $Pool_Parameters[$Property.Name] = $Property.Value
+                        if ($Pool -eq "Userpools") {
+                            foreach ($UserPool in $Session.Config.Userpools) {
+                                $UserPool_Name = $UserPool.Name
+                                if ($UserPool.Name -and -not $SelectedPoolNames.Contains($UserPool_Name) -and -not $ServerPoolNames.Contains($UserPool_Name)) {
+                                    $Pool_Parameters = @{ StatSpan = $RoundSpan; InfoOnly = $false; Name = $UserPool_Name }
+                                    foreach ($Property in $Session.Config.Pools.$UserPool_Name.PSObject.Properties) {
+                                        $Pool_Parameters[$Property.Name] = $Property.Value
+                                    }
+                                    Get-PoolsContent "Userpools" -Parameters $Pool_Parameters -Disabled $Disabled | Foreach-Object { [void]$NewPools.Add($_) }
+                                    [void]$SelectedPoolNames.Add($UserPool_Name)
                                 }
-                                Get-PoolsContent "Userpools" -Parameters $Pool_Parameters -Disabled $Disabled | Foreach-Object { [void]$NewPools.Add($_) }
-                                [void]$SelectedPoolNames.Add($UserPool_Name)
                             }
+                        } else {
+                            $Pool_Parameters = @{ StatSpan = $RoundSpan; InfoOnly = $false }
+                            foreach ($Property in $Session.Config.Pools.$Pool.PSObject.Properties) {
+                                $Pool_Parameters[$Property.Name] = $Property.Value
+                            }
+                            Get-PoolsContent $Pool -Parameters $Pool_Parameters -Disabled $Disabled | Foreach-Object { [void]$NewPools.Add($_)  }
+                            [void]$SelectedPoolNames.Add($Pool)
                         }
-                    } else {
-                        $Pool_Parameters = @{ StatSpan = $RoundSpan; InfoOnly = $false }
-                        foreach ($Property in $Session.Config.Pools.$Pool.PSObject.Properties) {
-                            $Pool_Parameters[$Property.Name] = $Property.Value
-                        }
-                        Get-PoolsContent $Pool -Parameters $Pool_Parameters -Disabled $Disabled | Foreach-Object { [void]$NewPools.Add($_)  }
-                        [void]$SelectedPoolNames.Add($Pool)
-                    }
 
-                    $TimerPools[$Pool] = [Math]::Round($StopWatch.Elapsed.TotalSeconds, 3)
-                    if ($Session.RoundCounter -eq 0) { Write-Host "done ($($TimerPools[$Pool])s) " }
-                    Write-Log "$Pool loaded in $($TimerPools[$Pool])s "
+                        $TimerPools[$Pool] = [Math]::Round($StopWatch.Elapsed.TotalSeconds, 3)
+                        if ($Session.RoundCounter -eq 0) { Write-Host "done ($($TimerPools[$Pool])s) " }
+                        Write-Log "$Pool loaded in $($TimerPools[$Pool])s "
+                    }
+                }
+                catch {
+                    if ($Session.RoundCounter -eq 0) { Write-Host "failed!" }
+                    Write-Log -Level Warn "Failed to load $(if ($Pool -eq "Userpools") {"Userpool $($UserPool_Name)"} else {$Pool}): $($_.Exception.Message)"
                 }
             }
         }
