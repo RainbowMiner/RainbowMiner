@@ -536,14 +536,18 @@ Param(
                 $Response = $null
 
                 if ($IsForm) {
-                    [System.Collections.Generic.List[System.IO.FileStream]]$fs_array = @()
+                    $fs_array = [System.Collections.Generic.List[System.IO.FileStream]]::new()
                 }
 
                 $content = [System.Net.Http.HttpRequestMessage]::new()
 
                 $content.Method = $requestmethod
                 $content.RequestUri = $requesturl
-                $headers_local.GetEnumerator() | Foreach-Object {[void]$content.Headers.Add($_.Key,$_.Value)}
+                $headers_local.GetEnumerator() | Foreach-Object {
+                    if ($_.Key -ne "Content-Type") {
+                        [void]$content.Headers.Add($_.Key, $_.Value)
+                    }
+                }
                 [void]$content.Headers.Add('User-Agent', $userAgent)
 
                 if ($body) {
@@ -579,7 +583,21 @@ Param(
                         if ($Session.LogLevel -eq "Debug") {
                             Write-Log "--> PLAIN: $($body)"
                         }
-                        $content.Content = [System.Net.Http.StringContent]::new($body,[System.Text.Encoding]::UTF8,'plain/text')
+
+                        $contentType = if ($headers_local.ContainsKey("Content-Type")) {
+                            $headers_local["Content-Type"]
+                        } elseif ($body.Trim().StartsWith("{")) {
+                            try {
+                                [void](ConvertFrom-Json $body -ErrorAction Stop)
+                                "application/json"
+                            } catch {
+                                "text/plain"
+                            }
+                        } else {
+                            "text/plain"
+                        }
+
+                        $content.Content = [System.Net.Http.StringContent]::new($body,[System.Text.Encoding]::UTF8,$contentType)
                     }
                 }
 
