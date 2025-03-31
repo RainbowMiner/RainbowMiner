@@ -586,7 +586,7 @@ Param(
 
                         $contentType = if ($headers_local.ContainsKey("Content-Type")) {
                             $headers_local["Content-Type"]
-                        } elseif ($body.Trim().StartsWith("{")) {
+                        } elseif ($body.TrimStart().StartsWith("{")) {
                             try {
                                 [void](ConvertFrom-Json $body -ErrorAction Stop)
                                 "application/json"
