@@ -1160,7 +1160,10 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         symbol = $sym
                     }
                     $rate = $Rates.$sym
-                    $CurrentRates | Foreach-Object {$val | Add-Member "rate$($_.symbol)" $($Rates."$($_.symbol)" / $rate)}
+                    $CurrentRates | Foreach-Object {
+                        $rate_sym = if ($rate) {$Rates."$($_.symbol)" / $rate} else {0}
+                        $val | Add-Member "rate$($_.symbol)" $rate_sym
+                    }
                     $val
                 }
                 $Data = ConvertTo-Json @($Data) -Depth 10
