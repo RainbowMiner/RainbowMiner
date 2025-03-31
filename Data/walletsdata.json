@@ -274,7 +274,7 @@
     {
         "symbol":  "ZIL",
         "match":  "^zil",
-        "rpc":  "https://api.zq2-devnet.zilliqa.com/",
+        "rpc":  "https://api.zilliqa.com/",
         "address":  "",
         "balance":  "result.balance",
         "received":  "",
