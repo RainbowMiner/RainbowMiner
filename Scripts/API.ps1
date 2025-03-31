@@ -1170,8 +1170,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             } else {
                 $Data = ConvertTo-Json $Rates -Depth 10
             }
-            $CurrentRates = $rate = $val = $null
-            Remove-Variable -Name CurrentRates, rate, val -ErrorAction Ignore
+            $CurrentRates = $rate = $rate_sym = $val = $null
+            Remove-Variable -Name CurrentRates, rate, rate_sym, val -ErrorAction Ignore
             Break
         }
         "/asyncloaderjobs" {
