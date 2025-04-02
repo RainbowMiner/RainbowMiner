@@ -105,16 +105,6 @@ if ($InfoOnly) {
 $ValidCompute_AMD    = @("RDNA3","RDNA2","RDNA1","GCN51","GCN50")
 $ValidCompute_NVIDIA = @("Pascal","Turing","Ampere","Ada","Hopper","Blackwell")
 
-if (-not (Test-Path "$(Join-Path $Session.MainPath "Bin\ANY-SRBMinerMulti\Cache\verthash.dat")")) {
-    $VerthashDatFile = if ($IsLinux) {"$env:HOME/.vertcoin/verthash.dat"} else {"$env:APPDATA\Vertcoin\verthash.dat"}
-    if (-not (Test-Path $VerthashDatFile) -or (Get-Item $VerthashDatFile).length -lt 1.19GB) {
-        $VerthashDatFile = Join-Path $Session.MainPath "Bin\Common\verthash.dat"
-        if (-not (Test-Path $VerthashDatFile) -or (Get-Item $VerthashDatFile).length -lt 1.19GB) {
-            $VerthashDatFile = $null
-        }
-    }
-}
-
 if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name}
 
 foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
@@ -180,10 +170,6 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                     $Compute = $ValidCompute_NVIDIA | Where-Object {-not $_.ExcludeCompute -or $_ -notin $_.ExcludeCompute}
                     $Compute_Param = "Architecture"
                 }
-            }
-
-            if ($MainAlgorithm -eq "verthash" -and $VerthashDatFile) {
-                $DeviceParams = " --verthash-dat-path '$($VerthashDatFile)'$($DeviceParams)"
             }
 
             $All_MainAlgorithms = if ($Miner_Vendor -eq "CPU") {@($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)")} else {@($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)","$($MainAlgorithm_Norm_0)-GPU")}

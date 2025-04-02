@@ -269,7 +269,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
             }
 
             if ($MainAlgorithm -eq "verthash" -and $VerthashDatFile) {
-                $DeviceParams = " --verthash-dat-path '$($VerthashDatFile)'$($DeviceParams)"
+                $DeviceParams = " --verthash-dat-path ""$($VerthashDatFile)""$($DeviceParams)"
             }
 
             $All_MainAlgorithms = if ($Miner_Vendor -eq "CPU") {@($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)")} else {@($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)","$($MainAlgorithm_Norm_0)-GPU")}
