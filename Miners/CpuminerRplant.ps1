@@ -13,14 +13,14 @@ if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # 
 $ManualUri = "https://github.com/rplant8/cpuminer-opt-rplant/releases"
 $Port = "232{0:d2}"
 $DevFee = 0.0
-$Version = "5.0.41"
+$Version = "5.0.42"
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-Rplant\cpuminer-$($f = $Global:GlobalCPUInfo.Features;$(if($f.avx512 -and $f.sha -and $f.vaes){'avx512-sha-vaes'}elseif($f.avx512){'avx512'}elseif($f.avx2 -and $f.sha -and $f.aes){'ryzen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'sse42-aes'}elseif($f.sse42){'sse42'}elseif($Global:GlobalCPUInfo.Vendor -eq "AMD"){'sse2amd'}else{'sse2'}))"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.41-rplant/cpuminer-opt-linux-5.0.41a.tar.gz"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.42-rplant/cpuminer-opt-linux-5.0.42.tar.gz"
 } else {
     $Path = ".\Bin\CPU-Rplant\cpuminer-$($f = $Global:GlobalCPUInfo.Features;$(if($f.avx512){'avx512'}elseif($f.avx2 -and $f.sha -and $f.aes){'ryzen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'sse42-aes'}elseif($f.sse42){'sse42'}elseif($Global:GlobalCPUInfo.Vendor -eq "AMD"){'sse2amd'}else{'sse2'})).exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.41-rplant/cpuminer-opt-win-5.0.41.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.42-rplant/cpuminer-opt-win-5.0.42a.zip"
     #$Version = "5.0.29"
 }
 
@@ -45,6 +45,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "mike"; FaultTolerance = 8; ExtendInterval = 3; Params = ""} #Mike/VKAX
     [PSCustomObject]@{MainAlgorithm = "minotaur"; Params = ""} #Minotaur/RING
     [PSCustomObject]@{MainAlgorithm = "minotaurx"; Params = ""} #Minotaurx
+    [PSCustomObject]@{MainAlgorithm = "rinhash"; Params = ""} #RinHash/RIN
     [PSCustomObject]@{MainAlgorithm = "rwahash"; Params = ""; LinuxOnly = $true} #RwaHash
     #[PSCustomObject]@{MainAlgorithm = "scrypt:1048576"; Params = ""} #ScryptN2, CpuminerVerium and CpuminerJayddee faster
     [PSCustomObject]@{MainAlgorithm = "scryptjane:16"; Params = ""; LinuxOnly = $true} #ScryptJane16
