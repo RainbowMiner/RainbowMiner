@@ -1013,7 +1013,7 @@ function update_miningheatcontrol() {
 $(function() {
     ConfigLoader.whenReady().then(function(cfg) {
         $.ajax({
-            url: '/userconfig', success: function (result) {
+            url: '/loadconfig', success: function (result) {
                 $("input.form-control,select.form-select,input.form-range").each(function(index) {
                     var conf = $(this).attr('id').replace(/^input/, "")
                     var res = '';
@@ -1030,7 +1030,7 @@ $(function() {
                 })
                 update_miningheatcontrol()
                 var pools = new Array(), excludepools = new Array()
-                $.each(result.Pools, function (key, data) {
+                $.each(cfg.AvailPools, function (key) {
                     var checked = result.PoolName.some(item => item.toLowerCase() === key.toLowerCase())? " checked":"";
                     var aesym = (typeof cfg.AutoexPools[key] !== "undefined")? ' <svg class="crypto-symbol"><use href="#'+cfg.AutoexPools[key]+'-symbol"/></svg>':'';
                     pools.push('<div class="form-check form-check-inline"><input type="checkbox" class="form-check-input" id="pool' + key + '" name="PoolName[]" value="'+key+'"' + checked + '><label class="form-check-label" for="pool' + key + '">' + key + aesym + '</label></div>')
