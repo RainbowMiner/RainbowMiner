@@ -659,6 +659,7 @@ function Invoke-Core {
     $CheckPools = $false
     $CheckGpuGroups = $false
     $CheckCombos = $false
+    $CheckUserPools = $false
 
     $RestartRunspaces = $false
     
@@ -1529,7 +1530,7 @@ function Invoke-Core {
                     }
                     $UPool
                 }) -Force
-                $CheckPools = $true
+                $CheckPools = $CheckUserPools = $true
             }
             $UserPoolsConfig = $null
             Remove-Variable -Name UserPoolsConfig -ErrorAction Ignore
@@ -1706,34 +1707,41 @@ function Invoke-Core {
     }
 
     #update API info config
-    if ($CheckConfig) {
-        $PoolSetup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"
-        $AutoexPools = [PSCustomObject]@{}
-        $PoolSetup.PSObject.Properties | Where-Object {$_.Value.Autoexchange} | Foreach-Object {
-            $AutoexPools | Add-Member $_.Name $_.Value.Autoexchange
+    if ($CheckConfig -or $CheckUserPools) {
+        if ($CheckConfig) {
+            $PoolSetup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"
+            $AutoexPools = [PSCustomObject]@{}
+            $PoolSetup.PSObject.Properties | Where-Object {$_.Value.Autoexchange} | Foreach-Object {
+                $AutoexPools | Add-Member $_.Name $_.Value.Autoexchange
+            }
+            $API.Info = ConvertTo-Json ([PSCustomObject]@{
+                                    Version                = $ConfirmedVersion.Version
+                                    RemoteVersion          = $ConfirmedVersion.RemoteVersion
+                                    ManualURI              = $ConfirmedVersion.ManualURI
+                                    WorkerName             = $Session.Config.WorkerName
+                                    EnableAlgorithmMapping = $Session.Config.EnableAlgorithmMapping
+                                    AlgorithmMap           = (Get-AlgorithmMap)
+                                    AutoexPools            = $AutoexPools
+                                    AvailPools             = @($Session.AvailPools + @($Session.Config.UserPools.Name) | Sort-Object -Unique)
+                                    OCmode                 = $Session.OCmode
+                                    UsePowerPrice          = $Session.Config.UsePowerPrice
+                                    PowerPriceCurrency     = $PowerPriceCurrency
+                                    FixedCostPerDay        = $Session.Config.FixedCostPerDay
+                                    DecSep                 = (Get-Culture).NumberFormat.NumberDecimalSeparator
+                                    IsWindows              = $Global:IsWindows
+                                    IsLinux                = $Global:IsLinux
+                                    IsLocked               = $Session.Config.APIlockConfig
+                                    IsServer               = $Session.Config.RunMode -eq "Server"
+                                }) -Depth 10
+            $API.CPUInfo = ConvertTo-Json $Global:GlobalCPUInfo -Depth 10
+            $PoolSetup = $null
+            $AutoexPools = $null
+        } else {
+            $ApiInfo = ConvertFrom-Json $API.Info -ErrorAction Ignore
+            $ApiInfo.AvailPools = @($Session.AvailPools + @($Session.Config.UserPools.Name) | Sort-Object -Unique)
+            $API.Info = ConvertTo-Json $ApiInfo -Depth 10
+            $ApiInfo = $null
         }
-        $API.Info = ConvertTo-Json ([PSCustomObject]@{
-                                Version                = $ConfirmedVersion.Version
-                                RemoteVersion          = $ConfirmedVersion.RemoteVersion
-                                ManualURI              = $ConfirmedVersion.ManualURI
-                                WorkerName             = $Session.Config.WorkerName
-                                EnableAlgorithmMapping = $Session.Config.EnableAlgorithmMapping
-                                AlgorithmMap           = (Get-AlgorithmMap)
-                                AutoexPools            = $AutoexPools
-                                AvailPools             = @($Session.AvailPools + $Session.Config.UserPools | Sort-Object -Unique)
-                                OCmode                 = $Session.OCmode
-                                UsePowerPrice          = $Session.Config.UsePowerPrice
-                                PowerPriceCurrency     = $PowerPriceCurrency
-                                FixedCostPerDay        = $Session.Config.FixedCostPerDay
-                                DecSep                 = (Get-Culture).NumberFormat.NumberDecimalSeparator
-                                IsWindows              = $Global:IsWindows
-                                IsLinux                = $Global:IsLinux
-                                IsLocked               = $Session.Config.APIlockConfig
-                                IsServer               = $Session.Config.RunMode -eq "Server"
-                            }) -Depth 10
-        $API.CPUInfo = ConvertTo-Json $Global:GlobalCPUInfo -Depth 10
-        $PoolSetup = $null
-        $AutoexPools = $null
     }
 
     #load server pools
