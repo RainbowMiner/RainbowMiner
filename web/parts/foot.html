@@ -105,7 +105,16 @@ $(function () {
                 $("#profit").attr("btc", result.AllProfitBTC);
                 $("#earnings").attr("btc", result.AllEarnings_Avg);
 
-                var power = parseFloat(result.Power.CPU)+parseFloat(result.Power.GPU);
+                var cpuPower = parseFloat(result?.Power?.CPU);
+                var gpuPower = parseFloat(result?.Power?.GPU);
+                var powerOffset = parseFloat(result?.Power?.Offset);
+
+                // Default to 0 if value is missing or not a number
+                cpuPower = isNaN(cpuPower) ? 0 : cpuPower;
+                gpuPower = isNaN(gpuPower) ? 0 : gpuPower;
+                powerOffset = isNaN(powerOffset) ? 0 : powerOffset;
+
+                var power = cpuPower + gpuPower;
                 var powerunit = "W";
                 if (power > 1000) {
                     power /= 1000;
@@ -114,9 +123,8 @@ $(function () {
                 } else {
                     power = power.toFixed(0);
                 }
-                var poweroffset = parseFloat(result.Power.Offset);
-                    
-                $("#power").html(power + powerunit + (poweroffset>0? "<small>+"+poweroffset.toFixed(0)+"W</small>":''));
+
+                $("#power").html(power + powerunit + (powerOffset>0? "<small>+"+powerOffset.toFixed(0)+"W</small>":''));
 
                 ConfigLoader.whenReady().then(function(cfg) {
                     if (cfg.Version) {
