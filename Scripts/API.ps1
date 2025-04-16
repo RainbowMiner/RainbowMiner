@@ -346,7 +346,11 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                     if ($val -is [array]) {$val = $val -join ','}
                     [void]$ConfigParameters.Add($_ , $val)
                 }
-                $Data = ConvertTo-Json $(Get-ChildItemContent $Session.ConfigFiles["Config"].Path -Force -Parameters $ConfigParameters) -Depth 10
+                $ConfigActual = Get-ChildItemContent $Session.ConfigFiles["Config"].Path -Force -Parameters $ConfigParameters
+                $ConfigActual | Add-Member HasAPIpassword ($ConfigActual.APIpassword -ne "") -Force
+                $ConfigActual | Add-Member HasServerPassword ($ConfigActual.ServerPassword -ne "") -Force
+                $ConfigActual.APIpassword = $ConfigActual.ServerPassword = ""
+                $Data = ConvertTo-Json $ConfigActual -Depth 10
             } else {
                 $ConfigActual = Get-ConfigContent $ConfigName
                 if (-not $Session.ConfigFiles[$ConfigName].Healthy) {
@@ -413,14 +417,39 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             $ConfigChanged = 0
 
             if ($ConfigName -eq "Config") {
+
+                $ConfigSetup = Get-ChildItemContent ".\Data\ConfigDefault.ps1"
+                $ConfigParameters = @{}
+                $Session.DefaultValues.Keys | Where-Object {$_ -ne "SetupOnly"} | ForEach-Object {
+                    $val = $Session.DefaultValues[$_]
+                    if ($ConfigSetup.$_ -ne $null) {$val = $ConfigSetup.$_}
+                    if ($val -is [array]) {$val = $val -join ','}
+                    [void]$ConfigParameters.Add($_ , $val)
+                }
+
                 $DataSaved = [hashtable]@{}
 
                 $Parameters.PSObject.Properties.Name | Where-Object {$ConfigActual.$_ -ne $null} | Foreach-Object {
-                    $DataSaved[$_] = "$(if ($Parameters.$_ -is [System.Collections.ArrayList]) {($Parameters.$_ | Foreach-Object {$_.Trim()}) -join ","} else {$Parameters.$_.Trim()})"
+                    if ($_ -eq "APIpassword" -or $_ -eq "ServerPassword") {
+                        if ($Parameters."Reset$_") {
+                            $DataSaved[$_] = ""
+                        } elseif ($Parameters.$_ -ne "") {
+                            $DataSaved[$_] = $Parameters.$_
+                        } else {
+                            $DataSaved[$_] = $ConfigActual.$_
+                        }                 
+                    } else {
+                        $DataSaved[$_] = "$(if ($Parameters.$_ -is [System.Collections.ArrayList]) {($Parameters.$_ | Foreach-Object {$_.Trim()}) -join ","} else {$Parameters.$_.Trim()})"
+                    }
+
+                    if ($ConfigParameters.ContainsKey($_) -and $DataSaved[$_] -eq $ConfigParameters[$_]) {
+                        $DataSaved[$_] = "`$$_"
+                    }
+
                     if ($DataSaved[$_] -ne "$($ConfigActual.$_)") {
                         $ConfigChanged++
+                        $ConfigActual.$_ = $DataSaved[$_]
                     }
-                    $ConfigActual.$_ = $DataSaved[$_]
                 }
 
                 if ($ConfigActual.MinerStatusKey -eq "new") {
@@ -574,8 +603,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 $Data = ConvertTo-Json ([PSCustomObject]@{Success=$false}) -Depth 10
             }
 
-            $ConfigName = $ConfigPath = $ConfigActual = $ConfigChanged = $DataSaved = $PoolName = $NewCoin = $Value = $Type = $CoinSymbol = $i = $Sorted = $null
-            Remove-Variable -Name ConfigName, ConfigPath, ConfigActual, ConfigChanged, DataSaved, PoolName, NewCoin, Value, Type, CoinSymbol, i, Sorted -ErrorAction Ignore
+            $ConfigName = $ConfigPath = $ConfigSetup = $ConfigParameters = $ConfigActual = $ConfigChanged = $DataSaved = $PoolName = $NewCoin = $Value = $Type = $CoinSymbol = $i = $Sorted = $null
+            Remove-Variable -Name ConfigName, ConfigPath, ConfigSetup, ConfigParameters, ConfigActual, ConfigChanged, DataSaved, PoolName, NewCoin, Value, Type, CoinSymbol, i, Sorted -ErrorAction Ignore
             Break
         }
         "/loadminerstats" {

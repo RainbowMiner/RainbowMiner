@@ -36,7 +36,7 @@
                     <div class="mb-3 row">
                         <label for="inputRegion" class="col-sm-2 col-form-label">Region</label>
                         <div class="col-sm-10">
-                            <input type="text" class="form-control" id="inputRegion" name="Region" placeholder="Enter your region">
+                            <input type="text" class="form-control" id="inputRegion" name="Region" placeholder="Enter your region" autocomplete="off">
                         </div>
                     </div>
                     <div class="mb-3 row">
@@ -100,11 +100,11 @@
                 <div class="accordion-body">
                     <!-- Form elements for Devices -->
                     <div class="mb-3 row">
-                        <label for="inputDeviceName" class="col-sm-2 col-form-label">Devices</label>
+                        <div class="col-sm-2 col-form-label">Devices</div>
                         <div class="col-sm-10" id="devices"></div>
                     </div>
                     <div class="mb-3 row">
-                        <label for="inputPools" class="col-sm-2 col-form-label">Exclude Devices</label>
+                        <div class="col-sm-2 col-form-label">Exclude Devices</div>
                         <div class="col-sm-10" id="excludedevices"></div>
                     </div>
                     <div class="mb-3 row is--cpu">
@@ -135,7 +135,7 @@
                 <div class="accordion-body">
                     <!-- Pools -->
                     <div class="mb-3 row">
-                        <label for="inputPools" class="col-sm-2 col-form-label">Pools</label>
+                        <div class="col-sm-2 col-form-label">Pools</div>
                         <div class="col-sm-10" id="pools">
                             <!-- Add dynamic content here -->
                         </div>
@@ -143,7 +143,7 @@
 
                     <!-- Exclude Pools -->
                     <div class="mb-3 row">
-                        <label for="inputExcludePools" class="col-sm-2 col-form-label">Exclude Pools</label>
+                        <div class="col-sm-2 col-form-label">Exclude Pools</div>
                         <div class="col-sm-10" id="excludepools">
                             <!-- Add dynamic content here -->
                         </div>
@@ -565,6 +565,7 @@
                         <label for="inputAPIpassword" class="col-sm-2 col-form-label">Machine's Password</label>
                         <div class="col-sm-10">
                             <input type="password" class="form-control" id="inputAPIpassword" name="APIpassword">
+                            <div class="form-text" id="helpAPIpassword">Leave empty for no change or check <input type="checkbox" class="form-check-input" id="inputResetAPIpassword" name="ResetAPIpassword" /> to clear password</div>
                         </div>
                     </div>
 
@@ -660,6 +661,7 @@
                             <label for="inputServerPassword" class="col-sm-2 col-form-label">Server's Password</label>
                             <div class="col-sm-10">
                                 <input type="password" class="form-control" id="inputServerPassword" name="ServerPassword">
+                                <div class="form-text" id="helpServerPassword">Leave empty for no change or check <input type="checkbox" class="form-check-input" id="inputResetServerPassword" name="ResetServerPassword" /> to clear password</div>
                             </div>
                         </div>
 
@@ -684,7 +686,7 @@
 
                         <!-- Server Config Files -->
                         <div class="mb-3 row is--serverconfig">
-                            <label for="inputServerConfigName" class="col-sm-2 col-form-label">Select Server Config Files</label>
+                            <div class="col-sm-2 col-form-label">Select Server Config Files</div>
                             <div class="col-sm-10" id="serverconfigname">
                                 <!-- Add dynamic content here -->
                             </div>
@@ -1014,7 +1016,14 @@ $(function() {
             url: '/userconfig', success: function (result) {
                 $("input.form-control,select.form-select,input.form-range").each(function(index) {
                     var conf = $(this).attr('id').replace(/^input/, "")
-                    var res = result[conf];
+                    var res = '';
+                    if (this.type == "password") {
+                        if (!result["Has" + conf]) {
+                            $("#help" + conf).hide();
+                        }
+                    } else {
+                        res = result[conf];
+                    }
                     if (typeof res == "boolean") { res = res? 1:0 }
                     else if (conf == "RunMode" || conf == "MiningMode") { res = res.toLowerCase(); }
                     $(this).val(res)
