@@ -3,8 +3,9 @@
   <h1 id="title" data-navbaractive="navsetup" class="h2">Setup</h1>
 </div>
 <div class="alert alert-info" role="alert">Ever growing setup page. We will start with HeatMyFlat :)</div>
+<div class="alert alert-info" role="none" id="loadingMessage">Loading, please wait ...</div>
 
-<form id="formConfig">
+<form id="formConfig" class="d-none">
     <input type="hidden" name="savearrays[]" value="DeviceName" />
     <input type="hidden" name="savearrays[]" value="ExcludeDeviceName" />
     <input type="hidden" name="savearrays[]" value="PoolName" />
@@ -1012,6 +1013,7 @@ function update_miningheatcontrol() {
 
 $(function() {
     ConfigLoader.whenReady().then(function(cfg) {
+        var loaded = 0;
         $.ajax({
             url: '/loadconfig', success: function (result) {
                 $("input.form-control,select.form-select,input.form-range").each(function(index) {
@@ -1028,21 +1030,25 @@ $(function() {
                     else if (conf == "RunMode" || conf == "MiningMode") { res = res.toLowerCase(); }
                     $(this).val(res)
                 })
+
                 update_miningheatcontrol()
+
                 var pools = new Array(), excludepools = new Array()
-                $.each(cfg.AvailPools, function (key) {
-                    var checked = result.PoolName.some(item => item.toLowerCase() === key.toLowerCase())? " checked":"";
+                var resultPoolName = result.PoolName.split(/[,;]/), resultExcludePoolName = result.ExcludePoolName.split(/[,;]/);
+                cfg.AvailPools.forEach(function(key) {
+                    var checked = resultPoolName.some(item => item.toLowerCase() === key.toLowerCase())? " checked":"";
                     var aesym = (typeof cfg.AutoexPools[key] !== "undefined")? ' <svg class="crypto-symbol"><use href="#'+cfg.AutoexPools[key]+'-symbol"/></svg>':'';
                     pools.push('<div class="form-check form-check-inline"><input type="checkbox" class="form-check-input" id="pool' + key + '" name="PoolName[]" value="'+key+'"' + checked + '><label class="form-check-label" for="pool' + key + '">' + key + aesym + '</label></div>')
-                    checked = result.ExcludePoolName.some(item => item.toLowerCase() === key.toLowerCase())? " checked":"";
+                    checked = resultExcludePoolName.some(item => item.toLowerCase() === key.toLowerCase())? " checked":"";
                     excludepools.push('<div class="form-check form-check-inline"><input type="checkbox" class="form-check-input" id="excludepool' + key + '" name="ExcludePoolName[]" value="' + key + '"' + checked + '><label class="form-check-label" for="excludepool' + key + '">' + key + aesym + '</label></div>')
                 })
                 $("#pools").html(pools.join(''));
                 $("#excludepools").html(excludepools.join(''));
 
                 var serverconfigname = new Array();
-                $.each(new Array("algorithms","coins","config","miners","ocprofiles","pools","scheduler"), function (key, data) {
-                    var checked = result.ServerConfigName.some(item => item.toLowerCase() === data.toLowerCase())? " checked":"";
+                var resultServerConfigName = result.ServerConfigName.split(/[,;]/);
+                ["algorithms","coins","config","miners","ocprofiles","pools","scheduler"].forEach(function (data) {
+                    var checked = resultServerConfigName.some(item => item.toLowerCase() === data.toLowerCase())? " checked":"";
                     serverconfigname.push('<div class="form-check form-check-inline"><input type="checkbox" class="form-check-input" id="serverconfig' + data + '" name="ServerConfigName[]" value="'+data+'"' + checked + '><label class="form-check-label" for="serverconfig' + data + '">' + data + '</label></div>')
                 })
                 $("#serverconfigname").html(serverconfigname.join(''));
@@ -1109,6 +1115,12 @@ $(function() {
                 $("#inputEnableMinerStatus").trigger("change");
                 $("#inputEnableOCProfiles").trigger("change");
                 $("#inputEnableFastlaneBenchmark").trigger("change");
+
+                loaded++;
+                if (loaded >= 2) {
+                    document.getElementById("configForm").classList.remove("d-none");
+                    document.getElementById("loadingMessage").classList.add("d-none");
+                }
             }
         });
         $.ajax({
@@ -1130,6 +1142,11 @@ $(function() {
                 else 
                     $('.is--cpu').hide();
                 $('#inputCPUMiningThreads').attr('max',maxthreads);
+                loaded++;
+                if (loaded >= 2) {
+                    document.getElementById("configForm").classList.remove("d-none");
+                    document.getElementById("loadingMessage").classList.add("d-none");
+                }
             }
         });
         $("#formConfig").submit(function (event) {
