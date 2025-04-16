@@ -1064,35 +1064,6 @@ function Invoke-Core {
 
     $PowerPriceCurrency = if ($Session.Config.OctopusTariffCode -ne '') {"GBP"} else {$Session.Config.PowerPriceCurrency}
 
-    if ($CheckConfig) {
-        $PoolSetup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"
-        $AutoexPools = [PSCustomObject]@{}
-        $PoolSetup.PSObject.Properties | Where-Object {$_.Value.Autoexchange} | Foreach-Object {
-            $AutoexPools | Add-Member $_.Name $_.Value.Autoexchange
-        }
-        $API.Info = ConvertTo-Json ([PSCustomObject]@{
-                                Version                = $ConfirmedVersion.Version
-                                RemoteVersion          = $ConfirmedVersion.RemoteVersion
-                                ManualURI              = $ConfirmedVersion.ManualURI
-                                WorkerName             = $Session.Config.WorkerName
-                                EnableAlgorithmMapping = $Session.Config.EnableAlgorithmMapping
-                                AlgorithmMap           = (Get-AlgorithmMap)
-                                AutoexPools            = $AutoexPools
-                                OCmode                 = $Session.OCmode
-                                UsePowerPrice          = $Session.Config.UsePowerPrice
-                                PowerPriceCurrency     = $PowerPriceCurrency
-                                FixedCostPerDay        = $Session.Config.FixedCostPerDay
-                                DecSep                 = (Get-Culture).NumberFormat.NumberDecimalSeparator
-                                IsWindows              = $Global:IsWindows
-                                IsLinux                = $Global:IsLinux
-                                IsLocked               = $Session.Config.APIlockConfig
-                                IsServer               = $Session.Config.RunMode -eq "Server"
-                            }) -Depth 10
-        $API.CPUInfo = ConvertTo-Json $Global:GlobalCPUInfo -Depth 10
-        $PoolSetup = $null
-        $AutoexPools = $null
-    }
-
     #automatic fork detection
     if (Test-Path ".\Data\forksdb.json") {
         try {
@@ -1732,6 +1703,37 @@ function Invoke-Core {
             Set-ContentJson -PathToFile ".\Logs\autoupdate.txt" -Data $Last_Autoupdate > $null
             $Session.AutoUpdate = $true
         }
+    }
+
+    #update API info config
+    if ($CheckConfig) {
+        $PoolSetup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"
+        $AutoexPools = [PSCustomObject]@{}
+        $PoolSetup.PSObject.Properties | Where-Object {$_.Value.Autoexchange} | Foreach-Object {
+            $AutoexPools | Add-Member $_.Name $_.Value.Autoexchange
+        }
+        $API.Info = ConvertTo-Json ([PSCustomObject]@{
+                                Version                = $ConfirmedVersion.Version
+                                RemoteVersion          = $ConfirmedVersion.RemoteVersion
+                                ManualURI              = $ConfirmedVersion.ManualURI
+                                WorkerName             = $Session.Config.WorkerName
+                                EnableAlgorithmMapping = $Session.Config.EnableAlgorithmMapping
+                                AlgorithmMap           = (Get-AlgorithmMap)
+                                AutoexPools            = $AutoexPools
+                                AvailPools             = @($Session.AvailPools + $Session.Config.UserPools | Sort-Object -Unique)
+                                OCmode                 = $Session.OCmode
+                                UsePowerPrice          = $Session.Config.UsePowerPrice
+                                PowerPriceCurrency     = $PowerPriceCurrency
+                                FixedCostPerDay        = $Session.Config.FixedCostPerDay
+                                DecSep                 = (Get-Culture).NumberFormat.NumberDecimalSeparator
+                                IsWindows              = $Global:IsWindows
+                                IsLinux                = $Global:IsLinux
+                                IsLocked               = $Session.Config.APIlockConfig
+                                IsServer               = $Session.Config.RunMode -eq "Server"
+                            }) -Depth 10
+        $API.CPUInfo = ConvertTo-Json $Global:GlobalCPUInfo -Depth 10
+        $PoolSetup = $null
+        $AutoexPools = $null
     }
 
     #load server pools
