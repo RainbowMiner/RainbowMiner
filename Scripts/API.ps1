@@ -347,9 +347,6 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                     [void]$ConfigParameters.Add($_ , $val)
                 }
                 $ConfigActual = Get-ChildItemContent $Session.ConfigFiles["Config"].Path -Force -Parameters $ConfigParameters
-                $ConfigActual | Add-Member HasAPIpassword ($ConfigActual.APIpassword -ne "") -Force
-                $ConfigActual | Add-Member HasServerPassword ($ConfigActual.ServerPassword -ne "") -Force
-                $ConfigActual.APIpassword = $ConfigActual.ServerPassword = ""
                 $Data = ConvertTo-Json $ConfigActual -Depth 10
             } else {
                 $ConfigActual = Get-ConfigContent $ConfigName

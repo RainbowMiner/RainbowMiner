@@ -1018,7 +1018,7 @@ $(function() {
                     var conf = $(this).attr('id').replace(/^input/, "")
                     var res = '';
                     if (this.type == "password") {
-                        if (!result["Has" + conf]) {
+                        if (result[conf] == "") {
                             $("#help" + conf).hide();
                         }
                     } else {
