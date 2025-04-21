@@ -1595,9 +1595,9 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         } catch {}
                     }
                     if ($EnableFixBigInt) {
-                        $Result = Invoke-GetUrlAsync $Parameters.url -method $Parameters.method -cycletime $Parameters.cycletime -retry $Parameters.retry -retrywait $Parameters.retrywait -tag $Parameters.tag -delay $Parameters.delay -timeout $Parameters.timeout -body $pbody -headers $pheaders -jobkey $Parameters.jobkey -fixbigint $(Get-Yes $Parameters.fixbigint)
+                        $Result = Invoke-GetUrlAsync $Parameters.url -requestmethod $Parameters.requestmethod -method $Parameters.method -cycletime $Parameters.cycletime -retry $Parameters.retry -retrywait $Parameters.retrywait -tag $Parameters.tag -delay $Parameters.delay -timeout $Parameters.timeout -body $pbody -headers $pheaders -jobkey $Parameters.jobkey -fixbigint $(Get-Yes $Parameters.fixbigint)
                     } else {
-                        $Result = Invoke-GetUrlAsync $Parameters.url -method $Parameters.method -cycletime $Parameters.cycletime -retry $Parameters.retry -retrywait $Parameters.retrywait -tag $Parameters.tag -delay $Parameters.delay -timeout $Parameters.timeout -body $pbody -headers $pheaders -jobkey $Parameters.jobkey
+                        $Result = Invoke-GetUrlAsync $Parameters.url -requestmethod $Parameters.requestmethod -method $Parameters.method -cycletime $Parameters.cycletime -retry $Parameters.retry -retrywait $Parameters.retrywait -tag $Parameters.tag -delay $Parameters.delay -timeout $Parameters.timeout -body $pbody -headers $pheaders -jobkey $Parameters.jobkey
                     }
                     if ($Result) {$Status = $true}
                 } catch {}

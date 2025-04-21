@@ -8,6 +8,8 @@ Param(
     [Parameter(Mandatory = $True)]
         [string]$url,
     [Parameter(Mandatory = $False)]   
+        [string]$requestmethod = "",
+    [Parameter(Mandatory = $False)]   
         [int]$cycletime = 0,
     [Parameter(Mandatory = $False)]
         [int]$retry = 0,
@@ -32,7 +34,7 @@ Param(
     [Parameter(Mandatory = $False)]
         [hashtable]$headers
 )
-    Invoke-GetUrlAsync $url -method "REST" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay -timeout $timeout -nocache $nocache -noquickstart $noquickstart -Jobkey $Jobkey -body $body -headers $headers -fixbigint $fixbigint
+    Invoke-GetUrlAsync $url -requestmethod $requestmethod -method "REST" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay -timeout $timeout -nocache $nocache -noquickstart $noquickstart -Jobkey $Jobkey -body $body -headers $headers -fixbigint $fixbigint
 }
 
 function Invoke-WebRequestAsync {
@@ -40,6 +42,8 @@ function Invoke-WebRequestAsync {
 Param(   
     [Parameter(Mandatory = $True)]
         [string]$url,
+    [Parameter(Mandatory = $False)]   
+        [string]$requestmethod = "",
     [Parameter(Mandatory = $False)]
         [int]$cycletime = 0,
     [Parameter(Mandatory = $False)]
@@ -65,7 +69,7 @@ Param(
     [Parameter(Mandatory = $False)]
         [hashtable]$headers
 )
-    Invoke-GetUrlAsync $url -method "WEB" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay -timeout $timeout -nocache $nocache -noquickstart $noquickstart -Jobkey $Jobkey -body $body -headers $headers -fixbigint $fixbigint
+    Invoke-GetUrlAsync $url -requestmethod $requestmethod -method "WEB" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay -timeout $timeout -nocache $nocache -noquickstart $noquickstart -Jobkey $Jobkey -body $body -headers $headers -fixbigint $fixbigint
 }
 
 function Invoke-GetUrlAsync {
@@ -73,6 +77,8 @@ function Invoke-GetUrlAsync {
 Param(   
     [Parameter(Mandatory = $False)]   
         [string]$url = "",
+    [Parameter(Mandatory = $False)]   
+        [string]$requestmethod = "",
     [Parameter(Mandatory = $False)]   
         [string]$method = "REST",
     [Parameter(Mandatory = $False)]   
@@ -121,7 +127,7 @@ Param(
 
     if (-not $Job) {
         $JobHost = if ($url -notmatch "^server://") {try{([System.Uri]$url).Host}catch{}} else {"server"}
-        $JobData = [PSCustomObject]@{Url=$url;Host=$JobHost;Error=$null;Running=$true;Paused=$false;Method=$method;Body=$body;Headers=$headers;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();LastCacheWrite=$null;LastFailRetry=$null;LastFailCount=0;CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Delay=$delay;Tag=$tag;Timeout=$timeout;FixBigInt=$fixbigint;Index=0}
+        $JobData = [PSCustomObject]@{Url=$url;Host=$JobHost;Error=$null;Running=$true;Paused=$false;RequestMethod=$requestmethod;Method=$method;Body=$body;Headers=$headers;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();LastCacheWrite=$null;LastFailRetry=$null;LastFailCount=0;CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Delay=$delay;Tag=$tag;Timeout=$timeout;FixBigInt=$fixbigint;Index=0}
     }
 
     if (-not $useAsyncLoader) {
@@ -328,24 +334,25 @@ Param(
             $Config = if ($Session.IsDonationRun) {$Session.UserConfig} else {$Session.Config}
             if ($Config.RunMode -eq "Client" -and $Config.ServerName -and $Config.ServerPort -and (Test-TcpServer $Config.ServerName -Port $Config.ServerPort -Timeout 2)) {
                 $serverbody = @{
-                    url       = $JobData.url
-                    method    = $JobData.method
-                    timeout   = $JobData.timeout
-                    body      = $JobData.body | ConvertTo-Json -Depth 10 -Compress
-                    headers   = $JobData.headers | ConvertTo-Json -Depth 10 -Compress
-                    cycletime = $JobData.cycletime
-                    retry     = $JobData.retry
-                    retrywait = $JobData.retrywait
-                    delay     = $JobData.delay
-                    tag       = $JobData.tag
-                    user      = $JobData.user
-                    password  = $JobData.password
-                    fixbigint = [bool]$JobData.fixbigint
-                    jobkey    = $JobKey
-                    machinename = $Session.MachineName
-                    workername  = $Config.Workername
-                    myip      = $Session.MyIP
-                    port      = $Config.APIPort
+                    url           = $JobData.url
+                    requestmethod = $JobData.requestmethod
+                    method        = $JobData.method
+                    timeout       = $JobData.timeout
+                    body          = $JobData.body | ConvertTo-Json -Depth 10 -Compress
+                    headers       = $JobData.headers | ConvertTo-Json -Depth 10 -Compress
+                    cycletime     = $JobData.cycletime
+                    retry         = $JobData.retry
+                    retrywait     = $JobData.retrywait
+                    delay         = $JobData.delay
+                    tag           = $JobData.tag
+                    user          = $JobData.user
+                    password      = $JobData.password
+                    fixbigint     = [bool]$JobData.fixbigint
+                    jobkey        = $JobKey
+                    machinename   = $Session.MachineName
+                    workername    = $Config.Workername
+                    myip          = $Session.MyIP
+                    port          = $Config.APIPort
                 }
                 #Write-ToFile -FilePath "Logs\geturl_$(Get-Date -Format "yyyy-MM-dd").txt" -Message "http://$($Config.ServerName):$($Config.ServerPort)/getjob $(ConvertTo-Json $serverbody)" -Append -Timestamp
                 $Result = Invoke-GetUrl "http://$($Config.ServerName):$($Config.ServerPort)/getjob" -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal -Timeout 30
@@ -354,14 +361,15 @@ Param(
             }
         }
 
-        $url      = $JobData.url
-        $method   = $JobData.method
-        $timeout  = $JobData.timeout
-        $body     = $JobData.body
-        $headers  = $JobData.headers
-        $user     = $JobData.user
-        $password = $JobData.password
-        $fixbigint= [bool]$JobData.fixbigint
+        $url           = $JobData.url
+        $method        = $JobData.method
+        $requestmethod = $JobData.requestmethod
+        $timeout       = $JobData.timeout
+        $body          = $JobData.body
+        $headers       = $JobData.headers
+        $user          = $JobData.user
+        $password      = $JobData.password
+        $fixbigint     = [bool]$JobData.fixbigint
     }
 
     if ($url -match "^server://(.+)$") {
