@@ -44,29 +44,29 @@ $Pool_Fee = 2
 
 $Pool_Currency = if ($AEcurrency) {$AEcurrency} else {"BTC"}
 
-$Pool_Request.PSObject.Properties | ForEach-Object {
+$Pool_Request.PSObject.Properties.Value | ForEach-Object {
 
-    $Pool_Algorithm = $_.Value.name
-    $Pool_Algorithm_Norm = Get-Algorithm $_.Value.name
+    $Pool_Algorithm = $_.name
+    $Pool_Algorithm_Norm = Get-Algorithm $_.name
     $Pool_Coin = ''
-    $Pool_Fee = [double]$_.Value.fees
+    $Pool_Fee = [double]$_.fees
     $Pool_Symbol = ''
-    $Pool_Port = [int]$_.Value.port
+    $Pool_Port = [int]$_.port
     $Pool_Host = "mining-dutch.nl"
     $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethstratumnh"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
         
-    $Pool_Factor = [double]$_.Value.mbtc_mh_factor
+    $Pool_Factor = [double]$_.mbtc_mh_factor
     if ($Pool_Factor -le 0) {
         Write-Log -Level Info "$($Name): Unable to determine divisor for algorithm $Pool_Algorithm. "
         return
     }
 
-    #$Pool_TSL = ($PoolCoins_Request.PSObject.Properties.Value | Where-Object algo -eq $Pool_Algorithm | Measure-Object timesincelast_shared -Minimum).Minimum
-    #$Pool_BLK = ($PoolCoins_Request.PSObject.Properties.Value | Where-Object algo -eq $Pool_Algorithm | Measure-Object "24h_blocks_shared" -Maximum).Maximum
+    #$Pool_TSL = ($PoolCoins_Request.PSObject.Properties | Where-Object algo -eq $Pool_Algorithm | Measure-Object timesincelast_shared -Minimum).Minimum
+    #$Pool_BLK = ($PoolCoins_Request.PSObject.Properties | Where-Object algo -eq $Pool_Algorithm | Measure-Object "24h_blocks_shared" -Maximum).Maximum
 
     if (-not $InfoOnly) {
-        $Pool_Price = [double]$_.Value.estimate_current * 1e-6 / $Pool_Factor
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value $Pool_Price -Duration $StatSpan -ChangeDetection $false -FaultDetection $true -FaultTolerance 5 -HashRate ([double]$_.Value.hashrate_shared * 1e6) -BlockRate $Pool_BLK -Quiet
+        $Pool_Price = [double]$_.estimate_current * 1e-6 / $Pool_Factor
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value $Pool_Price -Duration $StatSpan -ChangeDetection $false -FaultDetection $true -FaultTolerance 5 -HashRate ([double]$_.hashrate_shared * 1e6) -BlockRate $Pool_BLK -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
@@ -91,7 +91,7 @@ $Pool_Request.PSObject.Properties | ForEach-Object {
                 Updated       = $Stat.Updated
                 PoolFee       = $Pool_Fee
                 DataWindow    = $DataWindow
-                Workers       = [int]$_.Value.workers_shared
+                Workers       = [int]$_.workers_shared
                 Hashrate      = $Stat.HashRate_Live
                 EthMode       = $Pool_EthProxy
                 Name          = $Name
