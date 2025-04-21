@@ -70,7 +70,7 @@ param(
     [String]$DiffMessageTime = "",
     [String]$DiffMessageTolerancyPercent = "10",
     [String]$PoolOfflineMessage = "",
-    [String]$PoolOfflineTime = "3m",
+    [String]$PoolOfflineTime = "10m",
     [String]$PoolOfflineRetryTime = "15m",
     [String]$UseHost = ""
 )

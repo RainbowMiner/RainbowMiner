@@ -63,25 +63,7 @@
             Currencies=@("CPU","MBC")
         }
         "Crazypool" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{
-                EnableBzminerDual="1"
-                EnableGminerDual="1"
-                EnableMiniZDual="1"
-                EnableOneZeroMinerDual="1"
-                EnableRigelDual="1"
-                EnableSrbminerMultiDual="1"
-                EnableTTminerDual="1"
-            }
-            SetupFields=[PSCustomObject]@{
-                EnableBzMinerDual="If you set this to 1, BzMiner will dual mine ZIL on CrazyPool for various algorithms"
-                EnableGminerDual="If you set this to 1, Gminer will dual mine ZIL on CrazyPool for various algorithms"
-                EnableMiniZDual="If you set this to 1, MiniZ will dual mine ZIL on CrazyPool for various algorithms"
-                EnableOneZeroMinerDual="If you set this to 1, OneZeroMiner will dual mine ZIL on Crazypool with DynexSolve"
-                EnableRigelDual="If you set this to 1, Rigel will dual mine ZIL on Crazypool for various algorithms"
-                EnableSrbminerMultiDual="If you set this to 1, SrbminerMulti will dual mine ZIL on Crazypool for various algorithms"
-                EnableTTminerDual="If you set this to 1, TTminer will dual mine ZIL on Crazypool for various algorithms"
-            }
-            Currencies=@("ETC","UBQ","ZIL")
+            Currencies=@("ETC")
         }
         "DeepMinerZ" = [PSCustomObject]@{
             Currencies=@("DNX")
@@ -160,7 +142,7 @@
             Currencies=@("NIM","GRAM")
         }
         "K1Pool" = [PSCustomObject]@{
-            Currencies=@("NEXA","XEL")
+            Currencies=@("NEXA","XEL","ZIL")
         }
         "K1PoolSolo" = [PSCustomObject]@{
             Currencies=@("NEXA","XEL")
@@ -272,7 +254,7 @@
                         DiffMessageTime="15m"
                         DiffMessageTolerancyPercent="15"
                         DiffMessage="Dear renter, your pool's share difficulty is %currentdifffmt% (%currentdiff%) and it should be between %mindifffmt% (%mindiff%) and %maxdifffmt% (%maxdiff%) to get the advertised hashrate. If the difficulty is too high, the result will be eratic but accurate for long rental times, if the difficulty is too low, the final hashrate will be too low as well." 
-                        PoolOfflineTime="3m"
+                        PoolOfflineTime="10m"
                         PoolOfflineRetryTime="15m"
                         PoolOfflineMessage="Dear renter, it looks like your pool is currently offline. Please check your settings."
                         ProfitAverageTime="Hour"

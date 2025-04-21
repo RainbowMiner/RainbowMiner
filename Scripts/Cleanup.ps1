@@ -1874,6 +1874,36 @@ try {
         $RenamePools += [PSCustomObject]@{From="Gteh";To="Gtpool";Force=$true}
     }
 
+    if ($Version -le (Get-Version "4.9.8.1")) {
+
+        $PoolsConfigActualUpdate = @()
+
+        if (Test-Path $PoolsConfigFile) {
+            $PoolsConfigActualUpdate += $PoolsConfigFile
+        }
+
+        Get-ChildItem ".\Config" -Directory | Where-Object {$_.Name -ne "Backup"} | Foreach-Object {
+            $PoolsConfigActualPath = Join-Path $($_.FullName) "pools.config.txt"
+            if (Test-Path $PoolsConfigActualPath) {
+                $PoolsConfigActualUpdate += $PoolsConfigActualPath
+            }
+        }
+
+        $PoolsConfigActualUpdate | Foreach-Object {
+            $PoolsConfigActualPath = $_
+
+            try {
+                $PoolsActual  = Get-Content $PoolsConfigActualPath -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Sto
+                $Changes = 0
+                if ($PoolsActual.MiningRigRentals.PoolOfflineTime -eq "3m") {$PoolsActual.MiningRigRentals.PoolOfflineTime = "10m";$Changes++}
+                if ($Changes) {
+                    $PoolsActual | ConvertTo-Json -Depth 10 | Set-Content $PoolsConfigActualPath -Encoding UTF8
+                    $ChangesTotal += $Changes
+                }
+            } catch { }
+        }
+    }
+
     ###
     ### END OF VERSION CHECKS
     ###
