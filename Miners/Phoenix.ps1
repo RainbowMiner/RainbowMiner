@@ -26,7 +26,7 @@ if ($IsLinux) {
 
 $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "etchash"    ; MinMemGB = 3; Vendor = @("AMD","NVIDIA"); Params = @()} #Etchash DAG reached EOL for this miner
-    [PSCustomObject]@{MainAlgorithm = "ethash"     ; MinMemGB = 3; Vendor = @("AMD","NVIDIA"); Params = @()} #Ethash
+    #[PSCustomObject]@{MainAlgorithm = "ethash"     ; MinMemGB = 3; Vendor = @("AMD","NVIDIA"); Params = @()} #Ethash
     [PSCustomObject]@{MainAlgorithm = "ethash2g"     ; MinMemGB = 1; Vendor = @("AMD","NVIDIA"); Params = @()} #Ethash DAG < 2GB
     [PSCustomObject]@{MainAlgorithm = "ethash3g"     ; MinMemGB = 2; Vendor = @("AMD","NVIDIA"); Params = @()} #Ethash DAG < 3GB
     [PSCustomObject]@{MainAlgorithm = "ethash4g"     ; MinMemGB = 3; Vendor = @("AMD","NVIDIA"); Params = @()} #Ethash DAG < 4GB
