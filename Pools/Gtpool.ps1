@@ -43,7 +43,7 @@ $Pool_EthProxy = "ethstratumnh"
 $Coins_Request = [PSCustomObject]@{}
 
 try {
-    $Coins_Request = Invoke-RestMethodAsync "https://api.gtpool.io/?key=$($API_Key)" -body '{"method":"coins_list"}' -retry 3 -retrywait 1000 -tag $Name -cycletime 120
+    $Coins_Request = Invoke-RestMethodAsync "https://api.gtpool.io/v2/coin/list?key=$($API_Key)" -body '{"method":"coins_list"}' -retry 3 -retrywait 1000 -tag $Name -cycletime 120
 }
 catch {
     Write-Log -Level Warn "Pool Coins API ($Name) has failed. "
@@ -58,7 +58,7 @@ if (-not $Coins_Request.result) {
 $Mining_Request = [PSCustomObject]@{}
 
 try {
-    $Mining_Request = Invoke-RestMethodAsync "https://api.gtpool.io/?key=$($API_Key)" -body '{"method":"mining_list"}' -retry 3 -retrywait 1000 -tag $Name -cycletime 3600
+    $Mining_Request = Invoke-RestMethodAsync "https://api.gtpool.io/v2/mining/list?key=$($API_Key)" -body '{"method":"mining_list"}' -retry 3 -retrywait 1000 -tag $Name -cycletime 3600
 }
 catch {
     Write-Log -Level Warn "Pool Mining API ($Name) has failed. "
@@ -89,14 +89,14 @@ if (-not $InfoOnly) {
 
     if (-not $Workers.Count) {return}
 
-    $AllCoins_Request   = $Coins_Request.data | Where-Object {$_.active -and (-not $CoinSymbol -or $CoinSymbol -contains $_.coin) -and (-not $ExcludeCoinSymbol -or $ExcludeCoinSymbol -notcontains $_.coin)} | Sort-Object -Descending {$_.profit.revenue_usd}
+    $AllCoins_Request   = $Coins_Request.payload | Where-Object {$_.status -and (-not $CoinSymbol -or $CoinSymbol -contains $_.coin) -and (-not $ExcludeCoinSymbol -or $ExcludeCoinSymbol -notcontains $_.coin)} | Sort-Object -Descending {$_.profit.forecast/$_.profit.hashrate}
 
     if ($AllCoins_Request) {
 
         $Workers_Request = [PSCustomObject]@{}
 
         try {
-            $Workers_Request = Invoke-RestMethodAsync "https://api.gtpool.io/?key=$($API_Key)" -body '{"method":"workers_list"}' -retry 3 -retrywait 1000 -tag $Name -cycletime 120
+            $Workers_Request = Invoke-RestMethodAsync "https://api.gtpool.io/v2/worker/list?key=$($API_Key)" -body '{"method":"workers_list"}' -retry 3 -retrywait 1000 -tag $Name -cycletime 120
         }
         catch {
             Write-Log -Level Warn "Pool Workers API ($Name) has failed. "
@@ -115,27 +115,27 @@ if (-not $InfoOnly) {
 
         foreach($Worker1 in $Workers) {
 
-            $Current_Worker = $Workers_Request.data | Where-Object {$_.name -eq $Worker1} | Select-Object -First 1
+            $Current_Worker = $Workers_Request.payload | Where-Object {$_.name -eq $Worker1} | Select-Object -First 1
 
             if ($Current_Worker) {
 
                 $Pool_Model = if ($Worker1 -ne $Worker) {"$(($Session.Config.DeviceModel | Where-Object {$Session.Config.Devices.$_.Worker -eq $Worker1} | Sort-Object -Unique) -join '-')"} elseif ($Global:DeviceCache.DeviceNames.CPU -ne $null) {"GPU"}
 
-                $Pool_Coin = Get-Coin $Current_Worker.coin
+                $Pool_Coin = Get-Coin $Current_Worker.coin.ticker
 
                 $Pool_CoinSymbol = $Pool_Coin.symbol
                 $Pool_CoinName   = $Pool_Coin.name
                 $Pool_Algorithm_Norm  = $Pool_Coin.algo
 
-                $Current_Coin = $AllCoins_Request | Where-Object {$_.coin -eq $Pool_CoinSymbol}
+                $Current_Coin = $AllCoins_Request | Where-Object {$_.ticker -eq $Pool_CoinSymbol}
 
                 $BestCoin_Request = $AllCoins_Request | Select-Object -First 1
 
-                if (-not $Current_Coin -or ($EnableMiningSwitch_bool -and $BestCoin_Request.coin -ne $Pool_CoinSymbol)) {
-                    $BestCoin_Mining = $Mining_Request.data | Where-Object {$_.coin -eq $BestCoin_Request.coin -and $_.mining -match "PPLN"} | Select-Object -First 1
+                if (-not $Current_Coin -or ($EnableMiningSwitch_bool -and $BestCoin_Request.ticker -ne $Pool_CoinSymbol)) {
+                    $BestCoin_Mining = $Mining_Request.payload | Where-Object {$_.coin.ticker -eq $BestCoin_Request.ticker -and $_.config -match "PPLN"} | Select-Object -First 1
                     $Switch_Request = [PSCustomObject]@{}
                     try {
-                        $Switch_Request = Invoke-GetUrl "https://api.gtpool.io/?key=$($API_Key)" -body "{`"method`":`"change_mining`",`"workers`":[`"$($Current_Worker.uniq)`"],`"mining`":`"$($BestCoin_Mining.uniq)`"}"
+                        $Switch_Request = Invoke-GetUrl "https://api.gtpool.io/v2/mining/change?key=$($API_Key)" -body "{`"method`":`"change_mining`",`"workers`":[`"$($Current_Worker.uniq)`"],`"mining`":`"$($BestCoin_Mining.uniq)`"}"
                     }
                     catch {
                         Write-Log -Level Warn "Pool Change Mining API ($Name) has failed. "
@@ -147,7 +147,7 @@ if (-not $InfoOnly) {
                     } else {
                         $Current_Coin = $BestCoin_Request
 
-                        $Pool_Coin = Get-Coin $Current_Coin.coin
+                        $Pool_Coin = Get-Coin $Current_Coin.ticker
 
                         $Pool_CoinSymbol = $Pool_Coin.symbol
                         $Pool_CoinName   = $Pool_Coin.name
@@ -158,25 +158,27 @@ if (-not $InfoOnly) {
                 if (-not $Current_Coin) {return}
 
                 $Pool_Algorithm_Norm_With_Model = "$Pool_Algorithm_Norm$(if ($Pool_Model) {"-$Pool_Model"})"
-                $Pool_TSL            = (Get-UnixTimestamp) - [int]$Current_Coin.lastPoolBlockTimestamp
+                $Pool_TSL = (Get-UnixTimestamp) - [int]$Current_Coin.pool.lastBlockTime
 
                 $Stat = [PSCustomObject]@{}
 
                 if (-not $Worker_Count) {
                     foreach ($Coin_Request in $AllCoins_Request) {
-                        $Pool_HR = [int]$Coin_Request.profit.hashrate
-                        $Pool_PriceUsd = if ($Pool_HR) {$Coin_Request.profit.revenue_usd / $Pool_HR * $Coin_Request.profit.minutes / 1440} else {0}
+                        $Pool_HR = [int64]$Coin_Request.pool.workersHashrate
+                        $Pool_BLK = if ($Coin_Request.chain.hashrate -and $Coin_Request.chain.blockTime) {$Coin_Request.pool.workersHashrate/$Coin_Request.chain.hashrate * 86400 / $Coin_Request.chain.blockTime} else {0}
+                        $Pool_PriceUsd = $Coin_Request.profit.forecast / 1e8 / $Coin_Request.profit.hashrate * 86400 / $Coin_Request.profit.interval * $Coin_Request.priceUsd
                         $Pool_PriceBtc = if ($Global:Rates["USD"]) {$Pool_PriceUsd / $Global:Rates["USD"]} else {0}
-                        $Stat0 = Set-Stat -Name "$($Name)_$($Coin_Request.coin)_Profit" -Value $Pool_PriceBtc -Duration $StatSpan -ChangeDetection $false -HashRate $Coin_Request.workers.hashrate_pplnt -BlockRate $([double]$Coin_Request.profit.coins) -Quiet
-                        if ($Coin_Request.coin -eq $Current_Coin.coin) {
+                        $Stat0 = Set-Stat -Name "$($Name)_$($Coin_Request.ticker)_Profit" -Value $Pool_PriceBtc -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_HR -BlockRate $Pool_BLK -Quiet
+                        if ($Coin_Request.ticker -eq $Current_Coin.ticker) {
                             $Stat = $Stat0
                         }
                     }
                 } else {
-                    $Pool_HR = [int]$Current_Coin.profit.hashrate
-                    $Pool_PriceUsd = if ($Pool_HR) {$Current_Coin.profit.revenue_usd / $Pool_HR * $Current_Coin.profit.minutes / 1440} else {0}
+                    $Pool_HR = [int64]$Current_Coin.pool.workersHashrate
+                    $Pool_BLK = if ($Current_Coin.chain.hashrate -and $Current_Coin.chain.blockTime) {$Current_Coin.pool.workersHashrate/$Current_Coin.chain.hashrate * 86400 / $Current_Coin.chain.blockTime} else {0}
+                    $Pool_PriceUsd = $Current_Coin.profit.forecast / 1e8 / $Current_Coin.profit.hashrate * 86400 / $Current_Coin.profit.interval * $Current_Coin.priceUsd
                     $Pool_PriceBtc = if ($Global:Rates["USD"]) {$Pool_PriceUsd / $Global:Rates["USD"]} else {0}
-                    $Stat = Set-Stat -Name "$($Name)_$($Current_Coin.coin)_Profit" -Value $Pool_PriceBtc -Duration $StatSpan -ChangeDetection $false -HashRate $Current_Coin.workers.hashrate_pplnt -BlockRate $([double]$Current_Coin.profit.coins) -Quiet
+                    $Stat = Set-Stat -Name "$($Name)_$($Current_Coin.ticker)_Profit" -Value $Pool_PriceBtc -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_HR -BlockRate $Pool_BLK -Quiet
                 }
 
                 $Worker_Count++
@@ -206,7 +208,7 @@ if (-not $InfoOnly) {
                             Updated       = $Stat.Updated
                             PoolFee       = $Pool_Fee
                             DataWindow    = $DataWindow
-                            Workers       = [int]$Current_Coin.workers.workers_pplnt
+                            Workers       = [int]$Current_Coin.pool.workersCount
                             TSL           = $Pool_TSL
                             BLK           = $Stat.BlockRate_Average
                             EthMode       = $Pool_EthProxy
@@ -230,17 +232,17 @@ if (-not $InfoOnly) {
         }
     }
 } else {
-    $AllCoins_Request   = $Coins_Request.data | Where-Object {$_.active}
+    $AllCoins_Request   = $Coins_Request.payload | Where-Object {$_.status}
 
     foreach ($Current_Coin in $AllCoins_Request) {
 
-        $Pool_Coin = Get-Coin $Current_Coin.coin
+        $Pool_Coin = Get-Coin $Current_Coin.ticker
 
-        $Pool_CoinSymbol = $Current_Coin.coin
+        $Pool_CoinSymbol = $Current_Coin.ticker
         $Pool_CoinName   = $Pool_Coin.name
         $Pool_Algorithm_Norm  = $Pool_Coin.algo
 
-        $Pool_TSL            = (Get-UnixTimestamp) - [int]$Current_Coin.lastPoolBlockTimestamp
+        $Pool_TSL            = (Get-UnixTimestamp) - [int]$Current_Coin.pool.lastBlockTime
 
         foreach ($Pool_SSL in @($false,$true)) {
             $Pool_Stratum = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
@@ -265,7 +267,7 @@ if (-not $InfoOnly) {
                     Updated       = $Stat.Updated
                     PoolFee       = $Pool_Fee
                     DataWindow    = $DataWindow
-                    Workers       = [int]$Current_Coin.workers.workers_pplnt
+                    Workers       = [int]$Current_Coin.pool.workersCount
                     TSL           = $Pool_TSL
                     BLK           = $Stat.BlockRate_Average
                     EthMode       = $Pool_EthProxy
