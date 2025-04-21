@@ -43,7 +43,7 @@ $Pool_EthProxy = "ethstratumnh"
 $Coins_Request = [PSCustomObject]@{}
 
 try {
-    $Coins_Request = Invoke-RestMethodAsync "https://api.gtpool.io/v2/coin/list?key=$($API_Key)" -body '{"method":"coins_list"}' -retry 3 -retrywait 1000 -tag $Name -cycletime 120
+    $Coins_Request = Invoke-RestMethodAsync "https://api.gtpool.io/v2/coin/list?key=$($API_Key)" -requestmethod "POST" -retry 3 -retrywait 1000 -tag $Name -cycletime 120
 }
 catch {
     Write-Log -Level Warn "Pool Coins API ($Name) has failed. "
@@ -58,7 +58,7 @@ if (-not $Coins_Request.result) {
 $Mining_Request = [PSCustomObject]@{}
 
 try {
-    $Mining_Request = Invoke-RestMethodAsync "https://api.gtpool.io/v2/mining/list?key=$($API_Key)" -body '{"method":"mining_list"}' -retry 3 -retrywait 1000 -tag $Name -cycletime 3600
+    $Mining_Request = Invoke-RestMethodAsync "https://api.gtpool.io/v2/mining/list?key=$($API_Key)" -requestmethod "POST" -retry 3 -retrywait 1000 -tag $Name -cycletime 3600
 }
 catch {
     Write-Log -Level Warn "Pool Mining API ($Name) has failed. "
@@ -96,7 +96,7 @@ if (-not $InfoOnly) {
         $Workers_Request = [PSCustomObject]@{}
 
         try {
-            $Workers_Request = Invoke-RestMethodAsync "https://api.gtpool.io/v2/worker/list?key=$($API_Key)" -body '{"method":"workers_list"}' -retry 3 -retrywait 1000 -tag $Name -cycletime 120
+            $Workers_Request = Invoke-RestMethodAsync "https://api.gtpool.io/v2/worker/list?key=$($API_Key)" -requestmethod "POST" -retry 3 -retrywait 1000 -tag $Name -cycletime 120
         }
         catch {
             Write-Log -Level Warn "Pool Workers API ($Name) has failed. "
