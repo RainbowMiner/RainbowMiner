@@ -31,7 +31,6 @@ function Initialize-Session {
         $Session.IsCore             = $PSVersionTable.PSVersion -ge (Get-Version "6.1")
         $Session.IsPS7              = $PSVersionTable.PSVersion -ge (Get-Version "7.0")
         $Session.MachineName        = [System.Environment]::MachineName
-        $Session.MyIP               = Get-MyIP
         $Session.MainPath           = "$PWD"
         $Session.UnixEpoch          = [DateTime]::new(1970, 1, 1, 0, 0, 0, 0, ([System.DateTimeKind]::Utc))
 
@@ -40,6 +39,20 @@ function Initialize-Session {
         Set-Variable RegexAlgoIsEthash -Option Constant -Scope Global -Value "^Etc?hash|UbqHash"
         Set-Variable RegexAlgoIsProgPow -Option Constant -Scope Global -Value "^KawPow|ProgPow|^FiroPow|^MeowPow|^Meraki|^NexaPow|^SccPow|Octopus"
     }
+
+    Reset-Session
+}
+
+function Reset-Session {
+    $Session.MyIP = Get-MyIP
+
+    $Session.GlobalAlgorithmMap = $null
+    $Session.GlobalAlgorithms = $null
+    $Session.GlobalCoinsDB = $null
+    $Session.GlobalEquihashCoins = $null
+    $Session.GlobalNimqHashrates = $null
+    $Session.GlobalRegions = $null
+    $Session.GlobalRegions2 = $null
 }
 
 function Set-OsFlags {
