@@ -168,8 +168,8 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
         $ZilParams    = ""
 
-        if ($Pools.ZilliqaDual) {
-            if ($ZilWallet = $Pools.ZilliqaDual.User) {
+        if ($false -and $Pools.ZilliqaDual) {
+            if ($ZilWallet = $Pools.ZilliqaDual.Wallet) {
                 $ZilParams = " --url=$($ZilWallet -replace "@","%40")@$($Pools.ZilliqaDual.Host):$($Pools.ZilliqaDual.Port)" 
             }
         }
