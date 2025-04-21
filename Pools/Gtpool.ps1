@@ -73,7 +73,7 @@ if (-not $Mining_Request.result) {
 
 [hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = @("ru","eu","us","sg","hk")
+$Pool_Regions = @("ru","eu-de","eu-fr","eu-fi","us-west","us-east","sg","hk")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 if (-not $InfoOnly) {
