@@ -330,22 +330,42 @@ if ($AllRigs_Request) {
             if ($Pool_Rig) {
                 $Pool_Price = $Stat.$StatAverage
                 $Pool_Currency = "BTC"
+                $Pool_RigEnable = $false
 
                 $Rigs_Model = if ($Worker1 -ne $Worker) {"$(($Session.Config.DeviceModel | Where-Object {$Session.Config.Devices.$_.Worker -eq $Worker1} | Sort-Object -Unique) -join '-')"} elseif ($Global:DeviceCache.DeviceNames.CPU -ne $null) {"GPU"}
 
                 $Pool_Algorithm_Norm_With_Model = "$Pool_Algorithm_Norm$(if ($Rigs_Model) {"-$Rigs_Model"})"
 
-                $Pool_RigEnable = if ($_.status.status -eq "rented" -or $_.status.rented) {
-                    if ($_.poolstatus -eq "offline") {Write-Log -Level Info "$($Name): set rig id #$($Pool_RigId) rental status to $($_.poolstatus)"}
-                    Set-MiningRigRentalStatus $Pool_RigId -Status $_.poolstatus -SecondsUntilOffline $PoolOfflineTime_Seconds -SecondsUntilRetry $PoolOfflineRetryTime_Seconds
-                }
-
-                if ($Pool_RigEnable -and $_.rental_id -in $ExcludeRentalId_Array) {
-                    Write-Log -Level Info "$($Name): rig id #$($Pool_RigId) disabled, because it is on the ExcludeRentalId list in pools.config.txt"
-                    $Pool_RigEnable = $false
-                }
 
                 if ($_.status.status -eq "rented" -or $_.status.rented) {
+
+                    $Rental_Id = [int]$_.rental_id
+                    
+                    $Rental_Options = $Rental_Options_Current | Where-Object {$_.rental_id -eq $Rental_Id} | Foreach-Object {$_.ok = $true;$_.data}
+
+                    if (-not $Rental_Options) {
+                        $Rental_Options = [PSCustomObject]@{
+                            UseHost=""
+                            PoolOfflineTime = ""
+                            PoolOfflineRetryTime = ""
+                        }
+                        try {
+                            $Rental_Options | ConvertTo-Json -Depth 10 | Set-Content ".\Config\mrr-$($Rental_Id).config.txt"
+                         } catch {
+                            $Rental_Options = $null
+                        }
+                    }
+
+                    $Rental_PoolOfflineTime = if ($Rental_Options.PoolOfflineTime) {ConvertFrom-Time "$($Rental_Options.PoolOfflineTime)"} else {$PoolOfflineTime_Seconds}
+                    $Rental_PoolOfflineRetryTime = if ($Rental_Options.PoolOfflineRetryTime) {ConvertFrom-Time "$($Rental_Options.PoolOfflineRetryTime)"} else {$PoolOfflineRetryTime_Seconds}
+
+                    if ($_.poolstatus -eq "offline") {Write-Log -Level Info "$($Name): set rig id #$($Pool_RigId) rental status to $($_.poolstatus)"}
+                    $Pool_RigEnable = Set-MiningRigRentalStatus $Pool_RigId -Status $_.poolstatus -SecondsUntilOffline $Rental_PoolOfflineTime -SecondsUntilRetry $Rental_PoolOfflineRetryTime
+
+                    if ($Pool_RigEnable -and $_.rental_id -in $ExcludeRentalId_Array) {
+                        Write-Log -Level Info "$($Name): rig id #$($Pool_RigId) disabled, because it is on the ExcludeRentalId list in pools.config.txt"
+                        $Pool_RigEnable = $false
+                    }
 
                     $Rental_Result  = $null
 
@@ -353,19 +373,6 @@ if ($AllRigs_Request) {
 
                     $Rental_CheckForAutoExtend = ([double]$_.status.hours -lt 0.25) -and -not $Pool_RigStatus.extended
                     $Rental_CheckForExtensionMessage = $AllowExtensions -and $($ExtensionMessageTime_Hours -gt 0) -and ($ExtensionMessage.Length -gt 3) -and ([double]$_.status.hours -lt $ExtensionMessageTime_Hours) -and -not $Pool_RigStatus.extensionmessagesent
-
-                    $Rental_Id = [int]$_.rental_id
-                    
-                    $Rental_Options = $Rental_Options_Current | Where-Object {$_.rental_id -eq $Rental_Id} | Foreach-Object {$_.ok = $true;$_.data}
-
-                    if (-not $Rental_Options) {
-                        $Rental_Options = [PSCustomObject]@{UseHost=""}
-                        try {
-                            $Rental_Options | ConvertTo-Json -Depth 10 | Set-Content ".\Config\mrr-$($Rental_Id).config.txt"
-                         } catch {
-                            $Rental_Options = $null
-                        }
-                    }
 
                     try {
 
