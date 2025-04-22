@@ -2244,7 +2244,9 @@ function Invoke-Core {
                                 if ($UserPool.Name -and -not $SelectedPoolNames.Contains($UserPool_Name) -and -not $ServerPoolNames.Contains($UserPool_Name)) {
                                     $Pool_Parameters = @{ StatSpan = $RoundSpan; InfoOnly = $false; Name = $UserPool_Name }
                                     foreach ($Property in $Session.Config.Pools.$UserPool_Name.PSObject.Properties) {
-                                        $Pool_Parameters[$Property.Name] = $Property.Value
+                                        if ($Property.Value -isnot [array]) {
+                                            $Pool_Parameters[$Property.Name] = $Property.Value
+                                        }
                                     }
                                     Get-PoolsContent "Userpools" -Parameters $Pool_Parameters -Disabled $Disabled | Foreach-Object { [void]$NewPools.Add($_) }
                                     [void]$SelectedPoolNames.Add($UserPool_Name)
@@ -2253,7 +2255,9 @@ function Invoke-Core {
                         } else {
                             $Pool_Parameters = @{ StatSpan = $RoundSpan; InfoOnly = $false }
                             foreach ($Property in $Session.Config.Pools.$Pool.PSObject.Properties) {
-                                $Pool_Parameters[$Property.Name] = $Property.Value
+                                if ($Property.Value -isnot [array]) {
+                                    $Pool_Parameters[$Property.Name] = $Property.Value
+                                }
                             }
                             Get-PoolsContent $Pool -Parameters $Pool_Parameters -Disabled $Disabled | Foreach-Object { [void]$NewPools.Add($_)  }
                             [void]$SelectedPoolNames.Add($Pool)
