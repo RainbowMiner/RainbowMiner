@@ -332,12 +332,23 @@ if ($AllRigs_Request) {
                 $Pool_Currency = "BTC"
                 $Pool_RigEnable = $false
 
+                $Pool_RigRented = $_.status.status -eq "rented" -or $_.status.rented
+                $Rental_PoolStatus = $_.poolstatus
+
                 $Rigs_Model = if ($Worker1 -ne $Worker) {"$(($Session.Config.DeviceModel | Where-Object {$Session.Config.Devices.$_.Worker -eq $Worker1} | Sort-Object -Unique) -join '-')"} elseif ($Global:DeviceCache.DeviceNames.CPU -ne $null) {"GPU"}
 
                 $Pool_Algorithm_Norm_With_Model = "$Pool_Algorithm_Norm$(if ($Rigs_Model) {"-$Rigs_Model"})"
 
 
-                if ($_.status.status -eq "rented" -or $_.status.rented) {
+                if ($Pool_RigRented) {
+
+                    $Rental_Miner = $null
+                    foreach ( $Miner in $Global:ActiveMiners ) {
+                        if ($Miner.Status -eq [MinerStatus]::Running -and $Miner.Pool -contains "MiningRigRentals" -and $Miner.Algorithm -contains $Pool_Algorithm_Norm_With_Model) {
+                            $Rental_Miner = $Miner
+                            break
+                        }
+                    }
 
                     $Rental_Id = [int]$_.rental_id
                     
@@ -359,10 +370,19 @@ if ($AllRigs_Request) {
                     $Rental_PoolOfflineTime = if ($Rental_Options.PoolOfflineTime) {ConvertFrom-Time "$($Rental_Options.PoolOfflineTime)"} else {$PoolOfflineTime_Seconds}
                     $Rental_PoolOfflineRetryTime = if ($Rental_Options.PoolOfflineRetryTime) {ConvertFrom-Time "$($Rental_Options.PoolOfflineRetryTime)"} else {$PoolOfflineRetryTime_Seconds}
 
-                    if ($_.poolstatus -eq "offline") {Write-Log -Level Info "$($Name): set rig id #$($Pool_RigId) rental status to $($_.poolstatus)"}
-                    $Pool_RigEnable = Set-MiningRigRentalStatus $Pool_RigId -Status $_.poolstatus -SecondsUntilOffline $Rental_PoolOfflineTime -SecondsUntilRetry $Rental_PoolOfflineRetryTime
+                    if ($Rental_PoolStatus -eq "offline") {
+                        if ($Rental_Miner) {
+                            $TimeSinceLastShare = $Rental_Miner.GetLastAcceptedSeconds()
+                            if ($TimeSinceLastShare -ge 0 -and $TimeSinceLastShare -lt $Rental_PoolOfflineTime) {
+                                $Rental_PoolStatus = "online"
+                            }
+                        }
+                        Write-Log -Level Info "$($Name): renter's pool is offline - set rig id #$($Pool_RigId) rental status to $($Rental_PoolStatus)"
+                    }
 
-                    if ($Pool_RigEnable -and $_.rental_id -in $ExcludeRentalId_Array) {
+                    $Pool_RigEnable = Set-MiningRigRentalStatus $Pool_RigId -Status $Rental_PoolStatus -SecondsUntilOffline $Rental_PoolOfflineTime -SecondsUntilRetry $Rental_PoolOfflineRetryTime
+
+                    if ($Pool_RigEnable -and $Rental_Id -in $ExcludeRentalId_Array) {
                         Write-Log -Level Info "$($Name): rig id #$($Pool_RigId) disabled, because it is on the ExcludeRentalId list in pools.config.txt"
                         $Pool_RigEnable = $false
                     }
@@ -450,7 +470,7 @@ if ($AllRigs_Request) {
                     }
 
 
-                    if (-not $Pool_RigEnable -and $PoolOfflineMessage -ne "" -and $_.poolstatus -eq "offline" -and -not $Pool_RigStatus.poolofflinemessagesent) {
+                    if (-not $Pool_RigEnable -and $PoolOfflineMessage -ne "" -and $Rental_PoolStatus -eq "offline" -and -not $Pool_RigStatus.poolofflinemessagesent) {
                         try {
                             $PoolOfflineMessage_Result = $null
 
@@ -555,13 +575,8 @@ if ($AllRigs_Request) {
                             $Threads_Result = Invoke-MiningRigRentalRequest "/rig/$($Pool_RigId)/threads" $API_Key $API_Secret
                             $Pool_Diff = ($Threads_Result.threads | Select-Object -First 1).difficulty.share -as [double]
                             $Threads_Result = $null
-                            if (-not $Pool_Diff) {
-                                foreach ( $Miner in $Global:ActiveMiners ) {
-                                    if ($Miner.Status -eq [MinerStatus]::Running -and $Miner.Pool -contains "MiningRigRentals" -and $Miner.Algorithm -contains $Pool_Algorithm_Norm_With_Model) {
-                                        $Pool_Diff = [double]$Miner.GetDifficulty($Pool_Algorithm_Norm_With_Model)
-                                        break
-                                    }
-                                }
+                            if (-not $Pool_Diff -and $Rental_Miner) {
+                                $Pool_Diff = [double]$Rental_Miner.GetDifficulty($Pool_Algorithm_Norm_With_Model)
                             }
                             if ($Pool_Diff) {
                                 if ($MRRConfig -eq $null) {
@@ -629,7 +644,7 @@ if ($AllRigs_Request) {
 
                             if ($_.status.rented) {$_.status.rented = $false}
                             if ($_.status.status -eq "rented") {$_.status.status = "available"}
-                            $Pool_RigEnable = $false
+                            $Pool_RigRented = $Pool_RigEnable = $false
 
                             Write-Log -Level Warn "$($Name): cannot reach MRR, manually disable rental #$($Rental_Result.id) on $($Worker1) that ended $($Rental_Result.end)."
                         }
@@ -638,7 +653,7 @@ if ($AllRigs_Request) {
                     $Pool_RigStatus = $null
                 }
 
-                if ($_.status.status -eq "rented" -or $_.status.rented -or $_.poolstatus -eq "online" -or $EnableMining) {
+                if ($Pool_RigRented -or $Rental_PoolStatus -eq "online" -or $EnableMining) {
 
                     $Miner_Server = $Pool_Rig.server
                     $Miner_Port   = $Pool_Rig.port
@@ -672,7 +687,7 @@ if ($AllRigs_Request) {
                         [PSCustomObject]@{
                             Algorithm     = $Pool_Algorithm_Norm_With_Model
 					        Algorithm0    = $Pool_Algorithm_Norm
-                            CoinName      = if ($_.status.status -eq "rented" -or $_.status.rented) {try {$ts=[timespan]::fromhours($_.status.hours);"{0:00}h{1:00}m{2:00}s" -f [Math]::Floor($ts.TotalHours),$ts.Minutes,$ts.Seconds}catch{"$($_.status.hours)h"}} else {""}
+                            CoinName      = if ($Pool_RigRented) {try {$ts=[timespan]::fromhours($_.status.hours);"{0:00}h{1:00}m{2:00}s" -f [Math]::Floor($ts.TotalHours),$ts.Minutes,$ts.Seconds}catch{"$($_.status.hours)h"}} else {""}
                             CoinSymbol    = $Pool_CoinSymbol
                             Currency      = $Pool_Currency
                             Price         = $Pool_Price
@@ -687,8 +702,8 @@ if ($AllRigs_Request) {
                             SSL           = $Pool_SSL
                             Updated       = $Stat.Updated
                             PoolFee       = $Pool_Fee
-                            Exclusive     = ($_.status.status -eq "rented" -or $_.status.rented) -and $Pool_RigEnable
-                            Idle          = if (($_.status.status -eq "rented" -or $_.status.rented) -and $Pool_RigEnable) {$false} else {-not $EnableMining}
+                            Exclusive     = $Pool_RigRented -and $Pool_RigEnable
+                            Idle          = if ($Pool_RigRented -and $Pool_RigEnable) {$false} else {-not $EnableMining}
                             Failover      = @($Pool_Failover | Select-Object -ExpandProperty name | Foreach-Object {
                                 [PSCustomObject]@{
                                     Protocol = "stratum+tcp"
@@ -726,7 +741,7 @@ if ($AllRigs_Request) {
                                             Pass   = "x"
                                             Worker = $Worker1
                                             Method = if ($Pool_Rig.port -match "^33\d\d$") {"EthProxy"} else {"Stratum"}
-                                            WaitForResponse = $_.status.status -eq "rented" -or $_.status.rented
+                                            WaitForResponse = $Pool_RigRented
                                             SSL    = [bool]$SSL
                                         }
                                         Failover = @($Pool_Failover | Select-Object -ExpandProperty name)
