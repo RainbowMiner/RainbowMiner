@@ -17,6 +17,9 @@ param(
     [String]$Region = ""
 )
 
+$CoinSymbol = $Session.Config.Pools.$Name.CoinSymbol
+$ExcludeCoinSymbol = $Session.Config.Pools.$Name.ExcludeCoinSymbol
+
 # $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 if (-not $PartyPassword -and -not $InfoOnly) {return}

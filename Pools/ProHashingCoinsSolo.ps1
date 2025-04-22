@@ -12,7 +12,6 @@ param(
     [Bool]$AllowZero = $false,
     [String]$StatAverage = "Minute_10",
     [String]$StatAverageStable = "Week",
-    [Array]$CoinSymbol = @(),
     [alias("UserName")]
     [String]$User = "",
     [String]$API_Key = "",

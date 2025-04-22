@@ -106,6 +106,6 @@ $Pools_Request | Where-Object {$_.name -notmatch "solo$" -and ($Wallets."$($_.sy
                 Worker        = "{workername:$Worker}"
                 Email         = $Email
             }
-            }
+        }
     }
 }

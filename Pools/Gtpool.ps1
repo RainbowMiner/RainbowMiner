@@ -17,8 +17,10 @@ param(
     [String]$UseWorkerName = "",
     [String]$ExcludeWorkerName = "",
     [String]$EnableMiningSwitch = $false
-
 )
+
+$CoinSymbol = $Session.Config.Pools.$Name.CoinSymbol
+$ExcludeCoinSymbol = $Session.Config.Pools.$Name.ExcludeCoinSymbol
 
 # $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
