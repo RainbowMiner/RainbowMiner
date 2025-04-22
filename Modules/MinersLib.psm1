@@ -105,7 +105,7 @@ function Get-MinersContentMOD {
         $Parameters.InfoOnly -or (
             (Test-Intersect $possibleDevices @($Global:MinerInfo.$scriptName)) -and
             ($Session.Config.MinerName.Count -eq 0 -or (Test-Intersect $Session.Config.MinerName $_.BaseName)) -and
-            ($Session.Config.ExcludeMinerName.Count -eq 0 -or -not (Test-Intersect $Session.Config.ExcludeMinerName,$_.BaseName))
+            ($Session.Config.ExcludeMinerName.Count -eq 0 -or -not (Test-Intersect $Session.Config.ExcludeMinerName $_.BaseName))
         )
     } | Foreach-Object { 
         $scriptName = $_.BaseName
