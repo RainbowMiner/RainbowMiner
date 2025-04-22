@@ -19,8 +19,10 @@ param(
     [String]$EnableMiningSwitch = $false
 )
 
-$CoinSymbol = $Session.Config.Pools.$Name.CoinSymbol
+$CoinSymbol = $Session.Config.Pools.$Name.CoinSymbol | Where-Object {$_ -ne "ZIL"}
 $ExcludeCoinSymbol = $Session.Config.Pools.$Name.ExcludeCoinSymbol
+
+$HasZIL = $Session.Config.Pools.$Name.CoinSymbol -and $Session.Config.Pools.$Name.CoinSymbol -contains "ZIL" -and (-not $ExcludeCoinSymbol -or $ExcludeCoinSymbol -notcontains "ZIL")
 
 # $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
@@ -91,9 +93,11 @@ if (-not $InfoOnly) {
 
     if (-not $Workers.Count) {return}
 
-    $AllCoins_Request   = $Coins_Request.payload | Where-Object {$_.status -and (-not $CoinSymbol -or $CoinSymbol -contains $_.coin) -and (-not $ExcludeCoinSymbol -or $ExcludeCoinSymbol -notcontains $_.coin)} | Sort-Object -Descending {$_.profit.forecast/$_.profit.hashrate}
+    $AllCoins_Request = $Coins_Request.payload | Where-Object {$_.ticker -ne "ZIL" -and $_.status -and (-not $CoinSymbol -or $CoinSymbol -contains $_.ticker) -and (-not $ExcludeCoinSymbol -or $ExcludeCoinSymbol -notcontains $_.ticker)} | Sort-Object -Descending {$_.profit.forecast/$_.profit.hashrate}
 
     if ($AllCoins_Request) {
+
+        $ZilCoin_Request  = if ($HasZIL) {$Coins_Request.payload | Where-Object {$_.ticker -eq "ZIL" -and $_.status} | Select-Object -First 1}
 
         $Workers_Request = [PSCustomObject]@{}
 
@@ -104,7 +108,6 @@ if (-not $InfoOnly) {
             Write-Log -Level Warn "Pool Workers API ($Name) has failed. "
             return
         }
-
 
         if (-not $Workers_Request.result) {
             Write-Log -Level Warn "Pool Workers API ($Name) returned nothing. "
@@ -137,7 +140,7 @@ if (-not $InfoOnly) {
                     $BestCoin_Mining = $Mining_Request.payload | Where-Object {$_.coin.ticker -eq $BestCoin_Request.ticker -and $_.config -match "PPLN"} | Select-Object -First 1
                     $Switch_Request = [PSCustomObject]@{}
                     try {
-                        $Switch_Request = Invoke-GetUrl "https://api.gtpool.io/v2/mining/change?key=$($API_Key)" -body "{`"method`":`"change_mining`",`"workers`":[`"$($Current_Worker.uniq)`"],`"mining`":`"$($BestCoin_Mining.uniq)`"}"
+                        $Switch_Request = Invoke-GetUrl "https://api.gtpool.io/v2/mining/change?key=$($API_Key)" -body "{`"workers`":[`"$($Current_Worker.uniq)`"],`"mining`":`"$($BestCoin_Mining.uniq)`"}"
                     }
                     catch {
                         Write-Log -Level Warn "Pool Change Mining API ($Name) has failed. "
@@ -185,48 +188,112 @@ if (-not $InfoOnly) {
 
                 $Worker_Count++
 
-                if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
+                if ($Stat.HashRate_Live -or $AllowZero) {
 
-                foreach ($Pool_SSL in @($false,$true)) {
-                    $Pool_Stratum = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
-                    $Pool_Port    = if ($Pool_SSL) {9009} else {9999}
-                    foreach($Pool_Region in $Pool_Regions) {
-                        [PSCustomObject]@{
-                            Algorithm     = $Pool_Algorithm_Norm_With_Model
-                            Algorithm0    = $Pool_Algorithm_Norm
-                            CoinName      = $Pool_CoinName
-                            CoinSymbol    = $Pool_CoinSymbol
-                            Currency      = $Pool_CoinSymbol
-                            Price         = $Stat.$StatAverage #instead of .Live
-                            StablePrice   = $Stat.$StatAverageStable
-                            MarginOfError = $Stat.Week_Fluctuation
-                            Protocol      = $Pool_Stratum
-                            Host          = "$($Pool_Region).gteh.org"
-                            Port          = $Pool_Port
-                            User          = "$($Account_Id).{workername:$Worker1}"
-                            Pass          = "x$Pool_Params"
-                            Region        = $Pool_RegionsTable.$Pool_Region
-                            SSL           = $Pool_SSL
-                            Updated       = $Stat.Updated
-                            PoolFee       = $Pool_Fee
-                            DataWindow    = $DataWindow
-                            Workers       = [int]$Current_Coin.pool.workersCount
-                            TSL           = $Pool_TSL
-                            BLK           = $Stat.BlockRate_Average
-                            EthMode       = $Pool_EthProxy
-                            Hashrate      = $Stat.HashRate_Live
-				            ErrorRatio    = $Stat.ErrorRatio
-                            Name          = $Name
-                            Penalty       = 0
-                            PenaltyFactor = 1
-                            Disabled      = $false
-                            HasMinerExclusions = $false
-                            Price_0       = 0.0
-                            Price_Bias    = 0.0
-                            Price_Unbias  = 0.0
-                            Wallet        = $Account_Id
-                            Worker        = "{workername:$Worker1}"
-                            Email         = $Email
+                    foreach ($Pool_SSL in @($false,$true)) {
+                        $Pool_Stratum = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
+                        $Pool_Port    = if ($Pool_SSL) {9009} else {9999}
+                        foreach($Pool_Region in $Pool_Regions) {
+                            [PSCustomObject]@{
+                                Algorithm     = $Pool_Algorithm_Norm_With_Model
+                                Algorithm0    = $Pool_Algorithm_Norm
+                                CoinName      = $Pool_CoinName
+                                CoinSymbol    = $Pool_CoinSymbol
+                                Currency      = $Pool_CoinSymbol
+                                Price         = $Stat.$StatAverage #instead of .Live
+                                StablePrice   = $Stat.$StatAverageStable
+                                MarginOfError = $Stat.Week_Fluctuation
+                                Protocol      = $Pool_Stratum
+                                Host          = "$($Pool_Region).gtpool.io"
+                                Port          = $Pool_Port
+                                User          = "$($Account_Id).{workername:$Worker1}"
+                                Pass          = "x$Pool_Params"
+                                Region        = $Pool_RegionsTable.$Pool_Region
+                                SSL           = $Pool_SSL
+                                Updated       = $Stat.Updated
+                                PoolFee       = $Pool_Fee
+                                DataWindow    = $DataWindow
+                                Workers       = [int]$Current_Coin.pool.workersCount
+                                TSL           = $Pool_TSL
+                                BLK           = $Stat.BlockRate_Average
+                                EthMode       = $Pool_EthProxy
+                                Hashrate      = $Stat.HashRate_Live
+				                ErrorRatio    = $Stat.ErrorRatio
+                                Name          = $Name
+                                Penalty       = 0
+                                PenaltyFactor = 1
+                                Disabled      = $false
+                                HasMinerExclusions = $false
+                                Price_0       = 0.0
+                                Price_Bias    = 0.0
+                                Price_Unbias  = 0.0
+                                Wallet        = $Account_Id
+                                Worker        = "{workername:$Worker1}"
+                                Email         = $Email
+                            }
+                        }
+                    }
+                }
+
+                if ($ZilCoin_Request) {
+                    $Current_Coin = $ZilCoin_Request
+
+                    $Pool_Algorithm_Norm = "ZilliqaDual"
+                    $Pool_Algorithm_Norm_With_Model = "$Pool_Algorithm_Norm$(if ($Pool_Model) {"-$Pool_Model"})"
+                    $Pool_TSL = (Get-UnixTimestamp) - [int]$Current_Coin.pool.lastBlockTime
+
+                    $Stat = [PSCustomObject]@{}
+
+                    $Pool_HR = [int64]$Current_Coin.pool.workersHashrate
+                    $Pool_BLK = if ($Current_Coin.chain.hashrate -and $Current_Coin.chain.blockTime) {$Current_Coin.pool.workersHashrate/$Current_Coin.chain.hashrate * 86400 / $Current_Coin.chain.blockTime} else {26.624396348433418}
+                    $Pool_PriceUsd = $Current_Coin.profit.forecast / 1e8 / $Current_Coin.profit.hashrate * 86400 / $Current_Coin.profit.interval * $Current_Coin.priceUsd
+                    $Pool_PriceBtc = if ($Global:Rates["USD"]) {$Pool_PriceUsd / $Global:Rates["USD"]} else {0}
+                    $Stat = Set-Stat -Name "$($Name)_$($Current_Coin.ticker)_Profit" -Value $Pool_PriceBtc -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_HR -BlockRate $Pool_BLK -Quiet
+
+                    if ($Stat.HashRate_Live -or $AllowZero) {
+
+                        foreach ($Pool_SSL in @($false,$true)) {
+                            $Pool_Stratum = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
+                            $Pool_Port    = if ($Pool_SSL) {9009} else {9999}
+                            foreach($Pool_Region in $Pool_Regions) {
+                                [PSCustomObject]@{
+                                    Algorithm     = $Pool_Algorithm_Norm_With_Model
+                                    Algorithm0    = $Pool_Algorithm_Norm
+                                    CoinName      = "Zilliqa"
+                                    CoinSymbol    = "ZIL"
+                                    Currency      = "ZIL"
+                                    Price         = $Stat.$StatAverage #instead of .Live
+                                    StablePrice   = $Stat.$StatAverageStable
+                                    MarginOfError = $Stat.Week_Fluctuation
+                                    Protocol      = $Pool_Stratum
+                                    Host          = "$($Pool_Region).gtpool.io"
+                                    Port          = $Pool_Port
+                                    User          = "$($Account_Id).{workername:$Worker1}"
+                                    Pass          = "x$Pool_Params"
+                                    Region        = $Pool_RegionsTable.$Pool_Region
+                                    SSL           = $Pool_SSL
+                                    Updated       = $Stat.Updated
+                                    PoolFee       = $Pool_Fee
+                                    DataWindow    = $DataWindow
+                                    Workers       = [int]$Current_Coin.pool.workersCount
+                                    TSL           = $Pool_TSL
+                                    BLK           = $Stat.BlockRate_Average
+                                    EthMode       = $Pool_EthProxy
+                                    Hashrate      = $Stat.HashRate_Live
+				                    ErrorRatio    = $Stat.ErrorRatio
+                                    Name          = $Name
+                                    Penalty       = 0
+                                    PenaltyFactor = 1
+                                    Disabled      = $false
+                                    HasMinerExclusions = $false
+                                    Price_0       = 0.0
+                                    Price_Bias    = 0.0
+                                    Price_Unbias  = 0.0
+                                    Wallet        = $Account_Id
+                                    Worker        = "{workername:$Worker1}"
+                                    Email         = $Email
+                                }
+                            }
                         }
                     }
                 }

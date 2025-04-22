@@ -76,8 +76,8 @@ $Pools_Request | Where-Object {$_.name -notmatch "solo$" -and ($Wallets."$($_.sy
                 CoinName      = $Pool_CoinName
                 CoinSymbol    = $Pool_Currency
                 Currency      = $Pool_Currency
-                Price         = if ($Pool_Currency -eq "ZIL") {1e-15} else {0}
-                StablePrice   = if ($Pool_Currency -eq "ZIL") {1e-15} else {0}
+                Price         = if ($Pool_Currency -eq "ZIL") {3e-16} else {0}
+                StablePrice   = if ($Pool_Currency -eq "ZIL") {3e-16} else {0}
                 MarginOfError = 0
                 Protocol      = "stratum+$(if ($Pool_Host_Data.ssl) {"ssl"} else {"tcp"})"
                 Host          = "$($Pool_Host_Data.host)"
