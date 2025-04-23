@@ -370,14 +370,12 @@ if ($AllRigs_Request) {
                     $Rental_PoolOfflineTime = if ($Rental_Options.PoolOfflineTime) {ConvertFrom-Time "$($Rental_Options.PoolOfflineTime)"} else {$PoolOfflineTime_Seconds}
                     $Rental_PoolOfflineRetryTime = if ($Rental_Options.PoolOfflineRetryTime) {ConvertFrom-Time "$($Rental_Options.PoolOfflineRetryTime)"} else {$PoolOfflineRetryTime_Seconds}
 
-                    if ($Rental_PoolStatus -eq "offline") {
-                        if ($Rental_Miner) {
-                            $TimeSinceLastShare = $Rental_Miner.GetLastAcceptedSeconds()
-                            if ($TimeSinceLastShare -ge 0 -and $TimeSinceLastShare -lt $Rental_PoolOfflineTime) {
-                                $Rental_PoolStatus = "online"
-                            }
+                    $Rental_PoolIsOffline = $Rental_PoolStatus -eq "offline"
+                    if ($Rental_PoolIsOffline -and $Rental_Miner) {
+                        $TimeSinceLastShare = $Rental_Miner.GetLastAcceptedSeconds()
+                        if ($TimeSinceLastShare -ge 0 -and $TimeSinceLastShare -lt $Rental_PoolOfflineTime) {
+                            $Rental_PoolStatus = "online"
                         }
-                        Write-Log -Level Info "$($Name): renter's pool is offline - set rig id #$($Pool_RigId) rental status to $($Rental_PoolStatus)"
                     }
 
                     $Pool_RigEnable = Set-MiningRigRentalStatus $Pool_RigId -Status $Rental_PoolStatus -SecondsUntilOffline $Rental_PoolOfflineTime -SecondsUntilRetry $Rental_PoolOfflineRetryTime
@@ -390,6 +388,21 @@ if ($AllRigs_Request) {
                     $Rental_Result  = $null
 
                     $Pool_RigStatus = Get-MiningRigRentalStatus $Pool_RigId
+
+                    if ($Rental_PoolIsOffline) {
+                        if ($Rental_PoolStatus -eq "online") {
+                            $msg = "ignored because we find shares"
+                        } else {
+                            $secs = ($Pool_RigStatus.next - (Get-Date).ToUniversalTime()).TotalSeconds
+                            if ($secs -lt 0) {$secs = 0}
+                            if ($Pool_RigStatus.wait) {
+                                $msg = "waiting $($secs)s for online status"
+                            } else {
+                                $msg = "rig offline for $($secs)s"
+                            }
+                        }
+                        Write-Log -Level Info "$($Name): rig #$($Pool_RigId) renter's pool is offline - $($msg)"
+                    }
 
                     $Rental_CheckForAutoExtend = ([double]$_.status.hours -lt 0.25) -and -not $Pool_RigStatus.extended
                     $Rental_CheckForExtensionMessage = $AllowExtensions -and $($ExtensionMessageTime_Hours -gt 0) -and ($ExtensionMessage.Length -gt 3) -and ([double]$_.status.hours -lt $ExtensionMessageTime_Hours) -and -not $Pool_RigStatus.extensionmessagesent
