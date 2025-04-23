@@ -17,11 +17,16 @@ param(
 # $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "NIR";   port = 3377; fee = 0.9; rpc = "nirmata";    user = "{wallet}.{worker}.{diff}"; pass="x"}
-    [PSCustomObject]@{symbol = "QUAI";  port = 3333; fee = 0.9; rpc = "quai";       user = "{wallet}={diff}.{worker}"; pass="x"}
-    [PSCustomObject]@{symbol = "XCC";   port = 4481; fee = 0.9; rpc = "cyberchain"; user = "{wallet}={diff}.{worker}"; pass="x"}
-    [PSCustomObject]@{symbol = "XE";    port = 3381; fee = 0.9; rpc = "xechain";    user = "{wallet}={diff}.{worker}"; pass="x"}
-    [PSCustomObject]@{symbol = "XEL";   port = 2666; fee = 0.9; rpc = "xelis";      user = "{wallet}={diff}.{worker}"; pass="x"}
+    [PSCustomObject]@{symbol = "CLC";   port = 5118; fee = 0.9; rpc = "clc";        user = "{wallet}{=diff}.{worker}"; pass="x"}
+    [PSCustomObject]@{symbol = "XCB";   port = 3118; fee = 0.9; rpc = "corecoin";   user = "{wallet}{=diff}.{worker}"; pass="x"}
+    [PSCustomObject]@{symbol = "XCC";   port = 4481; fee = 0.9; rpc = "cyberchain"; user = "{wallet}{=diff}.{worker}"; pass="x"}
+    [PSCustomObject]@{symbol = "LBRT";  port = 4118; fee = 0.9; rpc = "liberty";    user = "{wallet}{=diff}.{worker}"; pass="x"}
+    [PSCustomObject]@{symbol = "MCM";   port = 3336; fee = 0.9; rpc = "mochimo";    user = "{wallet}{=diff}.{worker}"; pass="x"}
+    [PSCustomObject]@{symbol = "NIR";   port = 3377; fee = 0.9; rpc = "nirmata";    user = "{wallet}.{worker}{.diff}"; pass="x"}
+    [PSCustomObject]@{symbol = "QUAI";  port = 3333; fee = 0.9; rpc = "quai";       user = "{wallet}{=diff}.{worker}"; pass="x"}
+    [PSCustomObject]@{symbol = "R5";    port = 2118; fee = 0.9; rpc = "r5";         user = "{wallet}{=diff}.{worker}"; pass="x"}
+    [PSCustomObject]@{symbol = "XE";    port = 3381; fee = 0.9; rpc = "xechain";    user = "{wallet}{=diff}.{worker}"; pass="x"}
+    [PSCustomObject]@{symbol = "XEL";   port = 2666; fee = 0.9; rpc = "xelis";      user = "{wallet}{=diff}.{worker}"; pass="x"}
     [PSCustomObject]@{symbol = "ZANO";  port = 8877; fee = 0.9; rpc = "zano";       user = "{wallet}.{worker}";        pass="{diff}"}
 )
 
@@ -62,8 +67,8 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     }
     
     if ($Pool_Request.config.stratum -or $InfoOnly) {
-        $Pool_User = $_.user -replace "{wallet}","$($Wallets.$Pool_Currency)" -replace "{worker}","{workername:$Worker}" -replace "{diff}","{diff:.`$difficulty}"
-        $Pool_Pass = $_.pass -replace "{diff}","{diff:.`$difficulty}" 
+        $Pool_User = $_.user -replace "{wallet}","$($Wallets.$Pool_Currency)" -replace "{worker}","{workername:$Worker}" -replace "{=diff}","{diff:=`$difficulty}" -replace "{\.diff}","{diff:.`$difficulty}"
+        $Pool_Pass = $_.pass -replace "{diff}","{diff:`$difficulty}" 
         foreach ($Pool_Stratum in $Pool_Request.config.stratum) {
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
