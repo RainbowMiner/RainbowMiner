@@ -45,12 +45,12 @@ if ($IsLinux) {
 }
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "ethash"   ; MinMemGB = 3; Params = @(); ExtendInterval = 3} #Ethash
-    [PSCustomObject]@{MainAlgorithm = "ethash2g" ; MinMemGB = 1; Params = @(); ExtendInterval = 3} #Ethash
-    [PSCustomObject]@{MainAlgorithm = "ethash3g" ; MinMemGB = 2; Params = @(); ExtendInterval = 3} #Ethash
-    [PSCustomObject]@{MainAlgorithm = "ethash4g" ; MinMemGB = 3; Params = @(); ExtendInterval = 3} #Ethash
-    [PSCustomObject]@{MainAlgorithm = "ethash5g" ; MinMemGB = 4; Params = @(); ExtendInterval = 3} #Ethash
-    [PSCustomObject]@{MainAlgorithm = "ethashlowmemory"   ; MinMemGB = 3; Params = @(); ExtendInterval = 3} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "ethash"   ; MinMemGB = 3; Params = @(); FaultTolerance = 0.2; ExtendInterval = 3} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "ethash2g" ; MinMemGB = 1; Params = @(); FaultTolerance = 0.2; ExtendInterval = 3} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "ethash3g" ; MinMemGB = 2; Params = @(); FaultTolerance = 0.2; ExtendInterval = 3} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "ethash4g" ; MinMemGB = 3; Params = @(); FaultTolerance = 0.2; ExtendInterval = 3} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "ethash5g" ; MinMemGB = 4; Params = @(); FaultTolerance = 0.2; ExtendInterval = 3} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "ethashlowmemory"   ; MinMemGB = 3; Params = @(); FaultTolerance = 0.2; ExtendInterval = 3} #Ethash
 )
 
 # $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
