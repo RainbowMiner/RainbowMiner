@@ -2107,8 +2107,10 @@ try {
 
     if (Test-Path ".\Data\minerinfo.json") {Remove-Item ".\Data\minerinfo.json" -Force -ErrorAction Ignore; $ChangesTotal++}
 
-    $sourceFile = ".\Stats\Balances\Earnings.csv"
-    $archiveFile = ".\Stats\Balances\Earnings_Archive.csv"
+    $balancesPath = "Stats\Balances"
+
+    $sourceFile = Join-Path $balancesPath "Earnings.csv"
+    $archiveFile = Join-Path $balancesPath "Earnings_Archive.csv"
     $tempFile    = "$sourceFile.tmp"
 
     $cutoffDate = (Get-Date).AddMonths(-3)
