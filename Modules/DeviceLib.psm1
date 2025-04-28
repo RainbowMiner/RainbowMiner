@@ -1291,7 +1291,7 @@ function Update-DeviceInformation {
                     $Session.SysInfo.Cpus | Select-Object -Index $Device.Type_Index | Foreach-Object {
                         $Device.Data.Clock       = [int]$_.Clock
                         $Device.Data.Utilization = [int]$_.Utilization
-                        $Device.Data.PowerDraw   = [int]$_.PowerDraw
+                        $Device.Data.PowerDraw   = [Math]::Round($_.PowerDraw,2)
                         $Device.Data.Temperature = [int]$_.Temperature
                         $Device.Data.Method      = $_.Method
                     } 
@@ -1299,13 +1299,16 @@ function Update-DeviceInformation {
             }
             elseif ($IsLinux) {
                 $Global:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
-                    [int]$Utilization = [Math]::Min((((Invoke-Exe "ps" -ArgumentList "-A -o pcpu" -ExpandLines) -match "\d" | Measure-Object -Sum).Sum / $Global:GlobalCPUInfo.Threads), 100)
+                    $Utilization = if ($Session.SysInfo.CpuLoad) {$Session.SysInfo.CpuLoad} else {((Invoke-Exe "ps" -ArgumentList "-A -o pcpu" -ExpandLines) -match "\d" | Measure-Object -Sum).Sum / $Global:GlobalCPUInfo.Threads}
+                    $Utilization = [Math]::Min($Utilization, 100)
+
+                    $PowerDraw   = if ($Session.SysInfo.Cpus[0].PowerDraw) {$Session.SysInfo.Cpus[0].PowerDraw} else {$CPU_tdp * $Utilization / 100}
 
                     $_.Data.Clock       = [int]$(if ($Session.SysInfo.Cpus -and $Session.SysInfo.Cpus[0].Clock) {$Session.SysInfo.Cpus[0].Clock} else {$Global:GlobalCPUInfo.MaxClockSpeed})
                     $_.Data.Utilization = [int]$Utilization
-                    $_.Data.PowerDraw   = [int]($CPU_tdp * $Utilization / 100)
+                    $_.Data.PowerDraw   = [Math]::Round($PowerDraw,2)
                     $_.Data.Temperature = [int]$(if ($Session.SysInfo.Cpus -and $Session.SysInfo.Cpus[0].Temperature) {$Session.SysInfo.Cpus[0].Temperature} else {0})
-                    $_.Data.Method      = "tdp"
+                    $_.Data.Method      = if ($Session.SysInfo.Cpus[0].PowerDraw) {"pcp"} else {"tdp"}
                 }
             }
             $Global:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
