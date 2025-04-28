@@ -1,4 +1,4 @@
-﻿param($ControllerProcessID, $CreateProcessPath, $LDExportPath, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $StartWithoutTakingFocus, $LinuxDisplay, $CurrentPwd, $SetLDLIBRARYPATH)
+﻿param($ControllerProcessID, $CreateProcessPath, $LDExportPath, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $StartWithoutTakingFocus, $LinuxDisplay, $CurrentPwd, $SetLDLIBRARYPATH, $LinuxNiceness)
 
 $EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {Set-Item -force -path "env:$($matches[1])" -value $matches[2]}
 
@@ -56,6 +56,17 @@ if ($StartWithoutTakingFocus) {
         #$BE = "/usr/lib/x86_64-linux-gnu/libcurl-compat.so.3.0.0"
         if ($LinuxDisplay) {$env:DISPLAY = "$($LinuxDisplay)"}
         if ($SetLDLIBRARYPATH) {$env:LD_LIBRARY_PATH = "$($LDExportPath)"}
+
+        # Set nice level if requested
+        if ($LinuxNiceness -ne "") {
+            $OriginalFilePath = $ProcessParams.FilePath
+            $ProcessParams.FilePath = (Get-Command nice).Source
+            if (-not $ProcessParams.ArgumentList) {
+                $ProcessParams.ArgumentList = "-n $LinuxNiceness $OriginalFilePath"
+            } else {
+                $ProcessParams.ArgumentList = "-n $LinuxNiceness $OriginalFilePath $($ProcessParams.ArgumentList)"
+            }
+        }
     }
 
     $Process = Start-Process @ProcessParams

@@ -305,6 +305,26 @@
                             </select>
                         </div>
                     </div>
+
+                    <div class="is--linux">
+                        <!-- Enable miner niceness -->
+                        <div class="mb-3 row">
+                            <label for="inputEnableLinuxMinerNiceness" class="col-sm-2 col-form-label">Enable nice for miners</label>
+                            <div class="col-sm-10">
+                                <select class="form-select" id="inputEnableLinuxMinerNiceness" name="EnableLinuxMinerNiceness">
+                                    <option value="0">Disable</option>
+                                    <option value="1">Enable</option>
+                                </select>
+                            </div>
+                        </div>
+                        <!-- niceness for miners -->
+                        <div class="mb-3 row">
+                            <label for="inputLinuxMinerNiceness" class="col-sm-2 col-form-label">Miner niceness</label>
+                            <div class="col-sm-10">
+                                <input type="number" min="-20" max="19" step="1" class="form-control" id="inputLinuxMinerNiceness" name="LinuxMinerNiceness">
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

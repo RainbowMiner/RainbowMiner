@@ -1037,6 +1037,8 @@ For Server (Runmode=server) setup:
 - **MSIApath** = absolute windows path to MSI Afterburner executable [default=c:\Program Files (x86)\MSI Afterburner\MSIAfterburner.exe]
 - **MSIAprofile** = default MSI Afterburner profile (1-5), set to 0 to disable [default=2]
 - **NVSMIpath** = absolute windows path to Nvidia smi tools [default=c:\Program Files\NVIDIA Corporation\NVSMI]
+- **EnableLinuxMinerNiceness** = set to 1 to enable nice command for miners
+- **LinuxMinerNiceness** = enter the level for miner niceness from -20 = least nice to 19 = super nice [defaul=19]
 - **EnableLinuxHeadless** = if set to 1, miner-startscripts and overclocking-scripts will include DISPLAY+XAUTHORITY settings
 - **LinuxDisplay** = default Linux DISPLAY for headless operation [default=:0]
 - **LinuxXAuthority** = default Linux XAUTHORITY for headless operation (needed for overclocking). [default=RainbowMiner will guess]

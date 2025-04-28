@@ -148,9 +148,13 @@ function Start-SubProcessInConsole {
 
     $LDExp = ""
     $LinuxDisplay = ""
+    $LinuxNiceness = ""
     if ($IsLinux) {
         $LDExp = if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")}
         $LinuxDisplay = "$(if ($Session.Config.EnableLinuxHeadless) {$Session.Config.LinuxDisplay})"
+        if ($Session.Config.EnableLinuxMinerNiceness) {
+            $LinuxNiceness = "$($Session.Config.LinuxMinerNiceness)"
+        }
         $Executables | Foreach-Object {
             $Exec_Path = Join-Path (Split-Path -Path $FilePath) $_
             if (Test-Path $Exec_Path) {
@@ -159,7 +163,7 @@ function Start-SubProcessInConsole {
         }
     }
 
-    $Job = Start-Job -FilePath .\Scripts\StartInConsole.ps1 -ArgumentList $PID, (Resolve-Path ".\DotNet\Tools\CreateProcess.cs"), $LDExp, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $IsWindows, $LinuxDisplay, $ExecutionContext.SessionState.Path.CurrentFileSystemLocation, $SetLDLIBRARYPATH
+    $Job = Start-Job -FilePath .\Scripts\StartInConsole.ps1 -ArgumentList $PID, (Resolve-Path ".\DotNet\Tools\CreateProcess.cs"), $LDExp, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $IsWindows, $LinuxDisplay, $ExecutionContext.SessionState.Path.CurrentFileSystemLocation, $SetLDLIBRARYPATH, $LinuxNiceness
 
     $cnt = 30
     do {Start-Sleep 1; $JobOutput = Receive-Job $Job;$cnt--}
@@ -316,12 +320,15 @@ function Start-SubProcessInScreen {
 
     [System.Collections.Generic.List[string]]$Test  = @()
     $Stuff | Foreach-Object {[void]$Test.Add($_)}
-    [void]$Test.Add("$FilePath $TestArgumentList")
+
+    $nice = "$(if ($Session.Config.EnableLinuxMinerNiceness) {"nice -n $($Session.Config.LinuxMinerNiceness) "})"
+    [void]$Test.Add("$nice$FilePath $TestArgumentList")
 
     if ($StartStopDaemon) {
-        [void]$Stuff.Add("start-stop-daemon --start --make-pidfile --chdir '$WorkingDirectory' --pidfile '$PIDPath' --exec '$FilePath' -- $ArgumentList")
+        $nice = "$(if ($Session.Config.EnableLinuxMinerNiceness) {"--nicelevel $($Session.Config.LinuxMinerNiceness) "})"
+        [void]$Stuff.Add("start-stop-daemon --start --make-pidfile --chdir '$WorkingDirectory' --pidfile '$PIDPath' $($nice)--exec '$FilePath' -- $ArgumentList")
     } else {
-        [void]$Stuff.Add("$FilePath $ArgumentList")
+        [void]$Stuff.Add("$nice$FilePath $ArgumentList")
     }
 
     [System.Collections.Generic.List[string]]$Cmd = @()
@@ -527,12 +534,15 @@ function Start-SubProcessInTmux {
 
     [System.Collections.Generic.List[string]]$Test  = @()
     $Stuff | Foreach-Object {[void]$Test.Add($_)}
-    [void]$Test.Add("$FilePath $TestArgumentList")
+
+    $nice = "$(if ($Session.Config.EnableLinuxMinerNiceness) {"nice -n $($Session.Config.LinuxMinerNiceness) "})"
+    [void]$Test.Add("$nice$FilePath $TestArgumentList")
 
     if ($StartStopDaemon) {
-        [void]$Stuff.Add("start-stop-daemon --start --make-pidfile --chdir '$WorkingDirectory' --pidfile '$PIDPath' --exec '$FilePath' -- $ArgumentList")
+        $nice = "$(if ($Session.Config.EnableLinuxMinerNiceness) {"--nicelevel $($Session.Config.LinuxMinerNiceness) "})"
+        [void]$Stuff.Add("start-stop-daemon --start --make-pidfile --chdir '$WorkingDirectory' --pidfile '$PIDPath' $($nice)--exec '$FilePath' -- $ArgumentList")
     } else {
-        [void]$Stuff.Add("$FilePath $ArgumentList")
+        [void]$Stuff.Add("$nice$FilePath $ArgumentList")
     }
 
     [System.Collections.Generic.List[string]]$Cmd = @()
