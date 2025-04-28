@@ -2090,6 +2090,10 @@ function Invoke-Core {
                                     }
                                 }
                                 if ($newMiner.Threads -ne $null) {$newMiner.Threads = [int]($newMiner.Threads -replace "[^\d]")}
+                                if ($newMiner.PowerDraw -ne $null) {
+                                    $val = $newMiner.PowerDraw -replace "[^\d\.]"
+                                    $newMiner.PowerDraw = if ($val -eq "") {$null} else {[Math]::Round([double]$val,2)}
+                                }
                                 if ($newMiner.ShareCheck -ne $null -and $newMiner.ShareCheck -ne "") {$newMiner.ShareCheck = ConvertFrom-Time $p.ShareCheck}
                                 if ($newMiner.Disable -ne $null) {$newMiner.Disable = $Disable} else {$newMiner | Add-Member Disable $Disable -Force}
                                 if ($newMiner.Tuning -ne $null) {$newMiner.Tuning = $Tuning} else {$newMiner | Add-Member Tuning $Tuning -Force}
@@ -3023,7 +3027,7 @@ function Invoke-Core {
         if ($Session.Config.Miners) {
             $Miner_CommonCommands = $Miner_Arguments = $Miner_Difficulty = ''
             $Miner_MSIAprofile = 0
-            $Miner_Penalty = $Miner_ExtendInterval = $Miner_FaultTolerance = $Miner_ShareCheck = -1
+            $Miner_Penalty = $Miner_ExtendInterval = $Miner_FaultTolerance = $Miner_ShareCheck = $Miner_PowerDraw = -1
             $Miner_HashAdjust = $Miner_Hash2Adjust = -111
             $Miner_CommonCommands_found = $false
             $Miner_CommonCommands_array = [System.Collections.Generic.List[string]]::new()
@@ -3042,6 +3046,7 @@ function Invoke-Core {
                     if ($Session.Config.Miners.$Miner_CommonCommands.ExtendInterval -and $Miner_ExtendInterval -eq -1) {$Miner_ExtendInterval = [int]$Session.Config.Miners.$Miner_CommonCommands.ExtendInterval}
                     if ($Session.Config.Miners.$Miner_CommonCommands.FaultTolerance -and $Miner_FaultTolerance -eq -1) {$Miner_FaultTolerance = [double]$Session.Config.Miners.$Miner_CommonCommands.FaultTolerance}
                     if ($Session.Config.Miners.$Miner_CommonCommands.OCprofile -and $i -gt 1) {foreach ($p in @($Miner.DeviceModel -split '-')) {if (-not $Miner.OCprofile[$p]) {$Miner.OCprofile[$p]=$Session.Config.Miners.$Miner_CommonCommands.OCprofile}}}
+                    if ($Miner_IsCPU -and $Session.Config.Miners.$Miner_CommonCommands.PowerDraw -ne $null -and $Miner_PowerDraw -eq -1) {$Miner_PowerDraw = $Session.Config.Miners.$Miner_CommonCommands.PowerDraw}
                     $Miner_CommonCommands_found = $true
                 }
             }
@@ -3115,6 +3120,7 @@ function Invoke-Core {
             if ($Miner_ExtendInterval -ne -1) {$Miner.ExtendInterval = $Miner_ExtendInterval}
             if ($Miner_FaultTolerance -ne -1) {$Miner.FaultTolerance = $Miner_FaultTolerance}
             if ($Miner_ShareCheck -ne -1)     {$Miner | Add-Member -Name ShareCheck -Value $Miner_ShareCheck -MemberType NoteProperty -Force}
+            if ($Miner_PowerDraw -ne -1)      {$Miner.PowerDraw = $Miner_PowerDraw}
         }
 
         if (-not $Miner.MSIAprofile -and $Miner_AlgoNames.Count -eq 1 -and $Session.Config.Algorithms."$($Miner.BaseAlgorithm -replace '-.*$')".MSIAprofile -gt 0) {$Miner | Add-Member -Name MSIAprofile -Value $Session.Config.Algorithms."$($Miner.BaseAlgorithm -replace '-.*$')".MSIAprofile -MemberType NoteProperty -Force}
