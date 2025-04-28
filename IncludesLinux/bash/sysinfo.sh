@@ -223,7 +223,7 @@ get_cpu_info() {
     done
 
     printf "  \"CpuLoad\": ${cpu_load},\n"
-    printf "  \"CPUs\": [\n    {\n      \"Name\": \"${cpu_name}\",\n      \"Clock\": ${cpu_clock},\n      \"Temperature\": ${cpu_temp},\n      \"Power\": ${cpu_power}\n    }\n  ]"
+    printf "  \"CPUs\": [\n    {\n      \"Name\": \"${cpu_name}\",\n      \"Clock\": ${cpu_clock},\n      \"Temperature\": ${cpu_temp},\n      \"PowerDraw\": ${cpu_power}\n    }\n  ]"
 }
 
 # Function to get Memory information
