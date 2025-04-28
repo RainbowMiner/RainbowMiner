@@ -121,6 +121,7 @@ get_cpu_info() {
     cpu_clock="null"
     cpu_load="null"
     cpu_temp="null"
+    cpu_power="null"
     cpu_count=1
 
     # Fetch CPU name and socket count using lscpu (called only once)
@@ -190,12 +191,28 @@ get_cpu_info() {
         fi
     done
 
+    # CPU power detection
+    if [ -f /sys/class/powercap/intel-rapl:0/energy_uj ]; then
+        energy1=$(cat /sys/class/powercap/intel-rapl:0/energy_uj 2>/dev/null)
+        sleep 0.05  # 50 milliseconds
+        energy2=$(cat /sys/class/powercap/intel-rapl:0/energy_uj 2>/dev/null)
+
+        if [ -n "$energy1" ] && [ -n "$energy2" ] && echo "$energy1$energy2" | grep -qE '^[0-9]+$'; then
+            delta=$(awk -v e1="$energy1" -v e2="$energy2" 'BEGIN {print e2 - e1}')
+            if [ "$delta" -lt 0 ]; then
+                # Handle counter wraparound
+                delta=$((delta + 2**32))
+            fi
+            cpu_power=$(awk -v d="$delta" 'BEGIN {print (d / 1000000) * 20}')  # delta Joules * (1/0.05s) = Watt
+        fi
+    fi
+
     # Append "(xN)" only if there are multiple CPUs
     if [ "$cpu_count" -gt 1 ]; then
         cpu_name="${cpu_name} (x${cpu_count})"
     fi
 
-    for var in cpu_load cpu_temp cpu_freq; do
+    for var in cpu_load cpu_temp cpu_freq cpu_power; do
         eval "value=\$$var"  # Extract the variable value dynamically
 
         if [ -z "$value" ] || [ "$value" = "null" ]; then
@@ -206,7 +223,7 @@ get_cpu_info() {
     done
 
     printf "  \"CpuLoad\": ${cpu_load},\n"
-    printf "  \"CPUs\": [\n    {\n      \"Name\": \"${cpu_name}\",\n      \"Clock\": ${cpu_clock},\n      \"Temperature\": ${cpu_temp},\n    }\n  ]"
+    printf "  \"CPUs\": [\n    {\n      \"Name\": \"${cpu_name}\",\n      \"Clock\": ${cpu_clock},\n      \"Temperature\": ${cpu_temp},\n      \"Power\": ${cpu_power}\n    }\n  ]"
 }
 
 # Function to get Memory information
