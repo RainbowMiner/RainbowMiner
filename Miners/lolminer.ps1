@@ -14,14 +14,14 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=4724735.0"
 $Port = "317{0:d2}"
 $Cuda = "10.0"
 $DevFee = 1.0
-$Version = "1.94a"
+$Version = "1.95"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-lolMiner\lolMiner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/1.94a-lolminer/lolMiner_v1.94a_Lin64.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.95-lolminer/lolMiner_v1.95_Lin64.tar.gz"
 } else {
     $Path = ".\Bin\GPU-lolMiner\lolMiner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/1.94a-lolminer/lolMiner_v1.94a_Win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.95-lolminer/lolMiner_v1.95_Win64.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -74,7 +74,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "KarlsenHashV2";                MinMemGb = 2;   Params = "--algo KARLSENV2 --dualmode PYRINV2DUAL";                     Pers=$false; Fee=1.0;   ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "PyrinHashV2"; CUDAArch = "P"} #KarlsenHashV2
     [PSCustomObject]@{MainAlgorithm = "KarlsenHashV2";                MinMemGb = 2;   Params = "--algo KARLSENV2 --dualmode TONDUAL";                         Pers=$false; Fee=1.0;   ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "SHA256ton"; CUDAArch = "P"} #KarlsenHashV2
     [PSCustomObject]@{MainAlgorithm = "NexaPoW";         DAG = $true; MinMemGb = 2;   Params = "--algo NEXA";                             Pers=$false; Fee=2; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); CUDAArch = "P"} #NexaPow/NEOX
-    [PSCustomObject]@{MainAlgorithm = "Octopus";                      MinMemGb = 8;   Params = "--algo OCTOPUS";                          Pers=$false; Fee=2; ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #Octopus/CTXC
+    [PSCustomObject]@{MainAlgorithm = "Octopus";         DAG = $true; MinMemGb = 6;   Params = "--algo OCTOPUS";                          Pers=$false; Fee=2; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); ZombieMode = @("NVIDIA")} #Octopus/CTXC
     [PSCustomObject]@{MainAlgorithm = "PyrinHashV2";                  MinMemGb = 2;   Params = "--algo PYRINV2";                                              Pers=$false; Fee=1.0;   ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); CUDAArch = "P"} #KarlsenHashV2
     [PSCustomObject]@{MainAlgorithm = "SHA256ton";                    MinMemGb = 2;   Params = "--algo GRAM";        Pers=$false; Fee=1;   ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #SHA256ton/GRAM
     [PSCustomObject]@{MainAlgorithm = "UbqHash";         DAG = $true; MinMemGB = 2;   Params = "--algo UBQHASH --disable-dag-verify 1";   Pers=$false; Fee=0.7; ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #Ubqhash
@@ -155,7 +155,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
                 $MinMemGB = if ($_.DAG) {Get-EthDAGSize -CoinSymbol $Pools.$MainAlgorithm_Norm.CoinSymbol -Algorithm $MainAlgorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}
                 #Zombie-Mode since v1.11
-                if ($_.DAG -and $MainAlgorithm_Norm_0 -match $Global:RegexAlgoIsEthash -and $MinMemGB -gt $_.MinMemGb -and $Session.Config.EnableEthashZombieMode) {
+                if ($_.DAG -and ($MinMemGB -gt $_.MinMemGb) -and (($MainAlgorithm_Norm_0 -match $Global:RegexAlgoIsEthash -and $Session.Config.EnableEthashZombieMode) -or ($_.ZombieMode -and $Miner_Vendor -in $_.ZombieMode))) {
                     $MinMemGB = $_.MinMemGb
                 }
                 $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
