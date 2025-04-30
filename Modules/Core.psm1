@@ -1732,6 +1732,7 @@ function Invoke-Core {
                                     IsLinux                = $Global:IsLinux
                                     IsLocked               = $Session.Config.APIlockConfig
                                     IsServer               = $Session.Config.RunMode -eq "Server"
+                                    MinerStatusKey         = "$(if ($Session.Config.MinerStatusURL -and $Session.Config.MinerStatusKey) {$Session.Config.MinerStatusKey})"
                                 }) -Depth 10
             $API.CPUInfo = ConvertTo-Json $Global:GlobalCPUInfo -Depth 10
             $PoolSetup = $null
@@ -2473,7 +2474,7 @@ function Invoke-Core {
             param ($Pool)
             if ($Pool.Disabled) { return $true }
             if (-not $Pool.Exclusive) {
-                $Pool_WatchdogTimers = $Global:WatchdogTimers.Where({$_.PoolName -eq $Pool.Name -and $_.Kicked -lt $WDIntervalTime -and $_.Kicked -gt $WDResetTime})
+                $Pool_WatchdogTimers = $Global:WatchdogTimers.Where({($_.PoolName -eq $Pool.Name) -and ($_.Kicked -lt $WDIntervalTime) -and ($_.Kicked -gt $WDResetTime)})
                 if ($Pool_WatchdogTimers.Count -ge 3) { return $true }
                 if ($Pool_WatchdogTimers.Where({ $_.Algorithm -in $Pool.Algorithm }).Count -ge 2) { return $true }
             }

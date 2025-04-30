@@ -3,6 +3,27 @@
     <h1 id="title" data-navbaractive="navnetwork" class="h2">Network</h1>
 </div>
 
+
+<div id="actions" class="d-none">
+    <h3 class="mt-4 h-selector" id="h-actionsboxes">Actions for all rigs</h3>
+    <div id="actionsboxes" class="card-deck">
+        <div class="card m-2">
+            <div class="card-body">
+                <p>Reset the stats for all miners/algorithms, that have been updated lately and need a new benchmark.</p>
+                <p>These miners have been updated lately, but have not been executed since then. Therefor their benchmarks might be incorrect.</p>
+                <a href="#" id="resetneededbenchmarks" class="btn btn-primary" data-title="Reset Needed Benchmarks" data-msg="All updated miners without current benchmarks will be started on all rigs">Benchmark Updated Miners</a>
+            </div>
+        </div>
+        <div class="card m-2">
+            <div class="card-body">
+                <p>Clear the stats for miners that have a benchmarked hashrate of 0H/s.</p>
+                <p>These miners may have failed to benchmark properly, clearing their stats allows them to try benchmarking again.  You should watch closely for failed miners after doing this.</p>
+                <a href="#" id="resetzerohashrateminers" class="btn btn-primary" data-title="Reset 0H/s Miners" data-msg="All miners with failed benchmarks will be re-benched on all rigs">Re-run Failed Benchmarks</a>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div id="machines">
     <h3 class="mt-4 h-selector" id="h-machinesboxes">Rigs</h3>
     <div id="machinesboxes" class="card-deck">
@@ -25,6 +46,39 @@
 <script type="text/javascript">
 $(function () {
     const template = Handlebars.compile($("#machines_template").html());
+
+    ConfigLoader.whenReady().then(function(cfg) {
+        if (typeof cfg.MinerStatusKey !== "undefined" && cfg.MinerStatusKey != "") {
+            $('#actionsboxes a').click(function () {
+                var title  = this.dataset.title;
+                var msg    = this.dataset.msg;
+                var action = this.id;
+                var statusKey = cfg.MinerStatusKey
+
+                if (!confirm("Really " + title + " on ALL rigs?")) return false;
+
+                fetch('https://api.rbminer.net/action.php?action=' + action + '&user=' + statusKey)
+                  .then(response => {
+                    if (!response.ok) {
+                      throw new Error('Network response was not ok ' + response.statusText);
+                    }
+                    return response.json(); // Parse JSON from the response
+                  })
+                  .then(data => {
+                    $('#myModal .modal-title').text(title);
+                    $('#myModal .modal-body').text(data.Status == "Success"? msg : "Call failed - please try again");
+                    var myModal = new bootstrap.Modal(document.getElementById('myModal'));
+                    myModal.show();
+                  })
+                  .catch(error => {
+                    console.error('There was a problem with the fetch operation:', error);
+                  });
+                  return false;
+            });
+
+            $("#actions").removeClass("d-none");
+        }
+    });
 
     (function updateMachines() {
         $.ajax({
