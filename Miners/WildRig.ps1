@@ -14,14 +14,14 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 0.75
 $Cuda = "11.0"
-$Version = "0.42.7"
+$Version = "0.43.0"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.42.7-wildrigmulti/wildrig-multi-linux-0.42.7.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.43.0-wildrigmulti/wildrig-multi-linux-0.43.0.tar.xz"
 } else {
     $Path = ".\Bin\GPU-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.42.7-wildrigmulti/wildrig-multi-windows-0.42.7.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.43.0-wildrigmulti/wildrig-multi-windows-0.43.0.zip"
 }
 
 #removed aergo, bcd, blake2b-btcc, blake2b-glt, blake3, dedal, glt family algorithms, lyra2tdc, lyra2v3, lyra2vc0ban, phi5, rwahash, x7, xevan
@@ -36,6 +36,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "blake2b-glt";               Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; CoinSymbols = @("GLT")} #Blake2b-GLT
     [PSCustomObject]@{MainAlgorithm = "bmw512";                    Vendor = @("AMD","INTEL","NVIDIA"); Params = ""} #BMW512
     [PSCustomObject]@{MainAlgorithm = "c11";                       Vendor = @("AMD","INTEL");          Params = ""} #C11
+    [PSCustomObject]@{MainAlgorithm = "clchash";                   Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; AmdCompute="RDNA"} #ClcHash/CLC
     [PSCustomObject]@{MainAlgorithm = "curvehash";                 Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; DevFee = 1.0; ExtendInterval = 3} #CurveHash
     #[PSCustomObject]@{MainAlgorithm = "dedal";                     Vendor = @("AMD","INTEL");          Params = ""} #Dedal
     [PSCustomObject]@{MainAlgorithm = "evrprogpow"; DAG = $true;   Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3} #EvrProgPow / Evrmore Coin
@@ -145,6 +146,10 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
 
                 $MinMemGB = if ($_.DAG) {Get-EthDAGSize -CoinSymbol $Pools.$Algorithm_Norm.CoinSymbol -Algorithm $Algorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}
                 $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
+                if ($Miner_Vendor -eq "AMD" -and $_.AmdCompute) {
+                    $AmdCompute = $_.AmdCompute
+                    $Miner_Device = $Miner_Device | Where-Object {$_.OpenCL.DeviceCapability -match $AmdCompute}
+                }
                 $Params = "$($WatchdogParams)$(if ($Pools.$Algorithm_Norm.ScratchPadUrl) {"--scratchpad-url $($Pools.$Algorithm_Norm.ScratchPadUrl) --scratchpad-file scratchpad-$($Pools.$Algorithm_Norm.CoinSymbol.ToLower()).bin "})$($_.Params)"
 
 			    if ($Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName) -and (-not $_.CoinSymbols -or $Pools.$Algorithm_Norm.CoinSymbol -in $_.CoinSymbols)) {
