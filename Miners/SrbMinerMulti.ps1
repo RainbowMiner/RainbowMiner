@@ -13,15 +13,15 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.De
 $ManualUri = "https://bitcointalk.org/index.php?topic=5190081.0"
 $Port = "349{0:d2}"
 $DevFee = 0.85
-$Version = "2.8.5"
+$Version = "2.8.6"
 $Cuda = "11.7"
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.8.5-srbminermulti/SRBMiner-Multi-2-8-5-Linux.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.8.6-srbminermulti/SRBMiner-Multi-2-8-6-Linux.tar.gz"
 } else {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.8.5-srbminermulti/SRBMiner-Multi-2-8-5-win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.8.6-srbminermulti/SRBMiner-Multi-2-8-6-win64.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -49,6 +49,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "xelishashv2"      ;              Params = ""; Fee = 1.50;               Vendor = @("CPU")} #XelisHashV2
     [PSCustomObject]@{MainAlgorithm = "yespower"         ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yespower
     [PSCustomObject]@{MainAlgorithm = "yespower2b"       ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yespower2b
+    [PSCustomObject]@{MainAlgorithm = "yespoweradvc"     ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yespoweradvc
     [PSCustomObject]@{MainAlgorithm = "yespowerdogemone" ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yespowerDogemone
     [PSCustomObject]@{MainAlgorithm = "yespoweric"       ;              Params = ""; Fee = 0.00;               Vendor = @("CPU")} #yespoweric
     #[PSCustomObject]@{MainAlgorithm = "yespowerltncg"    ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yespowerltncg temporary disabled. Produces invalid shares
@@ -91,7 +92,6 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "fphash"           ;              Params = ""; Fee = 1.00; MinMemGb = 3; Vendor = @("AMD","INTEL","NVIDIA")} #FpHash/XCC
     [PSCustomObject]@{MainAlgorithm = "heavyhash"        ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","INTEL","NVIDIA")} #HeavyHash/
     [PSCustomObject]@{MainAlgorithm = "hoohash"          ;              Params = ""; Fee = 2.00;               Vendor = @("AMD","INTEL","NVIDIA")} #Hoohash/HTN (from 09/26/2024)
-    [PSCustomObject]@{MainAlgorithm = "hoohashv1"        ;              Params = ""; Fee = 2.00;               Vendor = @("AMD","INTEL","NVIDIA")} #HoohashV1/PUG
     [PSCustomObject]@{MainAlgorithm = "karlsenhashv2"    ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","INTEL","NVIDIA")} #KarlsenHashV2/KLS
     [PSCustomObject]@{MainAlgorithm = "kawpow"           ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 3; Vendor = @("AMD","INTEL","NVIDIA")} #KawPow/RVN
     [PSCustomObject]@{MainAlgorithm = "kawpow2g"         ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 3; Vendor = @("AMD","INTEL","NVIDIA"); Algorithm = "kawpow"} #KawPow/RVN
