@@ -794,6 +794,7 @@
     "sha3": "Keccak",
     "sha3d": "SHA3d",
     "sha3solidity": "SHA3Solidity",
+    "sha3x": "SHA3x",
     "sha512256d": "SHA512256d",
     "sha512256dradiant": "SHA512256d",
     "shabal": "Axiom",
