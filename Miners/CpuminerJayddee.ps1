@@ -72,6 +72,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "yescryptr8"; Params = ""} #yescryptr8, CpuminerOptBF faster
     [PSCustomObject]@{MainAlgorithm = "yescryptr8g"; Params = ""} #yescryptr8g, KOTO
     [PSCustomObject]@{MainAlgorithm = "yespower"; Params = ""} #YesPower
+    [PSCustomObject]@{MainAlgorithm = "yespowerADVC"; Params = "--param-n 2048 --param-r 32 --param-key `"Let the quest begin`""; Algorithm = "yespower"} #AdventureCoin
     [PSCustomObject]@{MainAlgorithm = "yespowerARWN"; Params = "--param-n 2048 --param-r 32 --param-key `"ARWN`""; Algorithm = "yespower"} #Arrowana
     [PSCustomObject]@{MainAlgorithm = "yespowerIC"; Params = "--param-n 2048 --param-r 32 --param-key `"IsotopeC`""; Algorithm = "yespower"} #Yespower IsotopeC (IC)
     [PSCustomObject]@{MainAlgorithm = "yespowerIOTS"; Params = "--param-n 2048 --param-key `"Iots is committed to the development of IOT`""; Algorithm = "yespower"} #Yespower .. (IOTS)
