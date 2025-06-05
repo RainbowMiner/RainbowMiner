@@ -2324,7 +2324,7 @@ function Invoke-Core {
             $Session.Earnings_Avg = $API.Earnings_Avg = ($BalancesData | Where-Object {$_.Name -notmatch "^\*" -and $_.BaseName -ne "Wallet" -and $Global:Rates."$($_.Currency)"} | Foreach-Object {$_.Earnings_Avg / $Global:Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
             $Session.Earnings_1d  = $API.Earnings_1d  = ($BalancesData | Where-Object {$_.Name -notmatch "^\*" -and $_.BaseName -ne "Wallet" -and $Global:Rates."$($_.Currency)"} | Foreach-Object {$_.Earnings_1d / $Global:Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
 
-            if ($RefreshBalances -and $Session.Updatetracker.ReportTotals -lt (Get-Date).AddHours(-3)) {
+            if ($RefreshBalances -and (-not $Session.Updatetracker.ReportTotals -or $Session.Updatetracker.ReportTotals -lt (Get-Date).AddHours(-3))) {
                 $Session.Updatetracker.ReportTotals = Get-Date
                 $Session.ReportTotals = $true
             }
@@ -5540,7 +5540,7 @@ function Invoke-ReportMinerStatus {
     $UncleanAlert = if ($Session.ReportUnclean) {$Session.ReportUnclean = $false; $true} else {$false}
     $ReportRates  = [PSCustomObject]@{}
 
-    if ($Session.Updatetracker.ReportRates -lt (Get-Date).AddMinutes(-30)) {
+    if (-not $Session.Updatetracker.ReportRates -or $Session.Updatetracker.ReportRates -lt (Get-Date).AddMinutes(-30)) {
         $Session.Config.Currency | Where-Object {$Global:Rates.ContainsKey($_)} | Foreach-Object {$ReportRates | Add-Member $_ $Global:Rates.$_ -Force}
         $Session.Updatetracker.ReportRates = Get-Date
     }
