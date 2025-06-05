@@ -25,20 +25,20 @@ $Pool_Fee  = 0.5
 $Pool_Request = [PSCustomObject]@{}
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://baikalmine.com/api/pool/menu/getTopMenu" -tag "BaikalMine" -cycletime 3600 -retry 5 -retrywait 250 | Where {$_.alias -eq $Pool_Type}
+    $Pool_Request = Invoke-RestMethodAsync "https://baikalmine.com/api/Pool/GetEntities" -tag "BaikalMine" -body '{"props":["_id","api","active","maintenance","type._id","type.name","type.identifier","coin.symbol","coin.name","coin.identifier","engine.type","ports"]}' -cycletime 3600 -retry 5 -retrywait 250
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
 
-if (-not $Pool_Request) {
+if (-not $Pool_Request.entities) {
     Write-Log -Level Warn "Pool API ($Name) returned nothing. "
     return
 }
 
-$Pool_Request.coins | Where-Object {$Wallets."$($_.name)" -or $InfoOnly} | ForEach-Object {
-    $Pool_Currency = $_.name
+$Pool_Request.entities | Where-Object {$_.type.identifier -eq $Pool_Type -and $Wallets."$($_.coin.symbol)" -or $InfoOnly} | ForEach-Object {
+    $Pool_Currency = $_.coin.symbol
 
     if ($Pool_Coin = Get-Coin $Pool_Currency) {
         $Pool_Algorithm_Norm = $Pool_Coin.Algo
@@ -52,14 +52,19 @@ $Pool_Request.coins | Where-Object {$Wallets."$($_.name)" -or $InfoOnly} | ForEa
     $PoolInfo_Request  = [PSCustomObject]@{}
 
     try {
-        $PoolInfo_Request   = Invoke-RestMethodAsync "https://baikalmine.com/api/pool/info/getInfo"  -tag $Name -cycletime 120 -delay 250 -body @{type = $Pool_Type; coin = $_.alias}
+        $PoolInfo_Request   = Invoke-RestMethodAsync "https://baikalmine.com/api/Engines/GetPoolStats"  -tag $Name -body "{`"type`":`"$Pool_Type`",`"coin`":`"$($_.coin.identifier)`",`"engine`":$($_.engine.type)}" -cycletime 120 -delay 250
     }
     catch {
         Write-Log -Level Warn "Pool $($Name): Info API for $($Pool_Currency) has failed. "
         return
     }
 
-    $Pool_RPC      = ($PoolInfo_Request.ports | Where-Object {$_.location -eq "Moscow"} | Select-Object -First 1).server
+    if (-not $PoolInfo_Request.entity) {
+        Write-Log -Level Warn "Pool $($Name): Info API for $($Pool_Currency) has failed. "
+        return
+    }
+
+    $Pool_RPC      = ($_.ports | Where-Object {$_.location -match "Moscow"} | Select-Object -First 1).ip
 
     $Pool_Hashrate = $null
     $Pool_Workers  = $null
