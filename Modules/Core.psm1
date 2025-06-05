@@ -617,6 +617,8 @@ function Start-Core {
         PoolsSave  = if (Test-Path ".\Data\poolsdata.json") {Get-ChildItem ".\Data\poolsdata.json" | Select-Object -ExpandProperty LastWriteTime} else {0}
         SpeedsSave = if (Test-Path ".\Data\minerspeeds.json") {Get-ChildItem ".\Data\minerspeeds.json" | Select-Object -ExpandProperty LastWriteTime} else {0}
         ReportDeviceData = 0
+        ReportRates  = 0
+        ReportTotals = 0
     }
 
     #Load databases, that only need updates once in a while
@@ -2322,7 +2324,10 @@ function Invoke-Core {
             $Session.Earnings_Avg = $API.Earnings_Avg = ($BalancesData | Where-Object {$_.Name -notmatch "^\*" -and $_.BaseName -ne "Wallet" -and $Global:Rates."$($_.Currency)"} | Foreach-Object {$_.Earnings_Avg / $Global:Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
             $Session.Earnings_1d  = $API.Earnings_1d  = ($BalancesData | Where-Object {$_.Name -notmatch "^\*" -and $_.BaseName -ne "Wallet" -and $Global:Rates."$($_.Currency)"} | Foreach-Object {$_.Earnings_1d / $Global:Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
 
-            if ($RefreshBalances) {$Session.ReportTotals = $true}
+            if ($RefreshBalances -and $Session.Updatetracker.ReportTotals -lt (Get-Date).AddHours(-3)) {
+                $Session.Updatetracker.ReportTotals = Get-Date
+                $Session.ReportTotals = $true
+            }
         }
     }
 
@@ -5535,7 +5540,10 @@ function Invoke-ReportMinerStatus {
     $UncleanAlert = if ($Session.ReportUnclean) {$Session.ReportUnclean = $false; $true} else {$false}
     $ReportRates  = [PSCustomObject]@{}
 
-    $Session.Config.Currency | Where-Object {$Global:Rates.ContainsKey($_)} | Foreach-Object {$ReportRates | Add-Member $_ $Global:Rates.$_ -Force}
+    if ($Session.Updatetracker.ReportRates -lt (Get-Date).AddMinutes(-30)) {
+        $Session.Config.Currency | Where-Object {$Global:Rates.ContainsKey($_)} | Foreach-Object {$ReportRates | Add-Member $_ $Global:Rates.$_ -Force}
+        $Session.Updatetracker.ReportRates = Get-Date
+    }
 
     $Including_Strings = [System.Collections.Generic.List[string]]::new()
     if ($Session.ReportTotals)    {[void]$Including_Strings.Add("totals")}
