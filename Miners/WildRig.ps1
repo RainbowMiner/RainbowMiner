@@ -14,14 +14,14 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 0.00
 $Cuda = "11.0"
-$Version = "0.43.1"
+$Version = "0.43.2"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.43.1-wildrigmulti/wildrig-multi-linux-0.43.1.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.43.2-wildrigmulti/wildrig-multi-linux-0.43.2.tar.xz"
 } else {
     $Path = ".\Bin\GPU-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.43.1-wildrigmulti/wildrig-multi-windows-0.43.1.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.43.2-wildrigmulti/wildrig-multi-windows-0.43.2.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -31,7 +31,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "c11";                       Vendor = @("AMD","INTEL");          Params = ""} #C11
     [PSCustomObject]@{MainAlgorithm = "clchash";                   Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; DevFee = 3.00; AmdCompute="RDNA"} #ClcHash/CLC
     [PSCustomObject]@{MainAlgorithm = "curvehash";                 Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 1.00} #CurveHash
-    [PSCustomObject]@{MainAlgorithm = "evohash";                   Vendor = @("AMD","INTEL","NVIDIA"); Params = "-i 18 --gpu-threads 1 --diff-factor 256"; AmdCompute="RDNA"} #Evohash/EVOAI
+    [PSCustomObject]@{MainAlgorithm = "evohash";                   Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; AmdCompute="RDNA"} #Evohash/EVOAI
     [PSCustomObject]@{MainAlgorithm = "evrprogpow"; DAG = $true;   Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 0.75} #EvrProgPow / Evrmore Coin
     [PSCustomObject]@{MainAlgorithm = "firopow"; DAG = $true;      Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 0.75} #FiroPow
     [PSCustomObject]@{MainAlgorithm = "ghostrider";                Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 1.00; FaultTolerance = 8; ExcludePoolName = "C3pool|MoneroOcean"} #Ghostrider
