@@ -1291,7 +1291,11 @@ function Update-DeviceInformation {
                     $Session.SysInfo.Cpus | Select-Object -Index $Device.Type_Index | Foreach-Object {
                         $Device.Data.Clock       = [int]$_.Clock
                         $Device.Data.Utilization = [Math]::Round($_.Utilization,1)
-                        $Device.Data.PowerDraw   = [Math]::Round($_.PowerDraw,2)
+                        if ($PowerAdjust["CPU"] -ne $null) {
+	                        $Device.Data.PowerDraw = [Math]::Round($_.PowerDraw * $PowerAdjust["CPU"] / 100, 2)
+                        } else {
+	                        $Device.Data.PowerDraw = [Math]::Round($_.PowerDraw,2)
+                        }
                         $Device.Data.Temperature = [int]$_.Temperature
                         $Device.Data.Method      = $_.Method
                     } 
@@ -1303,6 +1307,7 @@ function Update-DeviceInformation {
                     $Utilization = [Math]::Round([Math]::Min($Utilization, 100),1)
 
                     $PowerDraw   = if ($Session.SysInfo.Cpus[0].PowerDraw) {$Session.SysInfo.Cpus[0].PowerDraw} else {$CPU_tdp * $Utilization / 100}
+                    if ($PowerAdjust["CPU"] -ne $null) {$PowerDraw *= $PowerAdjust["CPU"] / 100}
 
                     $_.Data.Clock       = [int]$(if ($Session.SysInfo.Cpus -and $Session.SysInfo.Cpus[0].Clock) {$Session.SysInfo.Cpus[0].Clock} else {$Global:GlobalCPUInfo.MaxClockSpeed})
                     $_.Data.Utilization = $Utilization
