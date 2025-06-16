@@ -41,7 +41,6 @@ catch {
 $Pools_Data = @(
     [PSCustomObject]@{symbol = "AE";   port = 20000; host = "ae"; rpc = "aeternity-1"}
     [PSCustomObject]@{symbol = "ALPH"; port = 3106; host = "alph"; rpc = "alph-1"}
-    [PSCustomObject]@{symbol = "BLOCX";  port = 3148; host = "blocx"; rpc = "blocx-1"}
     [PSCustomObject]@{symbol = "CFX";  port = 3094; host = "cfx"; rpc = "cfx-1"}
     [PSCustomObject]@{symbol = "CLO";  port = 3126; host = "clore"; rpc = "clore-1"}
     [PSCustomObject]@{symbol = "CTXC"; port = 40000; host = "cortex"; rpc = "cortex-1"}
@@ -49,7 +48,6 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "ETC";  port = 35000; host = "etc"; rpc = "etc-1"}
     [PSCustomObject]@{symbol = "ETHW";  port = 3096; host = "ethw"; rpc = "ethw-1"}
     [PSCustomObject]@{symbol = "FIRO"; port = 3104; host = "firo"; rpc = "firo-1"}
-    #[PSCustomObject]@{symbol = "HTN"; port = 3142; host = "htn"; rpc = "htn-1"}
     [PSCustomObject]@{symbol = "KAS"; port = 3112; host = "kas"; rpc = "kas-1"}
     [PSCustomObject]@{symbol = "KLS"; port = 3132; host = "kls"; rpc = "kls-1"}
     [PSCustomObject]@{symbol = "MEWC"; port = 3116; host = "mewc"; rpc = "mewc-1"}
