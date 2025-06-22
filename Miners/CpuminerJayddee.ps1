@@ -27,8 +27,8 @@ if ($IsLinux) {
         }
     } else {
         #$Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$v=$Global:GlobalCPUInfo.Vendor;$(if($f.avx512 -and $f.sha -and $f.vaes) {if ($v -eq "AMD"){"zen4"}else{'avx512-sha-vaes'}}elseif($f.avx512){'avx512'}elseif($f.avx2 -and $f.sha -and $f.vaes) {if ($v -eq "AMD"){"zen3"}else{"avx2-sha-vaes"}}elseif($f.avx2 -and $f.sha -and $f.aes){'avx2-sha'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}elseif($f.sse42){'sse42'}elseif($f.ssse3){"ssse3"}else{'sse2'}))"
-        $Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$v=$Global:GlobalCPUInfo.Vendor;$(if($f.avx512){'avx512'}elseif($f.avx2 -and $f.sha -and $f.vaes) {"avx2-sha-vaes"}elseif($f.avx2 -and $f.sha -and $f.aes){'avx2-sha'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}elseif($f.sse42){'sse42'}elseif($f.ssse3){"ssse3"}else{'sse2'}))"
-        $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v25.4-jayddee/cpuminer-opt-25.4-linux.7z"
+        $Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$v=$Global:GlobalCPUInfo.Vendor;$(if($f.avx512 -and $f.sha -and $f.vaes) {'avx512-sha-vaes'}elseif($f.avx512){'avx512'}elseif($f.avx2 -and $f.sha -and $f.vaes) {"avx2-sha-vaes"}elseif($f.avx2 -and $f.sha -and $f.aes){'avx2-sha'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}elseif($f.sse42){'sse42'}elseif($f.ssse3){"ssse3"}else{'sse2'}))"
+        $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v25.4-jayddee/cpuminer-opt-25.4-gcc11-linux.7z"
     }
 } else {
     $Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx512 -and $f.sha -and $f.vaes){'avx512-sha-vaes'}elseif($f.avx512){'avx512'}elseif($f.avx2 -and $f.sha -and $f.vaes){'avx2-sha-vaes'}elseif($f.avx2 -and $f.sha -and $f.aes){'avx2-sha'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}else{'sse2'})).exe"
