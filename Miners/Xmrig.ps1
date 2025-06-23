@@ -11,7 +11,7 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.De
 
 $ManualUri = "https://github.com/xmrig/xmrig/releases"
 $Port = "303{0:d2}"
-$Version = "6.23.0"
+$Version = "6.24.0"
 $DevFee = 0.0
 
 $UriCuda = $null
@@ -26,12 +26,12 @@ if ($IsLinux) {
 
     if ($Global:GlobalCPUInfo.Vendor -eq "ARM" -or $Global:GlobalCPUInfo.Features.ARM) {
         if ($Global:GlobalCPUInfo.Architecture -eq 8) {
-            $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.23.0-xmrig/xmrig-6.23.0-armv8.7z"
+            $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.24.0-xmrig/xmrig-6.24.0-jammy-armv8.7z"
         }
     } else {
         if ($Session.LibCVersion -and $Session.LibCVersion -lt (Get-Version "2.25")) {return}
 
-        $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.23.0-xmrig/xmrig-6.23.0-bionic-x64.7z"
+        $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.24.0-xmrig/xmrig-6.24.0-focal-x64.7z"
 
         $CudaData = @(
             [PSCustomObject]@{
@@ -130,7 +130,7 @@ if ($IsLinux) {
     $CudaLib = "libxmrig-cuda.so"
 } else {
 
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.23.0-xmrig/xmrig-6.23.0-msvc-win64.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.24.0-xmrig/xmrig-6.24.0-msvc-win64.7z"
 
     $CudaData = @(
         [PSCustomObject]@{
