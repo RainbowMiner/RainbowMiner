@@ -244,7 +244,8 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
             $First = $true
 
             $MainAlgorithm = $_.MainAlgorithm
-            $SecondAlgorithm = $_.SecondaryAlgorithm
+            #$SecondAlgorithm = $_.SecondaryAlgorithm
+            $SecondAlgorithm = $null # disable dual-mining, broken in v2.9.3
 
             $MainAlgorithm_Norm_0 = Get-Algorithm $MainAlgorithm
             $SecondAlgorithm_Norm_0 = if ($_.SecondaryAlgorithm) {Get-Algorithm $_.SecondaryAlgorithm} else {$null}
