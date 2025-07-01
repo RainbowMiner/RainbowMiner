@@ -13,15 +13,15 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.De
 $ManualUri = "https://bitcointalk.org/index.php?topic=5190081.0"
 $Port = "349{0:d2}"
 $DevFee = 0.85
-$Version = "2.9.3"
+$Version = "2.9.4"
 $Cuda = "11.7"
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.9.3-srbminermulti/SRBMiner-Multi-2-9-3-Linux.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.9.4-srbminermulti/SRBMiner-Multi-2-9-4-Linux.tar.gz"
 } else {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.9.3-srbminermulti/SRBMiner-Multi-2-9-3-win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.9.4-srbminermulti/SRBMiner-Multi-2-9-4-win64.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -92,7 +92,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "fishhash"         ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","INTEL","NVIDIA")} #FishHash/IRON
     [PSCustomObject]@{MainAlgorithm = "fphash"           ;              Params = ""; Fee = 1.00; MinMemGb = 3; Vendor = @("AMD","INTEL","NVIDIA")} #FpHash/XCC
     [PSCustomObject]@{MainAlgorithm = "heavyhash"        ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","INTEL","NVIDIA")} #HeavyHash/
-    [PSCustomObject]@{MainAlgorithm = "hoohash"          ;              Params = ""; Fee = 2.00;               Vendor = @("AMD","INTEL","NVIDIA")} #Hoohash/HTN (from 09/26/2024)
+    #[PSCustomObject]@{MainAlgorithm = "hoohash"          ;              Params = ""; Fee = 2.00;               Vendor = @("AMD","INTEL","NVIDIA")} #Hoohash/HTN (from 09/26/2024)
     [PSCustomObject]@{MainAlgorithm = "karlsenhashv2"    ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","INTEL","NVIDIA")} #KarlsenHashV2/KLS
     [PSCustomObject]@{MainAlgorithm = "kawpow"           ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 3; Vendor = @("AMD","INTEL","NVIDIA")} #KawPow/RVN
     [PSCustomObject]@{MainAlgorithm = "kawpow2g"         ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 3; Vendor = @("AMD","INTEL","NVIDIA"); Algorithm = "kawpow"} #KawPow/RVN
@@ -244,8 +244,8 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
             $First = $true
 
             $MainAlgorithm = $_.MainAlgorithm
-            #$SecondAlgorithm = $_.SecondaryAlgorithm
-            $SecondAlgorithm = $null # disable dual-mining, broken in v2.9.3
+            $SecondAlgorithm = $_.SecondaryAlgorithm
+            #$SecondAlgorithm = $null # disable dual-mining, broken in v2.9.3
 
             $MainAlgorithm_Norm_0 = Get-Algorithm $MainAlgorithm
             $SecondAlgorithm_Norm_0 = if ($_.SecondaryAlgorithm) {Get-Algorithm $_.SecondaryAlgorithm} else {$null}
