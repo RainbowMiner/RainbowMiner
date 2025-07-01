@@ -88,7 +88,7 @@
 311	Excavator
 312	Ewbf
 313	CryptoDredge
-314	CuBalloon
+314	PhihashMiner
 315	SRBMiner
 316	Trex
 317	lolMiner
