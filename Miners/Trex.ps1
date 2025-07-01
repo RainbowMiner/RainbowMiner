@@ -132,7 +132,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
             if (-not $Pools.$Algorithm_Norm.Host) {continue}
 
-            $MinMemGB = if ($_.DAG) {Get-EthDAGSize -CoinSymbol $Pools.$Algorithm_Norm.CoinSymbol -Algorithm $Algorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}
+            $MinMemGB = if ($_.DAG) {if ($Pools.$Algorithm_Norm.DagSizeMax) {$Pools.$Algorithm_Norm.DagSizeMax} else {Get-EthDAGSize -CoinSymbol $Pools.$Algorithm_Norm.CoinSymbol -Algorithm $Algorithm_Norm_0 -Minimum $_.MinMemGb}} else {$_.MinMemGb}
             if (-not $SecondAlgorithm_Norm_0 -and $_.DAG -and $Algorithm_Norm_0 -match $Global:RegexAlgoIsEthash -and $MinMemGB -gt $_.MinMemGB -and $Session.Config.EnableEthashZombieMode) {
                 $MinMemGB = $_.MinMemGB
             }
@@ -182,7 +182,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
                 if ($SecondAlgorithm_Norm_0) {
 
                     if ($_.DAG) {
-                        $MinMemGB += Get-EthDAGSize -CoinSymbol $Pools.$SecondAlgorithm_Norm.CoinSymbol -Algorithm $SecondAlgorithm_Norm_0 -Minimum $_.MinMemGB2nd
+                        $MinMemGB += if ($Pools.$SecondAlgorithm_Norm.DagSizeMax) {$Pools.$SecondAlgorithm_Norm.DagSizeMax} else {Get-EthDAGSize -CoinSymbol $Pools.$SecondAlgorithm_Norm.CoinSymbol -Algorithm $SecondAlgorithm_Norm_0 -Minimum $_.MinMemGB2nd}
                         $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
                     }
 

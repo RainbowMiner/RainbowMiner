@@ -1125,6 +1125,35 @@ function Get-EthDAGSize {
     else   {$Minimum}
 }
 
+function Get-EthDAGSizeMax {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [Array]$CoinSymbols,
+        [Parameter(Mandatory = $false)]
+        [String]$Algorithm = "",
+        [Parameter(Mandatory = $false)]
+        [Switch]$GetSymbol = $false
+    )
+    $Max = 0
+    $Sym = $null
+
+    foreach ($Coin in $CoinSymbols) {
+        $Dagsize = Get-EthDAGSize -CoinSymbol $Coin -Algorithm $Algorithm -Minimum 0
+        if ($Dagsize -gt $Max) {
+            $Max = $DagSize
+            $Sym = $Coin
+        }
+    }
+
+    if ($Max) {
+        [PSCustomObject]@{
+            DagSize    = $Max
+            CoinSymbol = $Sym
+        }
+    } else {$null}
+}
+
 function Get-NimqHashrate {
     [CmdletBinding()]
     param(
