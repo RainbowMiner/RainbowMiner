@@ -10,7 +10,7 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 if ($IsLinux -and ($Global:GlobalCPUInfo.Vendor -eq "ARM" -or $Global:GlobalCPUInfo.Features.ARM)) {return} # No ARM binaries available
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
-$Version = "1.0.1"
+$Version = "1.0.1c"
 $ManualUri = "https://github.com/PhicoinProject/phihashminer/releases"
 $Port = "314{0:d2}"
 $DevFee = 0.0
@@ -22,7 +22,7 @@ if ($IsLinux) {
     $Path = ".\Bin\GPU-PhihashMiner\phihashminer"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.1-phihashminer/phihashminer-1.0.1-linux.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.1-phihashminer/phihashminer-1.0.1c-linux.7z"
             Cuda = "12.0"
         }
     )
@@ -30,7 +30,7 @@ if ($IsLinux) {
     $Path = ".\Bin\GPU-PhihashMiner\phihashminer.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.1-phihashminer/phihashminer-1.0.1b-win.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.1-phihashminer/phihashminer-1.0.1c-win.7z"
             Cuda = "12.0"
         }
     )
