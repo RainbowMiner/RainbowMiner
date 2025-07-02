@@ -107,7 +107,19 @@ $Pool_Request.PSObject.Properties.Name | ForEach-Object {
     if (-not $InfoOnly -and (($Algorithm -and $Pool_Algorithm_Norm -notin $Algorithm) -or ($ExcludeAlgorithm -and $Pool_Algorithm_Norm -in $ExcludeAlgorithm))) {return}
     if (-not $InfoOnly -and $Pool_CoinSymbol -and (($CoinSymbol -and $Pool_CoinSymbol -notin $CoinSymbol) -or ($ExcludeCoinSymbol -and $Pool_CoinSymbol -in $ExcludeCoinSymbol))) {return}
 
-    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasDAGSize) {if ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsEthash) {"ethstratum2"} else {"stratum"}} else {$null}
+    $Pool_EthProxy = $Pool_CoinSymbolMax = $null
+    if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasDAGSize) {
+        $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsEthash) {"ethstratum2"} else {"stratum"}
+        if (-not $Pool_CoinSymbol) {
+            $Algo_Coins = $PoolCoins_Request.PSObject.Properties | Where-Object {$_.Value.algo -eq $Pool_Algorithm} | Foreach-Object {$_.Name}
+            if ($Algo_Coins) {
+                $Pool_CoinSymbolMax = Get-EthDAGSizeMax -CoinSymbols $Algo_Coins -Algorithm $Pool_Algorithm_Norm
+                if ($Pool_CoinSymbolMax.CoinSymbol -and $Pool_Algorithm -in @("ethash","kawpow")) {
+                    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm -CoinSymbol $Pool_CoinSymbolMax.CoinSymbol
+                }
+            }
+        }
+    }
 
     $Pool_Factor = [double]$Pool_Request.$_.mbtc_mh_factor
     if ($Pool_Factor -le 0) {
@@ -166,6 +178,8 @@ $Pool_Request.PSObject.Properties.Name | ForEach-Object {
                     BLK                = $Stat.BlockRate_Average
                     TSL                = $Pool_TSL
                     EthMode            = $Pool_EthProxy
+                    CoinSymbolMax      = $Pool_CoinSymbolMax.CoinSymbol
+                    DagSizeMax         = $Pool_CoinSymbolMax.DagSize
                     ErrorRatio         = $Stat.ErrorRatio
                     Name               = $Name
                     Penalty            = 0
