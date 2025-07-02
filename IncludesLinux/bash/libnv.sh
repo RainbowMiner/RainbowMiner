@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 
-nv_cudalibs="https://github.com/RainbowMiner/miner-binaries/releases/download/v2024.04.18-cudalibs/cudalibs-linux-20240418.tar.gz"
+cuda_urls=(
+    "https://github.com/RainbowMiner/miner-binaries/releases/download/v2024.04.18-cudalibs/cudalibs-linux-20240418.tar.gz"
+    "https://github.com/RainbowMiner/miner-binaries/releases/download/v2025.07.02-cudalibs/cudalibs-linux-12.5.82.tar.gz"
+    "https://github.com/RainbowMiner/miner-binaries/releases/download/v2025.07.02-cudalibs/cudalibs-linux-12.6.85.tar.gz"
+    "https://github.com/RainbowMiner/miner-binaries/releases/download/v2025.07.02-cudalibs/cudalibs-linux-12.8.83.tar.gz"
+    "https://github.com/RainbowMiner/miner-binaries/releases/download/v2025.07.02-cudalibs/cudalibs-linux-12.9.86.tar.gz"
+)
 
 # Check for required commands
 for cmd in wget tar; do
@@ -45,46 +51,57 @@ done
 
 # Prepare paths
 target_folder="$(dirname "$0")/../lib"
-uri_file="$target_folder/_uri.txt"
-
 mkdir -p "$target_folder"
 
-# Check if CUDA libs need to be installed
-if [ "$nv_present" -eq 1 ] && [ "$install_nv" -eq 0 ]; then
-    install_nv=1
-    if [ -f "$uri_file" ]; then
-        current_uri=$(cat "$uri_file" 2>/dev/null)
-        [ "$current_uri" = "$nv_cudalibs" ] && install_nv=0
-    fi
-fi
 
-exit_status=1
+download_and_install() {
+    local url="$1"
+    local index="$2"
+    local uri_file="$target_folder/_uri${index}.txt"
+    [ "$index" -eq 1 ] && uri_file="$target_folder/_uri.txt"  # Ausnahme für erste URL
 
-# Download and install CUDA libs
-if [ "$install_nv" -eq 1 ]; then
-    [ "$quiet" -eq 0 ] && printf "\nDownloading %s\n" "$nv_cudalibs"
-    wget_opts="-O "$target_folder/cudalibs.tar.gz""
-    [ "$quiet" -eq 1 ] && wget_opts="-q $wget_opts"
-    wget $wget_opts "$nv_cudalibs"
-
-    if [ $? -eq 0 ]; then
-        [ "$quiet" -eq 0 ] && printf "Unpacking the archive now ..\n"
-        tar -xzf "$target_folder/cudalibs.tar.gz" -C "$target_folder"
-
-        if [ $? -eq 0 ]; then
-            echo "$nv_cudalibs" > "$uri_file"
-            [ "$quiet" -eq 0 ] && printf "Successfully updated Nvidia CUDA libs!\n"
-            exit_status=0
-        else
-            [ "$quiet" -eq 0 ] && printf "Unpacking failed!\n"
+    local needs_install=0
+    if [ "$install_nv" -eq 1 ]; then
+        needs_install=1
+    elif [ "$nv_present" -eq 1 ]; then
+        if [ ! -f "$uri_file" ] || [ "$(cat "$uri_file")" != "$url" ]; then
+            needs_install=1
         fi
-    else
-        [ "$quiet" -eq 0 ] && printf "Download failed!\n"
     fi
 
-    rm -f "$target_folder/cudalibs.tar.gz"
-else
-    [ "$quiet" -eq 0 ] && printf "Nothing to do\n"
-fi
+    if [ "$needs_install" -eq 1 ]; then
+        [ "$quiet" -eq 0 ] && printf "\nDownloading %s\n" "$url"
+        local archive="$target_folder/cudalibs$index.tar.gz"
+        local wget_opts="-O $archive"
+        [ "$quiet" -eq 1 ] && wget_opts="-q $wget_opts"
+        if wget $wget_opts "$url"; then
+            [ "$quiet" -eq 0 ] && printf "Unpacking archive #%d ..\n" "$index"
+            if tar -xzf "$archive" -C "$target_folder"; then
+                echo "$url" > "$uri_file"
+                [ "$quiet" -eq 0 ] && printf "Installed CUDA part #%d successfully!\n" "$index"
+                rm -f "$archive"
+                return 0
+            else
+                [ "$quiet" -eq 0 ] && printf "Unpacking archive #%d failed!\n" "$index"
+            fi
+            rm -f "$archive"
+        else
+            [ "$quiet" -eq 0 ] && printf "Download of archive #%d failed!\n" "$index"
+        fi
+        return 1
+    else
+        [ "$quiet" -eq 0 ] && printf "CUDA part #%d is up to date.\n" "$index"
+        return 0
+    fi
+}
+
+exit_status=0
+i=1
+for url in "${cuda_urls[@]}"; do
+    if ! download_and_install "$url" "$i"; then
+        exit_status=1
+    fi
+    i=$((i + 1))
+done
 
 exit $exit_status
