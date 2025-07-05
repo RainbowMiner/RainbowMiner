@@ -80,6 +80,9 @@
         "Ethwmine" = [PSCustomObject]@{
             Currencies=@("ETHW")
         }
+        "Evepool" = [PSCustomObject]@{
+            Currencies=@("VKAX")
+        }
         "F2pool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{UserName=""}
             SetupFields=[PSCustomObject]@{UserName="Enter your f2pool username, if you want to see balances"}
