@@ -159,6 +159,12 @@ $Pools_Data | ForEach-Object {
         $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
     }
 
+    $Pool_DagSizeMax = $Pool_CoinSymbolMax = $null
+    if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasDAGSize) {
+        $Pool_DagSizeMax = Get-EthDAGSize -Algorithm $Pool_Algorithm_Norm -CoinSymbol $Pool_CoinSymbol
+        $Pool_CoinSymbolMax = $Pool_CoinSymbol
+    }
+
     foreach($Pool_CurrencyData in $Pool_Currencies) {
 
         $Pool_Currency = $Pool_CurrencyData.symbol
@@ -193,8 +199,8 @@ $Pools_Data | ForEach-Object {
                     [PSCustomObject]@{     
                         Algorithm          = $Pool_Algorithm_Norm
                         Algorithm0         = $Pool_Algorithm_Norm
-                        CoinName           = $Pool_CoinName
-                        CoinSymbol         = $Pool_CoinSymbol
+                        CoinName           = $Pool_CurrencyData.name
+                        CoinSymbol         = $Pool_Currency
                         Currency           = $Pool_Currency
                         Price              = $Stat.$StatAverage #instead of .Live
                         StablePrice        = $Stat.$StatAverageStable
@@ -212,6 +218,8 @@ $Pools_Data | ForEach-Object {
                         DataWindow         = $DataWindow
                         ErrorRatio         = $Stat.ErrorRatio
                         EthMode            = $Pool_EthProxy
+                        CoinSymbolMax      = $Pool_CoinSymbolMax
+                        DagSizeMax         = $Pool_DagSizeMax
                         Name               = $Name
                         Penalty            = 0
                         PenaltyFactor      = 1
