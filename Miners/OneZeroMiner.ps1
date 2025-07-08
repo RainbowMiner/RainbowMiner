@@ -26,7 +26,7 @@ $Version = "1.4.5"
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptix"; Params = ""; ExtendInterval = 3; Fee = @{NVIDIA=2.0}; Vendor = @("NVIDIA")} #CryptixOX8/CPAY
     [PSCustomObject]@{MainAlgorithm = "dynex"; Params = ""; ExtendInterval = 5; DualZIL = $true; Fee = @{NVIDIA=2.0}; Vendor = @("NVIDIA")} #DynexSolve/DNX
-    [PSCustomObject]@{MainAlgorithm = "xelishashv2"; Params = ""; ExtendInterval = 3; Fee = @{NVIDIA=1.0;AMD=2.0}; Vendor = @("AMD","NVIDIA")} #XelisHashV2/XEL
+    [PSCustomObject]@{MainAlgorithm = "xelis"; Params = ""; ExtendInterval = 3; Fee = @{NVIDIA=1.0;AMD=2.0}; Vendor = @("AMD","NVIDIA")} #XelisHashV2/XEL
 )
 
 # $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
