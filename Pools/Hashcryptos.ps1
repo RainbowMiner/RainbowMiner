@@ -42,7 +42,7 @@ $Pools_Data = @(
     [PSCustomObject]@{algo = "equihash192";  port = 6660; stratum = "stratum4.hashcryptos.com"}
     [PSCustomObject]@{algo = "ghostrider";  port = 9997; stratum = "stratum4.hashcryptos.com"}
     [PSCustomObject]@{algo = "groestl";   port = 4004; stratum = "stratum3.hashcryptos.com"}
-    [PSCustomObject]@{algo = "kawpow";  port = 9985; stratum = "stratum4.hashcryptos.com"}
+    [PSCustomObject]@{algo = "kawpow";  port = 9985; stratum = "stratum4.hashcryptos.com"; coin = "RVN"}
     [PSCustomObject]@{algo = "keccak";    port = 4005; stratum = "stratum3.hashcryptos.com"}
     [PSCustomObject]@{algo = "lbry";  port = 9988; stratum = "stratum4.hashcryptos.com"}
     [PSCustomObject]@{algo = "lyra2rev2"; port = 4006; stratum = "stratum3.hashcryptos.com"}
@@ -80,11 +80,15 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
     $Pool_Host = $Pool_Data.stratum
     $Pool_Port = $Pool_Request.$_.port
 
-    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
+    $Pool_CoinSymbol = $Pool_Request.$_.coin
+
+    $Pool_Algorithm_Norm = Get-Algorithm -Algorithm $Pool_Algorithm -CoinSymbol $Pool_CoinSymbol
     $Pool_PoolFee = [Double]$Pool_Request.$_.fees
 
     $Pool_Factor = [Double]$Pool_Request.$_.mbtc_mh_factor
     if ($Pool_Data.factor) {$Pool_Factor /= $Pool_Data.factor}
+
+    $Pool_DagSizeMax = if ($Pool_CoinSymbol) {Get-EthDAGSize $Pool_CoinSymbol} else {$null}
 
     if ($Pool_Factor -le 0) {
         Write-Log -Level Info "$($Name): Unable to determine divisor for algorithm $Pool_Algorithm. "
@@ -122,6 +126,8 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
                 DataWindow    = $DataWindow
                 Workers       = [int]$Pool_Request.$_.workers
                 Hashrate      = $Stat.HashRate_Live
+                CoinSymbolMax = $Pool_CoinSymbol
+                DagSizeMax    = $Pool_DagSizeMax
 				ErrorRatio    = $Stat.ErrorRatio
                 Name          = $Name
                 Penalty       = 0
