@@ -53,9 +53,6 @@ $Pool_Request.algos | Where-Object {([Double]$_.p -gt 0.00 -and [Double]$_.s -gt
 
     if (-not $InfoOnly -and (($Algorithm -and $Pool_Algorithm_Norm -notin $Algorithm) -or ($ExcludeAlgorithm -and $Pool_Algorithm_Norm -in $ExcludeAlgorithm))) {return}
 
-    #if ($Pool_Algorithm_Norm -eq "Sia") {$Pool_Algorithm_Norm = "SiaNiceHash"} #temp fix
-    #if ($Pool_Algorithm_Norm -eq "Decred") {$Pool_Algorithm_Norm = "DecredNiceHash"} #temp fix
-
     if (-not $InfoOnly) {
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$_.p / 1e8) -Duration $StatSpan -HashRate ([Double]$_.s) -ChangeDetection $true -Quiet
     }
@@ -93,8 +90,6 @@ $Pool_Request.algos | Where-Object {([Double]$_.p -gt 0.00 -and [Double]$_.s -gt
                 }
             }
         }
-
-        $Pool_IsEthash = $Pool_Algorithm_Norm -match "^Etc?hash"
 
         $Pool_Host      = "$($Pool_Algorithm).auto.nicehash.com"
 
@@ -143,46 +138,6 @@ $Pool_Request.algos | Where-Object {([Double]$_.p -gt 0.00 -and [Double]$_.s -gt
                 Wallet        = $Pool_Wallet
                 Worker        = "{workername:$Worker}"
                 Email         = $Email
-            }
-            if ($Pool_IsEthash) {
-                [PSCustomObject]@{
-                    Algorithm     = "$($Pool_Algorithm_Norm)NH"
-					Algorithm0    = "$($Pool_Algorithm_Norm)NH"
-                    CoinName      = "$($Pool_Coin.Name)"
-                    CoinSymbol    = "$Pool_CoinSymbol"
-                    Currency      = "BTC"
-                    Price         = $Stat.$StatAverage
-                    StablePrice   = $Stat.$StatAverageStable
-                    MarginOfError = $Stat.Week_Fluctuation
-                    Protocol      = $Pool_Protocol
-                    Host          = $Pool_Host
-                    Port          = $Pool_Port
-                    User          = "$($Pool_Wallet).{workername:$Worker}"
-                    Pass          = "x"
-                    Region        = "US"
-                    SSL           = $Pool_SSL
-                    Updated       = $Stat.Updated
-                    PoolFee       = $Pool_PoolFee
-                    Workers       = $null
-                    Hashrate      = $Stat.HashRate_Live
-                    TSL           = $null
-                    BLK           = $null
-                    PaysLive      = $true
-                    EthMode       = $Pool_EthProxy
-                    CoinSymbolMax = $Pool_CoinSymbolMax
-                    DagSizeMax    = $Pool_DagSizeMax
-                    Name          = $Name
-                    Penalty       = 0
-                    PenaltyFactor = 1
-					Disabled      = $false
-					HasMinerExclusions = $false
-                    Price_0       = 0.0
-					Price_Bias    = 0.0
-					Price_Unbias  = 0.0
-                    Wallet        = $Pool_Wallet
-                    Worker        = "{workername:$Worker}"
-                    Email         = $Email
-                }
             }
         }
     }
