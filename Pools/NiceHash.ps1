@@ -40,8 +40,6 @@ if (($Pool_Request.algos | Measure-Object).Count -le 10 -or ($Pool_MiningRequest
 
 $Pool_PoolFee = 2.0
 
-$Grin29_Algorithm = (Get-Coin "GRIN").algo
-
 $Pool_Request.algos | Where-Object {([Double]$_.p -gt 0.00 -and [Double]$_.s -gt 0) -or $InfoOnly} | ForEach-Object {
     $Pool_Algo_Id   = $_.a
     $Pool_Data      = $Pool_MiningRequest.miningAlgorithms | Where-Object {$_.Enabled -and $_.order -eq $Pool_Algo_Id}
@@ -66,23 +64,34 @@ $Pool_Request.algos | Where-Object {([Double]$_.p -gt 0.00 -and [Double]$_.s -gt
 
         $Pool_CoinSymbol = Switch ($Pool_Algorithm_Norm) {
             "BeamHash3"         {"BEAM"}
+            "Blake3Alephium"    {"ALPH"}
             "CuckooCycle"       {"AE"}
-            "Cuckaroo29"        {"XBG"}
-            "Cuckarood29"       {"MWC"}
-            "$Grin29_Algorithm" {"GRIN"}
             "Eaglesong"         {"CKB"}
-            "EquihashR25x5x3"   {"BEAM"}
+            "Fishhash"          {"IRON"}
+            "HeavyHashPyrin"    {"PYI"}
             "Lbry"              {"LBC"}
+            "NexaPow"           {"NEXA"}
             "RandomX"           {"XMR"}
             "Octopus"           {"CFX"}
+            "Verushash"         {"VRSC"}
         }
     
         $Pool_Coin = if ($Pool_CoinSymbol) {Get-Coin $Pool_CoinSymbol}
 
-        $Pool_EthProxy = $null
+        $Pool_EthProxy = $Pool_DagSizeMax = $Pool_CoinSymbolMax = $null
 
         if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasDAGSize) {
             $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsEthash) {"ethstratumnh"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
+            if (-not $Pool_CoinSymbol) {
+                $Pool_CoinSymbolMax = Switch ($Pool_Algorithm_Norm) {
+                    "Etchash" {"ETC"}
+                    "Ethash"  {"ETHW"}
+                    "KawPow"  {"RVN"}
+                }
+                if ($Pool_CoinSymbolMax) {
+                    $Pool_DagSizeMax = Get-EthDAGSize -Algorithm $Pool_Algorithm -CoinSymbol $Pool_CoinSymbolMax
+                }
+            }
         }
 
         $Pool_IsEthash = $Pool_Algorithm_Norm -match "^Etc?hash"
@@ -121,6 +130,8 @@ $Pool_Request.algos | Where-Object {([Double]$_.p -gt 0.00 -and [Double]$_.s -gt
                 BLK           = $null
                 PaysLive      = $true
                 EthMode       = $Pool_EthProxy
+                CoinSymbolMax = $Pool_CoinSymbolMax
+                DagSizeMax    = $Pool_DagSizeMax
                 Name          = $Name
                 Penalty       = 0
                 PenaltyFactor = 1
@@ -158,6 +169,8 @@ $Pool_Request.algos | Where-Object {([Double]$_.p -gt 0.00 -and [Double]$_.s -gt
                     BLK           = $null
                     PaysLive      = $true
                     EthMode       = $Pool_EthProxy
+                    CoinSymbolMax = $Pool_CoinSymbolMax
+                    DagSizeMax    = $Pool_DagSizeMax
                     Name          = $Name
                     Penalty       = 0
                     PenaltyFactor = 1
