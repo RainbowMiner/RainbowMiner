@@ -70,6 +70,7 @@ $PoolCoins_Request.data.PSObject.Properties.Value | Where-Object {$_.port -and $
         "24h_blocks"  = ($_.Group."24h_blocks" | Measure-Object -Maximum).Maximum
         timesincelast = ($_.Group.timesincelast | Measure-Object -Minimum).Minimum
         workers       = ($_.Group.workers | Measure-Object -Sum).Sum
+        coins         = @($_.Group.abbreviation)
     }
 }
 
@@ -83,14 +84,37 @@ $Pool_Request.data.PSObject.Properties.Name | Where-Object {$PoolCoins_Overview.
     $Pool_TSL       = [int]$PoolCoins_Overview[$_].timesincelast
     $Pool_BLK       = [int]$PoolCoins_Overview[$_]."24h_blocks"
     $Pool_Workers   = [int]$PoolCoins_Overview[$_].workers
+    $Pool_CoinSymbol = if ($PoolCoins_Overview[$_].Coins.Count -eq 1) {$PoolCoins_Overview[$_].Coins[0]} else {$null}
 
     if ($Pool_Factor -le 0) {
         Write-Log -Level Info "$($Name): Unable to determine divisor for algorithm $Pool_Algorithm. "
         return
     }
 
-    if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
-    $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
+    if ($Pool_Algorithm -in @("ethash","kawpow") -and $Pool_CoinSymbol) {
+        $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm -CoinSymbol $Pool_CoinSymbol
+    } else {
+        if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
+        $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
+    }
+
+    if (-not $InfoOnly -and (($Algorithm -and $Pool_Algorithm_Norm -notin $Algorithm) -or ($ExcludeAlgorithm -and $Pool_Algorithm_Norm -in $ExcludeAlgorithm))) {return}
+    if (-not $InfoOnly -and $Pool_CoinSymbol -and (($CoinSymbol -and $Pool_CoinSymbol -notin $CoinSymbol) -or ($ExcludeCoinSymbol -and $Pool_CoinSymbol -in $ExcludeCoinSymbol))) {return}
+
+    $Pool_DagSizeMax = $Pool_CoinSymbolMax = $null
+    if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasDAGSize) {
+        if ($Pool_CoinSymbol) {
+            $Pool_DagSizeMax = Get-EthDAGSize -Algorithm $Pool_Algorithm_Norm -CoinSymbol $Pool_CoinSymbol
+            $Pool_CoinSymbolMax = $Pool_CoinSymbol
+        } else {
+            $pmax = Get-EthDAGSizeMax -CoinSymbols $PoolCoins_Overview[$_].Coins -Algorithm $Pool_Algorithm_Norm
+            if ($pmax.CoinSymbol -and $Pool_Algorithm -in @("ethash","kawpow")) {
+                $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm -CoinSymbol $pmax.CoinSymbol
+            }
+            $Pool_CoinSymbolMax = $pmax.CoinSymbol
+            $Pool_DagSizeMax    = $pmax.DagSize
+        }
+    }
 
     $Pool_MemorySize = "$(if ($Pool_Algorithm_Norm -eq "EthashLowMemory") {",l=`$memsizegb"})"
     
@@ -130,6 +154,8 @@ $Pool_Request.data.PSObject.Properties.Name | Where-Object {$PoolCoins_Overview.
             Workers       = $Pool_Workers
             BLK           = $Stat.BlockRate_Average
             TSL           = $Pool_TSL
+            CoinSymbolMax = $Pool_CoinSymbol
+            DagSizeMax    = $Pool_DagSizeMax
 			ErrorRatio    = $Stat.ErrorRatio
             Name          = $Name
             Penalty       = 0
