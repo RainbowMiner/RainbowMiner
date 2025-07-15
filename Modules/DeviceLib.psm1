@@ -1004,12 +1004,19 @@ function Update-DeviceInformation {
                                         $Utilization = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?usage$").Data
                                         $PCIBusId    = if ($_.GpuId -match "&BUS_(\d+)&DEV_(\d+)") {"{0:x2}:{1:x2}" -f [int]$Matches[1],[int]$Matches[2]} else {$null}
 
+                                        # AMD seems to work somewhat with ab beta, so lets parse power - tested RX9060XT
+                                        $CurrPowerDraw   = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?power$").Data
+                                        if ($CurrPowerDraw -eq 0) {
+                                            # if no power in list, or it equals 0, fall back to script - does not get executed on RX9060XT
+                                            $CurrPowerDraw = $Script:AmdCardsTDP."$($_.Model_Name)" * ((100 + $PowerLimitPercent) * 0.01) * ($Utilization * 0.01)
+                                        }
+
                                         $Data = [PSCustomObject]@{
                                             Clock       = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?core clock$").Data
                                             ClockMem    = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?memory clock$").Data
                                             FanSpeed    = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?fan speed$").Data
                                             Temperature = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?temperature$").Data
-                                            PowerDraw   = $Script:AmdCardsTDP."$($_.Model_Name)" * ((100 + $PowerLimitPercent) / 100) * ($Utilization / 100)
+                                            PowerDraw   = $CurrPowerDraw
                                         }
 
                                         $Devices | Where-Object {($_.BusId -and $PCIBusId -and ($_.BusId -eq $PCIBusId)) -or ((-not $_.BusId -or -not $PCIBusId) -and ($_.BusId_Type_Vendor_Index -eq $DeviceId))} | Foreach-Object {
