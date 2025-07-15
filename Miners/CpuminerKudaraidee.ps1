@@ -49,7 +49,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "XelisV2Pepew"; Params = ""; Algorithm = "xelisv2"} #XelisV2Pepew/PEPEW
     [PSCustomObject]@{MainAlgorithm = "Yespoweradvc"; Params = ""} #YespowerADVC
     [PSCustomObject]@{MainAlgorithm = "yespowermgpc"; Params = ""} #Magpiecoin
-    [PSCustomObject]@{MainAlgorithm = "Yespowereqpay"; Params = ""} #YespowerEQPAY
+    #[PSCustomObject]@{MainAlgorithm = "Yespowereqpay"; Params = ""} #YespowerEQPAY
     [PSCustomObject]@{MainAlgorithm = "yespowerarwn"; Params = ""} #Arrowana
     [PSCustomObject]@{MainAlgorithm = "yespowersugar"; Params = ""} #Yespower SugarChain (SUGAR)
     [PSCustomObject]@{MainAlgorithm = "yespowerurx"; Params = ""} #Yespower Uranium-X (URX)
