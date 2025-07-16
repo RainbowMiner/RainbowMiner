@@ -39,10 +39,8 @@ if ($Path -eq $null) {return}
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "argon2d1000";  Params = ""} #Argon2d1000
     [PSCustomObject]@{MainAlgorithm = "argon2d16000";  Params = ""} #Argon2d16000
-    [PSCustomObject]@{MainAlgorithm = "0x10"; Params = ""} #0x10
     [PSCustomObject]@{MainAlgorithm = "cpupower"; Params = ""} #CpuPower
-    [PSCustomObject]@{MainAlgorithm = "flex"; Params = ""} #Flex
-    [PSCustomObject]@{MainAlgorithm = "mweb"; Params = ""} #MWEB
+    #[PSCustomObject]@{MainAlgorithm = "flex"; Params = ""} #Flex, disabled, very slow and memory leak
     [PSCustomObject]@{MainAlgorithm = "rinhash"; Params = ""} #RinHash
     [PSCustomObject]@{MainAlgorithm = "x11k"; Params = ""} #x11k
     [PSCustomObject]@{MainAlgorithm = "x11kvs"; Params = ""} #x11kvs
