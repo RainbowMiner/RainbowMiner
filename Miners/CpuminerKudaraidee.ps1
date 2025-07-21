@@ -37,9 +37,9 @@ if ($IsLinux) {
 if ($Path -eq $null) {return}
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "argon2d1000";  Params = ""} #Argon2d1000
-    [PSCustomObject]@{MainAlgorithm = "argon2d16000";  Params = ""} #Argon2d16000
-    [PSCustomObject]@{MainAlgorithm = "cpupower"; Params = ""} #CpuPower
+    #[PSCustomObject]@{MainAlgorithm = "argon2d1000";  Params = ""} #Argon2d1000
+    #[PSCustomObject]@{MainAlgorithm = "argon2d16000";  Params = ""} #Argon2d16000
+    #[PSCustomObject]@{MainAlgorithm = "cpupower"; Params = ""} #CpuPower
     #[PSCustomObject]@{MainAlgorithm = "flex"; Params = ""} #Flex, disabled, very slow and memory leak
     [PSCustomObject]@{MainAlgorithm = "rinhash"; Params = ""} #RinHash
     [PSCustomObject]@{MainAlgorithm = "x11k"; Params = ""} #x11k
@@ -50,7 +50,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "Yespowereqpay"; Params = ""} #YespowerEQPAY
     [PSCustomObject]@{MainAlgorithm = "yespowerarwn"; Params = ""} #Arrowana
     [PSCustomObject]@{MainAlgorithm = "yespowersugar"; Params = ""} #Yespower SugarChain (SUGAR)
-    [PSCustomObject]@{MainAlgorithm = "yespowerurx"; Params = ""} #Yespower Uranium-X (URX)
+    #[PSCustomObject]@{MainAlgorithm = "yespowerurx"; Params = ""} #Yespower Uranium-X (URX)
 )
 
 # $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
