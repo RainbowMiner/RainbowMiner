@@ -32,8 +32,8 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "yespowerinter"; Params = ""} #Yespower Intercoin (ITC)
     [PSCustomObject]@{MainAlgorithm = "yespowerlitb"; Params = ""} #Yespower LightBit (LITB)
     [PSCustomObject]@{MainAlgorithm = "yespowerr16"; Params = ""} #YespowerR16
-    [PSCustomObject]@{MainAlgorithm = "yespowersugar"; Params = ""} #Yespower Sugar (SUGAR)
-    [PSCustomObject]@{MainAlgorithm = "yespowerurx"; Params = ""} #Yespower Uranium-X (URX)
+    #[PSCustomObject]@{MainAlgorithm = "yespowersugar"; Params = ""} #Yespower Sugar (SUGAR)
+    #[PSCustomObject]@{MainAlgorithm = "yespowerurx"; Params = ""} #Yespower Uranium-X (URX)
 )
 
 # $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
