@@ -45,7 +45,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "randomxeq"        ;              Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU"); ExcludePoolName = "C3pool|Moneroocean"} #RandomXEQ
     [PSCustomObject]@{MainAlgorithm = "randomy"          ;              Params = "--randomx-use-1gb-pages"; Fee = 1.00; Vendor = @("CPU")} #RandomY
     [PSCustomObject]@{MainAlgorithm = "randomyada"       ;              Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomYada
-    [PSCustomObject]@{MainAlgorithm = "rinhash"          ;              Params = ""; Fee = 1.00;               Vendor = @("CPU")} #RinHash/RIN
+    [PSCustomObject]@{MainAlgorithm = "rinhash"          ;              Params = ""; Fee = 1.00;               Vendor = @("CPU")} #RinHash2/RIN
     [PSCustomObject]@{MainAlgorithm = "verushash"        ;              Params = ""; Fee = 0.85;               Vendor = @("CPU"); ExcludePoolName="LuckPool"; FaultTolerance = 0.5} #Verushash
     [PSCustomObject]@{MainAlgorithm = "xelishashv2"      ;              Params = ""; Fee = 1.50;               Vendor = @("CPU")} #XelisHashV2
     [PSCustomObject]@{MainAlgorithm = "yespower"         ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yespower
