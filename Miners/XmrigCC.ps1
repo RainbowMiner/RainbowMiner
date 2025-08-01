@@ -323,7 +323,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
             if ($Miner_PlatformId -isnot [int]) {return}
         }
 
-        $Commands | Where-Object {$_.Vendor -icontains $Miner_Vendor -and ($_.Vendor -ne "NVIDIA" -or $_.MainAlgorithm -ne "rx/grft" -or $Uri -match "\ddev") -and ($IsWindows -or $_.MainAlgorithm -ne "astrobwt/v2")} | ForEach-Object {
+        $Commands | Where-Object {$_.Vendor -icontains $Miner_Vendor -and ($_.Vendor -ne "NVIDIA" -or $_.MainAlgorithm -ne "rx/grft" -or $Uri -match "\ddev")} | ForEach-Object {
             $First = $True
 
             $Algorithm = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
