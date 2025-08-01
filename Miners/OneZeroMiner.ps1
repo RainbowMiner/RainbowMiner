@@ -12,20 +12,22 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.De
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-OneZero\onezerominer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.4.5-onezerominer/onezerominer-linux-1.4.5.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.4.6-onezerominer/onezerominer-linux-1.4.6.tar.gz"
 } else {
     $Path = ".\Bin\GPU-OneZero\onezerominer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.4.5-onezerominer/onezerominer-win64-1.4.5.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.4.6-onezerominer/onezerominer-win64-1.4.6.zip"
 }
+
 $ManualUri = "https://github.com/OneZeroMiner/onezerominer/releases"
 $Port = "370{0:d2}"
 $DevFee = 3.0
 $Cuda = "11.8"
-$Version = "1.4.5"
+$Version = "1.4.6"
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptix"; Params = ""; ExtendInterval = 3; Fee = @{NVIDIA=2.0}; Vendor = @("NVIDIA")} #CryptixOX8/CPAY
     [PSCustomObject]@{MainAlgorithm = "dynex"; Params = ""; ExtendInterval = 5; DualZIL = $true; Fee = @{NVIDIA=2.0}; Vendor = @("NVIDIA")} #DynexSolve/DNX
+    [PSCustomObject]@{MainAlgorithm = "qhash"; Params = ""; ExtendInterval = 3; Fee = @{NVIDIA=5.0}; Vendor = @("NVIDIA")} #Qhash/QBC
     [PSCustomObject]@{MainAlgorithm = "xelis"; Params = ""; ExtendInterval = 3; Fee = @{NVIDIA=1.0;AMD=2.0}; Vendor = @("AMD","NVIDIA")} #XelisHashV2/XEL
 )
 
