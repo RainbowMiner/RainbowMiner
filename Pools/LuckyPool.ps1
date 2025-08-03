@@ -30,7 +30,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "XTM";   port = 6118; fee = 0.9; rpc = "tari";       user = "{wallet}{=diff}.{worker}"; pass="x"; algorithm = "SHA3x"}
     [PSCustomObject]@{symbol = "XE";    port = 3381; fee = 0.9; rpc = "xechain";    user = "{wallet}{=diff}.{worker}"; pass="x"}
     [PSCustomObject]@{symbol = "XEL";   port = 2666; fee = 0.9; rpc = "xelis";      user = "{wallet}{=diff}.{worker}"; pass="x"}
-    [PSCustomObject]@{symbol = "ZANO";  port = 8877; fee = 0.9; rpc = "zano";       user = "{wallet}.{worker}";        pass="{diff}"}
+    [PSCustomObject]@{symbol = "ZANO";  port = 8877; fee = 0.9; rpc = "zano";       user = "{wallet}.{worker}";        pass="x{diff}"}
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
@@ -71,7 +71,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     
     if ($Pool_Request.config.stratum -or $InfoOnly) {
         $Pool_User = $_.user -replace "{wallet}","$($Wallets.$Pool_Currency)" -replace "{worker}","{workername:$Worker}" -replace "{=diff}","{diff:=`$difficulty}" -replace "{\.diff}","{diff:.`$difficulty}"
-        $Pool_Pass = $_.pass -replace "{diff}","{diff:`$difficulty}" 
+        $Pool_Pass = $_.pass -replace "{diff}","{diff:,`$difficulty}" 
         foreach ($Pool_Stratum in $Pool_Request.config.stratum) {
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
