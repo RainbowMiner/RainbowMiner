@@ -9,6 +9,15 @@
         "divisor":  1E+18
     },
     {
+        "symbol":  "AION",
+        "match":  "^0x",
+        "rpc":  "https://mainnet-api.theoan.com/aion/dashboard/getAccountDetails?accountAddress={w}",
+        "address":  "",
+        "balance":  "content[0].balance",
+        "received":  "",
+        "divisor":  1
+    },
+    {
         "symbol":  "ALPH",
         "match":  "^1",
         "rpc":  "https://mainnet-backend.alephium.org/addresses/{w}/balance",
