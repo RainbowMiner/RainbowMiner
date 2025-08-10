@@ -117,12 +117,7 @@ $Payout_Currencies | Where-Object {
             }
         }
         catch {
-            if ($_.Exception.Message -match "404") {
-                if ($Error.Count) {$Error.RemoveAt(0)}
-                Set-JobCycleTime $Request_Url -cycletime 86400
-            } else {
-                Write-Log -Level Verbose "Pool Balance API ($($Pool_Name)) for $($Pool_Currency) has failed. "
-            }
+            Write-Log -Level Verbose "Pool Balance API ($($Pool_Name)) for $($Pool_Currency) has failed. "
         }
     }
 }
