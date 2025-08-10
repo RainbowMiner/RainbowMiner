@@ -72,6 +72,34 @@ Param(
     Invoke-GetUrlAsync $url -requestmethod $requestmethod -method "WEB" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay -timeout $timeout -nocache $nocache -noquickstart $noquickstart -Jobkey $Jobkey -body $body -headers $headers -fixbigint $fixbigint
 }
 
+function Set-JobCycleTime {
+[cmdletbinding()]
+Param(   
+    [Parameter(Mandatory = $False)]   
+        [string]$url = "",
+    [Parameter(Mandatory = $False)]   
+        [int]$cycletime = 0,
+    [Parameter(Mandatory = $False)]   
+        [string]$Jobkey = $null,
+    [Parameter(Mandatory = $False)]
+        $body,
+    [Parameter(Mandatory = $False)]
+        [hashtable]$headers
+)
+    if (-not (Test-Path Variable:Global:Asyncloader)) {return}
+
+    if (-not $url -and -not $Jobkey) {return}
+
+    if (-not $Jobkey) {$Jobkey = Get-MD5Hash "$($url)$(Get-HashtableAsJson $body)$(Get-HashtableAsJson $headers)"}
+
+    $Job = $null
+    [void]$AsyncLoader.Jobs.TryGetValue($Jobkey, [ref]$Job)
+    
+    if ($Job) {
+        $Job.CycleTime = $cycletime
+    }
+}
+
 function Invoke-GetUrlAsync {
 [cmdletbinding()]
 Param(   

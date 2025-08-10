@@ -52,20 +52,17 @@ $Pools_Data = @(
     [PSCustomObject]@{rpc = "erg";   symbol = "ERG";      port = 9999; fee = 1.0; divisor = 1e9}
     [PSCustomObject]@{rpc = "etc";   symbol = "ETC";      port = 5050; fee = 1.0; divisor = 1e18}
     [PSCustomObject]@{rpc = "ethw";  symbol = "ETHW";     port = 6060; fee = 1.0; divisor = 1e18}
-    [PSCustomObject]@{rpc = "firo";  symbol = "FIRO";     port = 9090; fee = 1.0; divisor = 1e8; altsymbol = "XZC"}
     [PSCustomObject]@{rpc = "flux";  symbol = "FLUX";     port = 9393; fee = 1.0; divisor = 1e8; altsymbol = "ZEL"}
     [PSCustomObject]@{rpc = "grin";  symbol = "GRIN-PRI"; port = 4040; fee = 1.0; divisor = 1e9; cycles = 42}
     [PSCustomObject]@{rpc = "kas";   symbol = "KAS";      port = 3030; fee = 1.0; divisor = 1e8}
     [PSCustomObject]@{rpc = "kls";   symbol = "KLS";      port = 3030; fee = 1.0; divisor = 1e8}
+    [PSCustomObject]@{rpc = "mwc";   symbol = "MWC-PRI";  port = 8585; fee = 1.0; divisor = 1e9; cycles = 42}
     [PSCustomObject]@{rpc = "neox";  symbol = "NEOX";     port = 5050; fee = 1.0; divisor = 1e8}
     [PSCustomObject]@{rpc = "nexa";  symbol = "NEXA";     port = 7070; fee = 1.0; divisor = 100}
-    [PSCustomObject]@{rpc = "pyi";   symbol = "PYI";      port = 3131; fee = 1.0; divisor = 1e8}
     [PSCustomObject]@{rpc = "rvn";   symbol = "RVN";      port = 7070; fee = 1.0; divisor = 1e8}
-    [PSCustomObject]@{rpc = "xmr";   symbol = "XMR";      port = 4444; fee = 1.0; divisor = 1e12}
     [PSCustomObject]@{rpc = "xna";   symbol = "XNA";      port = 7070; fee = 1.0; divisor = 1e8}
     [PSCustomObject]@{rpc = "zec";   symbol = "ZEC";      port = 1010; fee = 1.0; divisor = 1e8}
     [PSCustomObject]@{rpc = "zeph";  symbol = "ZEPH";     port = 4444; fee = 1.0; divisor = 1e12}
-    [PSCustomObject]@{rpc = "zen";   symbol = "ZEN";      port = 7070; fee = 1.0; divisor = 1e8}
 )
 
 $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Wallets.$Pool_Currency -or ($_.altsymbol -and $Wallets."$($_.altsymbol)") -or $InfoOnly} | ForEach-Object {
