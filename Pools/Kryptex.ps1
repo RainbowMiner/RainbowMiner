@@ -40,16 +40,21 @@ $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 $Pool_Ports = @(7777,8888)
 $Pool_ExcludeMineToAccount = @("NIR","QUAI","XEL")
 
-$Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin @("BLOCX","BTC","DGB","DOGE","PYI","UBQ") -and ($Wallets.$_ -or ($Email -ne "" -and $_ -notin $Pool_ExcludeMineToAccount) -or $InfoOnly)} | ForEach-Object {
-     
-    $Pool_Rpc = $_.ToLower()
-    $Pool_Host = "$($Pool_Rpc).kryptex.network" 
+$Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin @("BLOCX","BTC","DGB","DOGE","PYI","UBQ") -and ($Wallets.$_ -or ($Email -ne "" -and $_ -notin $Pool_ExcludeMineToAccount) -or $InfoOnly)} | Foreach-Object {
+    if ($_ -eq "XTM") {
+        [PSCustomObject]@{symbol=$_; algo="RandomX"; rpc="xtm-rx"}
+    } else {
+        [PSCustomObject]@{symbol=$_; algo=$null; rpc=$_.ToLower()}
+    }
+} | ForEach-Object {
+    
+    $Pool_Host = "$($_.rpc).kryptex.network" 
 
-    if ($Pool_Coin = Get-Coin $_) {
+    if ($Pool_Coin = Get-Coin $_.symbol -Algorithm $_.algo) {
         $Pool_Currency = $Pool_Coin.Symbol
         $Pool_Algorithm_Norm = $Pool_Coin.Algo
     } else {
-        Write-Log -Level Warn "$($Name): $_ not found in CoinsDB"
+        Write-Log -Level Warn "$($Name): $($_.symbol) not found in CoinsDB"
         return
     }
 
@@ -77,7 +82,7 @@ $Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin @("BLOCX
             $Pool_TSL = $timestamp - ($PoolCoin_Request.last_blocks_found | Select-Object -First 1).date
         }
 
-        $Stat = Set-Stat -Name "$($Name)_$($_)_Profit" -Value 0 -Duration $StatSpan -HashRate $PoolCoin_Request.hashrate -BlockRate $Pool_BLK -ChangeDetection $false -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -HashRate $PoolCoin_Request.hashrate -BlockRate $Pool_BLK -ChangeDetection $false -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
 
         if ($Wallets.$Pool_Currency) {
