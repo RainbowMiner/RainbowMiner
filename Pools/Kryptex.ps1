@@ -42,13 +42,14 @@ $Pool_ExcludeMineToAccount = @("NIR","QUAI","XEL")
 
 $Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin @("BLOCX","BTC","DGB","DOGE","PYI","UBQ") -and ($Wallets.$_ -or ($Email -ne "" -and $_ -notin $Pool_ExcludeMineToAccount) -or $InfoOnly)} | Foreach-Object {
     if ($_ -eq "XTM") {
-        [PSCustomObject]@{symbol=$_; algo="RandomX"; rpc="xtm-rx"}
+        [PSCustomObject]@{symbol=$_; algo="RandomX"; rpc="xtm-rx"; auto_btc = $false}
     } else {
-        [PSCustomObject]@{symbol=$_; algo=$null; rpc=$_.ToLower()}
+        [PSCustomObject]@{symbol=$_; algo=$null; rpc=$_.ToLower(); auto_btc = $true}
     }
 } | ForEach-Object {
     
-    $Pool_Host = "$($_.rpc).kryptex.network" 
+    $Pool_Rpc  = $_.rpc
+    $Pool_Host = "$($Pool_Rpc).kryptex.network" 
 
     if ($Pool_Coin = Get-Coin $_.symbol -Algorithm $_.algo) {
         $Pool_Currency = $Pool_Coin.Symbol
@@ -86,20 +87,28 @@ $Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin @("BLOCX
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
 
         if ($Wallets.$Pool_Currency) {
-            $Pool_ExCurrency = try {
-                [mailaddress]$Wallets.$Pool_Currency > $null
-                "BTC"
-            }
-            catch {
-                $Pool_Currency
+            if ($_.auto_btc) {
+                $Pool_ExCurrency = try {
+                    [mailaddress]$Wallets.$Pool_Currency > $null
+                    "BTC"
+                }
+                catch {
+                    $Pool_Currency
+                }
+            } else {
+                $Pool_ExCurrency = $Pool_Currency
             }
             $Pool_Wallet = $Wallets.$Pool_Currency
         } elseif ($Email -ne "") {
-            $Pool_ExCurrency = try {
-                [mailaddress]$Email > $null
-                "BTC"
-            }
-            catch {
+            if ($_.auto_btc) {
+                $Pool_ExCurrency = try {
+                    [mailaddress]$Email > $null
+                    "BTC"
+                }
+                catch {
+                }
+            } else {
+                $Pool_ExCurrency = $null
             }
             $Pool_Wallet = $Email
         }
