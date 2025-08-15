@@ -14,14 +14,14 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 0.00
 $Cuda = "11.0"
-$Version = "0.43.9"
+$Version = "0.44.0"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.43.9-wildrigmulti/wildrig-multi-linux-0.43.9.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.44.0-wildrigmulti/wildrig-multi-linux-0.44.0.tar.xz"
 } else {
     $Path = ".\Bin\GPU-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.43.9-wildrigmulti/wildrig-multi-windows-0.43.9.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.44.0-wildrigmulti/wildrig-multi-windows-0.44.0.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -125,15 +125,22 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
 		    foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
                 if (-not $Pools.$Algorithm_Norm.Host) {continue}
 
+                $QhashParams = ""
+
                 $MinMemGB = if ($_.DAG) {if ($Pools.$Algorithm_Norm.DagSizeMax) {$Pools.$Algorithm_Norm.DagSizeMax} else {Get-EthDAGSize -CoinSymbol $Pools.$Algorithm_Norm.CoinSymbol -Algorithm $Algorithm_Norm_0 -Minimum $_.MinMemGb}} else {$_.MinMemGb}
                 $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
                 if ($Miner_Vendor -eq "AMD" -and $_.AmdCompute) {
                     $AmdCompute = $_.AmdCompute
                     $Miner_Device = $Miner_Device | Where-Object {$_.OpenCL.DeviceCapability -match $AmdCompute}
                 } 
-                if ($Miner_Vendor -eq "NVIDIA" -and $_.NvCompute) {
-                    $NvCompute = $_.NvCompute
-                    $Miner_Device = $Miner_Device | Where-Object {$_.OpenCL.Architecture -match $NvCompute}
+                if ($Miner_Vendor -eq "NVIDIA") {
+                    if ($_.NvCompute) {
+                        $NvCompute = $_.NvCompute
+                        $Miner_Device = $Miner_Device | Where-Object {$_.OpenCL.Architecture -match $NvCompute}
+                    }
+                    if ($_.MainAlgorithm -eq "qhash" -and $Miner_Device.OpenCL.Architecture -eq "Ampere" -and $Miner_Device.Model_Base -eq "CMP170HX") {
+                        $QhashParams = " --qhash-kernel 2"
+                    }
                 }
 
 			    if ($Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName) -and (-not $_.CoinSymbols -or $Pools.$Algorithm_Norm.CoinSymbol -in $_.CoinSymbols)) {
@@ -152,7 +159,7 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
 					    DeviceName     = $Miner_Device.Name
 					    DeviceModel    = $Miner_Model
 					    Path           = $Path
-					    Arguments      = "--api-port `$mport -a $($Algorithm) -o stratum+tcp$(if ($Pools.$Algorithm_Norm.SSL) {"s"})://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User -replace "^nexa:")$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) -r 4 -R 5 --max-rejects 10 --multiple-instance --opencl-devices $($DeviceIDsAll) $($DeviceParams) --opencl-threads auto --gpu-temp-limit=95 $($Params)"
+					    Arguments      = "--api-port `$mport -a $($Algorithm) -o stratum+tcp$(if ($Pools.$Algorithm_Norm.SSL) {"s"})://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User -replace "^nexa:")$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) -r 4 -R 5 --max-rejects 10 --multiple-instance --opencl-devices $($DeviceIDsAll) $($DeviceParams)$($QhashParams) --opencl-threads auto --gpu-temp-limit=95 $($Params)"
 					    HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate"."$(if ($_.HashrateDuration){$_.HashrateDuration}else{"Week"})"}
 					    API            = "Xmrig"
 					    Port           = $Miner_Port
