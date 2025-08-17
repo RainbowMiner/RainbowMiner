@@ -14,14 +14,14 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 0.00
 $Cuda = "11.0"
-$Version = "0.44.0"
+$Version = "0.44.1"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.44.0-wildrigmulti/wildrig-multi-linux-0.44.0.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.44.1-wildrigmulti/wildrig-multi-linux-0.44.1.tar.xz"
 } else {
     $Path = ".\Bin\GPU-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.44.0-wildrigmulti/wildrig-multi-windows-0.44.0.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.44.1-wildrigmulti/wildrig-multi-windows-0.44.1.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -59,7 +59,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "progpow-telestai";  DAG = $true; Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 0.75} #Meraki/TLS
     [PSCustomObject]@{MainAlgorithm = "progpow-veil";      DAG = $true; Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 0.75} #ProgPowVeil
     [PSCustomObject]@{MainAlgorithm = "progpowz";          DAG = $true; Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 0.75; ExcludePoolName = "Fairpool"} #ProgPowZ
-    [PSCustomObject]@{MainAlgorithm = "qhash";                     Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; DevFee = 5.00} #Qhash/QTC, new in v0.43.3
+    [PSCustomObject]@{MainAlgorithm = "qhash";                     Vendor = @("AMD","NVIDIA"); ExcludeAmdCapability = "^GCN"; Params = ""; DevFee = 5.00} #Qhash/QTC, new in v0.43.3 / v0.44.1: old AMD gpu's like Vega, RX 5x0/4x0 and Intel are broken. Will be fixed next version
     [PSCustomObject]@{MainAlgorithm = "sha512256d";                Vendor = @("AMD","INTEL","NVIDIA"); Params = ""} #SHA512256d
     [PSCustomObject]@{MainAlgorithm = "sha256csm";                 Vendor = @("AMD","INTEL","NVIDIA"); Params = ""} #SHA256csm
     [PSCustomObject]@{MainAlgorithm = "sha256q";                   Vendor = @("AMD","INTEL","NVIDIA"); Params = ""} #SHA256q
@@ -138,8 +138,21 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
                         $NvCompute = $_.NvCompute
                         $Miner_Device = $Miner_Device | Where-Object {$_.OpenCL.Architecture -match $NvCompute}
                     }
+                    if ($_.ExcludeNvCompute) {
+                        $NvCompute = $_.ExcludeNvCompute
+                        $Miner_Device = $Miner_Device | Where-Object {$_.OpenCL.Architecture -notmatch $NvCompute}
+                    }
                     if ($_.MainAlgorithm -eq "qhash" -and $Miner_Device.OpenCL.Architecture -eq "Ampere" -and $Miner_Device.Model_Base -eq "CMP170HX") {
                         $QhashParams = " --qhash-kernel 2"
+                    }
+                } elseif ($Miner_Vendor -eq "AMD") {
+                    if ($_.AmdCapability) {
+                        $AmdCapability = $_.AmdCapability
+                        $Miner_Device = $Miner_Device | Where-Object {$_.OpenCL.DeviceCapability -match $AmdCapability}
+                    }
+                    if ($_.ExcludeAmdCapability) {
+                        $AmdCapability = $_.ExcludeAmdCapability
+                        $Miner_Device = $Miner_Device | Where-Object {$_.OpenCL.DeviceCapability -notmatch $AmdCapability}
                     }
                 }
 
