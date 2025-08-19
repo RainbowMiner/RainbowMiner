@@ -37,7 +37,7 @@ if ($IsLinux) {
 }
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "phihash"    ; MinMemGB = 3; Params = @(); ExtendInterval = 3} #Phihash
+    [PSCustomObject]@{MainAlgorithm = "phihash"    ; MinMemGB = 1; Params = @(); ExtendInterval = 3; FaultTolerance = 0.25} #Phihash
 )
 
 # $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
