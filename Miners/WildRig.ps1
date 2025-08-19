@@ -52,7 +52,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "minotaur";                  Vendor = @("AMD","INTEL","NVIDIA"); Params = ""} #, new in v0.26.0
     [PSCustomObject]@{MainAlgorithm = "nexapow"; DAG = $true;      Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 0.75} #NexaPow/NEXA
     [PSCustomObject]@{MainAlgorithm = "phi";                       Vendor = @("AMD","INTEL");          Params = ""} #PHI
-    [PSCustomObject]@{MainAlgorithm = "phihash";           DAG = $true; Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; MinMemGB = 4} #PhiHash/PHI
+    #[PSCustomObject]@{MainAlgorithm = "phihash";           DAG = $true; Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; MinMemGB = 4} #PhiHash/PHI
     [PSCustomObject]@{MainAlgorithm = "progpow-ethercore"; DAG = $true; Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3} #ProgPowEthercore
     [PSCustomObject]@{MainAlgorithm = "progpow-quai";      DAG = $true; Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 0.75} #ProgPowQuai
     [PSCustomObject]@{MainAlgorithm = "progpow-sero";      DAG = $true; Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 0.75} #ProgPowSero
