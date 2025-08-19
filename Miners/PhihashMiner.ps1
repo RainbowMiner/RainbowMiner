@@ -10,8 +10,8 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 if ($IsLinux -and ($Global:GlobalCPUInfo.Vendor -eq "ARM" -or $Global:GlobalCPUInfo.Features.ARM)) {return} # No ARM binaries available
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
-$Version = "1.0.1c"
-$ManualUri = "https://github.com/PhicoinProject/phihashminer/releases"
+$Version = "2.0.1"
+$ManualUri = "https://github.com/PhicoinProject/phihashminer_v2/releases"
 $Port = "314{0:d2}"
 $DevFee = 0.0
 
@@ -22,16 +22,16 @@ if ($IsLinux) {
     $Path = ".\Bin\GPU-PhihashMiner\phihashminer"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.1-phihashminer/phihashminer-1.0.1c-linux.7z"
-            Cuda = "12.0"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.0.1-phihashminer/phihashminer_v2.0.1_linux.zip"
+            #Cuda = "12.0"
         }
     )
 } else {
     $Path = ".\Bin\GPU-PhihashMiner\phihashminer.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.1-phihashminer/phihashminer-1.0.1c-win.7z"
-            Cuda = "12.0"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.0.1-phihashminer/phihashminer_v2.0.1_win.zip"
+            #Cuda = "12.0"
         }
     )
 }
@@ -44,7 +44,7 @@ $Commands = [PSCustomObject[]]@(
 
 if ($InfoOnly) {
     [PSCustomObject]@{
-        Type      = @("NVIDIA")
+        Type      = @("AMD","NVIDIA")
         Name      = $Name
         Path      = $Path
         Port      = $Miner_Port
@@ -56,30 +56,32 @@ if ($InfoOnly) {
     return
 }
 
-$Cuda = $null
-if ($Session.Config.CUDAVersion) {
-    for($i=0;$i -lt $UriCuda.Count -and -not $Cuda;$i++) {
-        if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $UriCuda[$i].Cuda -Warning $(if (($i -lt $UriCuda.Count-1) -or -not $Global:DeviceCache.DevicesByTypes.NVIDIA) {""}else{$Name})) {
-            $Uri  = $UriCuda[$i].Uri
-            $Cuda = $UriCuda[$i].Cuda
-        }
-    }
-}
+#$Cuda = $null
+#if ($Session.Config.CUDAVersion) {
+#    for($i=0;$i -lt $UriCuda.Count -and -not $Cuda;$i++) {
+#        if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $UriCuda[$i].Cuda -Warning $(if (($i -lt $UriCuda.Count-1) -or -not $Global:DeviceCache.DevicesByTypes.NVIDIA) {""}else{$Name})) {
+#            $Uri  = $UriCuda[$i].Uri
+#            $Cuda = $UriCuda[$i].Cuda
+#        }
+#    }
+#}
 
-if (-not $Cuda) {
+#if (-not $Cuda) {
     $Uri = $UriCuda[0].Uri
-}
+#}
 
-foreach ($Miner_Vendor in @("NVIDIA")) {
-	$Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object Type -eq "GPU" | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
+foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
+	$Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object Type -eq "GPU" | Select-Object Vendor, Model -Unique | ForEach-Object {
         $Miner_Model = $_.Model
 		$Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Model -eq $Miner_Model}
 
-		switch($_.Vendor) {
-			"NVIDIA" {$Miner_Deviceparams = "--cuda --cuda-devices"}
-			"AMD" {$Miner_Deviceparams = "--opencl --opencl-devices"}
-			Default {$Miner_Deviceparams = ""}
-		}
+		#switch($_.Vendor) {
+		#	"NVIDIA" {$Miner_Deviceparams = "--cuda --cuda-devices"}
+		#	"AMD" {$Miner_Deviceparams = "--opencl --opencl-devices"}
+		#	Default {$Miner_Deviceparams = ""}
+		#}
+
+        $Miner_Deviceparams = "--opencl --opencl-devices"
 
 		$Commands | ForEach-Object {
             $First = $true
@@ -111,8 +113,6 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
 						default            {"stratum$(if ($Pools.$Algorithm_Norm.SSL) {"s"})";$Miner_Protocol_Auto = $true}
 					}
 
-                    if ($Pools.$Algorithm_Norm.Host -match "F2pool" -and $Pools.$Algorithm_Norm.User -match "^0x[0-9a-f]{40}") {$Pool_Port = 8008}
-
                     $EnvVars = @()
                     if ($Pools.$Algorithm_Norm.SSL) {
                         $EnvVars += "SSL_NOVERIFY=1"
@@ -122,7 +122,6 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
                         $EnvVars += "GPU_FORCE_64BIT_PTR=0"
                     }
 
-
 					[PSCustomObject]@{
 						Name           = $Miner_Name
 						DeviceName     = $Miner_Device.Name
@@ -130,7 +129,7 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
 						Path           = $Path
 						Arguments      = "--api-port `$mport $($Miner_Deviceparams) $($DeviceIDsAll) -P $($Miner_Protocol)://$(Get-UrlEncode $Pools.$Algorithm_Norm.User -ConvertDot:$($Pools.$Algorithm_Norm.EthMode -ne "ethproxy"))$(if ($Pools.$Algorithm_Norm.Pass) {":$(Get-UrlEncode $Pools.$Algorithm_Norm.Pass -ConvertDot)"})@$($Pools.$Algorithm_Norm.Host):$($Pool_Port) --HWMON 2$(if (-not $Miner_Protocol_Auto) {" --farm-recheck 3000 --farm-retries 20 --work-timeout 900 --response-timeout 180"}) --exit $($_.Params)"
 						HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
-						API            = "Ethminer"
+						API            = "EthminerWrapper"
 						Port           = $Miner_Port
 						Uri            = $Uri
 						ManualUri      = $ManualUri
