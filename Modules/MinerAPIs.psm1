@@ -1530,7 +1530,7 @@ class EthminerWrapper : Miner {
                             $Difficulty | Add-Member @{$HashRate_Name = $this.Difficulty_Value}
 
                             $Accepted_Shares = [Int64]$(if ($Line_Cols[3] -match "A(\d+)") {$Matches[1]})
-                            $Rejected_Shares = [Int64]0
+                            $Rejected_Shares = [Int64]$(if ($Line_Cols[3] -match "R(\d+)") {$Matches[1]})
                             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
                         }
 
