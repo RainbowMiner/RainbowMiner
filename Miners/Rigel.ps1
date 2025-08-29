@@ -13,13 +13,13 @@ if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return}
 $ManualUri = "https://github.com/rigelminer/rigel/releases"
 $Port = "324{0:d2}"
 $DevFee = 0.7
-$Version = "1.22.2"
+$Version = "1.22.3"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Rigel\rigel"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.22.2-rigel/rigel-1.22.2-linux.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.22.3-rigel/rigel-1.22.3-linux.tar.gz"
             Cuda = "8.0"
         }
     )
@@ -27,7 +27,7 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Rigel\rigel.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.22.2-rigel/rigel-1.22.2-win.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.22.3-rigel/rigel-1.22.3-win.zip"
             Cuda = "8.0"
         }
     )
