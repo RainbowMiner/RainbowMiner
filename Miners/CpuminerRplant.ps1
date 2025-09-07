@@ -20,9 +20,9 @@ if ($IsLinux) {
     $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.46-rplant/cpuminer-opt-linux-5.0.46.tar.gz"
 } else {
     $Path = ".\Bin\CPU-Rplant\cpuminer-$($f = $Global:GlobalCPUInfo.Features;$(if($f.avx512){'avx512'}elseif($f.avx2 -and $f.sha -and $f.aes){'ryzen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'sse42-aes'}elseif($f.sse42){'sse42'}elseif($Global:GlobalCPUInfo.Vendor -eq "AMD"){'sse2amd'}else{'sse2'})).exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.46-rplant/cpuminer-opt-win-5.0.46.zip"
-    #$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.41-rplant/cpuminer-opt-win-5.0.41.zip"
-    #$Version = "5.0.41"
+    #$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.46-rplant/cpuminer-opt-win-5.0.46.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.41-rplant/cpuminer-opt-win-5.0.41.zip"
+    $Version = "5.0.41"
 }
 
 $Commands = [PSCustomObject[]]@(
