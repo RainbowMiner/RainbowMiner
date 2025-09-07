@@ -1,5 +1,5 @@
 ﻿[PSCustomObject]@{
-    "Allium" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="4";OCprofile="Profile1"}
+    "Allium" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="1";OCprofile="Profile1"}
     "Balloon" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="4";OCprofile="Profile4"}
     "Bitcore" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="4";OCprofile="Profile4"}
     "Blake2b" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="4";OCprofile="Profile4"}
@@ -35,6 +35,7 @@
     "NeoscryptXaya" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="3";OCprofile="Profile3"}
     "Nist5" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="4";OCprofile="Profile4"}
     "PHI2" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="4";OCprofile="Profile4"}
+    "Qhash" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="1";OCprofile="Profile1"}
     "Qubit" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="3";OCprofile="Profile3"}
     "RainforestV2" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="4";OCprofile="Profile4"}
     "SHA256csm" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="4";OCprofile="Profile4"}
