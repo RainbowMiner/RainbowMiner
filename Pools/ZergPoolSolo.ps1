@@ -125,7 +125,9 @@ $Pool_Request.PSObject.Properties.Name | ForEach-Object {
         return
     }
 
+    $hasAE = $false
     $Pool_Diff = ($PoolCoins_Request.PSObject.Properties.Value | Where-Object algo -eq $Pool_Algorithm | Foreach-Object {
+        if ($_.noautotrade -eq 0) {$hasAE = $true}
         if ([double]$_.network_hashrate -gt [double]$_.hashrate -or [int]$_."24h_blocks" -eq 0) {
             [double]$_.network_hashrate * $_.blocktime / 4294967296 #2^32
         } else {
@@ -139,7 +141,6 @@ $Pool_Request.PSObject.Properties.Name | ForEach-Object {
         $Pool_Price = Get-YiiMPValue $Pool_Request.$_ -DataWindow $Pool_DataWindow -Factor $Pool_Factor -ActualLast24h "actual_last24h_solo"
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value $Pool_Price -Duration $(if ($NewStat) {New-TimeSpan -Days 1} else {$StatSpan}) -ChangeDetection $false -Actual24h $($Pool_Request.$_.actual_last24h_solo/1000) -Estimate24h $($Pool_Request.$_.estimate_last24h) -Difficulty $Pool_Diff -Quiet
     }
-
 
     foreach($Pool_SSL in ($false,$true)) {
         if ($Pool_SSL) {
@@ -155,6 +156,7 @@ $Pool_Request.PSObject.Properties.Name | ForEach-Object {
             foreach($Pool_Currency in $Pool_Currencies) {
                 $Pool_Params = if ($Params.$Pool_Currency) {",$($Params.$Pool_Currency)"}
                 $Pool_CurrencySymbol = if ($InfoOnly) {$Pool_Currency} else {$Pool_Currency -replace "-(BEP|TRC)20"}
+                if (-not $hasAE -and $Pool_CoinSymbol -ne $Pool_CurrencySymbol) {continue}
                 [PSCustomObject]@{
                     Algorithm          = $Pool_Algorithm_Norm
                     Algorithm0         = $Pool_Algorithm_Norm

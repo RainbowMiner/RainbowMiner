@@ -71,7 +71,7 @@ if (-not $Pool_Regions) {
 if ($InfoOnly) {
     $Pool_Currencies = @("BTC") + @($PoolCoins_Request.PSObject.Properties.Name | Foreach-Object {if ($PoolCoins_Request.$_.symbol -eq $null -or $_ -match "^USD(T|C)-"){$_} else {$PoolCoins_Request.$_.symbol}}) | Select-Object -Unique
 } else {
-    $Pool_Currencies = @("BTC","DOGE","LTC") + @($Wallets.PSObject.Properties.Name | Sort-Object | Select-Object) | Select-Object -Unique | Where-Object {$Wallets.$_}
+    $Pool_Currencies = @("BTC","DOGE","LTC") + @($Wallets.PSObject.Properties.Name | Where-Object {$PoolCoins_Request.$_.noautotrade -eq 0} | Sort-Object | Select-Object) | Select-Object -Unique | Where-Object {$Wallets.$_}
 }
 if ($PoolCoins_Request) {
     $PoolCoins_Algorithms = @($Pool_Request.PSObject.Properties.Value | Where-Object coins -eq 1 | Select-Object -ExpandProperty name -Unique)
@@ -127,9 +127,31 @@ $Pool_Request.PSObject.Properties.Name | ForEach-Object {
         return
     }
 
-    $Pool_TSL = ($PoolCoins_Request.PSObject.Properties.Value | Where-Object algo -eq $Pool_Algorithm | Measure-Object timesincelast_shared -Minimum).Minimum
-    $Pool_BLK = ($PoolCoins_Request.PSObject.Properties.Value | Where-Object algo -eq $Pool_Algorithm | Measure-Object "24h_blocks_shared" -Maximum).Maximum
-    $Pool_Diff = ($PoolCoins_Request.PSObject.Properties.Value | Where-Object algo -eq $Pool_Algorithm | Measure-Object -Average difficulty).Average
+    $hasAE    = $false
+    $minTSL   = [double]::PositiveInfinity
+    $maxBLK   = [double]::NegativeInfinity
+    $sumDiff  = 0.0
+    $count    = 0
+
+    foreach ($c in $PoolCoins_Request.PSObject.Properties.Value) {
+        if ($c.algo -ne $Pool_Algorithm) { continue }
+
+        if ($c.noautotrade -eq 0) {$hasAE = $true}
+
+        $tsl = [double]$c.timesincelast_shared
+        if ($tsl -lt $minTSL) { $minTSL = $tsl }
+
+        $blk = [double]$c.'24h_blocks_shared'
+        if ($blk -gt $maxBLK) { $maxBLK = $blk }
+
+        $diff = [double]$c.difficulty
+        $sumDiff += $diff
+        $count++
+    }
+
+    $Pool_TSL  = if ($count) { $minTSL } else { $null }
+    $Pool_BLK  = if ($count) { $maxBLK } else { $null }
+    $Pool_Diff = if ($count) { $sumDiff / $count } else { $null }
 
     if (-not $InfoOnly) {
         $NewStat = $false
@@ -153,6 +175,7 @@ $Pool_Request.PSObject.Properties.Name | ForEach-Object {
             foreach($Pool_Currency in $Pool_Currencies) {
                 $Pool_Params = if ($Params.$Pool_Currency) {",$($Params.$Pool_Currency)"}
                 $Pool_CurrencySymbol = if ($InfoOnly) {$Pool_Currency} else {$Pool_Currency -replace "-(BEP|TRC)20"}
+                if (-not $hasAE -and $Pool_CoinSymbol -ne $Pool_CurrencySymbol) {continue}
                 [PSCustomObject]@{
                     Algorithm          = $Pool_Algorithm_Norm
                     Algorithm0         = $Pool_Algorithm_Norm
