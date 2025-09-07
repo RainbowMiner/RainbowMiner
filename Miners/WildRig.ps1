@@ -14,14 +14,14 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 0.00
 $Cuda = "11.0"
-$Version = "0.44.5"
+$Version = "0.44.6"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.44.5-wildrigmulti/wildrig-multi-linux-0.44.5.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.44.6-wildrigmulti/wildrig-multi-linux-0.44.6.tar.xz"
 } else {
     $Path = ".\Bin\GPU-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.44.5-wildrigmulti/wildrig-multi-windows-0.44.5.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.44.6-wildrigmulti/wildrig-multi-windows-0.44.6.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -36,7 +36,6 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "firopow"; DAG = $true;      Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 0.75} #FiroPow
     [PSCustomObject]@{MainAlgorithm = "ghostrider";                Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 1.00; FaultTolerance = 8; ExcludePoolName = "C3pool|MoneroOcean"} #Ghostrider
     [PSCustomObject]@{MainAlgorithm = "hashx7";                    Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; Algorithm = "x7"} #HashX7/6ZIP
-    [PSCustomObject]@{MainAlgorithm = "heavyhash";                 Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 2; FaultTolerance = 0.4} #Heavyhash/OBTC
     [PSCustomObject]@{MainAlgorithm = "hex";                       Vendor = @("AMD","INTEL","NVIDIA"); Params = ""} #Hex
     [PSCustomObject]@{MainAlgorithm = "hmq1725";                   Vendor = @("AMD","INTEL");          Params = ""} #HMQ1725
     [PSCustomObject]@{MainAlgorithm = "kawpow";       DAG = $true; Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 0.75; ExcludePoolName = "unMineable"} #KawPOW
@@ -59,7 +58,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "progpow-telestai";  DAG = $true; Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 0.75} #Meraki/TLS
     [PSCustomObject]@{MainAlgorithm = "progpow-veil";      DAG = $true; Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 0.75} #ProgPowVeil
     [PSCustomObject]@{MainAlgorithm = "progpowz";          DAG = $true; Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 0.75; ExcludePoolName = "Fairpool"} #ProgPowZ
-    [PSCustomObject]@{MainAlgorithm = "qhash";                     Vendor = @("AMD","NVIDIA"); Params = ""; DevFee = 5.00} #Qhash/QTC, new in v0.43.3
+    [PSCustomObject]@{MainAlgorithm = "qhash";                     Vendor = @("AMD","NVIDIA"); Params = ""; DevFee = 5.00; FaultTolerance = 0.4} #Qhash/QTC, new in v0.43.3
     [PSCustomObject]@{MainAlgorithm = "sha512256d";                Vendor = @("AMD","INTEL","NVIDIA"); Params = ""} #SHA512256d
     [PSCustomObject]@{MainAlgorithm = "sha256csm";                 Vendor = @("AMD","INTEL","NVIDIA"); Params = ""} #SHA256csm
     [PSCustomObject]@{MainAlgorithm = "sha256q";                   Vendor = @("AMD","INTEL","NVIDIA"); Params = ""} #SHA256q
@@ -88,7 +87,7 @@ $Commands = [PSCustomObject[]]@(
 
 if ($InfoOnly) {
     [PSCustomObject]@{
-        Type      = @("AMD","NVIDIA")
+        Type      = @("AMD","INTEL","NVIDIA")
         Name      = $Name
         Path      = $Path
         Port      = $Port
