@@ -208,6 +208,7 @@ $Pools_Data | ForEach-Object {
                         Pass               = "x"
                         Region             = $Pool_RegionsTable.$Pool_Region
                         SSL                = $Pool_SSL
+                        #SSLSelfSigned      = $Pool_SSL
                         Updated            = $Stat.Updated
                         PoolFee            = if ($Pool_Referal) {0.75} else {1.0}
                         PaysLive           = $true
