@@ -56,12 +56,17 @@ $Pools_Request | Where-Object {$_.name -notmatch "solo$" -and ($Wallets."$($_.sy
     }
 
     if (-not $InfoOnly) {
-        $timestamp       = Get-UnixTimestamp
-        $timestamp24h    = $timestamp - 86400
 
-        $blocks          = @($Pools_StatsRequest.blocks.candidates | Select-Object -ExpandProperty timestamp | Where-Object {$_ -ge $timestamp24h}) + @($Pools_StatsRequest.blocks.immature | Select-Object -ExpandProperty timestamp | Where-Object {$_ -ge $timestamp24h}) + @($Pools_StatsRequest.blocks.matured | Select-Object -ExpandProperty timestamp | Where-Object {$_ -ge $timestamp24h})
-        $blocks_measure  = $blocks | Measure-Object -Minimum -Maximum
-        $Pool_BLK        = [int]$($(if ($blocks_measure.Count -gt 1 -and ($blocks_measure.Maximum - $blocks_measure.Minimum)) {86400/($blocks_measure.Maximum - $blocks_measure.Minimum)} else {1})*$blocks_measure.Count)
+        if ($Pools_StatsRequest.pool.coinBlocktime) {
+            $Pool_BLK        = 86400 / $Pools_StatsRequest.pool.coinBlocktime * $Pools_StatsRequest.pool.poolHashrate / $Pools_StatsRequest.pool.networkSpeed * $Pools_StatsRequest.pool.poolLuck / 100
+        } else {
+            $timestamp       = Get-UnixTimestamp
+            $timestamp24h    = $timestamp - 86400
+
+            $blocks          = @($Pools_StatsRequest.blocks.candidates | Select-Object -ExpandProperty timestamp | Where-Object {$_ -ge $timestamp24h}) + @($Pools_StatsRequest.blocks.immature | Select-Object -ExpandProperty timestamp | Where-Object {$_ -ge $timestamp24h}) + @($Pools_StatsRequest.blocks.matured | Select-Object -ExpandProperty timestamp | Where-Object {$_ -ge $timestamp24h})
+            $blocks_measure  = $blocks | Measure-Object -Minimum -Maximum
+            $Pool_BLK        = [int]$($(if ($blocks_measure.Count -gt 1 -and ($blocks_measure.Maximum - $blocks_measure.Minimum)) {86400/($blocks_measure.Maximum - $blocks_measure.Minimum)} else {1})*$blocks_measure.Count)
+        }
         $Pool_TSL        = [int]($timestamp - [decimal]$Pools_StatsRequest.blocks.lastBlockFound)
                     
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate ([int64]$Pools_StatsRequest.pool.poolHashrate) -BlockRate $Pool_BLK -Quiet
