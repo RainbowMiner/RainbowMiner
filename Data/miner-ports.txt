@@ -52,6 +52,7 @@
 203	CpuminerWyfernTKC
 204	CpuminerOptBF
 205	CpuminerAurum
+206	CpuminerKudaraidee
 211	CpuminerWyvern
 212	CpuminerTake2
 213	CpuminerMulti
@@ -152,6 +153,7 @@
 375	Gminer234
 376	XmrigCC
 377	SrbMinerMulti268
+378	Xmrig5
 
 400	Sgminer
 401	SgminerBitcore
@@ -173,5 +175,6 @@
 417	NoncerProAMD
 418	FiroPOWAmd
 419	WildRig0340
+420	WildRig0445
 
 4068    CcminerSpModTribus
