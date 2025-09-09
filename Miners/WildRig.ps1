@@ -14,14 +14,14 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 0.00
 $Cuda = "11.0"
-$Version = "0.44.8"
+$Version = "0.45.0"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.44.8-wildrigmulti/wildrig-multi-linux-0.44.8.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.45.0-wildrigmulti/wildrig-multi-linux-0.45.0.tar.xz"
 } else {
     $Path = ".\Bin\GPU-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.44.8-wildrigmulti/wildrig-multi-windows-0.44.8.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.45.0-wildrigmulti/wildrig-multi-windows-0.45.0.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
