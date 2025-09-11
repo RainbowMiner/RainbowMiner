@@ -67,7 +67,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "yespowerr16"; Params = ""} #YespowerR16
     [PSCustomObject]@{MainAlgorithm = "yespowerARWN"; Params = ""} #Yespower Arowanacoin (ARWN)
     [PSCustomObject]@{MainAlgorithm = "yespowerIC"; Params = ""} #Yespower IsotopeC (IC)
-    [PSCustomObject]@{MainAlgorithm = "yespowerITC"; Params = ""} #Yespower Intercoin (ITC)
+    #[PSCustomObject]@{MainAlgorithm = "yespowerITC"; Params = ""} #Yespower Intercoin (ITC)
     [PSCustomObject]@{MainAlgorithm = "yespowerIOTS"; Params = ""} #Yespower .. (IOTS)
     [PSCustomObject]@{MainAlgorithm = "yespowerLITB"; Params = ""} #Yespower LightBit (LITB)
     [PSCustomObject]@{MainAlgorithm = "yespowerLTNCG"; Params = ""} #Yespower LighningCash-Gold v3 (LTNCG)
