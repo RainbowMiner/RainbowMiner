@@ -50,6 +50,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cpupower"; Params = "--param-key `"CPUpower: The number of CPU working or available for proof-of-work mining`""; Algorithm = "yespower"} #CpuPower
     [PSCustomObject]@{MainAlgorithm = "hmq1725"; Params = ""} #HMQ1725
     #[PSCustomObject]@{MainAlgorithm = "hodl"; Params = ""} #HODL
+    [PSCustomObject]@{MainAlgorithm = "interchained"; Params = "--param-n 1024 --param-r 8"; Algorithm = "yespower"} #Interchained
     [PSCustomObject]@{MainAlgorithm = "jha"; Params = ""} #JHA
     [PSCustomObject]@{MainAlgorithm = "lyra2rev3"; Params = ""} #Lyra2v3
     [PSCustomObject]@{MainAlgorithm = "lyra2z330"; Params = ""} #lyra2z330, CpuminerRplant faster
