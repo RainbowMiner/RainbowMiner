@@ -34,22 +34,22 @@ if (-not $Pool_Request.crypto) {
 
 [hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = @("ru")
+$Pool_Regions = @("eu","ru","sg","us")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
-$Pool_Ports = @(7777,8888)
-$Pool_ExcludeMineToAccount = @("NIR","QUAI","XEL")
+$Pool_NotMineable = @("BLOCX","BTC","DGB","DOGE","NIR","PYI","SDR","UBQ")
 
-$Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin @("BLOCX","BTC","DGB","DOGE","PYI","UBQ") -and ($Wallets.$_ -or ($Email -ne "" -and $_ -notin $Pool_ExcludeMineToAccount) -or $InfoOnly)} | Foreach-Object {
+$Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin $Pool_NotMineable -and ($Wallets.$_ -or $Email -ne "" -or $InfoOnly)} | Foreach-Object {
     if ($_ -eq "XTM") {
-        [PSCustomObject]@{symbol=$_; algo="RandomX"; rpc="xtm-rx"; auto_btc = $false}
+        [PSCustomObject]@{symbol=$_; algo="Cuckaroo29"; rpc="xtm-c29"}
+        [PSCustomObject]@{symbol=$_; algo="RandomX"; rpc="xtm-rx"}
+        [PSCustomObject]@{symbol=$_; algo="SHA3x"; rpc="xtm-sha3x"}
     } else {
-        [PSCustomObject]@{symbol=$_; algo=$null; rpc=$_.ToLower(); auto_btc = $true}
+        [PSCustomObject]@{symbol=$_; algo=$null; rpc=$_.ToLower()}
     }
 } | ForEach-Object {
     
-    $Pool_Rpc  = $_.rpc
-    $Pool_Host = "$($Pool_Rpc).kryptex.network" 
+    $Pool_Rpc  = $_.rpc 
 
     if ($Pool_Coin = Get-Coin $_.symbol -Algorithm $_.algo) {
         $Pool_Currency = $Pool_Coin.Symbol
@@ -70,6 +70,7 @@ $Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin @("BLOCX
     }
 
     $Pool_PoolFee = [Double]$PoolCoin_Request.fee * 100
+    $Pool_DirectMining = $PoolCoin_Request.directMining
 
     $Pool_BLK = $Pool_TSL = $null
 
@@ -87,7 +88,7 @@ $Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin @("BLOCX
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
 
         if ($Wallets.$Pool_Currency) {
-            if ($_.auto_btc) {
+            if ($Pool_DirectMining) {
                 $Pool_ExCurrency = try {
                     [mailaddress]$Wallets.$Pool_Currency > $null
                     "BTC"
@@ -100,7 +101,7 @@ $Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin @("BLOCX
             }
             $Pool_Wallet = $Wallets.$Pool_Currency
         } elseif ($Email -ne "") {
-            if ($_.auto_btc) {
+            if ($Pool_DirectMining) {
                 $Pool_ExCurrency = try {
                     [mailaddress]$Email > $null
                     "BTC"
@@ -120,45 +121,51 @@ $Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin @("BLOCX
 
 
     foreach($Pool_Region in $Pool_Regions) {
-        $Pool_SSL = $false
-        foreach($Pool_Port in $Pool_Ports) {
-            [PSCustomObject]@{
-                Algorithm     = $Pool_Algorithm_Norm
-                Algorithm0    = $Pool_Algorithm_Norm
-                CoinName      = $Pool_Coin.Name
-                CoinSymbol    = $Pool_Currency
-                Currency      = $Pool_ExCurrency
-                Price         = 0
-                StablePrice   = 0
-                MarginOfError = 0
-                Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
-                Host          = $Pool_Host
-                Port          = $Pool_Port
-                User          = "$($Pool_Wallet)/{workername:$Worker}"
-                Pass          = "x"
-                Region        = $Pool_RegionsTable.$Pool_Region
-                SSL           = $Pool_SSL
-                Updated       = $Stat.Updated
-                PoolFee       = $Pool_PoolFee
-                Workers       = $PoolCoin_Request.miners
-                Hashrate      = $Stat.HashRate_Live
-                TSL           = $Pool_TSL
-                BLK           = if ($Pool_BLK -ne $null) {$Stat.BlockRate_Average} else {$null}
-                PaysLive      = $PoolCoin_Request.fee_type -eq "PPS+"
-                WTM           = $true
-                Name          = $Name
-                Penalty       = 0
-                PenaltyFactor = 1
-                Disabled      = $false
-                HasMinerExclusions = $false
-                Price_0       = 0.0
-                Price_Bias    = 0.0
-                Price_Unbias  = 0.0
-                Wallet        = $Wallets.$Pool_Currency
-                Worker        = "{workername:$Worker}"
-                Email         = $Email
+        foreach($ssl in @("","ssl_")) {
+            foreach($url in $PoolCoin_Request.servers."$($ssl)urls") {
+                if ($url -match "^(.+?-$($Pool_Region).+?):(\d+)$") {
+                    $Pool_Host = $Matches[1]
+                    $Pool_Port = $Matches[2]
+                    $Pool_SSL  = $ssl -ne ""
+
+                    [PSCustomObject]@{
+                        Algorithm     = $Pool_Algorithm_Norm
+                        Algorithm0    = $Pool_Algorithm_Norm
+                        CoinName      = $Pool_Coin.Name
+                        CoinSymbol    = $Pool_Currency
+                        Currency      = $Pool_ExCurrency
+                        Price         = 0
+                        StablePrice   = 0
+                        MarginOfError = 0
+                        Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
+                        Host          = $Pool_Host
+                        Port          = $Pool_Port
+                        User          = "$($Pool_Wallet)/{workername:$Worker}"
+                        Pass          = "x"
+                        Region        = $Pool_RegionsTable.$Pool_Region
+                        SSL           = $Pool_SSL
+                        Updated       = $Stat.Updated
+                        PoolFee       = $Pool_PoolFee
+                        Workers       = $PoolCoin_Request.miners
+                        Hashrate      = $Stat.HashRate_Live
+                        TSL           = $Pool_TSL
+                        BLK           = if ($Pool_BLK -ne $null) {$Stat.BlockRate_Average} else {$null}
+                        PaysLive      = $PoolCoin_Request.fee_type -eq "PPS+"
+                        WTM           = $true
+                        Name          = $Name
+                        Penalty       = 0
+                        PenaltyFactor = 1
+                        Disabled      = $false
+                        HasMinerExclusions = $false
+                        Price_0       = 0.0
+                        Price_Bias    = 0.0
+                        Price_Unbias  = 0.0
+                        Wallet        = $Wallets.$Pool_Currency
+                        Worker        = "{workername:$Worker}"
+                        Email         = $Email
+                    }
+                }
             }
-            $Pool_SSL = $true
         }
     }
 }
