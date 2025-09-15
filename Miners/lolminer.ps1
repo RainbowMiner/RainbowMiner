@@ -14,14 +14,14 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=4724735.0"
 $Port = "317{0:d2}"
 $Cuda = "10.0"
 $DevFee = 1.0
-$Version = "1.97"
+$Version = "1.98"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-lolMiner\lolMiner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.97-lolminer/lolMiner_v1.97_Lin64.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.98-lolminer/lolMiner_v1.98_Lin64.tar.gz"
 } else {
     $Path = ".\Bin\GPU-lolMiner\lolMiner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.97-lolminer/lolMiner_v1.97_Win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.98-lolminer/lolMiner_v1.98_Win64.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -32,6 +32,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Blake3Alephium";               MinMemGB = 2;   Params = "--algo ALEPH";      Pers=$false; Fee=0.75; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); CUDAArch = "P"} #Blake3/ALPH
     [PSCustomObject]@{MainAlgorithm = "BlocxAutolykos2"; DAG = $true; MinMemGb = 2;   Params = "--algo AUTOLYKOS2"; Pers=$false; Fee=1.5; ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #Autolykos2/BLOCX
     [PSCustomObject]@{MainAlgorithm = "BlocxAutolykos2"; DAG = $true; MinMemGb = 2;   Params = "--algo AUTOLYKOS2 --dualmode TONDUAL"; Pers=$false; Fee=1.5; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "SHA256ton"} #Autolykos2/BLOCX
+    [PSCustomObject]@{MainAlgorithm = "Cuckaroo29";                   MinMemGb = 6;   Params = "--algo CR29";       Pers=$false; Fee=2;   ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #Cuckaroo29s
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo29b";                  MinMemGb = 6;   Params = "--algo CR29-40";    Pers=$false; Fee=1;   ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #Cuckaroo29b
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo29s";                  MinMemGb = 6;   Params = "--algo CR29-32";    Pers=$false; Fee=1;   ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #Cuckaroo29s
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo30";                   MinMemGb = 7.6; Params = "--algo C30CTX";     Pers=$false; Fee=2.5; ExtendInterval = 2; Vendor = @("AMD")} #Cuckaroo30
