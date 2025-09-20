@@ -12,17 +12,17 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.De
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-OneZero\onezerominer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5.9-onezerominer/onezerominer-linux-1.5.9.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6.0-onezerominer/onezerominer-linux-1.6.0.tar.gz"
 } else {
     $Path = ".\Bin\GPU-OneZero\onezerominer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5.9-onezerominer/onezerominer-win64-1.5.9.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6.0-onezerominer/onezerominer-win64-1.6.0.zip"
 }
 
 $ManualUri = "https://github.com/OneZeroMiner/onezerominer/releases"
 $Port = "370{0:d2}"
 $DevFee = 3.0
 $Cuda = "11.8"
-$Version = "1.5.9"
+$Version = "1.6.0"
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptix"; Params = ""; ExtendInterval = 3; Fee = @{NVIDIA=2.0}; Vendor = @("NVIDIA")} #CryptixOX8/CPAY
