@@ -1904,6 +1904,13 @@ try {
         }
     }
 
+    if ($Version -le (Get-Version "4.9.9.5")) {
+        $rmLHM = ".\Includes\getcpu\LibreHardwareMonitorLib.sys"
+        if (Test-Path $rmLHM) {
+            Get-ChildItem $rmLHM -File | Foreach-Object {Remove-Item $_.FullName -Force -ErrorAction Ignore;$ChangesTotal++}
+        }
+    }
+
     ###
     ### END OF VERSION CHECKS
     ###
