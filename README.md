@@ -23,7 +23,7 @@ Features: easy setup wizard with ad-hoc working default (no editing of files nee
 
 - **Multi-Platform (AMD, INTEL, NVIDIA, CPU) on Windows and Linux**
 - **Profit auto-switch between mining programs and [algorithm](https://rbminer.net/algorithms/) for GPUs & CPUs (optimized one for each vendor vs. one for each possible device combination)**
-- **Profit auto-switch between pools (2Miners, 6Block, Abelpool, Acepool, Aionpool, Alphpool, BaikalMiner, Binance, BlockCruncher, BlocxZone, C3pool, DeepMinerZ, Ekapool, EthashPool, Ethermine, Ethwmine, [ezil.me](https://ezil.me/?p=dcf9), F2pool, FlockPool, FluxPools, GrinMint, Hashcryptos, Hashpool, HashVault, [HeroMiners](https://herominers.com), Hiveon, Icemining, [K1Pool](https://k1pool.com/invite/016079e6c5), [Kryptex](https://pool.kryptex.com/?ref=15aa84c0), LeafPool, LuckPool, LuckyPool, Minerpool, MinerRocks, Mining4people, MiningDutch, [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069), Mintpond, Molepool, MoneroOcean, Nanopool, Neuropool, [Nicehash](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1), PhalanxMining, Pmpmining, Poolin, RaptoreumZone, Ravenminer, SeroPool, SoloPool, Sunpool, SuprNova, unMineable, UUpool, WoolyPooly, YadaMiners, Zergpool and Zpool)**
+- **Profit auto-switch between pools (2Miners, 6Block, Abelpool, Acepool, Aionpool, Alphpool, BaikalMiner, Binance, BlockCruncher, BlocxZone, C3pool, DeepMinerZ, Ekapool, EthashPool, Ethermine, Ethwmine, [ezil.me](https://ezil.me/?p=dcf9), F2pool, FlockPool, FluxPools, GrinMint, Hashcryptos, Hashpool, HashVault, [HeroMiners](https://herominers.com), Hiveon, Icemining, [K1Pool](https://k1pool.com/invite/016079e6c5), [Kryptex](https://pool.kryptex.com/?ref=15aa84c0), LeafPool, LuckPool, LuckyPool, Minerpool, MinerRocks, Mining4people, MiningDutch, [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069), Mintpond, Molepool, MoneroOcean, Nanopool, Neuropool, [Nicehash](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1), PhalanxMining, Pmpmining, Poolin, RaptoreumZone, Ravenminer, SeroPool, SoloPool, Sunpool, SuprNova, unMineable, UUpool, WoolyPooly, YadaMiners and Zpool)**
 - **Integrate own and custom pools**
 - **Profit calculation, including real cost of electricity per miner**
 - **Uses the top actual available miner programs (Bminer, Ccminer, Claymore, CryptoDredge, Dstm, EnemyZ, Ewbf, Gminer, NBminer, Sgminer, SrbMiner, T-Rex, Xmrig and many more)**
@@ -345,7 +345,7 @@ The better alternative: start as Linux `tmux`:
 
 ### Done!
 
-<details><summary>Valid poolnames</summary>2Miners, 2MinersAE, 2MinersSolo, 6Block, Abelpool, Acepool, Aionpool, AlphPool, BaikalMine, BaikalMineSolo, Binance, BlocxZone, BlocxZoneSolo, C3pool, CpuPool, Crazypool, Ekpool, EthashPool, Ethermine, Ethwmine, Ezil, F2pool, FlockPool, FluxPools, Grinmint, Hashcryptos, Hashpool, HashVault, HeroMiners, Hiveon, Icemining, K1Pool, K1PoolSolo, Kryptex, LeafPool, LuckPool, LuckyPool, Luxor, Minerpool, MinerRocks, Mining4people, MiningDutch, MiningDutchCoins, MiningRigRentals, Mintpond, Molepool, MoneroOcean, Nanopool, Neuropool, [Nicehash](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1), PhalanxMining, PhalanxMiningSolo, Pmpmining, Poolin, ProHashing, ProHashingCoins, ProHashingCoinsSolo, RaptoreumZone, Ravenminer, RPlant, SeroPool, SoloPool, Sunpool, SuprNova, unMineable, UUpool, ViaBTC, WhatToMine, WoolyPooly, WoolyPoolySolo, YadaMiners, ZergPool, ZergPoolCoins, ZergPoolCoinsParty, ZergPoolCoinsSolo, ZergPoolParty, ZergPoolSolo, Zpool, ZpoolCoins</details>
+<details><summary>Valid poolnames</summary>2Miners, 2MinersAE, 2MinersSolo, 6Block, Abelpool, Acepool, Aionpool, AlphPool, BaikalMine, BaikalMineSolo, Binance, BlocxZone, BlocxZoneSolo, C3pool, CpuPool, Crazypool, Ekpool, EthashPool, Ethermine, Ethwmine, Ezil, F2pool, FlockPool, FluxPools, Grinmint, Hashcryptos, Hashpool, HashVault, HeroMiners, Hiveon, Icemining, K1Pool, K1PoolSolo, Kryptex, LeafPool, LuckPool, LuckyPool, Luxor, Minerpool, MinerRocks, Mining4people, MiningDutch, MiningDutchCoins, MiningRigRentals, Mintpond, Molepool, MoneroOcean, Nanopool, Neuropool, [Nicehash](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1), PhalanxMining, PhalanxMiningSolo, Pmpmining, Poolin, ProHashing, ProHashingCoins, ProHashingCoinsSolo, RaptoreumZone, Ravenminer, RPlant, SeroPool, SoloPool, Sunpool, SuprNova, unMineable, UUpool, ViaBTC, WhatToMine, WoolyPooly, WoolyPoolySolo, YadaMiners, Zpool, ZpoolCoins</details>
 <details><summary>Valid algorithms</summary> Balloon, Bitcore, Blakecoin, Blake2s, BlakeVanilla, C11, Cortex, CryptoNightV8, Cuckaroo29, Cuckaroo29s, Ethash, X11, Decred, Equihash, Equihash144, Equihash192, Equihash-BTG, Groestl, Hex, HMQ1725, HSR, JHA, Keccak, Lbry, Lyra2RE2, Lyra2z, MyriadGroestl, NeoScrypt, Pascal, Phi, Phi2, Polytimos, Quark, Qubit, Scrypt, SHA256, Sib, Skunk, Skein, Tensority, Timetravel, Tribus, Veltor, X11, X12, X11evo, X16R, X16S, X17, X18, X21s, X22i, Yescrypt and many more: https://rbminer.net/algorithms/</details>
 
 ## HOTKEYS
@@ -549,12 +549,6 @@ If "EnableServerPools" is set to "1", the client will download the server's pool
 <details><summary>WoolyPooly</summary> https://www.woolypooly.com/ no auto-exchange, a separate wallet address is needed for each coin (ETHW, ETC, RVN, ERG, CFX, VEIL and more) you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>WoolyPoolySolo</summary> https://www.woolypooly.com/ no auto-exchange, a separate wallet address is needed for each coin (ETHW, ETC, RVN, ERG, CFX, VEIL and more) you want to mine solo. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>YadaMiners</summary> http://yadaminers.pl/ YDA/RandomYada-pool, pays in YDA, enter your Yada wallet address in pools configuration or edit pools.config.txt</details>
-<details><summary>ZergPool</summary> [https://www.zergpool.com/](https://zergpool.com/) auto-exchange and payout in BTC, DASH, LTC, TRX, USDT or any coin, that is listed at the pool. Pool will automatically select the most profitable coin. Switching will be by algorithm.</details>
-<details><summary>ZergPoolParty</summary> [https://www.zergpool.com/](https://zergpool.com/) auto-exchange and payout in BTC, DASH, LTC, TRX, USDT or any coin, that is listed at the pool. Pool will automatically select the most profitable coin. Switching will be by algorithm. Set "PartyPassword" in pools.config.txt for your group</details>
-<details><summary>ZergPoolSolo</summary> [https://www.zergpool.com/](https://zergpool.com/) auto-exchange and payout in BTC, DASH, LTC, TRX, USDT or any coin, that is listed at the pool. Pool will automatically select the most profitable coin. Switching will be by algorithm. Solo mining!</details>
-<details><summary>ZergPoolCoins</summary> [https://www.zergpool.com/](https://zergpool.com/) auto-exchange and payout in BTC, DASH, LTC, TRX, USDT or any other coin. Mine most profitable coin, either with auto-exchange to a currency of wish, or mine directly to individual coin wallets. If you setup RainbowMiner with many algorithm, expect a lot of switching. Switching will be by coin.</details>
-<details><summary>ZergPoolCoinsParty</summary> [https://www.zergpool.com/](https://zergpool.com/) auto-exchange and payout in BTC, DASH, LTC, TRX, USDT or any other coin. Mine most profitable coin, either with auto-exchange to a currency of wish, or mine directly to individual coin wallets. If you setup RainbowMiner with many algorithm, expect a lot of switching. Switching will be by coin. Set "PartyPassword" in pools.config.txt for your group</details>
-<details><summary>ZergPoolCoinsSolo</summary> [https://www.zergpool.com/](https://zergpool.com/) auto-exchange and payout in BTC, DASH, LTC, TRX, USDT or any other coin. Mine most profitable coin, either with auto-exchange to a currency of wish, or mine directly to individual coin wallets. If you setup RainbowMiner with many algorithm, expect a lot of switching. Switching will be by coin. Solo mining!</details>
 <details><summary>Zpool</summary> https://www.zpool.ca/ auto-exchange and payout in BTC, DASH, XVG, DGB and KMD or any other cointhat is listed at the pool. Pool will automatically select the most profitable coin. Switching will be by algorithm.</details>
 <details><summary>ZpoolCoins</summary> https://www.zpool.ca/ auto-exchange and payout in BTC, DASH, XVG, DGB and KMD or any other cointhat is listed at the pool. Mine most profitable coin, either with auto-exchange to a currency of wish, or mine directly to individual coin wallets. If you setup RainbowMiner with many algorithm, expect a lot of switching. Switching will be by coin.</details>
 <br />	
@@ -567,17 +561,6 @@ Payout via Bitcoin-Lightning channel is possible. If you want to see balance det
   
 The miner can be setup to mine any coin or currency, that is listed at the respective pool. The pool will then payout to the given non-BTC wallet address. Take into account, that non-BTC payouts depend heavily on that coin being mined. If the pool has not or is not mining that currency, the payouts will be delayed until the pool has mined the blocks. Read the pools websites, about the mineability and reliability of a currency. It's recommended to use BTC as any other coin could be removed at anytime and payouts will not occur. The pools Minerpool, MinerRocks, PocketWhale, Ravenminer and Yiimp do not have auto-exchange to BTC. Please be careful, what you choose to mine.
 </details>
-<details><summary>Notes for all ZergPool modules</summary>
-
-All ZergPool modules make use of the "Anycast" type stratum addresses "<algo>.mine.zergpool.com". If you want to let you miner use one of the specific stratum regions "na","eu" and "asia", set the "Region" parameter of the respective ZergPool module in pools.config.txt to the desired region code.
-</detail>
-<details><summary>Notes for Solo- and Party-mining</summary>
-  
-Gos.cx and ZergPool allow solo mining and party mining. This is achieved by adding parameters "m=solo" or "m=party.yourpassword" to the password of the pool. There are two ways to achieve this with RainbowMiner:
-- either supply `"BTC-Params": "m=solo",` / `"BTC-Params": "m=party.password",` in pools.config.txt and use the standard pools modules "Zergpool", "ZergpoolCoins"
-- or use the special pool modules "ZergpoolSolo", "ZergpoolParty", "ZergpoolCoinsSolo", "ZergpoolCoinsParty" - in case of party mining, these pool modules come with an extra parameter "PartyPassword" in pools.config.txt
-</details>
-
 
 ## MINERS
 
@@ -919,7 +902,7 @@ Note: RainbowMiner uses two list of unprofitable algorithms. The lists are both 
 
 #### Select pools
 
-- **PoolName** = list of pool names, you want to use for mining [default=nicehash,zergpool]
+- **PoolName** = list of pool names, you want to use for mining [default=nicehash,zpool]
 - **ExcludePoolName** = list of pool names, you want to exclude from mining
 - **ShowPoolBalances** = set to 1 to let RainbowMiner show your current pool balances [default=1]
 - **ShowPoolBalancesDetails** = set to 0 if coin balances at a pool should be added up to BTC [default=1]
@@ -1134,32 +1117,18 @@ Example:
 
 #### Add additional password parameters for YiiMP based pools
 
-Many of our pools are based on the open-source YiiMP pool (e.g. Hashcryptos,ZergPool,ZPool etc.). Some of these pools accept additional parameters. A prominent example is the setting of a custom payout limit at ZergPool (pl=x.xx). To add a password parameter, add one line to pools.config.txt in the form `"CURRENCY-Params": "parameters",`. In fact, all parameters will be added to the preset password contents, using a comma.
+Many of our pools are based on the open-source YiiMP pool (e.g. Hashcryptos,ZPool etc.). Some of these pools accept additional parameters. To add a password parameter, add one line to pools.config.txt in the form `"CURRENCY-Params": "parameters",`. In fact, all parameters will be added to the preset password contents, using a comma.
 
-Example 1:
+Example:
 
-    "ZergPool": {
+    "Zpool": {
         "LTC": "<YOUR_LTC_ADDRESS>",
-        "LTC-Params": "pl=1.5",
+        "LTC-Params": "m=solo",
         "Worker": "$WorkerName",
         "Penalty": "0"
     }
 
-In this example, if mining Zergpool, it will autoexchange everything into LTC. The parameter string "pl=1.5" will be added to the password, that is passed to the pool. In the case of ZergPool it will define a payout limit of 1.5 LTC. Of course any parameters can be added here, depending on the pool's options.
-
-For ZergPoolCoins pools, extra password parameters can be assigned per coin, even when using autoexchange to a certain currency:
-
-Example 2:
-
-    "ZergPoolCoins": {
-        "BTC": "<YOUR_BTC_ADDRESS>",
-        "BTC-Params": "pl=0.001",
-        "BTC-MBC-Params": "d=0.1",
-        "Worker": "$WorkerName",
-        "Penalty": "0"
-    }
-
-In example 2, when mining for some MBC on ZergPoolCoins, the difficulty will be set to 0.1 by adding ",d=0.1" to the miner's password parameter. "CURRENCY-COIN-Params" has priority over "CURRENCY-Params"
+In this example, if mining Zpool, it will autoexchange everything into LTC. The parameter string "m=solo" will be added to the password, that is passed to the pool.
 
 #### Change a pool's penalty
     
@@ -1191,7 +1160,7 @@ Set the parameter(s) to "0", to disable the feature(s) for that pool.
 
 #### Change a pool's time frame (data window)
 
-To override the default data window "average2e" of the YiiMP based pools (Hashcryptos,ZergPool,Zpool) the parameter "DataWindow" can be added to the pool's configuration record. 
+To override the default data window "average2e" of the YiiMP based pools (Hashcryptos,Zpool) the parameter "DataWindow" can be added to the pool's configuration record. 
 Possible values are:
 
 - estimate_current (=default): the pool's current calculated profitability-estimation (more switching, relies on the honesty of the pool)
@@ -1265,7 +1234,7 @@ Per default all algorithms of a pool will be used. To define your own set of alg
 
 Example:
 
-    "ZergPool": {
+    "Zpool": {
         "User": "$UserName",
         "Worker": "$WorkerName",
         "Algorithm": "lyra2z,skein,myriadgroestl,groestl,neoscrypt,equihash-btg",
@@ -1322,19 +1291,19 @@ Set if to a value of `"0"`-`"100"` or leave it empty `""` to use the global "Poo
 
 Example:
 
-    "ZergPool": {
+    "Zpool": {
         "BTC": "<YOUR_BTC_ADDRESS>",
         "Worker": "$WorkerName",
         "SwitchingHysteresis": "5"
     },
-    "ZergPoolCoins": {
+    "MiningDutch": {
         "BTC": "<YOUR_BTC_ADDRESS>",
         "Worker": "$WorkerName",
         "SwitchingHysteresis": "0"
     }
 
 
-In this example, the switching hysteresis would be set to 5% (another pool with the same algorithm would need at least a 5% higher price to be accepted) and switched off completely for ZergPoolCoins.
+In this example, the switching hysteresis would be set to 5% (another pool with the same algorithm would need at least a 5% higher price to be accepted) and switched off completely for MiningDutch.
 
 #### Force a specific region's stratum
 
@@ -1400,7 +1369,7 @@ add in userpools.config.txt
 
 in config.txt, add the XvgPool to the "PoolName" list:
 
-    "PoolName": "Nicehash,ZergPoolCoins,XvgPool",
+    "PoolName": "Nicehash,Zpool,XvgPool",
 
 #### Mandatory parameters:
 
