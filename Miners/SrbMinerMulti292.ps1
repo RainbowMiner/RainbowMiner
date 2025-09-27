@@ -32,8 +32,10 @@ $Commands = [PSCustomObject[]]@(
 
     #CPU and GPU mining
     [PSCustomObject]@{MainAlgorithm = "astrixhash"       ;              Params = ""; Fee = 1.00; MinMemGb = 2; Vendor = @("AMD","INTEL","NVIDIA")} #AstrixHash/AIX
+    [PSCustomObject]@{MainAlgorithm = "blake3_lbrt"      ;              Params = ""; Fee = 2.00; MinMemGb = 2; Vendor = @("AMD","INTEL","NVIDIA")} #Blake3Lbrt/LBRT
     [PSCustomObject]@{MainAlgorithm = "ethashb3"         ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 3; Vendor = @("AMD","INTEL","NVIDIA")} #ethashb3/RTH
     [PSCustomObject]@{MainAlgorithm = "hoohash"          ;              Params = ""; Fee = 2.00;               Vendor = @("AMD","INTEL","NVIDIA")} #Hoohash/HTN (from 09/26/2024)
+    [PSCustomObject]@{MainAlgorithm = "sha256dt"         ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","INTEL","NVIDIA")} #SHA256dt/NOVO
     [PSCustomObject]@{MainAlgorithm = "xehash"           ;              Params = ""; Fee = 1.00; MinMemGb = 3; Vendor = @("AMD","INTEL","NVIDIA")} #XeHash/XE
 
     #GPU Dualmining
