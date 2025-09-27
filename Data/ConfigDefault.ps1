@@ -1,5 +1,5 @@
 ﻿[PSCustomObject]@{
-    PoolName = @("Nicehash","ZergPool","Zpool")
+    PoolName = @("Nicehash","Zpool")
     ExcludeMinerName = @("CcminerMTP","CcminerMTP10","Nsgminer")
     MinerStatusURL = "https://rbminer.net"
     FastestMinerOnly = $true
