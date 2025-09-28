@@ -1911,6 +1911,24 @@ try {
         }
     }
 
+    if ($Version -le (Get-Version "4.9.9.6")) {
+        $RemovePoolStats += @("ZergPool_*_Profit.txt")
+        $RemovePoolStats += @("ZergPoolParty_*_Profit.txt")
+        $RemovePoolStats += @("ZergPoolSolo_*_Profit.txt")
+        $RemovePoolStats += @("ZergPoolCoinsParty_*_Profit.txt")
+        $RemovePoolStats += @("ZergPoolCoinsSolo_*_Profit.txt")
+
+        $rmOHM = ".\Includes\getcpu\OpenHardwareMonitorLib.sys"
+        if (Test-Path $rmLHM) {
+            Get-ChildItem $rmLHM -File | Foreach-Object {Remove-Item $_.FullName -Force -ErrorAction Ignore;$ChangesTotal++}
+        }
+
+        $rmOHM = ".\Includes\getcpu\OpenHardwareMonitorLib.dll"
+        if (Test-Path $rmLHM) {
+            Get-ChildItem $rmLHM -File | Foreach-Object {Remove-Item $_.FullName -Force -ErrorAction Ignore;$ChangesTotal++}
+        }
+    }
+
     ###
     ### END OF VERSION CHECKS
     ###
