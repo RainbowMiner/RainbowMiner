@@ -1911,7 +1911,7 @@ try {
         }
     }
 
-    if ($Version -le (Get-Version "4.9.9.6")) {
+    if ($Version -le (Get-Version "4.9.9.7")) {
         $RemovePoolStats += @("ZergPool_*_Profit.txt")
         $RemovePoolStats += @("ZergPoolParty_*_Profit.txt")
         $RemovePoolStats += @("ZergPoolSolo_*_Profit.txt")
