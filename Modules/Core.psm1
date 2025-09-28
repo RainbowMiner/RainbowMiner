@@ -5706,6 +5706,10 @@ function Invoke-ReportMinerStatus {
 
             Write-Log "Go report, go! $($ReportUrl)"
 
+            $ReportRunMode = if ($Session.Config.RunMode -eq "Client") {2}
+                             elseif ($Session.Config.RunMode -eq "Server") {1}
+                             else {0}
+
             $Response = Invoke-GetUrl $ReportUrl -body @{
                             user           = $Session.Config.MinerStatusKey
                             email          = $Session.Config.MinerStatusEmail
@@ -5738,6 +5742,7 @@ function Invoke-ReportMinerStatus {
                             console        = $Console
                             devices        = $DeviceData
                             data           = $minerreport
+                            runmode        = $ReportRunMode
                         }
 
             Write-Log "Done report, done."
