@@ -5743,6 +5743,7 @@ function Invoke-ReportMinerStatus {
                             devices        = $DeviceData
                             data           = $minerreport
                             runmode        = $ReportRunMode
+                            shrm           = $Session.Config.ShowRemoteMachines
                         }
 
             Write-Log "Done report, done."

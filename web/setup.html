@@ -744,6 +744,24 @@
                         </div>
                     </div>
 
+                    <!-- Show Remote Machines -->
+                    <div class="mb-3 row">
+                        <label for="inputShowRemoteMachines" class="col-sm-2 col-form-label">Show Remote Machines</label>
+                        <div class="col-sm-10">
+                            <select class="form-select" id="inputShowRemoteMachines" name="ShowRemoteMachines">
+                                <option value="0">Disable</option>
+                                <option value="1">Enable</option>
+                            </select>
+                            <div id="inputShowRemoteMachinesHelp" class="form-text">Controls whether this machine displays the status of other machines using the same Miner Status Key.<br />
+                                <ul>
+                                    <li>Server mode: By default, only Server machines show connected Clients.</li>
+                                    <li>Standalone/Client mode: Normally show only their own status. Enabling this option lets them display all other machines with the same Miner Status Key.</li>
+                                </ul>
+                                <strong>Warning:</strong> Enabling this on many machines can cause significant extra web traffic.
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Miner Status Email -->
                     <div class="mb-3 row is--reporting">
                         <label for="inputMinerStatusEmail" class="col-sm-2 col-form-label">Miner Status Email</label>
