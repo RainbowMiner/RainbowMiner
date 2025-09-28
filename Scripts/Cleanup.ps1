@@ -1919,13 +1919,13 @@ try {
         $RemovePoolStats += @("ZergPoolCoinsSolo_*_Profit.txt")
 
         $rmOHM = ".\Includes\getcpu\OpenHardwareMonitorLib.sys"
-        if (Test-Path $rmLHM) {
-            Get-ChildItem $rmLHM -File | Foreach-Object {Remove-Item $_.FullName -Force -ErrorAction Ignore;$ChangesTotal++}
+        if (Test-Path $rmOHM) {
+            Get-ChildItem $rmOHM -File | Foreach-Object {Remove-Item $_.FullName -Force -ErrorAction Ignore;$ChangesTotal++}
         }
 
         $rmOHM = ".\Includes\getcpu\OpenHardwareMonitorLib.dll"
-        if (Test-Path $rmLHM) {
-            Get-ChildItem $rmLHM -File | Foreach-Object {Remove-Item $_.FullName -Force -ErrorAction Ignore;$ChangesTotal++}
+        if (Test-Path $rmOHM) {
+            Get-ChildItem $rmOHM -File | Foreach-Object {Remove-Item $_.FullName -Force -ErrorAction Ignore;$ChangesTotal++}
         }
     }
 
