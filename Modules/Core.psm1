@@ -5780,10 +5780,16 @@ function Invoke-ReportMinerStatus {
                     $API.RemoteMinersProfit = $Profit
                     $API.RemoteMinersEarnings_Avg = $Earnings_Avg
                     $API.RemoteMinersEarnings_1d  = $Earnings_1d
+                } else {
+                    $API.RemoteMiners = $API.RemoteMinersProfit = $API.RemoteMinersEarnings_Avg = $API.RemoteMinersEarnings_1d = $null
                 }
+
                 if ($Response.Compare -ne $null) {
                     $API.CompareMiners = ConvertTo-Json @($Response.Compare | Select-Object) -Depth 10
+                } else {
+                    $API.CompareMiners = $null
                 }
+
                 if ($Response.IP -ne $null) {
                     $API.RemoteIP = $Response.IP
                 }
