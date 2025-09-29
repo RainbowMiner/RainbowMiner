@@ -52,7 +52,7 @@ Features: easy setup wizard with ad-hoc working default (no editing of files nee
 
 **Important note: do NOT use the newer Powershell Core v7.3.x/v7.4.x. Both come with a severe memory leak. Until this problem is solved, I strongly recommend you stick with Powershell Core v7.2.24**
 
-### Windows 7/8.1/10 pre-requisites
+### Windows 7/8.1/10/11 pre-requisites
 
 1. Install PowerShell 7: [Download Installer for version 7.2.24](https://github.com/PowerShell/PowerShell/releases/download/v7.2.24/PowerShell-7.2.24-win-x64.msi)
 2. Install Microsoft .NET Framework 4.7.2 or later: [Web Installer](https://www.microsoft.com/net/download/dotnet-framework-runtime)
@@ -62,6 +62,7 @@ Features: easy setup wizard with ad-hoc working default (no editing of files nee
       - [Nvidia Driver Version v471.41 - Windows 7,8,8.1](https://international.download.nvidia.com/Windows/471.41/471.41-desktop-win7-64bit-international-whql.exe)
     - **AMD**: [AMD Adrenalin 2022 Edition 22.3.2](https://drivers.amd.com/drivers/amd-software-adrenalin-edition-22.3.2-win10-win11-march24.exe) - if you run into trouble, try older versions from here: https://www.amd.com/de/support
 4. If your rig contains AMD graphic cards, RainbowMiner's overclocking features rely on MSI Afterburner, you should install and run it: [Download](http://download.msi.com/uti_exe//vga/MSIAfterburnerSetup.zip)
+5. If you want to have accurate power and clock values for your CPU, please install the [PawnIO driver](https://github.com/namazso/PawnIO.Setup/releases/latest/download/PawnIO_setup.exe) available from here: https://pawnio.eu/
 
 Finally: check, if Powershell 7 is in your PATH, because RainbowMiner will not run correctly, if the path to powershell is missing. Sometimes `C:\Program Files\PowerShell\7` has to be added manually to the PATH environment variable after installing Powershell 6. Here is a nice tutorial, on how to add to PATH environment variable https://www.howtogeek.com/118594/how-to-edit-your-system-path-for-easy-command-line-access/amp/
 
