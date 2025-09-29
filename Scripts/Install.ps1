@@ -167,6 +167,11 @@ if ($IsWindows) {
     Write-Host "Check/Install Microsoft Visual C++ 2015/2017/2019 .."
     if (-not (Test-IsElevated)) {Write-Host "Please watch for UAC popups and confirm them!" -ForegroundColor Yellow}
     Expand-WebRequest "https://aka.ms/vs/16/release/vc_redist.$($EnvBits).exe" -ArgumentList "/q" -ErrorAction Ignore
+
+    Write-Host "Check/Install PawnIO driver to allow accurate CPU power/clock readings .."
+    if (-not (Test-IsElevated)) {Write-Host "Please watch for UAC popups and confirm them!" -ForegroundColor Yellow}
+    Expand-WebRequest "https://github.com/namazso/PawnIO.Setup/releases/latest/download/PawnIO_setup.exe" -ArgumentList "-install -silent" -ErrorAction Ignore
+
     $StartCmd = "run Start.bat"
 } elseif ($IsLinux) {
     $StartCmd = if (Get-Command "tmux" -ErrorAction Ignore) {"or start-tmux.sh"}
