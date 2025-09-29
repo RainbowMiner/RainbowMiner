@@ -554,7 +554,7 @@ function Start-Setup {
                         }
                         "showremotemachines" {
                             if (Get-Yes $Config.EnableMinerStatus) 
-                                $Config.ShowRemoteMachines = Read-HostBool -Prompt "Show other machines with the same Miner Status Key (may increase traffic if enabled on many machines)?" -Default $Config.ShowRemoteMachines | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                $Config.ShowRemoteMachines = Read-HostString -Prompt "Show other machines with the same Miner Status Key ($(if ($Config.ShowRemoteMachines) {"enter 'clear'"} else {"leave empty"}) to show if is server only)?" -Default $Config.ShowRemoteMachines -Valid @("","0","1") | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
@@ -2006,7 +2006,7 @@ function Start-Setup {
                             $ConfigActual | Add-Member EnableMinerStatus $(if (Get-Yes $Config.EnableMinerStatus){"1"}else{"0"}) -Force
                             $ConfigActual | Add-Member MinerStatusUrl $Config.MinerStatusUrl -Force
                             $ConfigActual | Add-Member MinerStatusKey $Config.MinerStatusKey -Force
-                            $ConfigActual | Add-Member ShowRemoteMachines $(if (Get-Yes $Config.ShowRemoteMachines){"1"}else{"0"}) -Force
+                            $ConfigActual | Add-Member ShowRemoteMachines $Config.ShowRemoteMachines -Force
                             $ConfigActual | Add-Member MinerStatusEmail $Config.MinerStatusEmail -Force
                             $ConfigActual | Add-Member PushOverUserKey $Config.PushOverUserKey -Force
                             $ConfigActual | Add-Member MinerStatusMaxTemp $Config.MinerStatusMaxTemp -Force

@@ -73,7 +73,7 @@ param(
     [Parameter(Mandatory = $false)]
     [String]$MinerStatusKey = "", #will be generated during setup
     [Parameter(Mandatory = $false)]
-    [Bool]$ShowRemoteMachines = $false,
+    [String]$ShowRemoteMachines = "",
     [Parameter(Mandatory = $false)]
     [String]$MinerStatusEmail = "", #if miners go offline on rbminer.net, send email to this address
     [Parameter(Mandatory = $false)]
@@ -397,7 +397,7 @@ Import-Module .\Modules\Include.psm1
 
 Initialize-Session
 
-$Session.Version         = "4.9.9.8"
+$Session.Version         = "4.9.9.9"
 $Session.MainWindowTitle = "RainbowMiner v$($Session.Version)"
 $Session.SetupOnly       = $SetupOnly
 $Session.LogLevel        = $LogLevel

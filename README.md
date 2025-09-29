@@ -820,7 +820,7 @@ An example:
 - **EnableMinerStatus** = set to 1 to enable central monitoring
 - **MinerStatusURL** = url to central monitoring server [default=https://rbminer.net]
 - **MinerStatusKey** = your unique miner status key (get one at https://rbminer.net, you can reuse MPM keys)
-- **ShowRemoteMachines** = Show other machines with the same Miner Status Key (may increase traffic if enabled on many machines).
+- **ShowRemoteMachines** = set to 1 to show other machines with the same Miner Status Key (may increase traffic if enabled on many machines). Set to 0 to disable, leave empty for show if is server only. [default=]
 - **MinerStatusEmail** = if your miningrig goes offline at https://rbminer.net/monitoring, a warning will be sent to this email-address. Leave empty, if you do not want notifications.
 - **PushOverUserKey** = if your miningrig goes offline at https://rbminer.net/monitoring, a notification will be sent via https://pushover.net, using your pushover user key. Leave empty, if you do not want this.
 - **MinerStatusMaxTemp** = maximum allowed GPU temperature, triggers push message, if above [default=90]
