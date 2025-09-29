@@ -1932,8 +1932,8 @@ try {
     if ($Version -le (Get-Version "4.9.9.9")) {
         $Changes = 0
         $ConfigActual = Get-Content "$ConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
-        if ($ConfigActual.ShowRemoteMachines -ne "`$ShowRemoteMachines" -and $ConfigActual.ShowRemoteMachines -eq "0") {
-            $ConfigActual.ShowRemoteMachines = "";
+        if ($ConfigActual.ShowRemoteMachines -eq "0") {
+            $ConfigActual.ShowRemoteMachines = "`$ShowRemoteMachines";
             $Changes++;
         }
         if ($Changes) {
