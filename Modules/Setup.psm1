@@ -553,7 +553,7 @@ function Start-Setup {
                             }
                         }
                         "showremotemachines" {
-                            if (Get-Yes $Config.EnableMinerStatus) 
+                            if (Get-Yes $Config.EnableMinerStatus) {
                                 $Config.ShowRemoteMachines = Read-HostString -Prompt "Show other machines with the same Miner Status Key ($(if ($Config.ShowRemoteMachines) {"enter 'clear'"} else {"leave empty"}) to show if is server only)?" -Default $Config.ShowRemoteMachines -Valid @("","0","1") | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
