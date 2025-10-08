@@ -1352,7 +1352,6 @@ function Invoke-Core {
                 $Session.Config | Add-Member Scheduler ([System.Collections.Generic.List[PSCustomObject]]::new()) -Force
                 $AllScheduler | Foreach-Object {
                     $_ | Add-Member Name "$($_.Name)" -Force
-                    $_ | Add-Member DayOfWeek $([string]("$($_.DayOfWeek -replace "[^0-6\*]+")"[0])) -Force
                     $_ | Add-Member From $(Get-HourMinStr $_.From) -Force
                     $_ | Add-Member To   $(Get-HourMinStr $_.To -to) -Force
                     $_ | Add-Member PowerPrice "$($_.PowerPrice -replace ",","." -replace "[^0-9\.]+")" -Force
@@ -1369,7 +1368,7 @@ function Invoke-Core {
                         $_ | Add-Member $q @(($_.$q | Select-Object) | Where-Object {$_} | Foreach-Object {if ($q -match "algorithm"){Get-Algorithm $_}else{$_}} | Select-Object -Unique | Sort-Object) -Force
                     }
 
-                    foreach($q in @("Month")) {
+                    foreach($q in @("DayOfWeek","Month")) {
                         if ($_.$q -is [string]) {$_.$q = @($_.$q -replace "[^0-9,;\*]+" -split "[,;]+" | Where-Object {$_} | Select-Object)}
                         $_ | Add-Member $q @(($_.$q | Select-Object) | Where-Object {$_} | Foreach-Object {$_} | Select-Object -Unique) -Force
                         if ($_.$q -contains "*" -and $_.$q.Count -gt 1) {$_.$q = @("*")}
@@ -1670,12 +1669,12 @@ function Invoke-Core {
     $CurMonth  = "$([int]$GetDate.Month)"
     $Scheduler = $null
 
-    $Session.Config.Scheduler | Where-Object {$_.Enable -and ($_.DayOfWeek -eq "*" -or $_.DayOfWeek -eq $DayOfWeek) -and ($_.Month -contains "*" -or $_.Month -contains $CurMonth) -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To} | Foreach-Object {$PowerPrice = [Double]$_.PowerPrice;$EnableMiningHeatControl = $_.EnableMiningHeatControl;$MiningHeatControl = $_.MiningHeatControl;$PauseByScheduler = $_.Pause -and -not $Session.IsExclusiveRun;$PauseRentals = $_.PauseRentals;$MRRPriceFactor = $_.MRRPriceFactor;$Scheduler = $_}
+    $Session.Config.Scheduler | Where-Object {$_.Enable -and ($_.DayOfWeek -contains "*" -or $_.DayOfWeek -contains $DayOfWeek) -and ($_.Month -contains "*" -or $_.Month -contains $CurMonth) -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To} | Foreach-Object {$PowerPrice = [Double]$_.PowerPrice;$EnableMiningHeatControl = $_.EnableMiningHeatControl;$MiningHeatControl = $_.MiningHeatControl;$PauseByScheduler = $_.Pause -and -not $Session.IsExclusiveRun;$PauseRentals = $_.PauseRentals;$MRRPriceFactor = $_.MRRPriceFactor;$Scheduler = $_}
 
     $Global:PauseMiners.Set([PauseStatus]::ByScheduler,$PauseByScheduler)
 
     if ($Scheduler) {
-        Write-Log "Scheduler profile $($Scheduler.Name) currently active: DayOfWeek=$($Scheduler.DayOfWeek), From=$($Scheduler.From), To=$($Scheduler.To), Month=$($Scheduler.Month -join ",")"
+        Write-Log "Scheduler profile $($Scheduler.Name) currently active: DayOfWeek=$($Scheduler.DayOfWeek -join ","), From=$($Scheduler.From), To=$($Scheduler.To), Month=$($Scheduler.Month -join ",")"
     }
 
     $Session.CurrentPowerPrice              = $PowerPrice
