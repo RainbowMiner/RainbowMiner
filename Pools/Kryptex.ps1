@@ -12,7 +12,8 @@ param(
     [Bool]$AllowZero = $false,
     [String]$StatAverage = "Minute_10",
     [String]$StatAverageStable = "Week",
-    [String]$Email
+    [String]$Email,
+    [String]$MiningUsername
 )
 
 # $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -39,7 +40,7 @@ $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_NotMineable = @("BLOCX","BTC","DGB","DOGE","NIR","PYI","SDR","UBQ")
 
-$Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin $Pool_NotMineable -and ($Wallets.$_ -or $Email -ne "" -or $InfoOnly)} | Foreach-Object {
+$Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin $Pool_NotMineable -and ($Wallets.$_ -or $Email -ne "" -or $MiningUsername -ne "" -or $InfoOnly)} | Foreach-Object {
     if ($_ -eq "XTM") {
         [PSCustomObject]@{symbol=$_; algo="Cuckaroo29"; rpc="xtm-c29"}
         [PSCustomObject]@{symbol=$_; algo="RandomX"; rpc="xtm-rx"}
@@ -87,7 +88,13 @@ $Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin $Pool_No
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -HashRate $PoolCoin_Request.hashrate -BlockRate $Pool_BLK -ChangeDetection $false -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
 
-        if ($Wallets.$Pool_Currency) {
+        if ($MiningUsername -and $MiningUsername -ne "") {
+            $Pool_Wallet = if ($Worker) { "$MiningUsername/$Worker" } else { $MiningUsername }
+            $Pool_ExCurrency = "BTC"
+        } elseif ($Email -and $Email -ne "") {
+            $Pool_Wallet = if ($Worker) { "$Email/$Worker" } else { $Email }
+            $Pool_ExCurrency = "BTC"
+        } elseif ($Wallets.$Pool_Currency) {
             if ($Pool_DirectMining) {
                 $Pool_ExCurrency = try {
                     [mailaddress]$Wallets.$Pool_Currency > $null
@@ -100,18 +107,9 @@ $Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin $Pool_No
                 $Pool_ExCurrency = $Pool_Currency
             }
             $Pool_Wallet = $Wallets.$Pool_Currency
-        } elseif ($Email -ne "") {
-            if ($Pool_DirectMining) {
-                $Pool_ExCurrency = try {
-                    [mailaddress]$Email > $null
-                    "BTC"
-                }
-                catch {
-                }
-            } else {
-                $Pool_ExCurrency = $null
-            }
-            $Pool_Wallet = $Email
+        } else {
+            Write-Log -Level Warn "$($Name): No Mining Username or Email specified for wallet address."
+            return
         }
 
         if (-not $Pool_ExCurrency) {return}
@@ -140,7 +138,7 @@ $Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin $Pool_No
                         Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
                         Host          = $Pool_Host
                         Port          = $Pool_Port
-                        User          = "$($Pool_Wallet)/{workername:$Worker}"
+                        User          = "$($Pool_Wallet)"
                         Pass          = "x"
                         Region        = $Pool_RegionsTable.$Pool_Region
                         SSL           = $Pool_SSL
@@ -160,7 +158,8 @@ $Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin $Pool_No
                         Price_0       = 0.0
                         Price_Bias    = 0.0
                         Price_Unbias  = 0.0
-                        Wallet        = $Wallets.$Pool_Currency
+                        Wallet        = $Pool_Wallet
+                        MiningUsername= $MiningUsername
                         Worker        = "{workername:$Worker}"
                         Email         = $Email
                     }
