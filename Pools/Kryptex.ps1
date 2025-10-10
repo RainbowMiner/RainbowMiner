@@ -12,7 +12,8 @@ param(
     [Bool]$AllowZero = $false,
     [String]$StatAverage = "Minute_10",
     [String]$StatAverageStable = "Week",
-    [String]$Email
+    [String]$Email,
+    [String]$MiningUsername
 )
 
 # $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -39,7 +40,7 @@ $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_NotMineable = @("BLOCX","BTC","DGB","DOGE","NIR","PYI","SDR","UBQ")
 
-$Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin $Pool_NotMineable -and ($Wallets.$_ -or $Email -ne "" -or $InfoOnly)} | Foreach-Object {
+$Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin $Pool_NotMineable -and ($Wallets.$_ -or $Email -ne "" -or $MiningUsername -ne "" -or $InfoOnly)} | Foreach-Object {
     if ($_ -eq "XTM") {
         [PSCustomObject]@{symbol=$_; algo="Cuckaroo29"; rpc="xtm-c29"}
         [PSCustomObject]@{symbol=$_; algo="RandomX"; rpc="xtm-rx"}
@@ -100,6 +101,10 @@ $Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin $Pool_No
                 $Pool_ExCurrency = $Pool_Currency
             }
             $Pool_Wallet = $Wallets.$Pool_Currency
+        } elseif ($MiningUsername -ne "") {
+            if (-not $Pool_DirectMining) {return}
+            $Pool_ExCurrency = "BTC"
+            $Pool_Wallet = $MiningUsername
         } elseif ($Email -ne "") {
             if ($Pool_DirectMining) {
                 $Pool_ExCurrency = try {

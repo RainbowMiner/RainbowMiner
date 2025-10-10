@@ -151,9 +151,9 @@
             Currencies=@("NEXA","XEL")
         }
         "Kryptex" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{Email=""}
-            SetupFields=[PSCustomObject]@{Email="Enter your eMail-Address to enable all coins for autoexchange"}
-            Currencies=@("KAS","XMR")
+            Fields=[PSCustomObject]@{Email="";MiningUsername=""}
+            SetupFields=[PSCustomObject]@{Email="Enter your eMail-Address to enable all coins for autoexchange";MiningUsername="Enter your mining username to enable all coins for autoexchange"}
+            Currencies=@("XTM","XMR")
             Autoexchange="BTC"
         }
         "LeafPool" = [PSCustomObject]@{
