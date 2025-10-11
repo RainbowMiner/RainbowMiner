@@ -6539,7 +6539,19 @@ function Test-CacheGrow {
 function Get-PowerPrice {
     $PowerPrice = $Session.Config.PowerPrice
 
-    if ($Session.Config.OctopusTariffCode -ne '') {
+    if ($Session.Config.PowerPriceApi -ne '') {
+        try {
+            $PPApiRequest = Invoke-RestMethodAsync "$($Session.Config.PowerPriceApi)" -timeout 10 -cycletime 600 -tag "ppapi"
+            if ($Session.Config.PowerPriceApiValue -eq "" -or $Session.Config.PowerPriceApiValue -eq "#") {
+                $PPApiPrice = [decimal]$PPApiRequest
+            } else {
+                $PPApiPrice = Get-ValueFromRequest -Request $PPApiRequest -Value $Session.Config.PowerPriceApiValue
+            }
+            $PowerPrice = $PPApiPrice
+        } catch {
+            Write-Log -Level Warn "Call to PowerPriceApi $($Session.Config.PowerPriceApi) failed: $($_.Exception.Message)"
+        }
+    } elseif ($Session.Config.OctopusTariffCode -ne '') {
         if ($Session.Config.OctopusTariffCode -match "^E-[12]R-([A-Z0-9-]+)-[A-Z]$") {
             $ProductCode = $Matches[1]
             try {

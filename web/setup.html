@@ -472,6 +472,29 @@
                         </div>
                     </div>
 
+                    <!-- Power Price API -->
+                    <div class="mb-3 row">
+                        <label for="inputPowerPriceApi" class="col-sm-2 col-form-label">Power Price API</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="inputPowerPriceApi" name="PowerPriceApi" placeholder="http://..">
+                            <div id="inputPowerPriceApiHelp" class="form-text">
+                                Connect RainbowMiner to a power price API like NodeRed. The API needs to return either a plain number or a JSON formatted string
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Power Price API Value -->
+                    <div class="mb-3 row">
+                        <label for="inputPowerPriceApiValue" class="col-sm-2 col-form-label">Power Price API Value</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="inputPowerPriceApiValue" name="PowerPriceApiValue" placeholder="">
+                            <div id="inputPowerPriceApiValueHelp" class="form-text">
+                                Define where to find the power price value inside the JSON formatted string that the Power Price API returns. Use dot notation e.g. prices[1].value<br />
+                                If the API returns a plain number, leave this value empty (or set it to #)
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Fixed Cost per Day -->
                     <div class="mb-3 row">
                         <label for="inputFixedCostPerDay" class="col-sm-2 col-form-label">Fixed Cost per Day</label>

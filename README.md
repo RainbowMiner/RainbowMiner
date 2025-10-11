@@ -511,7 +511,7 @@ If "EnableServerPools" is set to "1", the client will download the server's pool
 <details><summary>Hiveon</summary> https://hiveon.net/ no auto-exchange, a separate wallet address is needed for each coin (ETC, RVN, ERG) you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>Icemining</summary> https://icemining.ca/ no auto-exchange, NIM, GRAM and CHAPA. Set your wallet in pools.config.txt</details>
 <details><summary>K1Pool</summary> [https://k1pool.com](https://k1pool.com/invite/016079e6c5) no auto-exchange, many currencies including XEL. Set your account wallet ID for coins to mine in pools.config.txt</details>
-<details><summary>Kryptex</summary> [https://kryptex.com](https://pool.kryptex.com/?ref=15aa84c0) no auto-exchange, many currencies including ALPH and NEXA. Set your account email for coins to mine in pools.config.txt</details>
+<details><summary>Kryptex</summary> [https://kryptex.com](https://pool.kryptex.com/?ref=15aa84c0) auto-exchange, many currencies including ALPH and NEXA. Set your account email or mining username for coins to mine in pools.config.txt</details>
 <details><summary>LeafPool</summary> https://www.leafpool.com/ no auto-exchange, mainly BEAM mining, a separate wallet address is needed for each coin you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>LuckPool</summary> https://luckpool.net/ no auto-exchange, mining VRSC and YEC, a separate wallet address is needed for each coin you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>LuckyPool</summary> https://luckypool.io/ no auto-exchange, a separate wallet address is needed for each coin you want to mine. Set in pools configuration or edit pools.config.txt</details>
@@ -959,6 +959,8 @@ For Server (Runmode=server) setup:
 - **PowerPrice** = price of 1kW/h (kilowatt per hour) that your electricity supplier charges [default=0]
 - **PowerOffset** = power offset to allow consideration for overhead power [default=0]
 - **OctopusTariffCode** = if you live in the UK and are an Octopus customer, you can let RainbowMiner pull the variable energy prices. Just enter your current trariff code. It's in the format E-1R-{product_code}-{region_code}, where product code is something like SILVER-2017-1, AGILE-18-02-21, ... and region code is a capital letter, range A to P
+- **PowerPriceApi** = Connect RainbowMiner to a power price API like NodeRed. The API needs to return either a plain number or a JSON formatted string
+- **PowerPriceApiValue** = Define where to find the power price value inside the JSON formatted string that the Power Price API returns. Use dot notation e.g. prices[1].value - if the API returns a plain number, leave this value empty (or set it to #)
 - **PowerPriceCurrency** = currency of your PowerPrice [default=USD]
 - **FixedCostPerDay** = cumulative fixed costs per day (in power price currency) [default=0]
 - **UsePowerPrice** = set to (1), if electricity cost and/or fixed cost should be subtracted from profits [default=0]
