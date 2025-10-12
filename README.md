@@ -2118,3 +2118,8 @@ Since I changed and optimized the script a lot to suit my needs, I decided to ma
 - BCH: 1MGRzyaLjQ67ZwwL9QTbXzwLxa8x1qSTBD
 - ETH: 0x3084A8657ccF9d21575e5dD8357A2DEAf1904ef6
 
+### All Thanks To Our Contributors:
+<a href="https://github.com/RainbowMiner/RainbowMiner/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=RainbowMiner/RainbowMiner" />
+</a>
+
