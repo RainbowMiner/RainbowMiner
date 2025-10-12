@@ -35,7 +35,7 @@ function Initialize-Session {
         $Session.UnixEpoch          = [DateTime]::new(1970, 1, 1, 0, 0, 0, 0, ([System.DateTimeKind]::Utc))
 
         Set-Variable RegexAlgoHasEthproxy -Option Constant -Scope Global -Value "^Etc?hash|ProgPow|^Meraki|UbqHash"
-        Set-Variable RegexAlgoHasDAGSize -Scope Global -Value "^Etc?hash|^KawPow|ProgPow|^FiroPow|^MeowPow|^Meraki|^NexaPow|^SccPow|UbqHash|Octopus|^Abelian|Autolykos2|^FishHash|^PhiHash"
+        Set-Variable RegexAlgoHasDAGSize -Option Constant -Scope Global -Value "^Etc?hash|^KawPow|ProgPow|^FiroPow|^MeowPow|^Meraki|^NexaPow|^SccPow|UbqHash|Octopus|^Abelian|Autolykos2|^FishHash|^PhiHash"
         Set-Variable RegexAlgoIsEthash -Option Constant -Scope Global -Value "^Etc?hash|UbqHash"
         Set-Variable RegexAlgoIsProgPow -Option Constant -Scope Global -Value "^KawPow|ProgPow|^FiroPow|^MeowPow|^Meraki|^NexaPow|^SccPow|Octopus"
     }
