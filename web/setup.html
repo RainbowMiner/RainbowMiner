@@ -495,6 +495,20 @@
                         </div>
                     </div>
 
+                    <!-- Power Price API Interval -->
+                    <div class="mb-3 row">
+                        <label for="inputPowerPriceApiInterval" class="col-sm-2 col-form-label">Power Price API Interval</label>
+                        <div class="col-sm-10">
+                            <div class="input-group">
+                                <input type="number" min="0" step="30" class="form-control" id="inputPowerPriceApiInterval" name="PowerPriceApiInterval" placeholder="Enter interval in seconds">
+                                <span class="input-group-text">seconds</span>
+                            </div>
+                            <div id="inputPowerPriceApiIntervalHelp" class="form-text">
+                                Enter the call-interval for the PowerPriceApi in seconds. Set to 0 to use RainbowMiner's base interval.
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Fixed Cost per Day -->
                     <div class="mb-3 row">
                         <label for="inputFixedCostPerDay" class="col-sm-2 col-form-label">Fixed Cost per Day</label>

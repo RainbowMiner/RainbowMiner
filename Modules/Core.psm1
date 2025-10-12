@@ -796,8 +796,21 @@ function Invoke-Core {
             $var = $Session.DefaultValues[$name]
             if ($var -is [array] -and $Session.Config.$name -is [string]) {$Session.Config.$name = $Session.Config.$name.Trim(); $Session.Config.$name = @(if ($Session.Config.$name -ne ''){@([regex]::split($Session.Config.$name.Trim(),"\s*[,;]+\s*") | Where-Object {$_})})}
             elseif (($var -is [bool] -or $var -is [switch]) -and $Session.Config.$name -isnot [bool]) {$Session.Config.$name = Get-Yes $Session.Config.$name}
-            elseif ($var -is [int] -and $Session.Config.$name -isnot [int]) {$Session.Config.$name = [int]$Session.Config.$name}
-            elseif ($var -is [double] -and $Session.Config.$name -isnot [double]) {$Session.Config.$name = [double]$session.Config.$name}
+            elseif ($var -is [int] -and $Session.Config.$name -isnot [int]) {
+                try {
+                    $Session.Config.$name = [int]$Session.Config.$name
+                } catch {
+                    Write-Log -Level Warn "Config $($name) is not an integer ($($Session.Config.$name))"
+                    $Session.Config.$name = 0
+                }
+            } elseif ($var -is [double] -and $Session.Config.$name -isnot [double]) {
+                try {
+                    $Session.Config.$name = [double]$session.Config.$name
+                } catch {
+                    Write-Log -Level Warn "Config $($name) is not a floating point number ($($Session.Config.$name))"
+                    $Session.Config.$name = 0.0
+                }
+            }
         }
         $Session.Config.Algorithm = @($Session.Config.Algorithm | ForEach-Object {Get-Algorithm $_} | Where-Object {$_} | Select-Object -Unique)
         $Session.Config.ExcludeAlgorithm = @($Session.Config.ExcludeAlgorithm | ForEach-Object {Get-Algorithm $_} | Where-Object {$_} | Select-Object -Unique)
@@ -6540,8 +6553,10 @@ function Get-PowerPrice {
     $PowerPrice = $Session.Config.PowerPrice
 
     if ($Session.Config.PowerPriceApi -ne '') {
+        $cycletime = if ($Session.Config.PowerPriceApiInterval) {$Session.Config.PowerPriceApiInterval} else {$Session.Config.Interval}
+
         try {
-            $PPApiRequest = Invoke-RestMethodAsync "$($Session.Config.PowerPriceApi)" -timeout 10 -cycletime 600 -tag "ppapi"
+            $PPApiRequest = Invoke-RestMethodAsync "$($Session.Config.PowerPriceApi)" -timeout 10 -cycletime $cycletime -tag "ppapi"
             if ($Session.Config.PowerPriceApiValue -eq "" -or $Session.Config.PowerPriceApiValue -eq "#") {
                 $PPApiPrice = [decimal]$PPApiRequest
             } else {

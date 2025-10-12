@@ -961,6 +961,7 @@ For Server (Runmode=server) setup:
 - **OctopusTariffCode** = if you live in the UK and are an Octopus customer, you can let RainbowMiner pull the variable energy prices. Just enter your current trariff code. It's in the format E-1R-{product_code}-{region_code}, where product code is something like SILVER-2017-1, AGILE-18-02-21, ... and region code is a capital letter, range A to P
 - **PowerPriceApi** = Connect RainbowMiner to a power price API like NodeRed. The API needs to return either a plain number or a JSON formatted string
 - **PowerPriceApiValue** = Define where to find the power price value inside the JSON formatted string that the Power Price API returns. Use dot notation e.g. prices[1].value - if the API returns a plain number, leave this value empty (or set it to #)
+- **PowerPriceApiInterval** = set to call-interval for PowerPriceApi or set it to 0 to use RainbowMiner's base interval
 - **PowerPriceCurrency** = currency of your PowerPrice [default=USD]
 - **FixedCostPerDay** = cumulative fixed costs per day (in power price currency) [default=0]
 - **UsePowerPrice** = set to (1), if electricity cost and/or fixed cost should be subtracted from profits [default=0]
@@ -2120,3 +2121,6 @@ Since I changed and optimized the script a lot to suit my needs, I decided to ma
 - BCH: 1MGRzyaLjQ67ZwwL9QTbXzwLxa8x1qSTBD
 - ETH: 0x3084A8657ccF9d21575e5dD8357A2DEAf1904ef6
 
+### All Thanks To Our Contributors:
+
+[![contributors](https://api.rbminer.net/contributors.php)](https://github.com/RainbowMiner/RainbowMiner/graphs/contributors)
