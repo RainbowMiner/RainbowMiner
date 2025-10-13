@@ -156,6 +156,9 @@
             Currencies=@("XTM","XMR")
             Autoexchange="BTC"
         }
+        "KryptexSolo" = [PSCustomObject]@{
+            Currencies=@("XTM","XMR")
+        }
         "LeafPool" = [PSCustomObject]@{
             Currencies=@("BEAM")
         }
