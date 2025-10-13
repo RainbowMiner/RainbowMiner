@@ -21,7 +21,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "XTM";   port = 6118; fee = 0.9; rpc = "tari";       user = "{wallet}{=diff}.{worker}"; pass="x"; algorithm = "SHA3x"}
     [PSCustomObject]@{symbol = "XE";    port = 3381; fee = 0.9; rpc = "xechain";    user = "{wallet}{=diff}.{worker}"; pass="x"}
     [PSCustomObject]@{symbol = "XEL";   port = 2666; fee = 0.9; rpc = "xelis";      user = "{wallet}{=diff}.{worker}"; pass="x"}
-    [PSCustomObject]@{symbol = "ZANO";  port = 8877; fee = 0.9; rpc = "zano";       user = "{wallet}.{worker}";        pass="{diff}"}
+    [PSCustomObject]@{symbol = "ZANO";  port = 8877; fee = 0.9; rpc = "zano";       user = "{wallet}.{worker}";        pass="x{diff}"}
 )
 
 $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)" -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains "$($_.symbol)")} | Foreach-Object {
@@ -39,16 +39,22 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)" -and (-no
         if (-not $Request.stats -or -not $Divisor) {
             Write-Log -Level Info "Pool Balance API ($Name) for $($Pool_Currency) returned nothing. "
         } else {
-            $Pending = ($Request.blocks | Where-Object {$_ -match "^\d+?:\d+?:\d+?:\d+?:\d+?:(\d+?):"} | Foreach-Object {[int64]$Matches[1]} | Measure-Object -Sum).Sum / $Divisor
+            if ($Request.stats.balance -eq $null -and ($Request.stats.locked -ne $null -or $Request.stats.unlocked -ne $null)) {
+                $Balance = [Decimal]$Request.stats.unlocked / $Divisor
+                $Pending = [Decimal]$Request.stats.locked / $Divisor
+            } else {
+                $Balance = [Decimal]$Request.stats.balance / $Divisor
+                $Pending = ($Request.blocks | Where-Object {$_ -match "^\d+?:\d+?:\d+?:\d+?:\d+?:(\d+?):"} | Foreach-Object {[int64]$Matches[1]} | Measure-Object -Sum).Sum / $Divisor
+            }
 			$Payouts = @($i=0;$Request.payments | Where-Object {$_ -match "^(.+?):(\d+?):"} | Foreach-Object {[PSCustomObject]@{time=$Request.payments[$i+1];amount=[Decimal]$Matches[2] / $Divisor;txid=$Matches[1]};$i+=2})
             [PSCustomObject]@{
                 Caption     = "$($Name) ($Pool_Currency)"
 				BaseName    = $Name
                 Name        = $Name
                 Currency    = $Pool_Currency
-                Balance     = [Decimal]$Request.stats.balance / $Divisor
+                Balance     = [Decimal]$Balance
                 Pending     = [Decimal]$Pending
-                Total       = [Decimal]$Request.stats.balance / $Divisor + [Decimal]$Pending
+                Total       = [Decimal]$Balance + [Decimal]$Pending
                 Paid        = [Decimal]$Request.stats.paid / $Divisor
                 Payouts     = @(Get-BalancesPayouts $Payouts | Select-Object)
                 LastUpdated = (Get-Date).ToUniversalTime()
