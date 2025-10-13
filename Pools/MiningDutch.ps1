@@ -62,11 +62,11 @@ $Pool_Request.PSObject.Properties.Value | ForEach-Object {
         return
     }
 
-    #$Pool_TSL = ($PoolCoins_Request.PSObject.Properties | Where-Object algo -eq $Pool_Algorithm | Measure-Object timesincelast_shared -Minimum).Minimum
-    #$Pool_BLK = ($PoolCoins_Request.PSObject.Properties | Where-Object algo -eq $Pool_Algorithm | Measure-Object "24h_blocks_shared" -Maximum).Maximum
+    $Pool_TSL   = $_.tsl
+    $Pool_BLK   = $_.blk
+    $Pool_Price = [double]$_.estimate_current * 1e-6 / $Pool_Factor
 
     if (-not $InfoOnly) {
-        $Pool_Price = [double]$_.estimate_current * 1e-6 / $Pool_Factor
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value $Pool_Price -Duration $StatSpan -ChangeDetection $false -FaultDetection $true -FaultTolerance 5 -HashRate ([double]$_.hashrate_shared * 1e6) -BlockRate $Pool_BLK -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
@@ -93,6 +93,9 @@ $Pool_Request.PSObject.Properties.Value | ForEach-Object {
                 PoolFee       = $Pool_Fee
                 DataWindow    = $DataWindow
                 Workers       = [int]$_.workers_shared
+                BLK           = $Stat.BlockRate_Average
+                TSL           = $Pool_TSL
+                WTM           = -not $Pool_Price -and $Pool_BLK
                 Hashrate      = $Stat.HashRate_Live
                 EthMode       = $Pool_EthProxy
                 Name          = $Name
