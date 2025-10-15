@@ -1,0 +1,10 @@
+{
+    "active":  true,
+    "symbol":  "FLUX",
+    "algorithm":  "FluxPOS",
+    "height":  2020000,
+    "rpc":  "https://explorer.runonflux.io/api/status",
+    "data":  "info.blocks",
+    "verify":  "info.network",
+    "verify_value":  "livenet"
+}
