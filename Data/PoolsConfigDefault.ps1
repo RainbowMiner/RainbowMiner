@@ -76,11 +76,6 @@
         "FlockPool" = [PSCustomObject]@{
             Currencies=@("RTM")
         }
-        "FluxPools" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{Password="x"}
-            SetupFields=[PSCustomObject]@{Password="Enter your Fluxpools password"}
-            Currencies=@("FLUX","FIRO","TCR")
-        }
         "Gtpool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{
                             Account_Id=""
