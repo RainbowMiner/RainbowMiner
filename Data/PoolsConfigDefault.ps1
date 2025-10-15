@@ -16,9 +16,6 @@
             SetupFields=[PSCustomObject]@{Username="Enter your 51pool username";Password="Enter your 51pool password"}
             Currencies=@("EPIC")
         }
-        "6Block" = [PSCustomObject]@{
-            Currencies=@("HNS")
-        }
         "Abelpool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{ReadonlyPageCode=""}
             SetupFields=[PSCustomObject]@{ReadonlyPageCode = "To view your balance, create a readonly page on abelpool.io and input the string after code= here."}
@@ -32,9 +29,6 @@
         }
         "Aionpool" = [PSCustomObject]@{
             Currencies=@("AION")
-        }
-        "AlphPool" = [PSCustomObject]@{
-            Currencies=@("ALPH")
         }
         "BaikalMine" = [PSCustomObject]@{
             Currencies=@("REOSC")
@@ -71,17 +65,8 @@
         "DeepMinerZSolo" = [PSCustomObject]@{
             Currencies=@("DNX")
         }
-        "Ekapool" = [PSCustomObject]@{
-            Currencies=@("AVS","FLR","DNX","ZANO")
-        }
-        "EthashPool" = [PSCustomObject]@{
-            Currencies=@("ETC","ETP")
-        }
         "Ethwmine" = [PSCustomObject]@{
             Currencies=@("ETHW")
-        }
-        "Evepool" = [PSCustomObject]@{
-            Currencies=@("VKAX")
         }
         "F2pool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{UserName=""}
@@ -95,9 +80,6 @@
             Fields=[PSCustomObject]@{Password="x"}
             SetupFields=[PSCustomObject]@{Password="Enter your Fluxpools password"}
             Currencies=@("FLUX","FIRO","TCR")
-        }
-        "FlyPool" = [PSCustomObject]@{
-            Currencies=@("BEAM","YEC")
         }
         "Gtpool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{
@@ -115,11 +97,6 @@
                             EnableMiningSwitch="If set to 1, the module will change mining to the most profitable coin, as defined in CoinSymbol automatically"
             }
             Currencies=@()
-        }
-        "Grinmint" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{Password="x"}
-            SetupFields=[PSCustomObject]@{Password="Enter your Grinmint password"}
-            Currencies=@("GRIN")
         }
         "Hashcryptos" = [PSCustomObject]@{
             Currencies=@("BTC")
@@ -175,16 +152,6 @@
             SetupFields=[PSCustomObject]@{User="Enter your Luxor username to enable all coins (or leavy it empty and set your username as wallet address in pools.config.txt)";API_Key="Enter your Luxor API key (Profile Settings > Api Keys > Generate New Key)"}
             Currencies=@("ARRR","DASH","ZEC","ZEN")
         }
-        "Minerpool" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{Password="xyz"}
-            SetupFields=[PSCustomObject]@{Password="Enter your Minerpool password (must NOT be x)"}
-            Currencies=@("FLUX","TENT","VDL")
-        }
-        "MinerpoolSolo" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{Password="xyz"}
-            SetupFields=[PSCustomObject]@{Password="Enter your Minerpool password (must NOT be x)"}
-            Currencies=@("FLUX","TENT","VDL")
-        }
         "MinerRocks" = [PSCustomObject]@{
             Currencies=@("TUBE")
         }
@@ -198,12 +165,6 @@
             Fields=[PSCustomObject]@{User="";API_ID="";API_Key="";AECurrency="BTC";Penalty=3}
             SetupFields=[PSCustomObject]@{User="Enter your MiningDutch username";API_ID="Enter your MiningDutch account ID";API_Key = "Enter your MiningDutch API key";AECurrency = "Enter your MiningDutch autoexchange currency"}
             Currencies=@()
-            Autoexchange="BTC"
-        }
-        "MiningDutchCoins" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{User="";API_ID="";API_Key="";AECurrency="BTC";Penalty=3}
-            SetupFields=[PSCustomObject]@{User="Enter your MiningDutch username";API_ID="Enter your MiningDutch account ID";API_Key = "Enter your MiningDutch API key";AECurrency = "Enter your MiningDutch autoexchange currency"}
-            Currencies=@("GLT")
             Autoexchange="BTC"
         }
         "MiningRigRentals" = [PSCustomObject]@{
@@ -401,9 +362,6 @@
         "RaptoreumZone" = [PSCustomObject]@{
             Currencies=@("RTM")
         }
-        "RaptorHash" = [PSCustomObject]@{
-            Currencies=@("RTM")
-        }
         "Ravenminer" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{AECurrency=""}
             SetupFields=[PSCustomObject]@{AECurrency = "Enter your RavenMiner autoexchange currency or leave empty for first of RVN,BTC,ETH,LTC,BCH,ADA,DOGE,MATIC"}
@@ -469,54 +427,6 @@
         }
         "XdagOrgSolo" = [PSCustomObject]@{
             Currencies=@("XDAG")
-        }
-        "ZergPool" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{AECurrency="";Penalty=12}
-            SetupFields=[PSCustomObject]@{AECurrency="Optionally define your autoexchange currency symbol"}
-            Currencies=@("BTC")
-            Autoexchange="BTC"
-            Yiimp=$true
-            BalancesKeepAlive="90d"
-        }
-        "ZergPoolCoins" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{AECurrency="";Penalty=12}
-            SetupFields=[PSCustomObject]@{AECurrency="Optionally define your autoexchange currency symbol"}
-            Currencies=@("BTC")
-            Autoexchange="BTC"
-            Yiimp=$true
-            BalancesKeepAlive="90d"
-        }
-        "ZergPoolCoinsParty" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{PartyPassword="";AECurrency="";Penalty=12}
-            SetupFields=[PSCustomObject]@{AECurrency="Optionally define your autoexchange currency symbol";PartyPassword="Enter your Party password"}
-            Currencies=@("BTC")
-            Autoexchange="BTC"
-            Yiimp=$true
-            BalancesKeepAlive="90d"
-        }
-        "ZergPoolCoinsSolo" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{AllowZero="1";AECurrency="";Penalty=12}
-            SetupFields=[PSCustomObject]@{AECurrency="Optionally define your autoexchange currency symbol"}
-            Currencies=@("BTC")
-            Autoexchange="BTC"
-            Yiimp=$true
-            BalancesKeepAlive="90d"
-        }
-        "ZergPoolParty" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{PartyPassword="";AECurrency="";Penalty=12}
-            SetupFields=[PSCustomObject]@{AECurrency="Optionally define your autoexchange currency symbol";PartyPassword="Enter your Party password"}
-            Currencies=@("BTC")
-            Autoexchange="BTC"
-            Yiimp=$true
-            BalancesKeepAlive="90d"
-        }
-        "ZergPoolSolo" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{AllowZero="1";Penalty=12}
-            SetupFields=[PSCustomObject]@{AECurrency="Optionally define your autoexchange currency symbol"}
-            Currencies=@("BTC")
-            Autoexchange="BTC"
-            Yiimp=$true
-            BalancesKeepAlive="90d"
         }
         "Zpool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{AECurrency="";Penalty=16}
