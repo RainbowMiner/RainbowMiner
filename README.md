@@ -23,7 +23,7 @@ Features: easy setup wizard with ad-hoc working default (no editing of files nee
 
 - **Multi-Platform (AMD, INTEL, NVIDIA, CPU) on Windows and Linux**
 - **Profit auto-switch between mining programs and [algorithm](https://rbminer.net/algorithms/) for GPUs & CPUs (optimized one for each vendor vs. one for each possible device combination)**
-- **Profit auto-switch between pools (2Miners, 6Block, Abelpool, Acepool, Aionpool, Alphpool, BaikalMiner, Binance, BlockCruncher, BlocxZone, C3pool, DeepMinerZ, EthashPool, Ethermine, Ethwmine, [ezil.me](https://ezil.me/?p=dcf9), F2pool, FlockPool, FluxPools, GrinMint, Hashcryptos, Hashpool, HashVault, [HeroMiners](https://herominers.com), Hiveon, Icemining, [K1Pool](https://k1pool.com/invite/016079e6c5), [Kryptex](https://pool.kryptex.com/?ref=15aa84c0), LeafPool, LuckPool, LuckyPool, Minerpool, MinerRocks, Mining4people, MiningDutch, [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069), Mintpond, Molepool, MoneroOcean, Nanopool, Neuropool, [Nicehash](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1), PhalanxMining, Pmpmining, Poolin, RaptoreumZone, Ravenminer, SeroPool, SoloPool, Sunpool, SuprNova, unMineable, UUpool, WoolyPooly, YadaMiners and Zpool)**
+- **Profit auto-switch between pools (2Miners, Abelpool, Acepool, Aionpool, Alphpool, BaikalMiner, Binance, BlockCruncher, BlocxZone, C3pool, DeepMinerZ, Ethermine, Ethwmine, [ezil.me](https://ezil.me/?p=dcf9), F2pool, FlockPool, FluxPools, Hashcryptos, Hashpool, HashVault, [HeroMiners](https://herominers.com), Hiveon, Icemining, [K1Pool](https://k1pool.com/invite/016079e6c5), [Kryptex](https://pool.kryptex.com/?ref=15aa84c0), LeafPool, LuckPool, LuckyPool, MinerRocks, Mining4people, MiningDutch, [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069), Mintpond, Molepool, MoneroOcean, Nanopool, Neuropool, [Nicehash](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1), PhalanxMining, Pmpmining, Poolin, RaptoreumZone, Ravenminer, SeroPool, SoloPool, Sunpool, SuprNova, unMineable, UUpool, WoolyPooly, YadaMiners and Zpool)**
 - **Integrate own and custom pools**
 - **Profit calculation, including real cost of electricity per miner**
 - **Uses the top actual available miner programs (Bminer, Ccminer, Claymore, CryptoDredge, Dstm, EnemyZ, Ewbf, Gminer, NBminer, Sgminer, SrbMiner, T-Rex, Xmrig and many more)**
@@ -346,7 +346,7 @@ The better alternative: start as Linux `tmux`:
 
 ### Done!
 
-<details><summary>Valid poolnames</summary>2Miners, 2MinersAE, 2MinersSolo, 6Block, Abelpool, Acepool, Aionpool, AlphPool, BaikalMine, BaikalMineSolo, Binance, BlocxZone, BlocxZoneSolo, C3pool, CpuPool, Crazypool, Ekpool, EthashPool, Ethermine, Ethwmine, Ezil, F2pool, FlockPool, FluxPools, Grinmint, Hashcryptos, Hashpool, HashVault, HeroMiners, Hiveon, Icemining, K1Pool, K1PoolSolo, Kryptex, KryptexSolo, LeafPool, LuckPool, LuckyPool, Luxor, Minerpool, MinerRocks, Mining4people, MiningDutch, MiningDutchCoins, MiningRigRentals, Mintpond, Molepool, MoneroOcean, Nanopool, Neuropool, [Nicehash](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1), PhalanxMining, PhalanxMiningSolo, Pmpmining, Poolin, ProHashing, ProHashingCoins, ProHashingCoinsSolo, RaptoreumZone, Ravenminer, RPlant, SeroPool, SoloPool, Sunpool, SuprNova, unMineable, UUpool, ViaBTC, WhatToMine, WoolyPooly, WoolyPoolySolo, YadaMiners, Zpool, ZpoolCoins</details>
+<details><summary>Valid poolnames</summary>2Miners, 2MinersAE, 2MinersSolo, Abelpool, Acepool, Aionpool, BaikalMine, BaikalMineSolo, Binance, BlocxZone, BlocxZoneSolo, C3pool, CpuPool, Crazypool, Ekpool, Ethermine, Ethwmine, Ezil, F2pool, FlockPool, FluxPools, Hashcryptos, Hashpool, HashVault, HeroMiners, Hiveon, Icemining, K1Pool, K1PoolSolo, Kryptex, KryptexSolo, LeafPool, LuckPool, LuckyPool, Luxor, MinerRocks, Mining4people, MiningDutch, MiningRigRentals, Mintpond, Molepool, MoneroOcean, Nanopool, Neuropool, [Nicehash](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1), PhalanxMining, PhalanxMiningSolo, Pmpmining, Poolin, ProHashing, ProHashingCoins, ProHashingCoinsSolo, RaptoreumZone, Ravenminer, RPlant, SeroPool, SoloPool, Sunpool, SuprNova, unMineable, UUpool, ViaBTC, WhatToMine, WoolyPooly, WoolyPoolySolo, YadaMiners, Zpool, ZpoolCoins</details>
 <details><summary>Valid algorithms</summary> Balloon, Bitcore, Blakecoin, Blake2s, BlakeVanilla, C11, Cortex, CryptoNightV8, Cuckaroo29, Cuckaroo29s, Ethash, X11, Decred, Equihash, Equihash144, Equihash192, Equihash-BTG, Groestl, Hex, HMQ1725, HSR, JHA, Keccak, Lbry, Lyra2RE2, Lyra2z, MyriadGroestl, NeoScrypt, Pascal, Phi, Phi2, Polytimos, Quark, Qubit, Scrypt, SHA256, Sib, Skunk, Skein, Tensority, Timetravel, Tribus, Veltor, X11, X12, X11evo, X16R, X16S, X17, X18, X21s, X22i, Yescrypt and many more: https://rbminer.net/algorithms/</details>
 
 ## HOTKEYS
@@ -479,11 +479,9 @@ If "EnableServerPools" is set to "1", the client will download the server's pool
 <details><summary>2Miners</summary> https://www.2miners.com/ no auto-exchange, a separate wallet address is needed for each coin (ETC, XZC and more) you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>2MinersAE</summary> https://www.2miners.com/ auto-exchange pool, mines Ethash and Etchas, payout in BTC or NANO (not for ETC). BTC is preset with $Wallet by default. So if you want to autoexchange to NANO, set the wallets and parameter AECurrency accordingly in pools.config.txt. Use parameter "CoinSymbol" to define, which coin to mine (e.g. set to "ETC", if you want to autoexchange-mine ETC, only).</details>
 <details><summary>2MinersSolo</summary> https://www.2miners.com/ no auto-exchange, a separate wallet address is needed for each coin (ETC, XZC and more) you want to mine solo. Set in pools configuration or edit pools.config.txt</details>
-<details><summary>6Block</summary> https://6block.com/ HNS (Handshake) pool, registration mandatory. Create a mining account and enter this account name as wallet in pools configuration or edit pools.config.txt</details>
 <details><summary>Abelpool</summary> https://abelpool.io/ ABEL/Abelean-pool, pays in ABEL, create an account, then look for "deploy command" and copy the wallet address plus password (looks like adb0000000000000000000000000000000000000000000000000000xxxyyyzzz:thepassword), then either set the full string as ABEL wallet or do separate the string at the ":" and put the left string into ABEL and the right string into ABEL-Params in pools configuration or edit pools.config.txt</details>
 <details><summary>Acepool</summary> https://acepool.top/ Equihash-pool in eu region for BEAM and XGM(Defis), set your acepool public key (can be created on their website) as wallet in pools configuration or edit pools.config.txt</details>
 <details><summary>Aionpool</summary> https://aionpool.tech/ AION/Equihash210,9-pool, pays in AION, enter your Aion wallet address in pools configuration or edit pools.config.txt</details>
-<details><summary>AlphPool</summary> https://www.alph-pool.com/ no auto-exchange, mining ALPH coin with Blake3, only</details>
 <details><summary>BaikalMine</summary> https://baikalmine.com/ no auto-exchange, enter wallet address for each coin you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>BaikalMineSolo</summary> https://baikalmine.com/ no auto-exchange, solo mining, only. Enter wallet address for each coin you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>Binance</summary> https://pool.binance.com/ no auto-exchange, ETC mining, instead of wallet, setup and use a miner name. Set in pools configuration or edit pools.config.txt</details>
@@ -494,14 +492,12 @@ If "EnableServerPools" is set to "1", the client will download the server's pool
 <details><summary>Crazypool</summary> https://crazypool.org/ no auto-exchange, a separate wallet address is needed for each coin (ETC, UBQ) you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>DeepMinerZ</summary> https://pool.deepminerz.com/ DNX, DynexSolve pool, pays in DNX, enter your DNX wallet address in pools configuration or edit pools.config.txt</details>
 <details><summary>DeepMinerZSolo</summary> https://pool.deepminerz.com/ DNX, DynexSolve for solo mining, pays in DNX, enter your DNX wallet address in pools configuration or edit pools.config.txt</details>
-<details><summary>EthashPool</summary> https://ethashpool.com/ auto-exchange to ETC and BTC, registration is mandatory for autoexchange to work. Either set wallet address or username (autoexchange) in pools configuration or edit pools.config.txt</details>
 <details><summary>Ethermine</summary> https://ethermine.org/ no auto-exchange, a separate wallet address is needed for each coin (ETC, ERG, RVN) you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>Ethwmine</summary> https://ethwmine.com/ no auto-exchange, a separate wallet address is needed for ETHW. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>Ezil.me</summary> [https://ezil.me](https://ezil.me/?p=dcf9) no auto-exchange, a ZIL wallet plus either an ETC wallet is needed. For more info on dual mining ZIL, see the FAQ below. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>F2Pool</summary> https://www.f2pool.com/ no auto-exchange, either enter your f2pool username as wallet address, or a real wallet address for each coin you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>FlockPool</summary> https://flockpool.com/ Raptoreum-pool, pays in RTM, set your RTM-address in pools configuration or edit pools.config.txt</details>
 <details><summary>FluxPools</summary> https://fluxpools.net/ no auto-exchange, mining TCR, FIRO and FLUX, a separate wallet address is needed for each coin you want to mine. Set in pools configuration or edit pools.config.txt</details>
-<details><summary>Grinmint</summary> https://grinmint.com/ GRIN/Cuckaroo29-pool, pays in GRIN, set your GRIN-eMail-address as wallet and enter your Grinmint password in pools configuration or edit pools.config.txt</details>
 <details><summary>Hashcryptos</summary>https://www.hashcryptos.com/  auto-exchange and payout in BTC and other currencies. To mine, you need to "activate" your wallet address on their website, first.</details>
 <details><summary>Hashpool</summary> https://hashpool.com/ no auto-exchange, a separate wallet address is needed for each coin you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>HashVault</summary> https://hashvault.pro/ no auto-exchange, dedicated to cryptonight mining, a separate wallet address is needed for each coin you want to mine. Set in pools configuration or edit pools.config.txt</details>
@@ -516,12 +512,10 @@ If "EnableServerPools" is set to "1", the client will download the server's pool
 <details><summary>LuckPool</summary> https://luckpool.net/ no auto-exchange, mining VRSC and YEC, a separate wallet address is needed for each coin you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>LuckyPool</summary> https://luckypool.io/ no auto-exchange, a separate wallet address is needed for each coin you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>Luxor</summary> https://mining.luxor.tech/ no auto-exchange, small pool with hand picked coins, a separate wallet address is needed for each coin you want to mine. Set in pools configuration or edit pools.config.txt</details>
-<details><summary>Minerpool</summary> https://minerpool.org/ no auto-exchange, RVN, FLUX and other Equihash coins, a separate wallet address is needed for each coin you want to mine. Default password is "xyz". Set in pools configuration or edit pools.config.txt</details>
 <details><summary>MinerRocks</summary> https://miner.rocks/ no auto-exchange, dedicated to cryptonight mining, a separate wallet address is needed for each coin you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>Mining4people</summary> https://www.mining4people.com/ no auto-exchange, multiple coins for pool mining available, a separate wallet address is needed for each coin you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>Mining4peopleSolo</summary> https://www.mining4people.com/ no auto-exchange, multiple coins for solo mining available, a separate wallet address is needed for each coin you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>MiningDutch</summary> https://mining-dutch.nl/ auto-exchange and paymout in various currencies, username required. Mining by algorithm profitability</details>
-<details><summary>MiningDutchCoins</summary> https://mining-dutch.nl/ auto-exchange and paymout in various currencies, username required. Mining by coin profitability</details>
 <details><summary>MiningRigRentals</summary> [https://www.miningrigrentals.com/](https://www.miningrigrentals.com/?ref=2598069) rent your complete rig to interested users in exchange for BTC, ETC, LTC or DASH. See extra section for more details</details>
 <details><summary>Mintpond</summary> https://mintpond.com/ if you are totally in Zcoin, then this pool might be the best choice. A separate wallet address is needed for XZC. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>Molepool</summary> https://molepool.com/ no auto-exchange, a separate wallet address is needed for ETHW. Set in pools configuration or edit pools.config.txt</details>
@@ -558,9 +552,9 @@ If "EnableServerPools" is set to "1", the client will download the server's pool
 
 If you plan to mine through Nicehash, you need to register an account with them ([https://www.nicehash.com/register](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1)). NiceHash will provide you with an extra NiceHash wallet/bitcoin address (RainbowMiner will ask for this address during the setup or configuration process).
 Payout via Bitcoin-Lightning channel is possible. If you want to see balance details, first create a new API key (My Settings->API-Key) with "Wallet permission->View.." and "Mining permission->View.." enabled. Second add API key, API secret and Organizazion ID to pools.config.txt</details>
-<details><summary>Notes for the pools BlockCruncher, Hashcryptos, HashPool, Minerpool, MinerRocks, Mining4people, PocketWhale, ProHashing, Ravenminer, YiiMP and Zpool</summary>
+<details><summary>Notes for the pools BlockCruncher, Hashcryptos, HashPool, MinerRocks, Mining4people, PocketWhale, ProHashing, Ravenminer, YiiMP and Zpool</summary>
   
-The miner can be setup to mine any coin or currency, that is listed at the respective pool. The pool will then payout to the given non-BTC wallet address. Take into account, that non-BTC payouts depend heavily on that coin being mined. If the pool has not or is not mining that currency, the payouts will be delayed until the pool has mined the blocks. Read the pools websites, about the mineability and reliability of a currency. It's recommended to use BTC as any other coin could be removed at anytime and payouts will not occur. The pools Minerpool, MinerRocks, PocketWhale, Ravenminer and Yiimp do not have auto-exchange to BTC. Please be careful, what you choose to mine.
+The miner can be setup to mine any coin or currency, that is listed at the respective pool. The pool will then payout to the given non-BTC wallet address. Take into account, that non-BTC payouts depend heavily on that coin being mined. If the pool has not or is not mining that currency, the payouts will be delayed until the pool has mined the blocks. Read the pools websites, about the mineability and reliability of a currency. It's recommended to use BTC as any other coin could be removed at anytime and payouts will not occur. The pools MinerRocks, PocketWhale, Ravenminer and Yiimp do not have auto-exchange to BTC. Please be careful, what you choose to mine.
 </details>
 
 ## MINERS
@@ -1596,13 +1590,13 @@ Assumed four GTX1070 GPUs running in this rig.
     {
       "GPU#00": "A",
       "GPU#01": "A",
-      "GPU#02": "Zerg",
+      "GPU#02": "Zpooler",
       "GPU#03": ""
     }
 
 Using this setup, RainbowMiner will use the following model names:
 - GPU#00 and GPU#01 will get name "GTX1070A"
-- GPU#02 will get name "GTX1070ZERG"
+- GPU#02 will get name "GTX1070ZPOOLER"
 - GPU#03 will keep name "GTX1070"
 
 This will result in three separate GPU groups. Be aware, that for each device group a new entry in devices.config.txt will be created. Also, all different device group combinations will be added to miners.config.txt.
