@@ -9,9 +9,9 @@ param(
 # $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pool_Users = @(foreach($PoolExt in @("","Coins","CoinsSolo")) {
-    if (-not $UsePools -or "$($Name)$($PoolExt)" -in $UsePools) {
-        if ($Config.Pools."$($Name)$($PoolExt)".User -and $Config.Pools."$($Name)$($PoolExt)".API_Key) {
-            [PSCustomObject]@{User=$Config.Pools."$($Name)$($PoolExt)".User;API_Key=$Config.Pools."$($Name)$($PoolExt)".API_Key}
+    if (-not $UsePools -or "$Name$PoolExt" -in $UsePools) {
+        if ($Config.Pools."$Name$PoolExt".User -and $Config.Pools."$Name$PoolExt".API_Key) {
+            [PSCustomObject]@{User=$Config.Pools."$Name$PoolExt".User;API_Key=$Config.Pools."$Name$PoolExt".API_Key}
         }
     }
 }) | Sort-Object User,API_Key -Unique
