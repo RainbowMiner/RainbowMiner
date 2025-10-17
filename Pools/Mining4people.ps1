@@ -19,14 +19,14 @@ param(
 $Pool_Request = [PSCustomObject]@{}
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://mining4people.com/api/pools" -retry 3 -retrywait 500 -tag $Name -cycletime 120
+    $Pool_Request = Invoke-RestMethodAsync "https://api.rbminer.net/data/mining4people.json" -retry 3 -retrywait 500 -tag $Name -cycletime 120
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
 
-if (-not $Pool_Request -or ($Pool_Request | Measure-Object).Count -le 5) {
+if (-not $Pool_Request) {
     Write-Log -Level Warn "Pool API ($Name) returned nothing. "
     return
 }
@@ -56,42 +56,29 @@ $Pool_Request | Where-Object {$_.feeType -eq "PPLNSBF" -and ($Wallets."$($_.coin
     $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethstratumnh"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
     $Pool_Ports = @(0,0)
         
-    $Pool_CoinRequest = [PSCustomObject]@{}
-    try {
-        $Pool_CoinRequest = Invoke-RestMethodAsync "https://mining4people.com/calcapi/pools/$($_.id)" -retry 3 -retrywait 500 -tag $Name -cycletime 120 -delay 200
-    }
-    catch {
-        Write-Log -Level Warn "Pool coin API ($Name) has failed for $($Pool_Currency) "
-        return
-    }
-
-    $Pool_CoinRequest = $Pool_CoinRequest.pool | Select-Object -First 1
-
-    $Pool_CoinRequest.ports.PSObject.Properties | Sort-Object {[double]$_.Value.difficulty},{[int]$_.Name},{[bool]$_.Value.tls} | Foreach-Object {
-        if ([bool]$_.Value.tls) {
-            if (-not $Pool_Ports[1]) {$Pool_Ports[1] = $_.Name}
+    $_.ports | Sort-Object {[double]$_.difficulty},{[int]$_.port},{[bool]$_.tls} | Foreach-Object {
+        if ($_.tls) {
+            if (-not $Pool_Ports[1]) {$Pool_Ports[1] = $_.port}
         } else {
-            if (-not $Pool_Ports[0]) {$Pool_Ports[0] = $_.Name}
+            if (-not $Pool_Ports[0]) {$Pool_Ports[0] = $_.port}
         }
     }
 
-    if (-not $InfoOnly) {
-        $hashrate      = $_.poolHashrate
-        $avgTime       = if ($_.poolHashrate -gt 0) {$Pool_CoinRequest.networkStats.networkDifficulty * 4294967296 / $hashrate} else {0}
-        $Pool_BLK      = [int]$(if ($avgTime -gt 0) {86400/$avgTime})
-        $lastBlocktime = if ($Pool_CoinRequest.lastPoolBlockTime) {([datetime]$Pool_CoinRequest.lastPoolBlockTime).ToUniversalTime()} else {[datetime]"1970-01-01T00:00:00"}
-        $Pool_TSL      = ((Get-Date).ToUniversalTime() - $lastBlocktime).TotalSeconds - [int]$Session.TimeDiff
-        $reward        = [int]$_.blockReward
-        $btcPrice      = if ($Global:Rates.$Pool_Currency) {1/[double]$Global:Rates.$Pool_Currency} else {0}
+    $Pool_BLK = $_.blk
+    $Pool_TSL = $_.tsl
 
-        $btcRewardLive =  if ($hashrate -gt 0) {$btcPrice * $reward * $Pool_BLK / $hashrate} else {0}
+    if (-not $InfoOnly) {
+        $hashrate = $_.poolHashrate
+        $reward   = $_.blockReward
+        $btcPrice = if ($Global:Rates.$Pool_Currency) {1/[double]$Global:Rates.$Pool_Currency} else {0}
+
+        $btcRewardLive =  if ($hashrate -gt 0 -and $_.networkHashrate -gt 0 -and $_.networkBlocktime -gt 0) {$btcPrice * $reward * 86400 / $_.networkBlocktime * $hashrate / $_.networkHashrate} else {0}
 
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value $btcRewardLive -Duration $StatSpan -ChangeDetection $false -HashRate $hashrate -BlockRate $Pool_BLK -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
     $Pool_TLS = $false
-
     $Pool_User = $Wallets.$Pool_Currency
 
     foreach($Pool_Port in $Pool_Ports) {
@@ -117,7 +104,7 @@ $Pool_Request | Where-Object {$_.feeType -eq "PPLNSBF" -and ($Wallets."$($_.coin
                     Updated       = $Stat.Updated
                     PoolFee       = $Pool_Fee
                     DataWindow    = $DataWindow
-                    Workers       = [int]$_.workers
+                    Workers       = $_.workers
                     Hashrate      = $Stat.HashRate_Live
                     TSL           = $Pool_TSL
                     BLK           = $Stat.BlockRate_Average

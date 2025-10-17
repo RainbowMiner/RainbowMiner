@@ -19,21 +19,21 @@ param(
 $Pool_Request = [PSCustomObject]@{}
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://mining4people.com/api/pools" -retry 3 -retrywait 500 -tag $Name -cycletime 120
+    $Pool_Request = Invoke-RestMethodAsync "https://api.rbminer.net/data/mining4people.json" -retry 3 -retrywait 500 -tag $Name -cycletime 120
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
 
-if (-not $Pool_Request -or ($Pool_Request | Measure-Object).Count -le 5) {
+if (-not $Pool_Request) {
     Write-Log -Level Warn "Pool API ($Name) returned nothing. "
     return
 }
 
 [hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = @("au","br","eu","fi","in","jp","us-west","us-east","us-cent")
+$Pool_Regions = @("au","br","eu","in","jp","us-west","us-east","us-cent")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Fee = 1
@@ -43,7 +43,7 @@ $Pool_Request | Where-Object {$_.feeType -eq "PPLNSBF70" -and ($Wallets."$($_.co
     $Pool_Currency = $_.coin
     $Pool_Coin = Get-Coin $Pool_Currency
 
-    if ($_.id -notmatch "^\w+-\w+-" -and $Pool_Coin -and -not $Pool_Coin.Multi) {
+    if ($_.id -notmatch "^\w+-\w+-pplns" -and $Pool_Coin -and -not $Pool_Coin.Multi) {
         $Pool_Algorithm_Norm = $Pool_Coin.algo
         $Pool_CoinName  = $Pool_Coin.name
     } else {
@@ -56,29 +56,19 @@ $Pool_Request | Where-Object {$_.feeType -eq "PPLNSBF70" -and ($Wallets."$($_.co
     $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethstratumnh"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
     $Pool_Ports = @(0,0)
         
+    $_.ports | Sort-Object {[double]$_.difficulty},{[int]$_.port},{[bool]$_.tls} | Foreach-Object {
+        if ($_.tls) {
+            if (-not $Pool_Ports[1]) {$Pool_Ports[1] = $_.port}
+        } else {
+            if (-not $Pool_Ports[0]) {$Pool_Ports[0] = $_.port}
+        }
+    }
+
+    $Pool_TSL = $_.tsl
+
     if (-not $InfoOnly) {
-        $Pool_CoinRequest = [PSCustomObject]@{}
-        try {
-            $Pool_CoinRequest = Invoke-RestMethodAsync "https://mining4people.com/calcapi/pools/$($_.id)" -retry 3 -retrywait 500 -tag $Name -cycletime 120 -delay 200
-        }
-        catch {
-            Write-Log -Level Warn "Pool coin API ($Name) has failed for $($Pool_Currency) "
-            return
-        }
-
-        $Pool_CoinRequest = $Pool_CoinRequest.pool | Select-Object -First 1
-
-        $Pool_CoinRequest.ports.PSObject.Properties | Sort-Object {[double]$_.Value.difficulty},{[int]$_.Name},{[bool]$_.Value.tls} | Foreach-Object {
-            if ([bool]$_.Value.tls) {
-                if (-not $Pool_Ports[1]) {$Pool_Ports[1] = $_.Name}
-            } else {
-                if (-not $Pool_Ports[0]) {$Pool_Ports[0] = $_.Name}
-            }
-        }
-
-        $Pool_TSL = ((Get-Date) - ([datetime]$Pool_CoinRequest.lastPoolBlockTime)).TotalSeconds
-
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate ([decimal]$Pool_CoinRequest.poolStats.poolHashrate) -Difficulty $Pool_CoinRequest.networkStats.networkDifficulty -Quiet
+        $hashrate = $_.poolHashrate
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate $hashrate -Difficulty $_.diff -Quiet
     }
 
     $Pool_TLS = $false
@@ -108,7 +98,7 @@ $Pool_Request | Where-Object {$_.feeType -eq "PPLNSBF70" -and ($Wallets."$($_.co
                     Updated       = $Stat.Updated
                     PoolFee       = $Pool_Fee
                     DataWindow    = $DataWindow
-                    Workers       = [int]$_.workers
+                    Workers       = $_.workers
                     Hashrate      = $Stat.HashRate_Live
                     TSL           = $Pool_TSL
                     BLK           = $null
