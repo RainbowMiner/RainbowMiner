@@ -8,14 +8,11 @@ param(
 
 # $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$Payout_Currencies = @()
-foreach($PoolExt in @("","AE","Solo")) {
-    if (-not $UsePools -or "$($Name)$($PoolExt)" -in $UsePools) {
-        $Payout_Currencies += @($Config.Pools."$($Name)$($PoolExt)".Wallets.PSObject.Properties | Select-Object)
+$Payout_Currencies = @(foreach ($PoolExt in "","AE","Solo") {
+    if (-not $UsePools -or "$Name$PoolExt" -in $UsePools) {
+        $Config.Pools."$Name$PoolExt".Wallets.PSObject.Properties | Where-Object Value
     }
-}
-
-$Payout_Currencies = $Payout_Currencies | Where-Object Value | Select-Object Name,Value -Unique | Sort-Object Name,Value
+}) | Sort-Object Name, Value -Unique
 
 if (-not $Payout_Currencies) {
     Write-Log -Level Verbose "Cannot get balance on pool ($Name) - no wallet address specified. "
