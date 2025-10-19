@@ -15,7 +15,7 @@ Param(
     $AsyncLoader.Pause      = $true
     $AsyncLoader.Jobs       = [System.Collections.Concurrent.ConcurrentDictionary[string, object]]::new()
     $AsyncLoader.HostDelays = [System.Collections.Concurrent.ConcurrentDictionary[string, object]]::new()
-    $AsyncLoader.HostTags   = [System.Collections.Concurrent.ConcurrentDictionary[string, object]]::new()
+    $AsyncLoader.HostTags   = [System.Collections.Generic.Dictionary[string, [System.Collections.Generic.HashSet[string]]]]::new([StringComparer]::OrdinalIgnoreCase)
     $AsyncLoader.CycleTime  = 10
     $AsyncLoader.Interval   = $Interval
     $AsyncLoader.Quickstart = $Quickstart
@@ -23,7 +23,7 @@ Param(
     $AsyncLoader.Timestamp  = $null
 
     # Setup additional, global variables for server handling
-    $Global:AsyncLoaderListeners   = [System.Collections.ArrayList]@()
+    $Global:AsyncLoaderListeners   = [System.Collections.ArrayList]::new()
 
     $initialSessionState = [Management.Automation.Runspaces.InitialSessionState]::CreateDefault()
     [void]$initialSessionState.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('AsyncLoader', $AsyncLoader, $null))
@@ -77,8 +77,11 @@ Param(
     if (-not (Test-Path Variable:Global:Asyncloader)) {return}
     foreach ($Jobkey in @($AsyncLoader.Jobs.Keys | Select-Object)) {
         $JobHost = $AsyncLoader.Jobs.$Jobkey.Host
-        if ($JobHost -and $AsyncLoader.HostTags.$JobHost -and ($AsyncLoader.HostTags.$JobHost -contains $tag)) {
-            $AsyncLoader.HostTags.$JobHost = @($AsyncLoader.HostTags.$JobHost | Where-Object {$_ -ne $tag})
+        $set = $null
+        if ($JobHost -and $AsyncLoader.HostTags.TryGetValue($JobHost, [ref]$set)) {
+            if ($set.Remove($tag) -and $set.Count -eq 0) {
+                [void]$AsyncLoader.HostTags.Remove($JobHost)
+            }
         }
         if (-not $JobHost -or ($AsyncLoader.HostTags.$JobHost | Measure-Object).Count -eq 0) {
             $AsyncLoader.Jobs.$Jobkey.Paused = $true

@@ -429,11 +429,12 @@ param(
             [void]$AsyncLoader.HostDelays.AddOrUpdate($JobHost, $delay, { param($key, $oldValue) $delay })
         }
 
-        [void]$AsyncLoader.HostTags.AddOrUpdate($JobHost, @($tag), { param($key, $oldValue) 
-            $result = @($oldValue)
-            if ($result -notcontains $tag) { $result += $tag }
-            return $result
-        })
+        $set = $null
+        if (-not $AsyncLoader.HostTags.TryGetValue($JobHost, [ref]$set)) {
+            $set = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+            $AsyncLoader.HostTags[$JobHost] = $set
+        }
+        [void]$set.Add($tag)
     }
 
     if (-not (Test-Path ".\Cache")) {New-Item "Cache" -ItemType "directory" -ErrorAction Ignore > $null}

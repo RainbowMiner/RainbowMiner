@@ -647,17 +647,18 @@ function Get-Device {
                                         $Global:GlobalCPUInfo.Name = "Unknown"
 
                                         if ($CPUpart.Length -gt 0) {
-                                            $CPUName = @()
+                                            $CPUName = [System.Collections.Generic.List[string]]::new()
                                             for($i=0; $i -lt $CPUpart.Length; $i++) {
                                                 $part = $CPUpart[$i]
                                                 $variant = if ($CPUvariant -and $CPUvariant.length -gt $i) {$CPUvariant[$i]} else {$CPUvariant[0]}
-                                                if ($ArmDB.variants.$CPUimpl.$part.$variant -ne $null) {$CPUName += $ArmDB.variants.$CPUimpl.$part.$variant}
-                                                elseif ($ArmDB.parts.$CPUimpl.$part -ne $null) {$CPUName += $ArmDB.parts.$CPUimpl.$part}
+                                                if ($ArmDB.variants.$CPUimpl.$part.$variant -ne $null) {[void]$CPUName.Add($ArmDB.variants.$CPUimpl.$part.$variant)}
+                                                elseif ($ArmDB.parts.$CPUimpl.$part -ne $null) {[void]$CPUName.Add($ArmDB.parts.$CPUimpl.$part)}
                                             }
                                             if ($CPUName.Length -gt 0) {
                                                 $Global:GlobalCPUInfo.Name = $CPUName -join "/"
                                                 $Global:GlobalCPUInfo.Features.ARM = $true
                                             }
+                                            $CPUName = $null
                                         }
                                     }
                                 }

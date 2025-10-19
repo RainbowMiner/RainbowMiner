@@ -548,16 +548,17 @@ Function Write-Log {
         if (-not $NoLog) {
             if ($Session.Debug) {
                 $grow = Test-CacheGrow
-                $grow_out = @()
+                $grow_out = [System.Collections.Generic.List[string]]::new()
                 foreach ( $item in $grow ) {
-                    $grow_out += "$($item.Name) $(if ($item.Diff -ge 0) {"+"})$($item.Diff)"
+                    [void]$grow_out.Add("$($item.Name) $(if ($item.Diff -ge 0) {"+"})$($item.Diff)")
                 }
                 if ($grow_out.Count) {
-                    $Message += " " + ($grow_out -join ", ")
+                    $Message = "$($Message) $($grow_out -join ", ")"
                 }
+                $grow_out = $null
             }
             # Generate a unique mutex name for the log directory
-            $mutexName = "RBM" + (Get-MD5Hash ([io.fileinfo](".\Logs")).FullName)
+            $mutexName = "RBM$(Get-MD5Hash ([io.fileinfo](".\Logs")).FullName)"
             $mutex = [System.Threading.Mutex]::new($false, $mutexName)
             try {
                 # Attempt to acquire the mutex, waiting up to 2 seconds

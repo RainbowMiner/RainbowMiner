@@ -280,8 +280,8 @@ function Start-Core {
         $AMDFound   = ($Global:DeviceCache.AllDevices | Where-Object {$_.Type -eq "GPU" -and $_.Vendor -eq "AMD"} | Measure-Object).Count
         $INTELFound = ($Global:DeviceCache.AllDevices | Where-Object {$_.Type -eq "GPU" -and $_.Vendor -eq "INTEL"} | Measure-Object).Count
         if ($CPUFound -or $NVFound -or $AMDFound -or $INTELFound) {
-            $DevicesFound = @()
-            if ($CPUFound)   {$DevicesFound += "$($CPUFound) CPU"}
+            $DevicesFound = [System.Collections.ArrayList]::new()
+            if ($CPUFound)   {[void]$DevicesFound.Add("$($CPUFound) CPU")}
             if ($NVFound)    {
                 $CUDAVersion = $null
                 foreach ($Device in $Global:GlobalCachedDevices) {
@@ -291,10 +291,10 @@ function Start-Core {
                     }
                 }
                 $Session.CUDAVersion = if ($CUDAVersion -ne "") {$CUDAVersion}else{$false}
-                $DevicesFound += "$($NVFound) Nvidia CUDA $($CUDAVersion)"
+                [void]$DevicesFound.Add("$($NVFound) Nvidia CUDA $($CUDAVersion)")
             }
-            if ($AMDFound)   {$DevicesFound += "$($AMDFound) AMD"}
-            if ($INTELFound) {$DevicesFound += "$($IntelFound) Intel"}
+            if ($AMDFound)   {[void]$DevicesFound.Add("$($AMDFound) AMD")}
+            if ($INTELFound) {[void]$DevicesFound.Add("$($IntelFound) Intel")}
             Write-Host "$($DevicesFound -join ", ") found" -ForegroundColor Green
         } else {
             Write-Host "none found!" -ForegroundColor Red
@@ -311,18 +311,18 @@ function Start-Core {
         try {
             Write-Host "Checking Windows pagefile/virtual memory .. " -NoNewline
 
-            $PageFile_Warn = @()
+            $PageFile_Warn = [System.Collections.ArrayList]::new()
             
             if ((Get-CimInstance Win32_ComputerSystem).AutomaticManagedPagefile) {
-                $PageFile_Warn += "Pagefile is set to manage automatically. This is NOT recommended!"
+                [void]$PageFile_Warn.Add("Pagefile is set to manage automatically. This is NOT recommended!")
             } elseif ($PageFileInfo = Get-CimInstance Win32_PageFileSetting -ErrorAction Ignore) {
                 $PageFileInfo | Foreach-Object {
                     $PageFileLetter = "$("$([IO.Path]::GetPathRoot($_.Name) -split ':' | Select-Object -First 1)".ToUpper()):"
                     if (-not $_.InitialSize -and -not $_.MaximumSize) {
-                        $PageFile_Warn += "Pagefile on $($PageFileLetter) is set to system managed"
+                        [void]$PageFile_Warn.Add("Pagefile on $($PageFileLetter) is set to system managed")
                     } else {
                         if ($_.InitialSize -ne $_.MaximumSize) {
-                            $PageFile_Warn += "Pagefile on $($PageFileLetter) initial size is not equal maximum size."
+                            [void]$PageFile_Warn.Add("Pagefile on $($PageFileLetter) initial size is not equal maximum size.")
                         }
                     }
                     Write-Log "$($_.Name) is set to initial size $($_.InitialSize) MB and maximum size $($_.MaximumSize) MB"
@@ -331,16 +331,16 @@ function Start-Core {
 
                 if ($PageFileMaxSize -lt ($GpuMemSizeMB + $CpuMemSizeMB)) {
                     if ($Session.MineOnCPU -eq $null -and $CpuMemSizeMB -gt 0 -and $GpuMemSizeMB -gt 0) {
-                        $PageFile_Warn += "Pagefiles may be too small ($($PageFileMaxSize) MB). Set them to a total minimum:"
-                        $PageFile_Warn += "- if mining on CPU, only: $($CpuMemSizeMB) MB$(if ($PageFileMaxSize -ge $CpuMemSizeMB) {" (current pagefile is large enough)"})"
-                        $PageFile_Warn += "- if mining on GPU, only: $($GpuMemSizeMB) MB$(if ($PageFileMaxSize -ge $GpuMemSizeMB) {" (current pagefile is large enough)"})"
-                        $PageFile_Warn += "- if mining on CPU + GPU: $($GpuMemSizeMB + $CpuMemSizeMB) MB"
+                        [void]$PageFile_Warn.Add("Pagefiles may be too small ($($PageFileMaxSize) MB). Set them to a total minimum:")
+                        [void]$PageFile_Warn.Add("- if mining on CPU, only: $($CpuMemSizeMB) MB$(if ($PageFileMaxSize -ge $CpuMemSizeMB) {" (current pagefile is large enough)"})")
+                        [void]$PageFile_Warn.Add("- if mining on GPU, only: $($GpuMemSizeMB) MB$(if ($PageFileMaxSize -ge $GpuMemSizeMB) {" (current pagefile is large enough)"})")
+                        [void]$PageFile_Warn.Add("- if mining on CPU + GPU: $($GpuMemSizeMB + $CpuMemSizeMB) MB")
                     } else {
-                        $PageFile_Warn += "Pagefiles are too small ($($PageFileMaxSize) MB). Set them to a total minimum of $($CpuMemSizeMB + $GpuMemSizeMB) MB"
+                        [void]$PageFile_Warn.Add("Pagefiles are too small ($($PageFileMaxSize) MB). Set them to a total minimum of $($CpuMemSizeMB + $GpuMemSizeMB) MB")
                     }
                 }
             } else {
-                $PageFile_Warn += "No pagefile found"
+                [void]$PageFile_Warn.Add("No pagefile found")
             }
             if ($PageFile_Warn) {
                 Write-Host "Problem!" -ForegroundColor Red
@@ -784,9 +784,8 @@ function Invoke-Core {
         if ($Session.Config.Type -ne $null) {$Session.Config | Add-Member DeviceName $Session.Config.Type -Force;$Session.Config | Add-Member ExcludeDeviceName @() -Force}
         if ($Session.Config.GPUs -ne $null -and $Session.Config.GPUs) {
             if ($Session.Config.GPUs -is [string]) {$Session.Config.GPUs = [regex]::split($Session.Config.GPUs,"\s*[,;]+\s*")}
-            $Session.Config | Add-Member DeviceName @() -Force
+            $Session.Config | Add-Member DeviceName @(Get-Device "nvidia" | Where-Object {$Session.Config.GPUs -contains $_.Type_Vendor_Index} | Foreach-Object {"GPU#{0:d2}" -f $_.Type_Vendor_Index}) -Force
             $Session.Config | Add-Member ExcludeDeviceName @() -Force
-            Get-Device "nvidia" | Where-Object {$Session.Config.GPUs -contains $_.Type_Vendor_Index} | Foreach-Object {$Session.Config.DeviceName += [string]("GPU#{0:d2}" -f $_.Type_Vendor_Index)}
         }
         if ("$($Session.Config.SSL)" -ne '' -and "$($Session.Config.SSL)" -notmatch "^[012]$") {$Session.Config.SSL = [int](Get-Yes $Session.Config.SSL)}
         #end backwards compatibility
@@ -828,19 +827,19 @@ function Invoke-Core {
         }
         if (-not $Session.Config.Region) {$Session.Config | Add-Member Region "US" -Force}
         $Session.Config.Region = Get-Region $Session.Config.Region
-        $Session.Config.DefaultPoolRegion = @($Session.Config.DefaultPoolRegion | ForEach-Object {Get-Region $_} | Where-Object {$_} | Select-Object -Unique)
+        $Session.Config.DefaultPoolRegion = [System.Collections.ArrayList]::new(@($Session.Config.DefaultPoolRegion | ForEach-Object {Get-Region $_} | Where-Object {$_} | Select-Object -Unique))
         if ($WiderRegion = Get-Region2 $Session.Config.Region) {
-            $Session.Config.DefaultPoolRegion = @($WiderRegion | Select-Object) + @($Session.Config.DefaultPoolRegion | Where-Object {$_ -notin $WiderRegion} | Select-Object)
+            $Session.Config.DefaultPoolRegion = [System.Collections.ArrayList]::new(@($WiderRegion | Select-Object) + @($Session.Config.DefaultPoolRegion | Where-Object {$_ -notin $WiderRegion} | Select-Object))
         }
         #make sure the following regions are always part of DefaultPoolRegion to avoid erratic sorting of pools
         @("US","CentralEurope","Asia","Russia") | Foreach-Object {
             $MissingRegion = Get-Region $_
             if ($Session.Config.DefaultPoolRegion -inotcontains $MissingRegion) {
-                $Session.Config.DefaultPoolRegion += $MissingRegion
+                [void]$Session.Config.DefaultPoolRegion.Add($MissingRegion)
             }
         }
-        $Session.Config.Currency = @($Session.Config.Currency | ForEach-Object {$_.ToUpper()} | Where-Object {$_})
-        if ($Session.Config.Currency -notcontains "BTC") {$Session.Config.Currency += "BTC"}
+        $Session.Config.DefaultPoolRegion = @($Session.Config.DefaultPoolRegion | Where-Object {$_})
+        $Session.Config.Currency = @(@($Session.Config.Currency | ForEach-Object {$_.ToUpper()} | Where-Object {$_}) + "BTC" | Select-Object -Unique)
         $Session.Config.UIstyle = if ($Session.Config.UIstyle -like "f*") {"full"} else {"lite"}
         $Session.Config.UIsorting = if ($Session.Config.UIsorting -like "p*") {"profit"} else {"biased"}
         $Session.Config.PowerPriceCurrency = $Session.Config.PowerPriceCurrency | ForEach-Object {$_.ToUpper()}
@@ -1953,10 +1952,10 @@ function Invoke-Core {
         $Global:DeviceCache.Devices = @()
         if (($Session.Config.DeviceName | Measure-Object).Count) {$Global:DeviceCache.Devices = @(Get-Device $Session.Config.DeviceName $Session.Config.ExcludeDeviceName)}
         $Global:DeviceCache.DevicesByTypes = [PSCustomObject]@{
-            AMD    = @($Global:DeviceCache.Devices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -eq "AMD"})
-            INTEL  = @($Global:DeviceCache.Devices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -eq "INTEL"})
-            NVIDIA = @($Global:DeviceCache.Devices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -eq "NVIDIA"})
-            CPU    = @($Global:DeviceCache.Devices | Where-Object {$_.Type -eq "Cpu"})
+            AMD    = [System.Collections.ArrayList]::new(@($Global:DeviceCache.Devices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -eq "AMD"}))
+            INTEL  = [System.Collections.ArrayList]::new(@($Global:DeviceCache.Devices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -eq "INTEL"}))
+            NVIDIA = [System.Collections.ArrayList]::new(@($Global:DeviceCache.Devices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -eq "NVIDIA"}))
+            CPU    = [System.Collections.ArrayList]::new(@($Global:DeviceCache.Devices | Where-Object {$_.Type -eq "Cpu"}))
             Combos = [PSCustomObject]@{}
             FullComboModels = [PSCustomObject]@{}
         }
@@ -1967,19 +1966,19 @@ function Invoke-Core {
         $Session.Config | Add-Member DotNETRuntimeVersion $Session.DotNETRuntimeVersion -Force
 
         if ($IsLinux) {
-            $Session.OCDaemonOnEmptyAdd = @()
+            $Session.OCDaemonOnEmptyAdd = [System.Collections.ArrayList]::new()
 
             if ($Session.Config.EnableLinuxHeadless) {
                 if ($Session.Config.LinuxDisplay) {
-                    $Session.OCDaemonOnEmptyAdd += "export DISPLAY=$($Session.Config.LinuxDisplay)"
+                    [void]$Session.OCDaemonOnEmptyAdd.Add("export DISPLAY=$($Session.Config.LinuxDisplay)")
                 }
                 if ($Session.Config.LinuxXAuthority) {
-                    $Session.OCDaemonOnEmptyAdd += "export XAUTHORITY=$($Session.Config.LinuxXAuthority)"
+                    [void]$Session.OCDaemonOnEmptyAdd.Add("export XAUTHORITY=$($Session.Config.LinuxXAuthority)")
                 }
             }
 
             if ($Global:DeviceCache.DevicesByTypes.NVIDIA -and $Session.Config.EnableOCProfiles) {
-                $Session.OCDaemonOnEmptyAdd += "export CUDA_DEVICE_ORDER=PCI_BUS_ID"
+                [void]$Session.OCDaemonOnEmptyAdd.Add("export CUDA_DEVICE_ORDER=PCI_BUS_ID")
                 Invoke-NvidiaSmi -Arguments "-pm 1" -Runas > $null
                 Invoke-NvidiaSmi -Arguments "--gom=COMPUTE" -Runas > $null
                 Set-OCDaemon "sleep 1" -OnEmptyAdd $Session.OCDaemonOnEmptyAdd
@@ -1991,7 +1990,7 @@ function Invoke-Core {
         #Create combos
         @($Global:DeviceCache.DevicesByTypes.PSObject.Properties.Name) | Where {@("Combos","FullComboModels") -inotcontains $_} | Foreach-Object {
             $SubsetType = [String]$_
-            $Global:DeviceCache.DevicesByTypes.Combos | Add-Member $SubsetType @() -Force
+            $Global:DeviceCache.DevicesByTypes.Combos | Add-Member $SubsetType ([System.Collections.ArrayList]::new()) -Force
             $Global:DeviceCache.DevicesByTypes.FullComboModels | Add-Member $SubsetType $(@($Global:DeviceCache.DevicesByTypes.$SubsetType | Select-Object -ExpandProperty Model -Unique | Sort-Object) -join '-') -Force
             $Global:DeviceCache.DevicesByTypes.FullComboModels.$SubsetType | Where-Object {$_ -match '-' -and $Session.Config.Combos.$SubsetType.$_ -ne $null} | Foreach-Object {
                 # always force enable full combos
@@ -1999,7 +1998,7 @@ function Invoke-Core {
             }
             Get-DeviceSubSets $Global:DeviceCache.DevicesByTypes.$SubsetType | Where-Object {$Session.Config.Combos.$SubsetType."$($_.Model -join '-')"} | Foreach-Object {                       
                 $SubsetModel= $_
-                $Global:DeviceCache.DevicesByTypes.Combos.$SubsetType += @($Global:DeviceCache.DevicesByTypes.$SubsetType | Where-Object {$SubsetModel.Model -icontains $_.Model} | Foreach-Object {$SubsetNew = $_ | ConvertTo-Json -Depth 10 | ConvertFrom-Json;$SubsetNew.Model = $($SubsetModel.Model -join '-');$SubsetNew.Model_Name = $($SubsetModel.Model_Name -join '+');$SubsetNew})
+                [void]$Global:DeviceCache.DevicesByTypes.Combos.$SubsetType.AddRange(@($Global:DeviceCache.DevicesByTypes.$SubsetType | Where-Object {$SubsetModel.Model -icontains $_.Model} | Foreach-Object {$SubsetNew = $_ | ConvertTo-Json -Depth 10 | ConvertFrom-Json;$SubsetNew.Model = $($SubsetModel.Model -join '-');$SubsetNew.Model_Name = $($SubsetModel.Model_Name -join '+');$SubsetNew}))
             }
             if ($Global:DeviceCache.DevicesByTypes.$SubsetType) {
                 @($Global:DeviceCache.DevicesByTypes.$SubsetType | Select-Object -ExpandProperty Model -Unique) + @($Global:DeviceCache.DevicesByTypes.Combos.$SubsetType | Select-Object -ExpandProperty Model) | Where-Object {$_} | Foreach-Object {$Global:DeviceCache.DevicesToVendors[$_] = $SubsetType}
@@ -2015,7 +2014,7 @@ function Invoke-Core {
             }
         } elseif ($Session.Config.MiningMode -eq "combo") {
             #add combos to DevicesbyTypes
-            @("AMD","INTEL","NVIDIA","CPU") | Foreach-Object {$Global:DeviceCache.DevicesByTypes.$_ += $Global:DeviceCache.DevicesByTypes.Combos.$_}
+            @("AMD","INTEL","NVIDIA","CPU") | Foreach-Object {[void]$Global:DeviceCache.DevicesByTypes.$_.AddRange($Global:DeviceCache.DevicesByTypes.Combos.$_)}
         }
 
         $Global:DeviceCache.DeviceNames = [hashtable]@{}
@@ -3833,12 +3832,12 @@ function Invoke-Core {
         #Get most profitable miner combination
         $ActiveMiners_Sorted = @($Global:ActiveMiners | Where-Object {$_.Enabled -and ($_.NeedsBenchmark -or -not $_.BenchmarkOnly)} | Sort-Object @{Expression={$_.IsExclusiveMiner}; Descending = $true}, @{Expression={$_.IsLocked}; Descending = $true}, @{Expression={$_.Profit -eq $null}; Descending = $true}, @{Expression={$_.IsFocusWalletMiner}; Descending=$true}, @{Expression={$_.PostBlockMining -gt 0}; Descending=$true}, @{Expression={$_.IsRunningFirstRounds -and -not $_.NeedsBenchmark}; Descending=$true}, @{Expression={[double]$_.Profit_Bias}; Descending=$true}, @{Expression={$_.Benchmarked}; Descending=$true}, @{Expression={$_.ExtendInterval}; Descending=$true}, @{Expression={$_.Algorithm[0] -eq $_.BaseAlgorithm[0]}; Descending=$true})
 
-        $BestMiners = @()
+        $BestMiners = [System.Collections.ArrayList]::new()
 
         $ActiveMiners_Sorted | Select-Object DeviceName -Unique | ForEach-Object {
             $Miner_GPU = $_
             if ($BestMiner = $ActiveMiners_Sorted | Where-Object {-not (Compare-Object $Miner_GPU.DeviceName $_.DeviceName)} | Select-Object -First 1) {
-                $BestMiners += $BestMiner
+                [void]$BestMiners.Add($BestMiner)
             }
         }
 
@@ -3855,23 +3854,27 @@ function Invoke-Core {
                     if ($Session.Config.UsePowerPrice -and $Miner_PBM.Profit_Cost -ne $null -and $Miner_PBM.Profit_Cost -gt 0) { $Miner_PBM_Profit += $Miner_PBM.Profit_Cost }
 
                     if ($BestMiner_Profit * $Session.Config.Coins."$($Miner_PBM.CoinSymbol)".MinProfitPercent / 100 -gt $Miner_PBM_Profit) {
-                        $BestMiners += $BestMiner
+                        [void]$BestMiners.Add($BestMiner)
                         $Miners_PBM_Remove += $Miner_PBM
                     }
                 }
             }
             if ($Miners_PBM_Remove.Count) {
-                $BestMiners = @($BestMiners | Where-Object {$_ -notin $Miners_PBM_Remove})
+                for($i=$BestMiners.Count-1; $i -ge 0; $i--) {
+                    if ($BestMiners[$i] -in $Miners_PBM_Remove) {
+                        [void]$BestMiners.RemoveAt($i)
+                    }
+                }
             }
         }
 
         $NoCPUMining = $Session.Config.EnableCheckMiningConflict -and $MinersNeedingBenchmarkCount -eq 0 -and ($BestMiners | Where-Object DeviceModel -eq "CPU" | Measure-Object).Count -and ($BestMiners | Where-Object NoCPUMining -eq $true | Measure-Object).Count
         if ($NoCPUMining) {
-            $BestMiners2 = @()
+            $BestMiners2 = [System.Collections.ArrayList]::new()
             $ActiveMiners_Sorted | Select-Object DeviceName -Unique | ForEach-Object {
                 $Miner_GPU = $_
                 if ($BestMiner = $ActiveMiners_Sorted | Where-Object {-not $_.NoCPUMining -and -not (Compare-Object $Miner_GPU.DeviceName $_.DeviceName)} | Select-Object -First 1) {
-                    $BestMiners2 += $BestMiner
+                    [void]$BestMiners2.Add($BestMiner)
                 }
             }
         }
@@ -3880,8 +3883,16 @@ function Invoke-Core {
         $Check_Profitability = $false
         if ($Session.Config.UsePowerPrice -and $MinersNeedingBenchmarkCount -eq 0) {
             if ($Session.Config.CheckProfitability) {
-                $BestMiners = @($BestMiners | Where-Object {$_.Profit -gt $Session.Config.ProfitabilityLevel -or $_.IsExclusiveMiner -or $_.IsLocked})
-                if ($BestMiners2) {$BestMiners2 = @($BestMiners2 | Where {$_.Profit -gt $Session.Config.ProfitabilityLevel -or $_.IsExclusiveMiner -or $_.IsLocked})}
+                for($i=$BestMiners.Count-1; $i -ge 0; $i--) {
+                    if (-not ($BestMiners[$i].Profit -gt $Session.Config.ProfitabilityLevel -or $BestMiners[$i].IsExclusiveMiner -or $BestMiners[$i].IsLocked)) {
+                        [void]$BestMiners.RemoveAt($i)
+                    }
+                }
+                for($i=$BestMiners2.Count-1; $i -ge 0; $i--) {
+                    if (-not ($BestMiners2[$i].Profit -gt $Session.Config.ProfitabilityLevel -or $BestMiners2[$i].IsExclusiveMiner -or $BestMiners2[$i].IsLocked)) {
+                        [void]$BestMiners2.RemoveAt($i)
+                    }
+                }
             }
             $Check_Profitability = $true
         }
@@ -3895,7 +3906,11 @@ function Invoke-Core {
             }
             if ($Exclusive_Device_Names.Count) {
                 foreach ( $devNames in $Exclusive_Device_Names ) {
-                    $BestMiners = @($BestMiners | Where-Object {$_.DeviceModel -notmatch "-" -or -not (Test-Intersect $devNames $_.DeviceName) -or -not (Compare-Object $devNames $_.DeviceName)})
+                    for($i=$BestMiners.Count-1; $i -ge 0; $i--) {
+                        if (-not ($BestMiners[$i].DeviceModel -notmatch "-" -or -not (Test-Intersect $devNames $BestMiners[$i].DeviceName) -or -not (Compare-Object $devNames $BestMiners[$i].DeviceName))) {
+                            [void]$BestMiners.RemoveAt($i)
+                        }
+                    }
                 }
             }
             if ($NoCPUMining) {
@@ -3907,7 +3922,11 @@ function Invoke-Core {
                 }
                 if ($Exclusive_Device_Names.Count) {
                     foreach ( $devNames in $Exclusive_Device_Names ) {
-                        $BestMiners2 = @($BestMiners2 | Where-Object {$_.DeviceModel -notmatch "-" -or -not (Test-Intersect $devNames $_.DeviceName) -or -not (Compare-Object $devNames $_.DeviceName)})
+                        for($i=$BestMiners2.Count-1; $i -ge 0; $i--) {
+                            if (-not ($BestMiners2[$i].DeviceModel -notmatch "-" -or -not (Test-Intersect $devNames $BestMiners2[$i].DeviceName) -or -not (Compare-Object $devNames $BestMiners2[$i].DeviceName))) {
+                                [void]$BestMiners2.RemoveAt($i)
+                            }
+                        }
                     }
                 }
             }
@@ -5367,8 +5386,9 @@ function Get-BestMinerDeviceCombos {
         [Parameter(Mandatory = $false)]
         [String]$SortBy = "Profit_Bias"
     )
+    $BestMiners = @($BestMiners | Where-Object { $_ })
     if ($BestMiners) {
-        $BestMiners_DeviceNames = @($BestMiners | Foreach-Object {$_.DeviceName} | Select-Object -Unique | Sort-Object)
+        $BestMiners_DeviceNames = @($BestMiners | Foreach-Object {$_.DeviceName} | Sort-Object -Unique)
         $Miners_Device_Combos   = (Get-Combination ($BestMiners | Select-Object DeviceName -Unique) | Where-Object {-not (Compare-Object ($_.Combination | Select-Object -ExpandProperty DeviceName) $BestMiners_DeviceNames)})
         $Miners_Device_Combos | ForEach-Object {
             $Miner_Device_Combo = $_.Combination
@@ -6159,7 +6179,7 @@ function Set-Balance {
                     Earnings_1d   = [Decimal]$Stat.Earnings_1d
                     Earnings_1w   = [Decimal]$Stat.Earnings_1w
                     Earnings_Avg  = [Decimal]$Stat.Earnings_Avg
-                    Last_Earnings = @($Stat.Last_Earnings | Foreach-Object {[PSCustomObject]@{Date = [DateTime]$_.Date;Value = [Decimal]$_.Value}} | Select-Object)
+                    Last_Earnings = [System.Collections.ArrayList]::new(@($Stat.Last_Earnings | Foreach-Object {[PSCustomObject]@{Date = [DateTime]$_.Date;Value = [Decimal]$_.Value}} | Select-Object))
                     Started  = [DateTime]$Stat.Started
                     Updated  = [DateTime]$Stat.Updated
         }
@@ -6177,7 +6197,7 @@ function Set-Balance {
             $Stat.Earnings += $Earnings
             $Stat.Updated   = $Updated_UTC
 
-            $Stat.Last_Earnings += [PSCustomObject]@{Date=$Updated_UTC;Value=$Earnings}
+            [void]$Stat.Last_Earnings.Add([PSCustomObject]@{Date=$Updated_UTC;Value=$Earnings})
 
             $Rate = [Decimal]$Global:Rates."$($Balance.Currency)"
             if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}

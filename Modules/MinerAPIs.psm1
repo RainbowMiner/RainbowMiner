@@ -276,9 +276,20 @@ class Miner {
     }
 
     hidden StartMiningPreProcess() {
-        $this.Stratum = @()
-        while ($this.Stratum.Count -lt $this.Algorithm.Count) {$this.Stratum += [PSCustomObject]@{Accepted=0;Rejected=0;Stale=0;LastAcceptedTime=$null;LastRejectedTime=$null;LastStaleTime=$null}}
-        $this.RejectedShareRatio = @(0.0) * $this.Algorithm.Count
+        $n = $this.Algorithm.Count
+
+        $this.Stratum = @(1..$n | ForEach-Object {
+            [PSCustomObject]@{
+                Accepted          = 0
+                Rejected          = 0
+                Stale             = 0
+                LastAcceptedTime  = $null
+                LastRejectedTime  = $null
+                LastStaleTime     = $null
+            }
+        })
+
+        $this.RejectedShareRatio = [double[]]::new($n)
         $this.ActiveLast = Get-Date
     }
 
@@ -505,8 +516,8 @@ class Miner {
                 $Line = $_ -replace "`n|`r", ""
                 $Line_Simple = $Line -replace "\x1B\[[0-?]*[ -/]*[@-~]", ""
                 if ($Line_Simple) {
-                    $HashRates = @()
-                    $Devices = @()
+                    $HashRates = [System.Collections.ArrayList]::new()
+                    $Devices   = [System.Collections.ArrayList]::new()
 
                     if ($Line_Simple -match "/s") {
                         $Words = $Line_Simple -split "\s+"
@@ -530,7 +541,7 @@ class Miner {
                                 "ph/s*" {$HashRate *= 1E+15;Break}
                             }
 
-                            $HashRates += $HashRate
+                            [void]$HashRates.Add($HashRate)
                         }
                     }
 
@@ -549,7 +560,7 @@ class Miner {
                                         $Device_Type = ($Words | Select-Object -Index $i)
                                     }
 
-                                    $Devices += "{0}#{1:d2}" -f $Device_Type, $Device
+                                    [void]$Devices.Add("{0}#{1:d2}" -f $Device_Type, $Device)
                                 }
                             }
                         }
@@ -666,7 +677,6 @@ class Miner {
         $AlgosDiffer = $Algorithm -match '-'
         $AlgorithmBase = $Algorithm -replace '\-.*$'
 
-
         if (($this.Data | Where-Object Device | Measure-Object).Count) {
             $HashRates_Devices = @($this.Data | Where-Object Device | Select-Object -ExpandProperty Device -Unique)
         } else {
@@ -683,28 +693,60 @@ class Miner {
 
         $Steps = if ($this.Rounds -ge 2*$Intervals) {1} else {2}
         for ($Step = 0; $HashData -and ($Step -lt $Steps); $Step++) {
-            $HashRates_Counts = @{}
-            $HashRates_Averages = @{}
-            $HashRates_Variances = @{}
+            $HashRates_Counts     = [System.Collections.Generic.Dictionary[string,int]]::new()
+            $HashRates_Averages   = [System.Collections.Generic.Dictionary[string,
+                                           System.Collections.Generic.List[double]]]::new()
+            $HashRates_Variances  = [System.Collections.Generic.Dictionary[string,
+                                           System.Collections.Generic.List[double]]]::new()
 
             $HashData | ForEach-Object {
                 $Data_HashRates = $_.HashRate.$Algorithm
-                if (-not $Data_HashRates -and $AlgosDiffer) {$Data_HashRates = $_.HashRate.$AlgorithmBase}
+                if (-not $Data_HashRates -and $AlgosDiffer) { $Data_HashRates = $_.HashRate.$AlgorithmBase }
 
                 $Data_Devices = $_.Device
-                if (-not $Data_Devices) {$Data_Devices = $HashRates_Devices}
+                if (-not $Data_Devices) { $Data_Devices = $HashRates_Devices }
 
                 $HashRate = ($Data_HashRates | Measure-Object -Sum).Sum
-                if ($HashRates_Variances."$($Data_Devices -join '-')" -or ($HashRate -gt $HashRates_Average * $MinHashRate)) {
-                    $Data_Devices | ForEach-Object {$HashRates_Counts.$_++}
-                    $Data_Devices | ForEach-Object {$HashRates_Averages.$_ += @($HashRate / $Data_Devices.Count)}
-                    $HashRates_Variances."$($Data_Devices -join '-')" += @($HashRate)
+
+                $key = ($Data_Devices -join '-')
+                $hasBucket = $HashRates_Variances.ContainsKey($key)
+
+                if ($hasBucket -or ($HashRate -gt $HashRates_Average * $MinHashRate)) {
+                    $perDevice = if ($Data_Devices.Count) { $HashRate / [double]$Data_Devices.Count } else { 0.0 }
+
+                    foreach ($dev in $Data_Devices) {
+                        if (-not $HashRates_Counts.ContainsKey($dev))   { $HashRates_Counts[$dev] = 0 }
+                        if (-not $HashRates_Averages.ContainsKey($dev)) {
+                            $HashRates_Averages[$dev] = [System.Collections.Generic.List[double]]::new()
+                        }
+
+                        $HashRates_Counts[$dev]++
+                        [void]$HashRates_Averages[$dev].Add($perDevice)
+                    }
+
+                    if (-not $hasBucket) {
+                        $HashRates_Variances[$key] = [System.Collections.Generic.List[double]]::new()
+                    }
+                    [void]$HashRates_Variances[$key].Add([double]$HashRate)
                 }
             }
 
-            $HashRates_Count    = ($HashRates_Counts.Values | ForEach-Object {$_} | Measure-Object -Minimum).Minimum
-            $HashRates_Average  = ($HashRates_Averages.Values | ForEach-Object {$_} | Measure-Object -Average).Average * $HashRates_Averages.Keys.Count
-            $HashRates_Variance = if ($HashRates_Average -and $HashRates_Count -gt 2) {($HashRates_Variances.Keys | ForEach-Object {$_} | ForEach-Object {Get-Sigma $HashRates_Variances.$_} | Measure-Object -Maximum).Maximum / $HashRates_Average} else {1}
+            $sum = 0.0
+            $count = 0
+            foreach ($list in $HashRates_Averages.Values) {
+                foreach ($v in $list) {
+                    $sum += $v
+                    $count++
+                }
+            }
+            $HashRates_Average  = if ($count) { ($sum / $count) * $HashRates_Averages.Count } else { 0 }
+            $HashRates_Count    = ($HashRates_Counts.Values   | Measure-Object -Minimum).Minimum
+            $HashRates_Variance = if ($HashRates_Average -and $HashRates_Count -gt 2) {
+                ($HashRates_Variances.Keys |
+                    ForEach-Object { Get-Sigma $HashRates_Variances[$_] } |
+                    Measure-Object -Maximum).Maximum / $HashRates_Average
+            } else { 1 }
+
             Write-Log -Level Info "$($this.Name): GetHashrate $Algorithm #$($Step) smpl:$HashRates_Count, avg:$([Math]::Round($HashRates_Average,2)), var:$([Math]::Round($HashRates_Variance,3)*100)"
         }
 
@@ -2033,35 +2075,36 @@ class Nanominer : Miner {
         $ConfigFile = "config_$($this.Pool -join '-')-$($this.BaseAlgorithm -join '-')-$($this.DeviceModel)$(if ($Parameters.SSL){"-ssl"}).txt"
 
         if (Test-Path $this.Path) {
-            $FileC = @(
+            $FileC = [System.Collections.ArrayList]::new(@(
                 ";Automatic config file created by RainbowMiner",
                 ";Do not edit!",
                 "mport=0",
                 "webPort=$($this.Port)",
                 "Watchdog=false",
                 "noLog=true"
-            )
+            ))
 
             foreach ($Algo in $Parameters.Algorithms) {
-                $FileC += @(
+                [void]$FileC.AddRange(@(
                                 "[$($Algo.Algo)]",
                                 "wallet=$($Algo.Wallet)",
                                 "rigName=$($Algo.Worker)",
                                 "pool1=$($Algo.Host):$($Algo.Port)",
                                 "devices=$(if ($Parameters.Devices -ne $null) {$Parameters.Devices -join ','})",
                                 "useSSL=$(if ($Algo.SSL) {"true"} else {"false"})"
-                            )
-                if ($Algo.PaymentId -ne $null) {$FileC += "paymentId=$($Algo.PaymentId)"}
-                if ($Algo.Pass)                {$FileC += "rigPassword=$($Algo.Pass)"}
-                if ($Algo.Email)               {$FileC += "email=$($Algo.Email)"}
-                if ($Algo.Coin)                {$FileC += "coin=$($Algo.Coin)"}
-                if ($Algo.Protocol)            {$FileC += "protocol=$($Algo.Protocol)"}
-                if ($Algo.Algo -eq "zil")      {$FileC += "zilEpoch=0"}
-                if ($Parameters.LHR)           {$FileC += "lhr=$($Parameters.LHR)"}
-                if ($Parameters.Threads)       {$FileC += "cpuThreads=$($Parameters.Threads)"}                
+                            ))
+                if ($Algo.PaymentId -ne $null) {[void]$FileC.Add("paymentId=$($Algo.PaymentId)")}
+                if ($Algo.Pass)                {[void]$FileC.Add("rigPassword=$($Algo.Pass)")}
+                if ($Algo.Email)               {[void]$FileC.Add("email=$($Algo.Email)")}
+                if ($Algo.Coin)                {[void]$FileC.Add("coin=$($Algo.Coin)")}
+                if ($Algo.Protocol)            {[void]$FileC.Add("protocol=$($Algo.Protocol)")}
+                if ($Algo.Algo -eq "zil")      {[void]$FileC.Add("zilEpoch=0")}
+                if ($Parameters.LHR)           {[void]$FileC.Add("lhr=$($Parameters.LHR)")}
+                if ($Parameters.Threads)       {[void]$FileC.Add("cpuThreads=$($Parameters.Threads)")}
             }
 
             $FileC | Out-File "$($Miner_Path)\$($ConfigFile)" -Encoding utf8
+            $FileC = $null
         }
 
         return "$($ConfigFile)$(if ($Parameters.Params) {" $($Parameters.Params)"})"
@@ -3445,10 +3488,10 @@ class Xmrig3 : Miner {
 
                         $Aff = if ($Parameters.Affinity) {ConvertFrom-CPUAffinity $Parameters.Affinity}
                         if ($AffCount = ($Aff | Measure-Object).Count) {
-                            $AffThreads = @(Compare-Object $Aff $Parameters.Config.$Device.$Algo -IncludeEqual -ExcludeDifferent | Where-Object {$_.SideIndicator -eq "=="} | Foreach-Object {$_.InputObject} | Select-Object)
+                            $AffThreads = [System.Collections.ArrayList]::new(@(Compare-Object $Aff $Parameters.Config.$Device.$Algo -IncludeEqual -ExcludeDifferent | Where-Object {$_.SideIndicator -eq "=="} | Foreach-Object {$_.InputObject} | Select-Object))
                             $ThreadsCount = [Math]::Min($AffCount,$Parameters.Config.$Device.$Algo.Count)
                             if ($AffThreads.Count -lt $ThreadsCount) {
-                                $Aff | Where-Object {$_ -notin $AffThreads} | Sort-Object {$_ -band 1},{$_} | Select-Object -First ($ThreadsCount-$AffThreads.Count) | Foreach-Object {$AffThreads += $_}
+                                $Aff | Where-Object {$_ -notin $AffThreads} | Sort-Object {$_ -band 1},{$_} | Select-Object -First ($ThreadsCount-$AffThreads.Count) | Foreach-Object {[void]$AffThreads.Add($_)}
                             }
                             $Parameters.Config.$Device.$Algo = @($AffThreads | Sort-Object);
                         }
@@ -3602,10 +3645,10 @@ class Xmrig6 : Miner {
 
                         $Aff = if ($Parameters.Affinity) {ConvertFrom-CPUAffinity $Parameters.Affinity}
                         if ($AffCount = ($Aff | Measure-Object).Count) {
-                            $AffThreads = @(Compare-Object $Aff $Parameters.Config.$Device.$Algo -IncludeEqual -ExcludeDifferent | Where-Object {$_.SideIndicator -eq "=="} | Foreach-Object {$_.InputObject} | Select-Object)
+                            $AffThreads = [System.Collections.ArrayList]::new(@(Compare-Object $Aff $Parameters.Config.$Device.$Algo -IncludeEqual -ExcludeDifferent | Where-Object {$_.SideIndicator -eq "=="} | Foreach-Object {$_.InputObject} | Select-Object))
                             $ThreadsCount = [Math]::Min($AffCount,$Parameters.Config.$Device.$Algo.Count)
                             if ($AffThreads.Count -lt $ThreadsCount) {
-                                $Aff | Where-Object {$_ -notin $AffThreads} | Sort-Object {$_ -band 1},{$_} | Select-Object -First ($ThreadsCount-$AffThreads.Count) | Foreach-Object {$AffThreads += $_}
+                                $Aff | Where-Object {$_ -notin $AffThreads} | Sort-Object {$_ -band 1},{$_} | Select-Object -First ($ThreadsCount-$AffThreads.Count) | Foreach-Object {[void]$AffThreads.Add($_)}
                             }
                             $Parameters.Config.$Device.$Algo = @($AffThreads | Sort-Object);
                         }

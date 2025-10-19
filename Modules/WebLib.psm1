@@ -177,11 +177,12 @@ Param(
             [void]$AsyncLoader.HostDelays.AddOrUpdate($JobHost, $delay, { param($key, $oldValue) $delay })
         }
 
-        [void]$AsyncLoader.HostTags.AddOrUpdate($JobHost, @($tag), { param($key, $oldValue) 
-            $result = @($oldValue)
-            if ($result -notcontains $tag) { $result += $tag }
-            return $result
-        })
+        $set = $null
+        if (-not $AsyncLoader.HostTags.TryGetValue($JobHost, [ref]$set)) {
+            $set = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+            $AsyncLoader.HostTags[$JobHost] = $set
+        }
+        [void]$set.Add($tag)
     }
 
     if (-not (Test-Path ".\Cache")) {New-Item "Cache" -ItemType "directory" -ErrorAction Ignore > $null}
@@ -498,7 +499,7 @@ Param(
             if ($Proxy.Proxy) {
                 $curlproxy = "-x `"$Proxy.Proxy`" "
                 if ($Proxy.Username -and $Proxy.Password) {
-                    $curlproxy += "-U `"$($Proxy.Username):$($Proxy.Password)`" "
+                    $curlproxy = "$($curlproxy) -U `"$($Proxy.Username):$($Proxy.Password)`" "
                 }
             }
 
