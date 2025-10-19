@@ -1,53 +1,54 @@
-﻿enum PauseStatus {
-    ByUser
-    ByScheduler
-    ByActivity
-    ByBattery
-    ByError
+﻿[Flags()]
+enum PauseStatus {
+    None        = 0
+    ByUser      = 1
+    ByScheduler = 2
+    ByActivity  = 4
+    ByBattery   = 8
+    ByError     = 16
 }
 
-
 class PauseMiners {
-    [PauseStatus[]]$Status
+    static [PauseStatus]$IA = [PauseStatus]::ByUser -bor [PauseStatus]::ByError
 
-    PauseMiners() {
-        $this.Reset()
-    }
+    [PauseStatus]$Status = [PauseStatus]::None
+
+    PauseMiners() {}
 
     [bool]Test() {
-        return $this.Status.Count -gt 0
+        return $this.Status -ne [PauseStatus]::None
     }
 
     [bool]Test([PauseStatus]$Pause) {
-        return $this.Status -contains $Pause
+        return ($this.Status -band $Pause) -ne 0
     }
 
     [bool]TestIA() {
-        return $this.Status.Count -gt 0 -and ($this.Status -contains [PauseStatus]::ByUser -or $this.Status -contains [PauseStatus]::ByError)
+        return ($this.Status -band [PauseMiners]::IA) -ne 0
     }
 
     [bool]TestIAOnly() {
-        return $this.Status.Count -gt 0 -and -not ((Compare-Object $this.Status @([PauseStatus]::ByUser,[PauseStatus]::ByError) | Where-Object SideIndicator -eq "<=" | Measure-Object).Count)
+        return (($this.Status -band [PauseMiners]::IA) -ne 0) -and (($this.Status -band (-bnot [PauseMiners]::IA)) -eq 0)
     }
 
     [void]Reset() {
-        [PauseStatus[]]$this.Status = @()
+        $this.Status = [PauseStatus]::None
     }
 
     [void]Reset([PauseStatus]$Pause) {
-        if ($this.Status -contains $Pause) {$this.Status = $this.Status.Where({$_ -ne $Pause})}
+        $this.Status = $this.Status -band (-bnot $Pause)
     }
 
     [void]ResetIA() {
-        if ($this.TestIA()) {$this.Status = $this.Status.Where({$_ -ne [PauseStatus]::ByUser -and $_ -ne [PauseStatus]::ByError})}
-    }
-    
-    [void]Set([PauseStatus]$Pause) {
-        if ($this.Status -notcontains $Pause) {$this.Status += $Pause}
+        $this.Status = $this.Status -band (-bnot [PauseMiners]::IA)
     }
 
-    [void]Set([PauseStatus]$Pause,[Bool]$Value) {
-        if ($Value) {$this.Set($Pause)} else {$this.Reset($Pause)}
+    [void]Set([PauseStatus] $Pause) {
+        $this.Status = $this.Status -bor $Pause
+    }
+
+    [void]Set([PauseStatus] $Pause, [bool] $Value) {
+        if ($Value) { $this.Set($Pause) } else { $this.Reset($Pause) }
     }
 
     [void]SetIA() {
