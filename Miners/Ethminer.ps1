@@ -134,15 +134,14 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
                     if ($Pools.$Algorithm_Norm.Host -match "F2pool" -and $Pools.$Algorithm_Norm.User -match "^0x[0-9a-f]{40}") {$Pool_Port = 8008}
 
-                    $EnvVars = @()
+                    $EnvVars = [System.Collections.Generic.List[string]]::new()
                     if ($Pools.$Algorithm_Norm.SSL) {
-                        $EnvVars += "SSL_NOVERIFY=1"
+                        [void]$EnvVars.Add("SSL_NOVERIFY=1")
                     }
 
                     if ($Miner_Vendor -eq "AMD") {
-                        $EnvVars += "GPU_FORCE_64BIT_PTR=0"
+                        [void]$EnvVars.Add("GPU_FORCE_64BIT_PTR=0")
                     }
-
 
 					[PSCustomObject]@{
 						Name           = $Miner_Name

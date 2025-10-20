@@ -78,7 +78,7 @@ for($i=0;$i -lt $UriCuda.Count -and -not $Cuda;$i++) {
 
 if (-not $Cuda) {return}
 
-if ($IsLinux) {$Path += $Cuda -replace "\."}
+if ($IsLinux) {$Path = "$($Path)$($Cuda -replace "\.")"}
 
 $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Model = $_.Model

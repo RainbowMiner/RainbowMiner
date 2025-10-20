@@ -113,13 +113,13 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 						default            {"stratum$(if ($Pools.$Algorithm_Norm.SSL) {"s"})";$Miner_Protocol_Auto = $true}
 					}
 
-                    $EnvVars = @()
+                    $EnvVars = [System.Collections.Generic.List[string]]::new()
                     if ($Pools.$Algorithm_Norm.SSL) {
-                        $EnvVars += "SSL_NOVERIFY=1"
+                        [void]$EnvVars.Add("SSL_NOVERIFY=1")
                     }
 
                     if ($Miner_Vendor -eq "AMD") {
-                        $EnvVars += "GPU_FORCE_64BIT_PTR=0"
+                        [void]$EnvVars.Add("GPU_FORCE_64BIT_PTR=0")
                     }
 
 					[PSCustomObject]@{
