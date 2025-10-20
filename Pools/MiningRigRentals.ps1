@@ -247,7 +247,7 @@ if ($AllRigs_Request) {
             $Session.MRRRentalTimestamp[$Worker1] = (Get-Date).ToUniversalTime()
             $RigInfo_CacheTime = 2 * $Session.Config.Interval
         } else {
-            $Valid_Rigs = @()
+            $Valid_Rigs = [System.Collections.ArrayList]::new()
 
             if ((Compare-Object $Devices_Benchmarking $Workers_Devices[$Worker1] -ExcludeDifferent -IncludeEqual | Measure-Object).Count) {
 
@@ -279,7 +279,7 @@ if ($AllRigs_Request) {
                             (Compare-Object $Devices_Rented $Workers_Devices[$Worker1] -ExcludeDifferent -IncludeEqual | Measure-Object).Count -or
                             ($DeviceAlgorithm.Count -and $DeviceAlgorithm -inotcontains $Pool_Algorithm_Norm) -or
                             ($DeviceExcludeAlgorithm.Count -and $DeviceExcludeAlgorithm -icontains $Pool_Algorithm_Norm)
-                            )) {$Valid_Rigs += $_.id}
+                            )) {[void]$Valid_Rigs.Add($_.id)}
                     }
                 } else {
                     Write-Log -Level Warn "$($Name): Wait $([Math]::Round(($PauseBetweenRentals_Seconds - $NotRentedSince_Seconds)/60,1)) minutes for $($Worker1) rigs to be re-enabled."
@@ -698,9 +698,22 @@ if ($AllRigs_Request) {
                         }
                     }
 
-                    $Pool_FailOver = if ($Pool_AltRegions = Get-Region2 $Pool_RegionsTable."$($_.region)") {$Pool_AllHosts | Where-Object {$_.name -ne $Miner_Server} | Sort-Object -Descending {$ix = $Pool_AltRegions.IndexOf($Pool_RegionsTable."$($_.region)");[int]($ix -ge 0)*(100-$ix)},{$_.region -match "^$($Miner_Server.SubString(0,2))"},{100-$_.id} | Select-Object -First 2}
-                    if (-not $Pool_Failover) {$Pool_FailOver = @($Pool_AllHosts | Where-Object {$_.name -ne $Miner_Server -and $_.region -match "^us"} | Select-Object -First 1) + @($Pool_AllHosts | Where-Object {$_.name -ne $Miner_Server -and $_.region -match "^eu"} | Select-Object -First 1)}
-                    $Pool_FailOver += $Pool_AllHosts | Where-Object {$_.name -ne $Miner_Server -and $Pool_FailOver -notcontains $_} | Select-Object -First 1
+                    $Pool_FailOver = [System.Collections.ArrayList]::new()
+
+                    if ($Pool_AltRegions = Get-Region2 $Pool_RegionsTable."$($_.region)") {
+                        $Pool_AllHosts | Where-Object {$_.name -ne $Miner_Server} | Sort-Object -Descending {$ix = $Pool_AltRegions.IndexOf($Pool_RegionsTable."$($_.region)");[int]($ix -ge 0)*(100-$ix)},{$_.region -match "^$($Miner_Server.SubString(0,2))"},{100-$_.id} | Select-Object -First 2 | Foreach-Object {
+                            [void]$Pool_FailOver.Add($_)
+                        }
+                    }
+                    if (-not $Pool_Failover.Count) {
+                        @($Pool_AllHosts | Where-Object {$_.name -ne $Miner_Server -and $_.region -match "^us"} | Select-Object -First 1) + @($Pool_AllHosts | Where-Object {$_.name -ne $Miner_Server -and $_.region -match "^eu"} | Select-Object -First 1) | Foreach-Object {
+                            [void]$Pool_FailOver.Add($_)
+                        }
+                    }
+
+                    $Pool_AllHosts | Where-Object {$_.name -ne $Miner_Server -and $Pool_FailOver -notcontains $_} | Select-Object -First 1 | Foreach-Object {
+                        [void]$Pool_FailOver.Add($_)
+                    }
 
                     $Rigs_UserSep   = if (@("ProgPowVeil","ProgPowZ","Ubqhash") -icontains $Pool_Algorithm_Norm) {"*"} else {"."}
 
