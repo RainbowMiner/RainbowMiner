@@ -693,7 +693,7 @@ class Miner {
         $HashData  = $this.Data | Where-Object {$_.HashRate -and ($_.HashRate.$Algorithm -or ($AlgosDiffer -and $_.HashRate.$AlgorithmBase)) -and ($_.Date -ge $Timeframe)}
         $MaxVariance = if ($this.FaultTolerance) {$this.FaultTolerance} else {0.075}
         $MinHashRate = 1-[Math]::Min($MaxVariance/2,0.1)
-        $MaxHashRate = 1+[Math]::Min($MaxVariance/2,0.1)
+        $MaxHashRate = 1+[Math]::Min($MaxVariance*2,0.1)
 
         $HashRates_Count = $HashRates_Average = $HashRates_Variance = 0
 
