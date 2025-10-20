@@ -22,7 +22,7 @@ try {
         }
     }
     else {
-        $RunningMiners_Request | Foreach-Object {$RunningMiners_Paths += $_.Path}
+        $RunningMiners_Request | Foreach-Object {[void]$RunningMiners_Paths.Add($_.Path)}
     }
 }
 catch {
