@@ -359,6 +359,8 @@ if ($AllRigs_Request) {
                             UseHost=""
                             PoolOfflineTime = ""
                             PoolOfflineRetryTime = ""
+                            MinerName=""
+                            ExcludeMinerName=""
                         }
                         try {
                             $Rental_Options | ConvertTo-Json -Depth 10 | Set-Content ".\Config\mrr-$($Rental_Id).config.txt"
@@ -369,6 +371,22 @@ if ($AllRigs_Request) {
 
                     $Rental_PoolOfflineTime = if ($Rental_Options.PoolOfflineTime) {ConvertFrom-Time "$($Rental_Options.PoolOfflineTime)"} else {$PoolOfflineTime_Seconds}
                     $Rental_PoolOfflineRetryTime = if ($Rental_Options.PoolOfflineRetryTime) {ConvertFrom-Time "$($Rental_Options.PoolOfflineRetryTime)"} else {$PoolOfflineRetryTime_Seconds}
+
+                    if ($Rental_Options.MinerName) {
+                        if ($Rental_Options.MinerName -is [string]) {
+                            $Rental_MinerName  = @($Rental_Options.MinerName -replace "[^A-Z0-9,;]+" -split "[,;]+" | Where-Object {$_} | Select-Object)
+                        } else {
+                            $Rental_MinerName = $Rental_Options.MinerName
+                        }
+                    } else {$Rental_MinerName = $null}
+
+                    if ($Rental_Options.ExcludeMinerName) {
+                        if ($Rental_Options.ExcludeMinerName -is [string]) {
+                            $Rental_ExcludeMinerName  = @($Rental_Options.ExcludeMinerName -replace "[^A-Z0-9,;]+" -split "[,;]+" | Where-Object {$_} | Select-Object)
+                        } else {
+                            $Rental_ExcludeMinerName = $Rental_Options.ExcludeMinerName
+                        }
+                    } else {$Rental_ExcludeMinerName = $null}
 
                     $Rental_PoolIsOffline = $Rental_PoolStatus -eq "offline"
                     if ($Rental_PoolIsOffline -and $Rental_Miner) {
@@ -738,6 +756,8 @@ if ($AllRigs_Request) {
                             Wallet        = $Pool_Wallet
                             Worker        = $Pool_Worker
                             Email         = $Email
+                            MinerName     = $Rental_MinerName
+                            ExcludeMinerName = $Rental_ExcludeMinerName
                         }
                     }
                 }

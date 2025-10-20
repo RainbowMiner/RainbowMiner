@@ -2667,7 +2667,7 @@ function Invoke-Core {
             $Pool_Name  = $Pools.$_.Name
             $Pools.$_.Price_Bias = $Pool_Price_Bias
             $Pools.$_.Price_Unbias = $Pool_Price
-            $Pools.$_.HasMinerExclusions = $Session.Config.Pools.$Pool_Name.MinerName.Count -or $Session.Config.Pools.$Pool_Name.ExcludeMinerName.Count
+            $Pools.$_.HasMinerExclusions = $Session.Config.Pools.$Pool_Name.MinerName.Count -or $Session.Config.Pools.$Pool_Name.ExcludeMinerName.Count -or $Pools.$_.MinerName -ne $null -or $Pools.$_.ExcludeMinerName -ne $null
         }
     } else {
         $API.AllPools   = $null
@@ -2716,7 +2716,10 @@ function Invoke-Core {
                 if ($Pools.$Algo.HasMinerExclusions) {
                     $Pool_Name = $Pools.$Algo.Name
                     if (($Session.Config.Pools.$Pool_Name.MinerName.Count -and $Session.Config.Pools.$Pool_Name.MinerName -notcontains $Miner_Name) -or
-                        ($Session.Config.Pools.$Pool_Name.ExcludeMinerName.Count -and $Session.Config.Pools.$Pool_Name.ExcludeMinerName -contains $Miner_Name)) {
+                        ($Session.Config.Pools.$Pool_Name.ExcludeMinerName.Count -and $Session.Config.Pools.$Pool_Name.ExcludeMinerName -contains $Miner_Name) -or 
+                        ($Pools.$Algo.MinerName.Count -and $Pools.$Algo.MinerName -notcontains $Miner_Name) -or
+                        ($Pools.$Algo.ExcludeMinerName.Count -and $Pools.$Algo.ExcludeMinerName -contains $Miner_Name)
+                        ) {
                         return
                     }
                 }
@@ -3843,7 +3846,7 @@ function Invoke-Core {
 
         #If post block mining: check for minimum profit
         if ($Miners_PBM = $BestMiners | Where-Object {$_.PostBlockMining -gt 0 -and -not $_.IsExclusiveMiner -and -not $_.IsLocked -and -not $_.IsFocusWalletMiner -and -not $_.NeedsBenchmark -and -not $_.IsRunningFirstRounds -and $Session.Config.Coins."$($_.CoinSymbol)".MinProfitPercent -gt 0}) {
-            $Miners_PBM_Remove = @()
+            $Miners_PBM_Remove = [System.Collections.ArrayList]::new()
             $Miners_PBM | Foreach-Object {
                 $Miner_PBM = $_
                 if ($BestMiner = $ActiveMiners_Sorted | Where-Object {$_.PostBlockMining -eq 0 -and -not (Compare-Object $Miner_PBM.DeviceName $_.DeviceName)} | Select-Object -First 1) {
@@ -3855,13 +3858,13 @@ function Invoke-Core {
 
                     if ($BestMiner_Profit * $Session.Config.Coins."$($Miner_PBM.CoinSymbol)".MinProfitPercent / 100 -gt $Miner_PBM_Profit) {
                         [void]$BestMiners.Add($BestMiner)
-                        $Miners_PBM_Remove += $Miner_PBM
+                        [void]$Miners_PBM_Remove.Add($Miner_PBM)
                     }
                 }
             }
             if ($Miners_PBM_Remove.Count) {
                 for($i=$BestMiners.Count-1; $i -ge 0; $i--) {
-                    if ($BestMiners[$i] -in $Miners_PBM_Remove) {
+                    if ($Miners_PBM_Remove.Contains($BestMiners[$i])) {
                         [void]$BestMiners.RemoveAt($i)
                     }
                 }
