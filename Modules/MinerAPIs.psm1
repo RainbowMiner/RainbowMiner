@@ -50,6 +50,7 @@ class Miner {
     [string]$BaseName
     [double]$FaultTolerance = 0.1
     [int]$ExtendInterval = 0
+    [int]$SkipSeconds = 0
     [double]$Penalty = 0
     [double[]]$PoolPenalty
     [int]$PostBlockMining = 0
@@ -685,9 +686,14 @@ class Miner {
 
         $Intervals = [Math]::Max($this.ExtendInterval,1)
         $Timeframe = (Get-Date).ToUniversalTime().AddSeconds( - $this.DataInterval * $Intervals)
+        $TimeframeMin = $this.StartTime.AddSeconds($this.SkipSeconds)
+        if ($Timeframe -lt $TimeframeMin) {
+            $TimeFrame = $TimeframeMin
+        }
         $HashData  = $this.Data | Where-Object {$_.HashRate -and ($_.HashRate.$Algorithm -or ($AlgosDiffer -and $_.HashRate.$AlgorithmBase)) -and ($_.Date -ge $Timeframe)}
         $MaxVariance = if ($this.FaultTolerance) {$this.FaultTolerance} else {0.075}
         $MinHashRate = 1-[Math]::Min($MaxVariance/2,0.1)
+        $MaxHashRate = 1+[Math]::Min($MaxVariance/2,0.1)
 
         $HashRates_Count = $HashRates_Average = $HashRates_Variance = 0
 
@@ -711,7 +717,10 @@ class Miner {
                 $key = ($Data_Devices -join '-')
                 $hasBucket = $HashRates_Variances.ContainsKey($key)
 
-                if ($hasBucket -or ($HashRate -gt $HashRates_Average * $MinHashRate)) {
+                $isAboveMin = $HashRate -gt $HashRates_Average * $MinHashRate
+                $isBelowMax = $HashRates_Average -eq 0 -or ($HashRate -lt $HashRates_Average * $MaxHashRate)
+
+                if ($hasBucket -or ($isAboveMin -and $isBelowMax)) {
                     $perDevice = if ($Data_Devices.Count) { $HashRate / [double]$Data_Devices.Count } else { 0.0 }
 
                     foreach ($dev in $Data_Devices) {

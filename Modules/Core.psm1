@@ -2667,7 +2667,7 @@ function Invoke-Core {
             $Pool_Name  = $Pools.$_.Name
             $Pools.$_.Price_Bias = $Pool_Price_Bias
             $Pools.$_.Price_Unbias = $Pool_Price
-            $Pools.$_.HasMinerExclusions = $Session.Config.Pools.$Pool_Name.MinerName.Count -or $Session.Config.Pools.$Pool_Name.ExcludeMinerName.Count -or $Pools.$_.MinerName -ne $null -or $Pools.$_.ExcludeMinerName -ne $null
+            $Pools.$_.HasMinerExclusions = $Session.Config.Pools.$Pool_Name.MinerName.Count -or $Session.Config.Pools.$Pool_Name.ExcludeMinerName.Count -or $Pools.$_.MinerName.Count -or $Pools.$_.ExcludeMinerName.Count
         }
     } else {
         $API.AllPools   = $null
@@ -3679,6 +3679,7 @@ function Invoke-Core {
         $Miner_MaxRejectedShareRatio = [Double]$(if ($Miner.MaxRejectedShareRatio -eq $null) {$Session.Config.MaxRejectedShareRatio} else {$Miner.MaxRejectedShareRatio})
         if ($Miner_MaxRejectedShareRatio -lt 0) {$Miner_MaxRejectedShareRatio = 0}
         elseif ($Miner_MaxRejectedShareRatio -gt 1) {$Miner_MaxRejectedShareRatio = 1}
+        $Miner_SkipSeconds = if ($Miner.SkipSeconds -eq $null) {5} else {[int]$Miner.SkipSeconds}
 
         $accessNow = (Get-Date).ToUniversalTime()
 
@@ -3699,6 +3700,7 @@ function Invoke-Core {
             $ActiveMiner.OCprofile          = $Miner.OCprofile
             $ActiveMiner.EnableOCprofile    = $Session.Config.EnableOCProfiles
             $ActiveMiner.ExtendInterval     = $Miner.ExtendInterval
+            $ActiveMiner.SkipSeconds        = $Miner_SkipSeconds
             $ActiveMiner.FaultTolerance     = $Miner.FaultTolerance
             $ActiveMiner.Penalty            = $Miner.Penalty
             $ActiveMiner.ManualUri          = "$Miner_ManualUri"
@@ -3774,6 +3776,7 @@ function Invoke-Core {
                     OCprofile            = $Miner.OCprofile
                     EnableOCprofile      = $Session.Config.EnableOCProfiles
                     ExtendInterval       = $Miner.ExtendInterval
+                    SkipSeconds          = $Miner_SkipSeconds
                     ShowMinerWindow      = ($Session.Config.ShowMinerWindow -or $IsLinux -or $Miner.ShowMinerWindow)
                     FaultTolerance       = $Miner.FaultTolerance
                     Penalty              = $Miner.Penalty
