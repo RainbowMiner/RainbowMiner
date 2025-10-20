@@ -148,18 +148,6 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
         $Miner_Model = $_.Model
         $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)" | Where-Object {$_.Model -eq $Miner_Model}
 
-        $ZilAlgorithm = ""
-        $ZilParams2   = ""
-        $ZilParams3   = ""
-
-        if ($Pools.ZilliqaDual) {
-            if ($ZilWallet = $Pools.ZilliqaDual.Wallet) {
-                $ZilAlgorithm = "+zil"
-                $ZilParams2   = " -o [2]$($Pools.ZilliqaDual.Protocol)://$($Pools.ZilliqaDual.Host):$($Pools.ZilliqaDual.Port) -u [2]$($Pools.ZilliqaDual.User)$(if ($Pools.ZilliqaDual.Worker -and $Pools.ZilliqaDual.User -eq $Pools.ZilliqaDual.Wallet) {" -w [2]$($Pools.ZilliqaDual.Worker)"}) --zil-countdown"
-                $ZilParams3   = " -o [3]$($Pools.ZilliqaDual.Protocol)://$($Pools.ZilliqaDual.Host):$($Pools.ZilliqaDual.Port) -u [3]$($Pools.ZilliqaDual.User)$(if ($Pools.ZilliqaDual.Worker -and $Pools.ZilliqaDual.User -eq $Pools.ZilliqaDual.Wallet) {" -w [3]$($Pools.ZilliqaDual.Worker)"}) --zil-countdown"
-            }
-        }
-
         $Commands | Where-Object {$_.Vendor -icontains $Miner_Vendor} | ForEach-Object {
             $First = $true
 
@@ -203,16 +191,6 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
                         $First = $false
                     }
 
-                    $ZilParams = ""
-
-                    if ($ZilParams2 -ne "") {
-                        $ZilParams = if ($SecondAlgorithm_Norm_0) {$ZilParams3} else {$ZilParams2}
-                        $ZilNoCache = @($Miner_Device | Foreach-Object {if ($_.OpenCL.GlobalMemsize -le 8gb) {"off"} else {"on"}}) -join ","
-                        if ($ZilNoCache -match "off") {
-                            $ZilParams = "$($ZilParams) --zil-cache-dag $($ZilNoCache)"
-                        }
-                    }
-
                     $Pool_Port = if ($Pools.$MainAlgorithm_Norm.Ports -ne $null -and $Pools.$MainAlgorithm_Norm.Ports.GPU) {$Pools.$MainAlgorithm_Norm.Ports.GPU} else {$Pools.$MainAlgorithm_Norm.Port}
 
                     $Miner_Protocol = Switch ($Pools.$MainAlgorithm_Norm.EthMode) {
@@ -250,7 +228,7 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
                                         DeviceName      = $Miner_Device.Name
                                         DeviceModel     = $Miner_Model
                                         Path            = $Path
-                                        Arguments       = "--api-bind 127.0.0.1:`$mport -d $($DeviceIDsAll)$($IntensityParams) -a $($MainAlgorithm_0)+$($_.SecondaryAlgorithm)$($ZilAlgorithm)$($CoinParams) -o [1]$($Miner_Protocol)://$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) -u [1]$($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" -p [1]$($Pools.$MainAlgorithm_Norm.Pass)"})$(if ($Pools.$MainAlgorithm_Norm.Worker -and $Pools.$MainAlgorithm_Norm.User -eq $Pools.$MainAlgorithm_Norm.Wallet) {" -w [1]$($Pools.$MainAlgorithm_Norm.Worker)"}) -o [2]$($Pools.$SecondAlgorithm_Norm.Protocol)://$($Pools.$SecondAlgorithm_Norm.Host):$($SecondPool_Port) -u [2]$($Pools.$SecondAlgorithm_Norm.User)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {" -p [2]$($Pools.$SecondAlgorithm_Norm.Pass)"})$(if ($Pools.$SecondAlgorithm_Norm.Worker -and $Pools.$SecondAlgorithm_Norm.User -eq $Pools.$SecondAlgorithm_Norm.Wallet) {" -w [2]$($Pools.$SecondAlgorithm_Norm.Worker)"})$($ZilParams) --no-tui --no-watchdog --dag-reset-mclock off $($_.Params)"
+                                        Arguments       = "--api-bind 127.0.0.1:`$mport -d $($DeviceIDsAll)$($IntensityParams) -a $($MainAlgorithm_0)+$($_.SecondaryAlgorithm)$($CoinParams) -o [1]$($Miner_Protocol)://$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) -u [1]$($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" -p [1]$($Pools.$MainAlgorithm_Norm.Pass)"})$(if ($Pools.$MainAlgorithm_Norm.Worker -and $Pools.$MainAlgorithm_Norm.User -eq $Pools.$MainAlgorithm_Norm.Wallet) {" -w [1]$($Pools.$MainAlgorithm_Norm.Worker)"}) -o [2]$($Pools.$SecondAlgorithm_Norm.Protocol)://$($Pools.$SecondAlgorithm_Norm.Host):$($SecondPool_Port) -u [2]$($Pools.$SecondAlgorithm_Norm.User)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {" -p [2]$($Pools.$SecondAlgorithm_Norm.Pass)"})$(if ($Pools.$SecondAlgorithm_Norm.Worker -and $Pools.$SecondAlgorithm_Norm.User -eq $Pools.$SecondAlgorithm_Norm.Wallet) {" -w [2]$($Pools.$SecondAlgorithm_Norm.Worker)"}) --no-tui --no-watchdog --dag-reset-mclock off $($_.Params)"
                                         HashRates       = [PSCustomObject]@{
                                                              $MainAlgorithm_Norm = $($Global:StatsCache."$($Miner_Name_Dual)_$($MainAlgorithm_Norm_0)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))
                                                              $SecondAlgorithm_Norm = $($Global:StatsCache."$($Miner_Name_Dual)_$($SecondAlgorithm_Norm_0)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))
@@ -274,20 +252,19 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
                                         Benchmarked     = $Global:StatsCache."$($Miner_Name_Dual)_$($MainAlgorithm_Norm_0)_HashRate".Benchmarked
                                         LogFile         = $Global:StatsCache."$($Miner_Name_Dual)_$($MainAlgorithm_Norm_0)_HashRate".LogFile
                                         ExcludePoolName = $_.ExcludePoolName
-                                        DualZIL         = $ZilParams -ne ""
                                     }
                                 }
                             }
                         }
 
                     } else {
-                        $o1_count = "$(if ($ZilParams -ne '') {"[1]"})"
+                        $o1_count = ""
                         [PSCustomObject]@{
                             Name            = $Miner_Name
                             DeviceName      = $Miner_Device.Name
                             DeviceModel     = $Miner_Model
                             Path            = $Path
-                            Arguments       = "--api-bind 127.0.0.1:`$mport -d $($DeviceIDsAll) -a $($MainAlgorithm_0)$($ZilAlgorithm)$($CoinParams) -o $($o1_count)$($Miner_Protocol)://$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) -u $($o1_count)$($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" -p $($o1_count)$($Pools.$MainAlgorithm_Norm.Pass)"})$(if ($Pools.$MainAlgorithm_Norm.Worker -and $Pools.$MainAlgorithm_Norm.User -eq $Pools.$MainAlgorithm_Norm.Wallet) {" -w $($o1_count)$($Pools.$MainAlgorithm_Norm.Worker)"})$($ZilParams) --no-tui --no-watchdog --dag-reset-mclock off $($_.Params)"
+                            Arguments       = "--api-bind 127.0.0.1:`$mport -d $($DeviceIDsAll) -a $($MainAlgorithm_0)$($CoinParams) -o $($o1_count)$($Miner_Protocol)://$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) -u $($o1_count)$($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" -p $($o1_count)$($Pools.$MainAlgorithm_Norm.Pass)"})$(if ($Pools.$MainAlgorithm_Norm.Worker -and $Pools.$MainAlgorithm_Norm.User -eq $Pools.$MainAlgorithm_Norm.Wallet) {" -w $($o1_count)$($Pools.$MainAlgorithm_Norm.Worker)"}) --no-tui --no-watchdog --dag-reset-mclock off $($_.Params)"
                             HashRates       = [PSCustomObject]@{$MainAlgorithm_Norm = $($Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Week)}
                             API             = "Rigel"
                             Port            = $Miner_Port
@@ -304,7 +281,6 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
                             Benchmarked     = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Benchmarked
                             LogFile         = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".LogFile
                             ExcludePoolName = $_.ExcludePoolName
-                            DualZIL         = $ZilParams -ne ""
                         }
                     }
                 }

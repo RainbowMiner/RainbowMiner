@@ -25,42 +25,42 @@ if ($IsLinux) {
 }
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "autolykos";       DAG = $true; Params = ""; MinMemGb = 2;  Vendor = @("AMD","NVIDIA");         ExtendInterval = 2; DevFee = 2.5; DualZIL = $true} #Autolycos/Ergo
+    [PSCustomObject]@{MainAlgorithm = "autolykos";       DAG = $true; Params = ""; MinMemGb = 2;  Vendor = @("AMD","NVIDIA");         ExtendInterval = 2; DevFee = 2.5} #Autolycos/Ergo
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo30";                   Params = ""; MinMemGb = 14; Vendor = @("AMD");                  ExtendInterval = 2; DevFee = 5.0} #Cuckaroo30/Cortex
-    [PSCustomObject]@{MainAlgorithm = "Ethash";          DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","INTEL","NVIDIA");          ExtendInterval = 2; DevFee = 1.0; DualZIL = $true; ExcludePoolName = "F2Pool"} #Ethash
-    [PSCustomObject]@{MainAlgorithm = "Ethash2g";        DAG = $true; Params = ""; MinMemGb = 1;  Vendor = @("AMD","INTEL","NVIDIA");          ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; DualZIL = $true; ExcludePoolName = "F2Pool"} #Ethash
-    [PSCustomObject]@{MainAlgorithm = "Ethash3g";        DAG = $true; Params = ""; MinMemGb = 2;  Vendor = @("AMD","INTEL","NVIDIA");          ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; DualZIL = $true; ExcludePoolName = "F2Pool"} #Ethash
-    [PSCustomObject]@{MainAlgorithm = "Ethash4g";        DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","INTEL","NVIDIA");          ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; DualZIL = $true; ExcludePoolName = "F2Pool"} #Ethash
-    [PSCustomObject]@{MainAlgorithm = "Ethash5g";        DAG = $true; Params = ""; MinMemGb = 4;  Vendor = @("AMD","INTEL","NVIDIA");          ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; DualZIL = $true; ExcludePoolName = "F2Pool"} #Ethash
-    [PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; Params = ""; MinMemGb = 2;  Vendor = @("AMD","INTEL","NVIDIA");          ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; DualZIL = $true; ExcludePoolName = "F2Pool"} #Ethash for low memory coins
-    [PSCustomObject]@{MainAlgorithm = "EthashB3";        DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","INTEL","NVIDIA");          ExtendInterval = 2; DevFee = 1.0; DualZIL = $true} #EthashB3
-    [PSCustomObject]@{MainAlgorithm = "EtcHash";         DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA");                  ExtendInterval = 2; DevFee = 1.0; DualZIL = $true} #EtcHash
-    [PSCustomObject]@{MainAlgorithm = "EvrProgPow";      DAG = $true; Params = ""; MinMemGb = 2;  Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; DevFee = 2.0; DualZIL = $true} #EvrProgPow/EVR
-    [PSCustomObject]@{MainAlgorithm = "FiroPow";         DAG = $true; Params = ""; MinMemGb = 2;  Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; DevFee = 1.0; DualZIL = $true; ZombieMode = $true} #FiroPOW
+    [PSCustomObject]@{MainAlgorithm = "Ethash";          DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","INTEL","NVIDIA");          ExtendInterval = 2; DevFee = 1.0; ExcludePoolName = "F2Pool"} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "Ethash2g";        DAG = $true; Params = ""; MinMemGb = 1;  Vendor = @("AMD","INTEL","NVIDIA");          ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; ExcludePoolName = "F2Pool"} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "Ethash3g";        DAG = $true; Params = ""; MinMemGb = 2;  Vendor = @("AMD","INTEL","NVIDIA");          ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; ExcludePoolName = "F2Pool"} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "Ethash4g";        DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","INTEL","NVIDIA");          ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; ExcludePoolName = "F2Pool"} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "Ethash5g";        DAG = $true; Params = ""; MinMemGb = 4;  Vendor = @("AMD","INTEL","NVIDIA");          ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; ExcludePoolName = "F2Pool"} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; Params = ""; MinMemGb = 2;  Vendor = @("AMD","INTEL","NVIDIA");          ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; ExcludePoolName = "F2Pool"} #Ethash for low memory coins
+    [PSCustomObject]@{MainAlgorithm = "EthashB3";        DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","INTEL","NVIDIA");          ExtendInterval = 2; DevFee = 1.0} #EthashB3
+    [PSCustomObject]@{MainAlgorithm = "EtcHash";         DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA");                  ExtendInterval = 2; DevFee = 1.0} #EtcHash
+    [PSCustomObject]@{MainAlgorithm = "EvrProgPow";      DAG = $true; Params = ""; MinMemGb = 2;  Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; DevFee = 2.0} #EvrProgPow/EVR
+    [PSCustomObject]@{MainAlgorithm = "FiroPow";         DAG = $true; Params = ""; MinMemGb = 2;  Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; DevFee = 1.0; ZombieMode = $true} #FiroPOW
     [PSCustomObject]@{MainAlgorithm = "fishhash";                     Params = ""; MinMemGb = 2;  Vendor = @("AMD","NVIDIA");         ExtendInterval = 2; DevFee = 1.0} #FishHash
     [PSCustomObject]@{MainAlgorithm = "karlsenhashv2";                Params = ""; MinMemGb = 2;  Vendor = @("AMD","NVIDIA");         ExtendInterval = 2; DevFee = 1.0} #KarlsenhashV2/KLS
-    [PSCustomObject]@{MainAlgorithm = "KawPow";          DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; DevFee = 2.0; DualZIL = $true} #KawPOW
-    [PSCustomObject]@{MainAlgorithm = "KawPow2g";        DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; DevFee = 2.0; Algorithm = "KawPow"; DualZIL = $true} #KawPOW
-    [PSCustomObject]@{MainAlgorithm = "KawPow3g";        DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; DevFee = 2.0; Algorithm = "KawPow"; DualZIL = $true} #KawPOW
-    [PSCustomObject]@{MainAlgorithm = "KawPow4g";        DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; DevFee = 2.0; Algorithm = "KawPow"; DualZIL = $true} #KawPOW
-    [PSCustomObject]@{MainAlgorithm = "KawPow5g";        DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; DevFee = 2.0; Algorithm = "KawPow"; DualZIL = $true} #KawPOW
-    [PSCustomObject]@{MainAlgorithm = "Octopus";         DAG = $true; Params = ""; MinMemGb = 5;  Vendor = @("AMD","NVIDIA");         ExtendInterval = 2; DevFee = 2.0; DualZIL = $true} #Octopus/Conflux
+    [PSCustomObject]@{MainAlgorithm = "KawPow";          DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; DevFee = 2.0} #KawPOW
+    [PSCustomObject]@{MainAlgorithm = "KawPow2g";        DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; DevFee = 2.0; Algorithm = "KawPow"} #KawPOW
+    [PSCustomObject]@{MainAlgorithm = "KawPow3g";        DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; DevFee = 2.0; Algorithm = "KawPow"} #KawPOW
+    [PSCustomObject]@{MainAlgorithm = "KawPow4g";        DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; DevFee = 2.0; Algorithm = "KawPow"} #KawPOW
+    [PSCustomObject]@{MainAlgorithm = "KawPow5g";        DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; DevFee = 2.0; Algorithm = "KawPow"} #KawPOW
+    [PSCustomObject]@{MainAlgorithm = "Octopus";         DAG = $true; Params = ""; MinMemGb = 5;  Vendor = @("AMD","NVIDIA");         ExtendInterval = 2; DevFee = 2.0} #Octopus/Conflux
     [PSCustomObject]@{MainAlgorithm = "RandomNEVO";                   Params = ""; MinMemGb = 3;  Vendor = @("CPU");                  ExtendInterval = 2; DevFee = 2.0} #RandomNEVO
     [PSCustomObject]@{MainAlgorithm = "RandomX";                      Params = ""; MinMemGb = 3;  Vendor = @("CPU");                  ExtendInterval = 2; DevFee = 2.0} #RandomX
-    [PSCustomObject]@{MainAlgorithm = "SCCPow";          DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; DevFee = 1.0; DualZIL = $true; ZombieMode = $true; Algorithm = "FiroPow"} #SCCPow
+    [PSCustomObject]@{MainAlgorithm = "SCCPow";          DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; DevFee = 1.0; ZombieMode = $true; Algorithm = "FiroPow"} #SCCPow
     [PSCustomObject]@{MainAlgorithm = "Verushash";                    Params = ""; MinMemGb = 3;  Vendor = @("CPU");                  ExtendInterval = 2; DevFee = 2.0; CPUFeatures = @("avx","aes"); ExcludePoolName="LuckPool"} #Verushash
     [PSCustomObject]@{MainAlgorithm = "UbqHash";                      Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA");         ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; Coins = @("UBQ"); ExcludePoolName = "F2Pool"} #UbqHash
     [PSCustomObject]@{MainAlgorithm = "Verthash";                     Params = ""; MinMemGb = 2;  Vendor = @("AMD");                  ExtendInterval = 2; DevFee = 1.0} #Verthash
 
     # Dual mining
-    #[PSCustomObject]@{MainAlgorithm = "autolykos";       DAG = $true; Params = ""; MinMemGb = 2;  Vendor = @("AMD","NVIDIA");         ExtendInterval = 2; DevFee = 2.5; DualZIL = $true; SecondaryAlgorithm = "heavyhash"} #Autolycos/Ergo + kHeavyhash/KAS
-    #[PSCustomObject]@{MainAlgorithm = "Ethash";          DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","INTEL","NVIDIA");          ExtendInterval = 2; DevFee = 1.0; DualZIL = $true; ExcludePoolName = "F2Pool"; SecondaryAlgorithm = "heavyhash"} #Ethash + kHeavyHash
-    #[PSCustomObject]@{MainAlgorithm = "Ethash2g";        DAG = $true; Params = ""; MinMemGb = 1;  Vendor = @("AMD","INTEL","NVIDIA");          ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; DualZIL = $true; ExcludePoolName = "F2Pool"; SecondaryAlgorithm = "heavyhash"} #Ethash + kHeavyhash/KAS
-    #[PSCustomObject]@{MainAlgorithm = "Ethash3g";        DAG = $true; Params = ""; MinMemGb = 2;  Vendor = @("AMD","INTEL","NVIDIA");          ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; DualZIL = $true; ExcludePoolName = "F2Pool"; SecondaryAlgorithm = "heavyhash"} #Ethash + kHeavyhash/KAS
-    #[PSCustomObject]@{MainAlgorithm = "Ethash4g";        DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","INTEL","NVIDIA");          ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; DualZIL = $true; ExcludePoolName = "F2Pool"; SecondaryAlgorithm = "heavyhash"} #Ethash + kHeavyhash/KAS
-    #[PSCustomObject]@{MainAlgorithm = "Ethash5g";        DAG = $true; Params = ""; MinMemGb = 4;  Vendor = @("AMD","INTEL","NVIDIA");          ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; DualZIL = $true; ExcludePoolName = "F2Pool"; SecondaryAlgorithm = "heavyhash"} #Ethash + kHeavyhash/KAS
-    #[PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; Params = ""; MinMemGb = 2;  Vendor = @("AMD","INTEL","NVIDIA");          ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; DualZIL = $true; ExcludePoolName = "F2Pool"; SecondaryAlgorithm = "heavyhash"} #Ethash for low memory coins + kHeavyhash/KAS
-    #[PSCustomObject]@{MainAlgorithm = "EtcHash";         DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD");                  ExtendInterval = 2; DevFee = 1.0; DualZIL = $true; SecondaryAlgorithm = "heavyhash"} #EtcHash + kHeavyhash/KAS
+    #[PSCustomObject]@{MainAlgorithm = "autolykos";       DAG = $true; Params = ""; MinMemGb = 2;  Vendor = @("AMD","NVIDIA");         ExtendInterval = 2; DevFee = 2.5; SecondaryAlgorithm = "heavyhash"} #Autolycos/Ergo + kHeavyhash/KAS
+    #[PSCustomObject]@{MainAlgorithm = "Ethash";          DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","INTEL","NVIDIA");          ExtendInterval = 2; DevFee = 1.0; ExcludePoolName = "F2Pool"; SecondaryAlgorithm = "heavyhash"} #Ethash + kHeavyHash
+    #[PSCustomObject]@{MainAlgorithm = "Ethash2g";        DAG = $true; Params = ""; MinMemGb = 1;  Vendor = @("AMD","INTEL","NVIDIA");          ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; ExcludePoolName = "F2Pool"; SecondaryAlgorithm = "heavyhash"} #Ethash + kHeavyhash/KAS
+    #[PSCustomObject]@{MainAlgorithm = "Ethash3g";        DAG = $true; Params = ""; MinMemGb = 2;  Vendor = @("AMD","INTEL","NVIDIA");          ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; ExcludePoolName = "F2Pool"; SecondaryAlgorithm = "heavyhash"} #Ethash + kHeavyhash/KAS
+    #[PSCustomObject]@{MainAlgorithm = "Ethash4g";        DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","INTEL","NVIDIA");          ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; ExcludePoolName = "F2Pool"; SecondaryAlgorithm = "heavyhash"} #Ethash + kHeavyhash/KAS
+    #[PSCustomObject]@{MainAlgorithm = "Ethash5g";        DAG = $true; Params = ""; MinMemGb = 4;  Vendor = @("AMD","INTEL","NVIDIA");          ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; ExcludePoolName = "F2Pool"; SecondaryAlgorithm = "heavyhash"} #Ethash + kHeavyhash/KAS
+    #[PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; Params = ""; MinMemGb = 2;  Vendor = @("AMD","INTEL","NVIDIA");          ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; ExcludePoolName = "F2Pool"; SecondaryAlgorithm = "heavyhash"} #Ethash for low memory coins + kHeavyhash/KAS
+    #[PSCustomObject]@{MainAlgorithm = "EtcHash";         DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD");                  ExtendInterval = 2; DevFee = 1.0; SecondaryAlgorithm = "heavyhash"} #EtcHash + kHeavyhash/KAS
 
 )
 
@@ -123,19 +123,6 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                         $Miner_Name = (@($Name) + @($SecondAlgorithm_Norm_0 | Select-Object | Foreach-Object {"$($MainAlgorithm_Norm_0)-$($_)"}) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
                         $First = $false
-                        #$ZilWallet = if ($Session.Config.Pools.Ezil.EnableNanominerDual -and $_.DualZIL -and $Pools.ZilliqaETH -and $Pools.ZilliqaETH.EthMode -eq $Pools.$MainAlgorithm_Norm.EthMode) {
-                        #    [PSCustomObject]@{
-                        #            Algo      = "zil"
-                        #            Host      = $Pools.ZilliqaETH.Host
-                        #            Port      = $Pools.ZilliqaETH.Port
-                        #            SSL       = $Pools.ZilliqaETH.SSL
-                        #            Wallet    = $Pools.ZilliqaETH.Wallet
-                        #            Worker    = $Pools.ZilliqaETH.Worker
-                        #            Pass      = $Pools.ZilliqaETH.Pass
-                        #            Email     = $Pools.ZilliqaETH.Email
-                        #    }
-                        #} else {$null}
-                        $ZilWallet = $null
                     }
                     $Pool_Port = if ($Miner_Vendor -ne "CPU" -and $Pools.$MainAlgorithm_Norm.Ports -ne $null -and $Pools.$MainAlgorithm_Norm.Ports.GPU) {$Pools.$MainAlgorithm_Norm.Ports.GPU} else {$Pools.$MainAlgorithm_Norm.Port}
                     $Wallet    = if ($Pools.$MainAlgorithm_Norm.Wallet) {$Pools.$MainAlgorithm_Norm.Wallet} else {$Pools.$MainAlgorithm_Norm.User}
@@ -212,10 +199,6 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                                     Params    = "$($_.Params)"
                                 }
 
-                                if ($ZilWallet) {
-                                    $Arguments.Algorithms += $ZilWallet
-                                }
-
                                 [PSCustomObject]@{
                                     Name            = $Miner_Name
                                     DeviceName      = $Miner_Device.Name
@@ -246,7 +229,6 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                                     LogFile         = $Global:StatsCache."$($Miner_Name_Dual)_$($MainAlgorithm_Norm_0)_HashRate".LogFile
                                     #ListDevices    = "-d"
                                     ExcludePoolName = $_.ExcludePoolName
-                                    DualZIL         = $ZilWallet -ne $null
                                 }
                             }
                         }
@@ -274,10 +256,6 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                             LHR       = "$(if ($Miner_Vendor -eq "NVIDIA" -and $MainAlgorithm_Norm -match "^Etc?hash") {($Miner_Device | Foreach-Object {if ($_.IsLHR) {"0"} else {"off"}}) -join ','})"
                         }
 
-                        if ($ZilWallet) {
-                            $Arguments.Algorithms += $ZilWallet
-                        }
-
                         [PSCustomObject]@{
                             Name            = $Miner_Name
                             DeviceName      = $Miner_Device.Name
@@ -302,7 +280,6 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                             LogFile         = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".LogFile
                             #ListDevices    = "-d"
                             ExcludePoolName = $_.ExcludePoolName
-                            DualZIL         = $ZilWallet -ne $null
                         }
                     }
                 }

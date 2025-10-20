@@ -26,7 +26,7 @@ $Version = "1.6.3"
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptix"; Params = ""; ExtendInterval = 3; Fee = @{NVIDIA=2.0}; Vendor = @("NVIDIA")} #CryptixOX8/CPAY
-    [PSCustomObject]@{MainAlgorithm = "dynex"; Params = ""; ExtendInterval = 5; DualZIL = $true; Fee = @{NVIDIA=2.0}; Vendor = @("NVIDIA")} #DynexSolve/DNX
+    [PSCustomObject]@{MainAlgorithm = "dynex"; Params = ""; ExtendInterval = 5; Fee = @{NVIDIA=2.0}; Vendor = @("NVIDIA")} #DynexSolve/DNX
     [PSCustomObject]@{MainAlgorithm = "qhash"; Params = ""; ExtendInterval = 2; Fee = @{NVIDIA=3.0}; Vendor = @("NVIDIA"); FaultTolerance = 0.4} #Qhash/QBC
     [PSCustomObject]@{MainAlgorithm = "xelis"; Params = ""; ExtendInterval = 3; Fee = @{NVIDIA=1.0;AMD=2.0}; Vendor = @("AMD","NVIDIA")} #XelisHashV2/XEL
 )
@@ -55,12 +55,6 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
         $Miner_Model = $_.Model
         $Miner_Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)" | Where-Object {$_.Model -eq $Miner_Model}
 
-        $ZilParams = if ($Miner_Vendor -eq "NVIDIA" -and $Pools.ZilliqaDual) {
-            if ($ZilWallet = $Pools.ZilliqaDual.Wallet) {
-                " --a2 zil --w2 $($Pools.ZilliqaDual.User)$(if ($Pools.ZilliqaDual.Pass) {" --p2 $($Pools.ZilliqaDual.Pass)"}) --o2 $($Pools.ZilliqaDual.Protocol)://$($Pools.ZilliqaDual.Host):$($Pools.ZilliqaDual.Port) "
-            }
-        }
-
         $DisableCommand = if ($Miner_Vendor -eq "NVIDIA") {"--disable-amd"} else {"--disable-nvidia"}
 
         $Commands | Where-Object {$Miner_Vendor -in $_.Vendor} | ForEach-Object {
@@ -82,7 +76,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 					    DeviceName     = $Miner_Device.Name
 					    DeviceModel    = $Miner_Model
 					    Path           = $Path
-					    Arguments      = "$($DisableCommand) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -w $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) -o $(if ($Pools.$Algorithm_Norm.SSL) {"$($Pools.$Algorithm_Norm.Protocol)://"})$($Pools.$Algorithm_Norm.Host):$($Pool_Port)$(if ($Pools.$Algorithm_Norm.Worker -and $Pools.$Algorithm_Norm.User -eq $Pools.$Algorithm_Norm.Wallet) {" --worker $($Pools.$Algorithm_Norm.Worker)"}) --api-port `$mport$(if ($_.DualZIL) {$ZilParams}) --disable-telemetry$($_.Params)"
+					    Arguments      = "$($DisableCommand) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -w $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) -o $(if ($Pools.$Algorithm_Norm.SSL) {"$($Pools.$Algorithm_Norm.Protocol)://"})$($Pools.$Algorithm_Norm.Host):$($Pool_Port)$(if ($Pools.$Algorithm_Norm.Worker -and $Pools.$Algorithm_Norm.User -eq $Pools.$Algorithm_Norm.Wallet) {" --worker $($Pools.$Algorithm_Norm.Worker)"}) --api-port `$mport --disable-telemetry$($_.Params)"
 					    HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
 					    API            = "OneZeroMiner"
 					    Port           = $Miner_Port

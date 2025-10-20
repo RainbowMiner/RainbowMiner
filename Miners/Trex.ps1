@@ -39,11 +39,11 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "blake3"; Params = ""; MinMemGB = 2; ExtendInterval = 2} #Blake3/ALPH (new with 0.25.1)
     [PSCustomObject]@{MainAlgorithm = "etchash"; DAG = $true; Params = ""; MinMemGB = 2; ExtendInterval = 3} #Etchash (new with 0.18.8)
     [PSCustomObject]@{MainAlgorithm = "etchash"; SecondAlgorithm = "blake3"; DAG = $true; Params = ""; MinMemGB = 2; MinMemGB2nd = 2; ExtendInterval = 3; DualAll = $true} #Etchash+Blake3/ALPH (new with 0.26.6)
-    [PSCustomObject]@{MainAlgorithm = "ethash"; DAG = $true; Params = ""; MinMemGB = 2; ExtendInterval = 3; DualZIL = $true} #Ethash (new with v0.17.2, broken in v0.18.3, fixed with v0.18.5)
-    [PSCustomObject]@{MainAlgorithm = "ethash2g"; DAG = $true; Params = ""; MinMemGB = 1; ExtendInterval = 3; DualZIL = $true; Algorithm = "ethash"} #Ethash (new with v0.17.2, broken in v0.18.3, fixed with v0.18.5)
-    [PSCustomObject]@{MainAlgorithm = "ethash3g"; DAG = $true; Params = ""; MinMemGB = 2; ExtendInterval = 3; DualZIL = $true; Algorithm = "ethash"} #Ethash (new with v0.17.2, broken in v0.18.3, fixed with v0.18.5)
-    [PSCustomObject]@{MainAlgorithm = "ethash4g"; DAG = $true; Params = ""; MinMemGB = 3; ExtendInterval = 3; DualZIL = $true; Algorithm = "ethash"} #Ethash (new with v0.17.2, broken in v0.18.3, fixed with v0.18.5)
-    [PSCustomObject]@{MainAlgorithm = "ethash5g"; DAG = $true; Params = ""; MinMemGB = 4; ExtendInterval = 3; DualZIL = $true; Algorithm = "ethash"} #Ethash (new with v0.17.2, broken in v0.18.3, fixed with v0.18.5)
+    [PSCustomObject]@{MainAlgorithm = "ethash"; DAG = $true; Params = ""; MinMemGB = 2; ExtendInterval = 3} #Ethash (new with v0.17.2, broken in v0.18.3, fixed with v0.18.5)
+    [PSCustomObject]@{MainAlgorithm = "ethash2g"; DAG = $true; Params = ""; MinMemGB = 1; ExtendInterval = 3; Algorithm = "ethash"} #Ethash (new with v0.17.2, broken in v0.18.3, fixed with v0.18.5)
+    [PSCustomObject]@{MainAlgorithm = "ethash3g"; DAG = $true; Params = ""; MinMemGB = 2; ExtendInterval = 3; Algorithm = "ethash"} #Ethash (new with v0.17.2, broken in v0.18.3, fixed with v0.18.5)
+    [PSCustomObject]@{MainAlgorithm = "ethash4g"; DAG = $true; Params = ""; MinMemGB = 3; ExtendInterval = 3; Algorithm = "ethash"} #Ethash (new with v0.17.2, broken in v0.18.3, fixed with v0.18.5)
+    [PSCustomObject]@{MainAlgorithm = "ethash5g"; DAG = $true; Params = ""; MinMemGB = 4; ExtendInterval = 3; Algorithm = "ethash"} #Ethash (new with v0.17.2, broken in v0.18.3, fixed with v0.18.5)
     [PSCustomObject]@{MainAlgorithm = "ethash"; SecondAlgorithm = "autolykos2"; DAG = $true; Params = ""; MinMemGB = 4; MinMemGB2nd = 2; ExtendInterval = 3} #Ethash+Autolycos2/ERG (new with 0.24.1)
     [PSCustomObject]@{MainAlgorithm = "ethash"; SecondAlgorithm = "blake3"; DAG = $true; Params = ""; MinMemGB = 4; MinMemGB2nd = 2; ExtendInterval = 3; DualAll = $true} #Ethash+Blake3/ALPH (new with 0.25.1)
     [PSCustomObject]@{MainAlgorithm = "ethash"; SecondAlgorithm = "firopow"; DAG = $true; Params = ""; MinMemGB = 4; MinMemGB2nd = 4; ExtendInterval = 3} #Ethash+FiroPow/RVN (new with 0.24.6)
@@ -69,7 +69,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethash5g"; SecondAlgorithm = "firopow"; DAG = $true; Params = ""; MinMemGB = 4; MinMemGB2nd = 4; ExtendInterval = 3; Algorithm = "ethash"} #Ethash+FiroPow/RVN (new with 0.24.6)
     [PSCustomObject]@{MainAlgorithm = "ethash5g"; SecondAlgorithm = "kawpow"; DAG = $true; Params = ""; MinMemGB = 4; MinMemGB2nd = 4; ExtendInterval = 3; Algorithm = "ethash"} #Ethash+KawPow/RVN (new with 0.24.1)
     [PSCustomObject]@{MainAlgorithm = "ethash5g"; SecondAlgorithm = "octopus"; DAG = $true; Params = ""; MinMemGB = 4; MinMemGB2nd = 4; ExtendInterval = 3; Algorithm = "ethash"} #Ethash+Octopus/CFX (new with 0.24.1)
-    [PSCustomObject]@{MainAlgorithm = "ethashlowmemory"; DAG = $true; Params = ""; MinMemGb = 2; ExtendInterval = 3; Algorithm = "ethash"; DualZIL = $true} #Ethash for low memory coins
+    [PSCustomObject]@{MainAlgorithm = "ethashlowmemory"; DAG = $true; Params = ""; MinMemGb = 2; ExtendInterval = 3; Algorithm = "ethash"} #Ethash for low memory coins
     [PSCustomObject]@{MainAlgorithm = "ethashlowmemory"; SecondAlgorithm = "autolykos2"; DAG = $true; Params = ""; MinMemGB = 2; MinMemGB2nd = 2; ExtendInterval = 3; Algorithm = "ethash"} #Ethash+Autolycos2/ERG (new with 0.24.1)
     [PSCustomObject]@{MainAlgorithm = "ethashlowmemory"; SecondAlgorithm = "blake3"; DAG = $true; Params = ""; MinMemGB = 2; MinMemGB2nd = 2; ExtendInterval = 3; DualAll = $true; Algorithm = "ethash"} #Ethash+Blake3/ALPH (new with 0.25.1)
     [PSCustomObject]@{MainAlgorithm = "ethashlowmemory"; SecondAlgorithm = "firopow"; DAG = $true; Params = ""; MinMemGB = 2; MinMemGB2nd = 4; ExtendInterval = 3; Algorithm = "ethash"} #Ethash+FiroPow/RVN (new with 0.24.6)
@@ -154,15 +154,6 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
                     $Miner_Port   = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                     $Miner_Name   = (@($Name) + @($SecondAlgorithm_Norm_0 | Select-Object | Foreach-Object {"$($Algorithm_Norm_0)_$($_)"}) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
                     $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ','
-                    #if ($Session.Config.Pools.Ezil.EnableTrexDual -and $_.DualZIL -and $Pools.ZilliqaETH -and $Pools.ZilliqaETH.Host -and $Pools.ZilliqaETH.Wallet -and $Pools.ZilliqaETH.EthMode -eq $Pools.$Algorithm_Norm.EthMode) {
-                    #    $ZilPool = "$($Pools.ZilliqaETH.Protocol)://$($Pools.ZilliqaETH.Host):$($Pools.ZilliqaETH.Port)"
-                    #    $ZilUser = "$(if ($Pools.$Algorithm_Norm.Wallet -match "^0x") {$Pools.$Algorithm_Norm.Wallet} elseif ($_.DualZIL -eq "ETH") {"0xaaD1d2972f99A99248464cdb075B28697d4d8EEd"}).$($Pools.ZilliqaETH.User)"
-                    #    $ZilPass = $Pools.ZilliqaETH.Pass
-                    #} else {
-                        $ZilPool = ""
-                        $ZilUser = ""
-                        $ZilPass = ""
-                    #}
                     $First = $False
                 }
 
@@ -244,7 +235,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 					    DeviceName     = $Miner_Device.Name
 					    DeviceModel    = $Miner_Model
 					    Path           = $Path
-					    Arguments      = "-N 10 -r 5 --api-bind-http 127.0.0.1:`$mport -d $($DeviceIDsAll) -a $($Algorithm) -o $($Pool_Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Wallet -and $Pools.$Algorithm_Norm.Worker) {" -w $($Pools.$Algorithm_Norm.Worker)"})$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$($Pools.$Algorithm_Norm.Failover | Select-Object | Foreach-Object {" -o $($_.Protocol)://$($_.Host):$($_.Port) -u $($_.User)$(if ($_.Pass) {" -p $($_.Pass)"})"})$(if ($Pools.$Algorithm_Norm.SSL) {" --no-strict-ssl"})$(if ($ZilPool -and $ZilUser -and $ZilPass) {" --coin eth+zil --url2 $($ZilPool) --user2 $($ZilUser) --pass2 $($ZilPass) --extra-dag-epoch 0"})$(if (-not $Session.Config.ShowMinerWindow){" --no-color"}) --no-watchdog --no-new-block-info $($_.Params)"
+					    Arguments      = "-N 10 -r 5 --api-bind-http 127.0.0.1:`$mport -d $($DeviceIDsAll) -a $($Algorithm) -o $($Pool_Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Wallet -and $Pools.$Algorithm_Norm.Worker) {" -w $($Pools.$Algorithm_Norm.Worker)"})$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$($Pools.$Algorithm_Norm.Failover | Select-Object | Foreach-Object {" -o $($_.Protocol)://$($_.Host):$($_.Port) -u $($_.User)$(if ($_.Pass) {" -p $($_.Pass)"})"})$(if ($Pools.$Algorithm_Norm.SSL) {" --no-strict-ssl"})$(if (-not $Session.Config.ShowMinerWindow){" --no-color"}) --no-watchdog --no-new-block-info $($_.Params)"
 					    HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate"."$(if ($_.HashrateDuration){$_.HashrateDuration}else{"Week"})"}
 					    API            = "Trex"
 					    Port           = $Miner_Port
@@ -261,7 +252,6 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
                         Benchmarked    = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Benchmarked
                         LogFile        = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".LogFile
                         ExcludePoolName = $_.ExcludePoolName
-                        DualZIL        = $ZilUser -ne "" -and $ZilPool -ne ""
 				    }
                 }
 		    }

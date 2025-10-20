@@ -166,14 +166,6 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
         $Miner_Model = $_.Model
         $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)" | Where-Object {$_.Model -eq $Miner_Model}
 
-        $ZilParams    = ""
-
-        if ($false -and $Pools.ZilliqaDual) {
-            if ($ZilWallet = $Pools.ZilliqaDual.Wallet) {
-                $ZilParams = " --url=$($ZilWallet -replace "@","%40")@$($Pools.ZilliqaDual.Host):$($Pools.ZilliqaDual.Port)" 
-            }
-        }
-
         $Commands | Where-Object {$_.Vendor -icontains $Miner_Vendor} | ForEach-Object {
             $First = $true
 
@@ -198,9 +190,9 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                     }
                     $PersCoin = Get-EquihashCoinPers $Pools.$MainAlgorithm_Norm.CoinSymbol -Default "auto"
 				    $Pool_Port = if ($Pools.$MainAlgorithm_Norm.Ports -ne $null -and $Pools.$MainAlgorithm_Norm.Ports.GPU) {$Pools.$MainAlgorithm_Norm.Ports.GPU} else {$Pools.$MainAlgorithm_Norm.Port}
-                    $Stratum = @()
-                    if ($Pools.$MainAlgorithm_Norm.SSL) {$Stratum += "ssl"}
-                    if ($Pools.$MainAlgorithm_Norm.Host -match "miningrigrentals" -and $MainAlgorithm_Norm_0 -match "^etc?hash") {$Stratum += "stratum2"}
+                    $Stratum = [System.Collections.Generic.List[string]]::new()
+                    if ($Pools.$MainAlgorithm_Norm.SSL) {[void]$Stratum.Add("ssl")}
+                    if ($Pools.$MainAlgorithm_Norm.Host -match "miningrigrentals" -and $MainAlgorithm_Norm_0 -match "^etc?hash") {[void]$Stratum.Add("stratum2")}
 
                     if ($SecondAlgorithm_Norm_0) {
 
@@ -222,16 +214,16 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                                 if ($Pools.$SecondAlgorithm_Norm.Host -and $Pools.$SecondAlgorithm_Norm.User -and (-not $_.ExcludePoolName -or $Pools.$SecondAlgorithm_Norm.Host -notmatch $_.ExcludePoolName) -and (-not $_.CoinSymbol -or $_.CoinSymbol -icontains $Pools.$SecondAlgorithm_Norm.CoinSymbol) -and (-not $_.ExcludeCoinSymbol -or $_.ExcludeCoinSymbol -inotcontains $Pools.$SecondAlgorithm_Norm.CoinSymbol)) {
 
                                     $SecondPool_Port = if ($Pools.$SecondAlgorithm_Norm.Ports -ne $null -and $Pools.$SecondAlgorithm_Norm.Ports.GPU) {$Pools.$SecondAlgorithm_Norm.Ports.GPU} else {$Pools.$SecondAlgorithm_Norm.Port}
-                                    $Stratum2 = @()
-                                    if ($Pools.$SecondAlgorithm_Norm.SSL) {$Stratum2 += "ssl"}
-                                    if ($Pools.$SecondAlgorithm_Norm.Host -match "miningrigrentals" -and $SecondAlgorithm_Norm_0 -match "^etc?hash") {$Stratum2 += "stratum2"}
+                                    $Stratum2 = [System.Collections.Generic.List[string]]::new()
+                                    if ($Pools.$SecondAlgorithm_Norm.SSL) {[void]$Stratum2.Add("ssl")}
+                                    if ($Pools.$SecondAlgorithm_Norm.Host -match "miningrigrentals" -and $SecondAlgorithm_Norm_0 -match "^etc?hash") {[void]$Stratum2.Add("stratum2")}
 
 				                    [PSCustomObject]@{
 					                    Name           = $Miner_Name_Dual
 					                    DeviceName     = $Miner_Device.Name
 					                    DeviceModel    = $Miner_Model
 					                    Path           = $Path
-					                    Arguments      = "--$($Miner_Vendor.ToLower()) --telemetry=`$mport -cd $($DeviceIDsAll) --url=$(if ($Stratum) {"$($Stratum -join '+')://"})$($Pools.$MainAlgorithm_Norm.User -replace "@","%40")@$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" -p $($Pools.$MainAlgorithm_Norm.Pass)"})$(if ($Pools.$MainAlgorithm_Norm.Worker -and $Pools.$MainAlgorithm_Norm.User -eq $Pools.$MainAlgorithm_Norm.Wallet) {" --worker=$($Pools.$MainAlgorithm_Norm.Worker)"})$(if ($PersCoin -and ($_.AutoPers -or $PersCoin -ne "auto")) {" --pers=$($PersCoin)"}) --gpu-line --minimal --extra --latency$(if (-not $Session.Config.ShowMinerWindow) {" --nocolor"})$(if ($Pools.$MainAlgorithm_Norm.Host -notmatch "xxxMiningRigRentals" -and $PersCoin -ne "auto") {" --smart-pers"}) $($_.Params) --nohttpheaders$($ZilParams) --url2=$(if ($Stratum2) {"$($Stratum2 -join '+')://"})$($Pools.$SecondAlgorithm_Norm.User -replace "@","%40")@$($Pools.$SecondAlgorithm_Norm.Host):$($SecondPool_Port) $($DeviceIntensitiesAll)"
+					                    Arguments      = "--$($Miner_Vendor.ToLower()) --telemetry=`$mport -cd $($DeviceIDsAll) --url=$(if ($Stratum) {"$($Stratum -join '+')://"})$($Pools.$MainAlgorithm_Norm.User -replace "@","%40")@$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" -p $($Pools.$MainAlgorithm_Norm.Pass)"})$(if ($Pools.$MainAlgorithm_Norm.Worker -and $Pools.$MainAlgorithm_Norm.User -eq $Pools.$MainAlgorithm_Norm.Wallet) {" --worker=$($Pools.$MainAlgorithm_Norm.Worker)"})$(if ($PersCoin -and ($_.AutoPers -or $PersCoin -ne "auto")) {" --pers=$($PersCoin)"}) --gpu-line --minimal --extra --latency$(if (-not $Session.Config.ShowMinerWindow) {" --nocolor"})$(if ($Pools.$MainAlgorithm_Norm.Host -notmatch "xxxMiningRigRentals" -and $PersCoin -ne "auto") {" --smart-pers"}) $($_.Params) --nohttpheaders --url2=$(if ($Stratum2) {"$($Stratum2 -join '+')://"})$($Pools.$SecondAlgorithm_Norm.User -replace "@","%40")@$($Pools.$SecondAlgorithm_Norm.Host):$($SecondPool_Port) $($DeviceIntensitiesAll)"
 					                    HashRates      = [PSCustomObject]@{
                                                             $MainAlgorithm_Norm = $($Global:StatsCache."$($Miner_Name_Dual)_$($MainAlgorithm_Norm_0)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))
                                                             $SecondAlgorithm_Norm = $($Global:StatsCache."$($Miner_Name_Dual)_$($SecondAlgorithm_Norm_0)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))
@@ -240,6 +232,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 					                    Port           = $Miner_Port
                                         FaultTolerance = $_.FaultTolerance
 					                    ExtendInterval = $_.ExtendInterval
+                                        SkipSeconds    = 40
                                         Penalty        = 0
 					                    DevFee         = [PSCustomObject]@{
 								                            ($MainAlgorithm_Norm) = $_.Fee
@@ -254,7 +247,6 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                                         Benchmarked    = $Global:StatsCache."$($Miner_Name_Dual)_$($MainAlgorithm_Norm_0)_HashRate".Benchmarked
                                         LogFile        = $Global:StatsCache."$($Miner_Name_Dual)_$($MainAlgorithm_Norm_0)_HashRate".LogFile
                                         ExcludePoolName= $_.ExcludePoolName
-                                        DualZIL        = $ZilParams -ne ""
 				                    }
                                 }
                             }
@@ -265,12 +257,13 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 					        DeviceName     = $Miner_Device.Name
 					        DeviceModel    = $Miner_Model
 					        Path           = $Path
-					        Arguments      = "--$($Miner_Vendor.ToLower()) --telemetry=`$mport -cd $($DeviceIDsAll) --url=$(if ($Stratum) {"$($Stratum -join '+')://"})$($Pools.$MainAlgorithm_Norm.User -replace "@","%40")@$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" -p $($Pools.$MainAlgorithm_Norm.Pass)"})$(if ($Pools.$MainAlgorithm_Norm.Worker -and $Pools.$MainAlgorithm_Norm.User -eq $Pools.$MainAlgorithm_Norm.Wallet) {" --worker=$($Pools.$MainAlgorithm_Norm.Worker)"})$(if ($PersCoin -and ($_.AutoPers -or $PersCoin -ne "auto")) {" --pers=$($PersCoin)"}) --gpu-line --minimal --extra --latency$(if (-not $Session.Config.ShowMinerWindow) {" --nocolor"})$(if ($Pools.$MainAlgorithm_Norm.Host -notmatch "xxxMiningRigRentals" -and $PersCoin -ne "auto") {" --smart-pers"}) $($_.Params) --nohttpheaders$($ZilParams)"
+					        Arguments      = "--$($Miner_Vendor.ToLower()) --telemetry=`$mport -cd $($DeviceIDsAll) --url=$(if ($Stratum) {"$($Stratum -join '+')://"})$($Pools.$MainAlgorithm_Norm.User -replace "@","%40")@$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" -p $($Pools.$MainAlgorithm_Norm.Pass)"})$(if ($Pools.$MainAlgorithm_Norm.Worker -and $Pools.$MainAlgorithm_Norm.User -eq $Pools.$MainAlgorithm_Norm.Wallet) {" --worker=$($Pools.$MainAlgorithm_Norm.Worker)"})$(if ($PersCoin -and ($_.AutoPers -or $PersCoin -ne "auto")) {" --pers=$($PersCoin)"}) --gpu-line --minimal --extra --latency$(if (-not $Session.Config.ShowMinerWindow) {" --nocolor"})$(if ($Pools.$MainAlgorithm_Norm.Host -notmatch "xxxMiningRigRentals" -and $PersCoin -ne "auto") {" --smart-pers"}) $($_.Params) --nohttpheaders"
 					        HashRates      = [PSCustomObject]@{$MainAlgorithm_Norm = $($Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Week)}
 					        API            = "MiniZ"
 					        Port           = $Miner_Port
                             FaultTolerance = $_.FaultTolerance
 					        ExtendInterval = $_.ExtendInterval
+                            SkipSeconds    = 40
                             Penalty        = 0
 					        DevFee         = $_.Fee
 					        Uri            = $Uri
@@ -282,7 +275,6 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                             Benchmarked    = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Benchmarked
                             LogFile        = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".LogFile
                             ExcludePoolName = $_.ExcludePoolName
-                            DualZIL        = $ZilParams -ne ""
 				        }
                     }
 			    }
