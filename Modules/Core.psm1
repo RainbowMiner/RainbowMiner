@@ -2681,7 +2681,7 @@ function Invoke-Core {
         }
     }
     if (-not $FilteredPools) { $FilteredPools = @() }
-    elseif ($FilteredPools.Count -eq 1) { $FilteredPools = @($FilteredPools) }
+    elseif ($FilteredPools -isnot [array]) { $FilteredPools = @($FilteredPools) }
 
     $API.Pools = ConvertTo-Json $FilteredPools -Depth 10 -ErrorAction Ignore
  
@@ -3625,7 +3625,7 @@ function Invoke-Core {
     }
  
     if (-not $Miners) { $Miners = @() }
-    elseif ($Miners.Count -eq 1) {$Miners = @($Miners)}
+    elseif ($Miners -isnot [array]) {$Miners = @($Miners)}
 
     #Give API access to the fasted miners information
     ConvertTo-Json $Miners -Depth 10 -ErrorAction Ignore | Set-Content ".\Data\fastestminers.json"
