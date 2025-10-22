@@ -77,8 +77,8 @@ function Start-SubProcessInBackground {
         [Switch]$Quiet = $false
     )
 
-    [int[]]$Running = @()
-    Get-SubProcessRunningIds $FilePath | Foreach-Object {$Running += $_}
+    $Running = [System.Collections.Generic.List[int]]::new()
+    Get-SubProcessRunningIds $FilePath | Where-Object {$_} | Foreach-Object {[void]$Running.Add([int]$_)}
 
     if ($ArgumentList) {
         $ArgumentListToBlock = $ArgumentList
@@ -92,14 +92,13 @@ function Start-SubProcessInBackground {
 
     $Job = Start-ThreadJob -FilePath .\Scripts\StartInBackground.ps1 -ArgumentList $PID, $WorkingDirectory, $FilePath, $ArgumentList, $LogPath, $EnvVars, $Priority, $PWD
 
-    [int[]]$ProcessIds = @()
-    
+    $ProcessIds = [System.Collections.Generic.List[int]]::new()
     if ($Job) {
-        Get-SubProcessIds -FilePath $FilePath -ArgumentList $ArgumentList -MultiProcess $MultiProcess -Running $Running -Executables $Executables | Foreach-Object {$ProcessIds += $_}
+        Get-SubProcessIds -FilePath $FilePath -ArgumentList $ArgumentList -MultiProcess $MultiProcess -Running $Running.ToArray() -Executables $Executables | Where-Object {$_} | Foreach-Object {[void]$ProcessIds.Add([int]$_)}
     }
     
     if ($Priority -lt 10) {
-        Set-SubProcessPriority $ProcessIds -Priority $Priority -CPUAffinity $CPUAffinity -Quiet:$Quiet
+        Set-SubProcessPriority $ProcessIds.ToArray() -Priority $Priority -CPUAffinity $CPUAffinity -Quiet:$Quiet
     }
 
     [PSCustomObject]@{
@@ -143,8 +142,8 @@ function Start-SubProcessInConsole {
         [Switch]$Quiet = $false
     )
 
-    [int[]]$Running = @()
-    Get-SubProcessRunningIds $FilePath | Foreach-Object {$Running += $_}
+    $Running = [System.Collections.Generic.List[int]]::new()
+    Get-SubProcessRunningIds $FilePath | Where-Object {$_} | Foreach-Object {[void]$Running.Add([int]$_)}
 
     $LDExp = ""
     $LinuxDisplay = ""
@@ -169,16 +168,17 @@ function Start-SubProcessInConsole {
     do {Start-Sleep 1; $JobOutput = Receive-Job $Job;$cnt--}
     while ($JobOutput -eq $null -and $cnt -gt 0)
 
-    [int[]]$ProcessIds = @()
-    
+    $ProcessIds = [System.Collections.Generic.List[int]]::new()
     if ($JobOutput) {
-        Get-SubProcessIds -FilePath $FilePath -ArgumentList $ArgumentList -MultiProcess $MultiProcess -Running $Running -Executables $Executables | Foreach-Object {$ProcessIds += $_}
-     }
+        Get-SubProcessIds -FilePath $FilePath -ArgumentList $ArgumentList -MultiProcess $MultiProcess -Running $Running.ToArray() -Executables $Executables | Where-Object {$_} | Foreach-Object {[void]$ProcessIds.Add([int]$_)}
 
-    if (-not $ProcessIds.Count -and $JobOutput.ProcessId) {$ProcessIds += $JobOutput.ProcessId}
+        if (-not $ProcessIds.Count -and $JobOutput.ProcessId) {
+            [void]$ProcessIds.Add([int]$JobOutput.ProcessId)
+        }
+    }
 
     if ($Priority -lt 10) {
-        Set-SubProcessPriority $ProcessIds -Priority $Priority -CPUAffinity $CPUAffinity -Quiet:$Quiet
+        Set-SubProcessPriority $ProcessIds.ToArray() -Priority $Priority -CPUAffinity $CPUAffinity -Quiet:$Quiet
     }
 
     if ($IsWindows -and $JobOutput.ProcessId -and $WinTitle -ne "") {
@@ -392,17 +392,15 @@ function Start-SubProcessInScreen {
 
     $JobOutput.StartLog | Where-Object {$_} | Foreach-Object {Write-Log "$_"}
 
-    [int[]]$ProcessIds = @()
-    
+    $ProcessIds = [System.Collections.Generic.List[int]]::new()
     if ($JobOutput.ProcessId) {
-        $ProcessIds += $JobOutput.ProcessId
+        [void]$ProcessIds.Add([int]$JobOutput.ProcessId)
         if ($MultiProcess) {
-            if (-not $Executables) {
-                $Executables = @(Split-Path $FilePath -Leaf)
-            }
-            Get-SubProcessIds -FilePath $FilePath -ArgumentList $ArgumentList -MultiProcess $MultiProcess -Running $ProcessIds -Executables $Executables | Foreach-Object {
-                if ($_ -notin $ProcessIds) {
-                    $ProcessIds += $_
+            if (-not $Executables) { $Executables = @(Split-Path $FilePath -Leaf) }
+            Get-SubProcessIds -FilePath $FilePath -ArgumentList $ArgumentList -MultiProcess $MultiProcess -Running $ProcessIds.ToArray() -Executables $Executabless | Where-Object {$_} | Foreach-Object {
+                $p = [int]$_
+                if (-not $ProcessIds.Contains($p)) {
+                    [void]$ProcessIds.Add($p)
                 }
             }
         }
@@ -605,17 +603,15 @@ function Start-SubProcessInTmux {
 
     $JobOutput.StartLog | Where-Object {$_} | Foreach-Object {Write-Log "$_"}
 
-    [int[]]$ProcessIds = @()
-    
+    $ProcessIds = [System.Collections.Generic.List[int]]::new()
     if ($JobOutput.ProcessId) {
-        $ProcessIds += $JobOutput.ProcessId
+        [void]$ProcessIds.Add([int]$JobOutput.ProcessId)
         if ($MultiProcess) {
-            if (-not $Executables) {
-                $Executables = @(Split-Path $FilePath -Leaf)
-            }
-            Get-SubProcessIds -FilePath $FilePath -ArgumentList $ArgumentList -MultiProcess $MultiProcess -Running $ProcessIds -Executables $Executables | Foreach-Object {
-                if ($_ -notin $ProcessIds) {
-                    $ProcessIds += $_
+            if (-not $Executables) { $Executables = @(Split-Path $FilePath -Leaf) }
+            Get-SubProcessIds -FilePath $FilePath -ArgumentList $ArgumentList -MultiProcess $MultiProcess -Running $ProcessIds.ToArray() -Executables $Executabless | Where-Object {$_} | Foreach-Object {
+                $p = [int]$_
+                if (-not $ProcessIds.Contains($p)) {
+                    [void]$ProcessIds.Add($p)
                 }
             }
         }
@@ -658,45 +654,42 @@ function Get-SubProcessIds {
         [int]$MultiProcess = 0
     )
 
-    $StopWatch = [System.Diagnostics.Stopwatch]::New()
+    $found = [System.Collections.Generic.List[int]]::new()
 
-    $StopWatch.Restart()
+    $runningSet = [System.Collections.Generic.HashSet[int]]::new()
+    foreach ($p in $Running) { [void]$runningSet.Add([int]$p) }
+
+    $sw = [System.Diagnostics.Stopwatch]::StartNew()
 
     if ($IsWindows) {
-
-        $WaitCount = 0
-        $ProcessFound = 0
         $ArgumentList = ("*$($ArgumentList.Replace("*","#!star!#").Replace("'","*").Replace('"',"*") -replace '([\[\]\?\`])','`$1')*" -replace "\*+","*").Replace("#!star!#",'`*')
         $FilePathOnly = "$(Split-Path -Path $FilePath)"
 
         do {
             Start-Sleep -Milliseconds 100
-            Get-CIMInstance CIM_Process | Where-Object {($_.ExecutablePath -ne $null -and ("$(Split-Path -Path $_.ExecutablePath)" -eq $FilePathOnly)) -and $_.CommandLine -like $ArgumentList -and $Running -inotcontains $_.ProcessId} | Foreach-Object {
-                $Running += $_.ProcessId
-                $ProcessFound++
-                $_.ProcessId
-                Write-Log "$($_.ProcessId) found for $FilePath"
+            Get-CIMInstance CIM_Process | Where-Object {($_.ExecutablePath -ne $null -and ("$(Split-Path -Path $_.ExecutablePath)" -eq $FilePathOnly)) -and $_.CommandLine -like $ArgumentList -and -not $runningSet.Contains([int]$_.ProcessId)} | Foreach-Object {
+                $p = [int]$_.ProcessId
+                [void]$runningSet.Add($p)
+                [void]$found.Add($p)
+                Write-Log "$p found for $FilePath"
             }
-            $WaitCount++
-        } until (($StopWatch.Elapsed.TotalSeconds -gt 10) -or ($ProcessFound -gt $MultiProcess))
+        } until (($sw.Elapsed.TotalSeconds -gt 10) -or ($found.Count -gt $MultiProcess))
 
     } elseif ($IsLinux) {
-
-        $WaitCount = 0
-        $ProcessFound = 0
-
         do {
             Start-Sleep -Milliseconds 100
-            Get-Process | Where-Object {$_.Name -in $Executables -and ($($_.Parent).Parent.Id -in $Running -or $($_.Parent).Id -in $Running)} | Foreach-Object {
-                $ProcessFound++
-                $_.Id
-                Write-Log "Success: got id $($_.Id) for $($_.Name) as child of $($($_.Parent).Parent.Name)"
+            Get-Process | Where-Object {$_.Name -in $Executables -and $_.Parent -and ($runningSet.Contains([int]$_.Parent.Id) -or ($_.Parent.Parent -and $runningSet.Contains([int]$_.Parent.Parent.Id)))} | Foreach-Object {
+                $p = [int]$_.Id
+                [void]$found.Add($p)
+                Write-Log "Success: got id $p for $($_.Name) as child of $($_.Parent.Parent.Name)"
             }
-            $WaitCount++
-        } until (($StopWatch.Elapsed.TotalSeconds -gt 10) -or ($ProcessFound -ge $MultiProcess))
+        } until (($sw.Elapsed.TotalSeconds -gt 10) -or ($found.Count -ge $MultiProcess))
     }
 
-    $StopWatch = $null
+    $sw.Stop()
+    $sw = $null
+
+    $found.ToArray()
 }
 
 function Set-SubProcessPriority {
@@ -745,15 +738,18 @@ function Stop-SubProcess {
         $Job.ProcessId | Select-Object -First 1 | Foreach-Object {
             if ($Process = Get-Process -Id $_ -ErrorAction Ignore) {
 
-                $StopWatch = [System.Diagnostics.Stopwatch]::New()
+                $sw = [System.Diagnostics.Stopwatch]::StartNew()
 
-                $StopWatch.Start()
-
-                $ToKill  = @()
-                $ToKill += $Process
+                $ToKill  = [System.Collections.ArrayList]::new()
+                [void]$ToKill.Add($Process)
 
                 if ($IsLinux) {
-                    $ToKill += Get-Process | Where-Object {$_.Parent.Id -eq $Process.Id -and $_.Name -eq $Process.Name}
+                    foreach ($p in Get-Process -Name $Process.Name -ErrorAction Ignore) {
+                        if ($p.Parent -and ($p.Parent.Id -eq $Process.Id)) {
+                            [void]$ToKill.Add($p)
+                        }
+                    }
+                    $p = $null
                 }
 
                 if ($ShutdownUrl -ne "") {
@@ -763,14 +759,14 @@ function Stop-SubProcess {
                     try {
                         $Response = Invoke-GetUrl $ShutdownUrl -Timeout 20 -ErrorAction Stop
 
-                        $StopWatch.Restart()
-                        while (($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) -and $StopWatch.Elapsed.TotalSeconds -le 20) {
+                        $sw.Restart()
+                        while (($ToKill.HasExited -contains $null -or $ToKill.HasExited -contains $false) -and $sw.Elapsed.TotalSeconds -le 20) {
                             Start-Sleep -Milliseconds 500
                         }
-                        if ($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) {
+                        if ($ToKill.HasExited -contains $null -or $ToKill.HasExited -contains $false) {
                             Write-Log -Level Warn "$($Title) failed to close within 20 seconds via API $(if ($Name) {": $($Name)"})"
                         }
-                        $StopWatch.Restart()
+                        $sw.Restart()
                     }
                     catch {
                         Write-Log -Level Warn "Failed to shutdown process $($Title) via API$(if ($Name) {": $($Name)"})"
@@ -790,7 +786,7 @@ function Stop-SubProcess {
                     #    if (-not $Process.HasExited) {
                     #        Write-Log "Send Ctrl+C to $($Shutdown_Title)"
                     #        if (Send-CtrlC $Process.Id) {
-                    #            while (-not $Process.HasExited -and $StopWatch.Elapsed.TotalSeconds -le $WaitForExit) {
+                    #            while (-not $Process.HasExited -and $sw.Elapsed.TotalSeconds -le $WaitForExit) {
                     #                Start-Sleep -Milliseconds 500
                     #            }
                     #            if (-not $Process.HasExited -and $WaitForExit -gt 0) {
@@ -825,7 +821,7 @@ function Stop-SubProcess {
 
                     if ($Job.ScreenName) {
                         try {
-                            if ($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) {
+                            if ($ToKill.HasExited -contains $null -or $ToKill.HasExited -contains $false) {
                                 Write-Log "Send ^C to $($Title)'s screen $($Job.ScreenName)"
 
                                 $ArgumentList = if ($Job.ScreenCmd -eq "screen") {"-S $($Job.ScreenName) -X stuff `^C"} elseif ($Job.ScreenCmd -eq "tmux") {"send-keys -t $($Job.ScreenName) C-c"}
@@ -838,12 +834,12 @@ function Stop-SubProcess {
                                     $Screen_Process.WaitForExit(5000) > $null
                                 }
 
-                                $StopWatch.Restart()
-                                while (($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) -and $StopWatch.Elapsed.TotalSeconds -le 10) {
+                                $sw.Restart()
+                                while (($ToKill.HasExited -contains $null -or $ToKill.HasExited -contains $false) -and $sw.Elapsed.TotalSeconds -le 10) {
                                     Start-Sleep -Milliseconds 500
                                 }
 
-                                if ($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) {
+                                if ($ToKill.HasExited -contains $null -or $ToKill.HasExited -contains $false) {
                                     Write-Log -Level Warn "$($Title) failed to close within 10 seconds$(if ($Name) {": $($Name)"})"
                                 }
                             }
@@ -888,13 +884,13 @@ function Stop-SubProcess {
                 # Wait for miner to shutdown
                 #
 
-                while (($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) -and $StopWatch.Elapsed.TotalSeconds -le $WaitForExit) {
-                    Write-Log "Wait for exit of $($Title) PID $($_) ($($StopWatch.Elapsed.TotalSeconds)s elapsed)$(if ($Name) {": $($Name)"})"
+                while (($ToKill.HasExited -contains $null -or $ToKill.HasExited -contains $false) -and $sw.Elapsed.TotalSeconds -le $WaitForExit) {
+                    Write-Log "Wait for exit of $($Title) PID $($_) ($($sw.Elapsed.TotalSeconds)s elapsed)$(if ($Name) {": $($Name)"})"
                     Start-Sleep -Seconds 1
                 }
 
                 if ($WaitForExit -gt 0) {
-                    if ($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) {
+                    if ($ToKill.HasExited -contains $null -or $ToKill.HasExited -contains $false) {
                         Write-Log -Level Warn "Alas! $($Title) failed to close within $WaitForExit seconds$(if ($Name) {": $($Name)"}) - $(if ($Session.Config.EnableRestartComputer) {"REBOOTING COMPUTER NOW"} else {"PLEASE REBOOT COMPUTER!"})"
                         if ($Session.Config.EnableRestartComputer) {$Session.RestartComputer = $true}
                     } else {
@@ -902,6 +898,9 @@ function Stop-SubProcess {
                         Start-Sleep -Seconds 1
                     }
                 }
+
+                $ToKill.Clear()
+                $ToKill = $null
             }
         }
     }
