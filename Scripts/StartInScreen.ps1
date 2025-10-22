@@ -29,7 +29,7 @@ if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
     }
 }
 
-$StartLog = @()
+$StartLog = [System.Collections.Generic.List[string]]@()
 
 if ($started) {
     $StopWatch.Restart()
@@ -46,17 +46,17 @@ if ($started) {
     } until ($ScreenProcessId -or ($StopWatch.Elapsed.TotalSeconds) -ge 5)
 
     if (-not $ScreenProcessId) {
-        $StartLog += "Failed to get screen."
-        $StartLog += "Result of `"screen -ls`""
+        [void]$StartLog.Add("Failed to get screen.")
+        [void]$StartLog.Add("Result of `"screen -ls`"")
         if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
-            Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "screen -ls" | Foreach-Object {$StartLog += $_}
+            Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "screen -ls" | Foreach-Object {[void]$StartLog.Add($_)}
             $OCDcount++
         } else {
-            Invoke-Expression "screen -ls" | Foreach-Object {$StartLog += $_}
+            Invoke-Expression "screen -ls" | Foreach-Object {[void]$StartLog.Add($_)}
         }
     } else {
 
-        $StartLog += "Success: got id $ScreenProcessId for screen $ScreenName"
+        [void]$StartLog.Add("Success: got id $ScreenProcessId for screen $ScreenName")
 
         $MinerExecutable = Split-Path $FilePath -Leaf
 
@@ -75,11 +75,11 @@ if ($started) {
         } until ($Process -or ($StopWatch.Elapsed.TotalSeconds) -ge 10)
 
         if ($Process) {
-            $StartLog += "Success: got id $($Process.Id) for $MinerExecutable in screen $ScreenName"
+            [void]$StartLog.Add("Success: got id $($Process.Id) for $MinerExecutable in screen $ScreenName")
         } else {
-            $StartLog += "Failed to get process for $ScreenName with id $ScreenProcessId"
-            $StartLog += "List of processes:"
-            Get-Process | Where-Object {$_.Path -and $_.Path -like "$($CurrentPwd)/Bin/*"} | Foreach-Object {$StartLog += "$($_.Name)`t$($_.Id)`t$($_.Parent.Id)"}
+            [void]$StartLog.Add("Failed to get process for $ScreenName with id $ScreenProcessId")
+            [void]$StartLog.Add("List of processes:")
+            Get-Process | Where-Object {$_.Path -and $_.Path -like "$($CurrentPwd)/Bin/*"} | Foreach-Object {[void]$StartLog.Add("$($_.Name)`t$($_.Id)`t$($_.Parent.Id)")}
         }
 
     }
@@ -99,9 +99,14 @@ $ProcessName = $Process.Name
 
 do {
     if ($Done = $ControllerProcess.WaitForExit(1000)) {
-        $ToKill = @()
-        $ToKill += $Process
-        $ToKill += Get-Process | Where-Object {$_.Parent.Id -eq $Process.Id -and $_.Name -eq $Process.Name}
+        $ToKill = [System.Collections.ArrayList]::new()
+        [void]$ToKill.Add($Process)
+        foreach ($p in Get-Process -Name $Process.Name -ErrorAction Ignore) {
+            if ($p.Parent -and ($p.Parent.Id -eq $Process.Id)) {
+                [void]$ToKill.Add($p)
+            }
+        }
+        $p = $null
 
         $ArgumentList = "-S $($ScreenName) -X stuff `^C"
         if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
@@ -113,7 +118,7 @@ do {
         }
 
         $StopWatch.Restart()
-        while (($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) -and $StopWatch.Elapsed.TotalSeconds -le 10) {
+        while (($ToKill.HasExited -contains $null -or $ToKill.HasExited -contains $false) -and $StopWatch.Elapsed.TotalSeconds -le 10) {
             Start-Sleep -Milliseconds 500
         }
 
@@ -136,6 +141,9 @@ do {
                 Stop-Process -InputObject $_ -Force -ErrorAction Ignore
             }
         }
+
+        $ToKill.Clear()
+        $ToKill = $null
 
         if ($ScreenProcessId) {
             $ArgumentList = "-S $($ScreenName) -X quit"

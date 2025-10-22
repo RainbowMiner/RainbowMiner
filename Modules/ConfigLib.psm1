@@ -121,7 +121,7 @@ function Set-GpuGroupsConfigDefault {
             $GpuNames = Get-Device "amd","intel","nvidia" -IgnoreOpenCL | Select-Object -ExpandProperty Name -Unique
             foreach ($GpuName in $GpuNames) {
                 if ($Preset.$GpuName -eq $null) {$Preset | Add-Member $GpuName "" -Force}
-                elseif ($Preset.$GpuName -ne "") {$Global:GlobalCachedDevices | Where-Object Name -eq $GpuName | Foreach-Object {$_.Model += $Preset.$GpuName.ToUpper();$_.GpuGroup = $Preset.$GpuName.ToUpper()}}
+                elseif ($Preset.$GpuName -ne "") {$Global:GlobalCachedDevices | Where-Object Name -eq $GpuName | Foreach-Object {$_.Model = "$($_.Model)$($Preset.$GpuName.ToUpper())";$_.GpuGroup = $Preset.$GpuName.ToUpper()}}
             }
             $Sorted = [PSCustomObject]@{}
             $Preset.PSObject.Properties.Name | Sort-Object | Foreach-Object {$Sorted | Add-Member $_ $Preset.$_ -Force}
@@ -166,15 +166,15 @@ function Set-CombosConfigDefault {
                 if ($Preset.$SubsetType -eq $null) {$Preset | Add-Member $SubsetType ([PSCustomObject]@{}) -Force}
                 if ($Sorted.$SubsetType -eq $null) {$Sorted | Add-Member $SubsetType ([PSCustomObject]@{}) -Force}
 
-                $NewSubsetModels = @()
+                $NewSubsetModels = [System.Collections.Generic.List[string]]::new()
 
                 $SubsetDevices = @($Global:GlobalCachedDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -eq $SubsetType})
 
                 if (($SubsetDevices.Model | Select-Object -Unique).Count -gt 1) {
 
                     # gpugroups never combine against each other, if same gpu. Except full group
-                    $GpuGroups = @()
-                    $FullGpuGroups = $SubsetDevices | Where-Object GpuGroup -ne "" | Group-Object {$_.Model -replace "$($_.GpuGroup)$"} | Where-Object {$_.Count -gt 1} | Foreach-Object {$GpuGroups += $_.Group.Model;($_.Group.Model | Select-Object -Unique | Sort-Object) -join '-'}
+                    $GpuGroups = [System.Collections.Generic.List[string]]::new()
+                    $FullGpuGroups = $SubsetDevices | Where-Object GpuGroup -ne "" | Group-Object {$_.Model -replace "$($_.GpuGroup)$"} | Where-Object {$_.Count -gt 1} | Foreach-Object {[void]$GpuGroups.Add($_.Group.Model);($_.Group.Model | Select-Object -Unique | Sort-Object) -join '-'}
 
                     # count groups
                     $GpuCount = ($SubsetDevices | Where-Object GpuGroup -eq "" | Select-Object -Property Model -Unique | Measure-Object).Count + $FullGpuGroups.Count
@@ -215,7 +215,7 @@ function Set-CombosConfigDefault {
                             }
                             $Preset.$SubsetType | Add-Member $SubsetModel "$([int]$SubsetDefault)" -Force
                         }
-                        $NewSubsetModels += $SubsetModel
+                        [void]$NewSubsetModels.Add($SubsetModel)
                     }
 
                     if ($DisplayWarning) {
@@ -226,7 +226,7 @@ function Set-CombosConfigDefault {
                     $Preset.$SubsetType.$SubsetModel = "1"
                 }
 
-                $Preset.$SubsetType.PSObject.Properties.Name | Where-Object {$NewSubsetModels -icontains $_} | Sort-Object | Foreach-Object {$Sorted.$SubsetType | Add-Member $_ "$(if (Get-Yes $Preset.$SubsetType.$_) {1} else {0})" -Force}
+                $Preset.$SubsetType.PSObject.Properties.Name | Where-Object {$NewSubsetModels -contains $_} | Sort-Object | Foreach-Object {$Sorted.$SubsetType | Add-Member $_ "$(if (Get-Yes $Preset.$SubsetType.$_) {1} else {0})" -Force}
             }
             if ($ForceWrite -or -not [RBMToolBox]::CompareObject($Sorted,$Preset_Copy)) {
                 Set-ContentJson -PathToFile $PathToFile -Data $Sorted > $null

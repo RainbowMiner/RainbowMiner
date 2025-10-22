@@ -92,9 +92,14 @@ $ProcessName = $Process.Name
 
 do {
     if ($Done = $ControllerProcess.WaitForExit(1000)) {
-        $ToKill = @()
-        $ToKill += $Process
-        $ToKill += Get-Process | Where-Object {$_.Parent.Id -eq $Process.Id -and $_.Name -eq $Process.Name}
+        $ToKill = [System.Collections.ArrayList]::new()
+        [void]$ToKill.Add($Process)
+        foreach ($p in Get-Process -Name $Process.Name -ErrorAction Ignore) {
+            if ($p.Parent -and ($p.Parent.Id -eq $Process.Id)) {
+                [void]$ToKill.Add($p)
+            }
+        }
+        $p = $null
 
         $ArgumentList = "send-keys -t $ScreenName C-c"
         if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
@@ -106,7 +111,7 @@ do {
         }
 
         $StopWatch.Restart()
-        while (($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) -and $StopWatch.Elapsed.TotalSeconds -le 10) {
+        while (($ToKill.HasExited -contains $null -or $ToKill.HasExited -contains $false) -and $StopWatch.Elapsed.TotalSeconds -le 10) {
             Start-Sleep -Milliseconds 500
         }
 
@@ -129,6 +134,9 @@ do {
                 Stop-Process -InputObject $_ -Force -ErrorAction Ignore
             }
         }
+
+        $ToKill.Clear()
+        $ToKill = $null
 
         if ($ScreenProcessId) {
             $ArgumentList = "kill-session -t $ScreenName"

@@ -424,20 +424,19 @@ function Get-Device {
         #re-index in case the OpenCL platforms have shifted positions
         if ($Platform_Devices) {
             try {
+                $OpenCL_Platforms = [System.Collections.Generic.List[string]]::new()
                 if ($Session.OpenCLPlatformSorting) {
-                    $OpenCL_Platforms = $Session.OpenCLPlatformSorting
+                    $Session.OpenCLPlatformSorting | Foreach-Object {[void]$OpenCL_Platforms.Add($_)}
                 } elseif (Test-Path ".\Data\openclplatforms.json") {
-                    $OpenCL_Platforms = Get-ContentByStreamReader ".\Data\openclplatforms.json" | ConvertFrom-Json -ErrorAction Ignore
+                    $Ocl = Get-ContentByStreamReader ".\Data\openclplatforms.json" | ConvertFrom-Json -ErrorAction Ignore
+                    $Ocl | Foreach-Object {[void]$OpenCL_Platforms.Add($_)}
                 }
 
-                if (-not $OpenCL_Platforms) {
-                    $OpenCL_Platforms = @()
-                }
-
-                $OpenCL_Platforms_Current = @($Platform_Devices | Sort-Object {$_.Vendor -notin $KnownVendors},PlatformId | Foreach-Object {"$($_.Vendor)"})
+                $OpenCL_Platforms_Current = [System.Collections.Generic.List[string]]::new()
+                $Platform_Devices | Sort-Object {$_.Vendor -notin $KnownVendors},PlatformId | Foreach-Object {[void]$OpenCL_Platforms_Current.Add("$($_.Vendor)")}
 
                 if (Compare-Object $OpenCL_Platforms $OpenCL_Platforms_Current | Where-Object SideIndicator -eq "=>") {
-                    $OpenCL_Platforms_Current | Where-Object {$_ -notin $OpenCL_Platforms} | Foreach-Object {$OpenCL_Platforms += $_}
+                    $OpenCL_Platforms_Current | Where-Object {$_ -notin $OpenCL_Platforms} | Foreach-Object {[void]$OpenCL_Platforms.Add($_)}
                     if (-not $Session.OpenCLPlatformSorting -or -not (Test-Path ".\Data\openclplatforms.json")) {
                         Set-ContentJson -PathToFile ".\Data\openclplatforms.json" -Data $OpenCL_Platforms > $null
                     }
@@ -1707,8 +1706,13 @@ param(
         }
         $DeviceId = 0
         $GoodDevices = $Global:GlobalNvidiaSMIList | Foreach-Object {if ($_ -ne "error") {$DeviceId};$DeviceId++}
-        $Arguments += "-i $($GoodDevices -join ",")"
-        $SMI_Result = Invoke-NvidiaSmi -Query $Query -Arguments $Arguments -Runas:$Runas
+
+        $ArgumentsList = [System.Collections.Generic.List[string]]::new()
+        foreach($arg in $Arguments) {
+            [void]$ArgumentsList.Add($arg)
+        }
+        [void]$ArgumentsList.Add("-i $($GoodDevices -join ",")")
+        $SMI_Result = Invoke-NvidiaSmi -Query $Query -Arguments $ArgumentsList -Runas:$Runas
         $DeviceId = 0
         $Global:GlobalNvidiaSMIList | Foreach-Object {
             if ($_ -ne "error") {$SMI_Result[$DeviceId];$DeviceId++}

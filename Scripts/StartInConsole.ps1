@@ -8,8 +8,7 @@ if ($ControllerProcess -eq $null) {return}
 if ($StartWithoutTakingFocus) {
     Add-Type -Path $CreateProcessPath
     $lpApplicationName = $FilePath;
-    $lpCommandLine = '"' + $FilePath + '"' #Windows paths cannot contain ", so there is no need to escape
-    if ($ArgumentList -ne "") {$lpCommandLine += " " + $ArgumentList}
+    $lpCommandLine = """$FilePath""$(if ($ArgumentList) {" $ArgumentList"})" #Windows paths cannot contain ", so there is no need to escape
     $lpProcessAttributes = New-Object SECURITY_ATTRIBUTES
     $lpProcessAttributes.Length = [System.Runtime.InteropServices.Marshal]::SizeOf($lpProcessAttributes)
     $lpThreadAttributes = New-Object SECURITY_ATTRIBUTES

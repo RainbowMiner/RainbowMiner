@@ -5538,13 +5538,13 @@ function Set-MinerStats {
         }
 
         if ($CurrentProfitGPU -gt 0) {
-            $DeviceNameGPU = @()
+            $DeviceNameGPU = [System.Collections.Generic.List[string]]::new()
             foreach ($Device in $Global:DeviceCache.Devices) {
                 if ($Device.Type -eq "Gpu") {
-                    $DeviceNameGPU += $Device.Name
+                    [void]$DeviceNameGPU.Add($Device.Name)
                 }
             }
-            $DeviceNameGPU = $DeviceNameGPU | Sort-Object
+            $DeviceNameGPU.Sort([System.StringComparer]::OrdinalIgnoreCase)
 
             if ($DeviceNameGPU.Count -gt $DeviceNameCountGPU) {
                 Set-Stat -Name "Profit-$($DeviceNameGPU -join "-")" `

@@ -674,37 +674,38 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             #create zip log and xxx out all purses
             $DebugDate     = Get-Date -Format "yyyy-MM-dd"
             $DebugPath     = Join-Path (Resolve-Path ".\Logs") "debug-$DebugDate"
-            $PurgeStrings  = @()
+
+            $PurgeStrings  = [System.Collections.Generic.List[string]]::new()
             $UserConfig    = if ($Session.UserConfig) {$Session.UserConfig | ConvertTo-Json -Depth 10 -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore} else {$null}
             $RunningConfig = $Session.Config | ConvertTo-Json -Depth 10 -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
             @($RunningConfig,$UserConfig) | Where-Object {$_} | Foreach-Object {
                 $CurrentConfig = $_
-                @("Wallet","API_Key","MinerStatusKey","MinerStatusEmail","PushOverUserKey") | Where-Object {$CurrentConfig.$_} | Foreach-Object {$PurgeStrings += $CurrentConfig.$_}
+                @("Wallet","API_Key","MinerStatusKey","MinerStatusEmail","PushOverUserKey") | Where-Object {$CurrentConfig.$_} | Foreach-Object {[void]$PurgeStrings.Add($CurrentConfig.$_)}
                 @("Username","APIPassword","ServerPassword") | Where-Object {$CurrentConfig.$_} | Foreach-Object {$CurrentConfig.$_ = "XXX"}
                 $CurrentConfig.Pools.PSObject.Properties.Value | Foreach-Object {
                     $CurrentPool = $_
-                    $PurgeStrings += @($CurrentPool.Wallets.PSObject.Properties.Value | Where-Object {$_} | Select-Object)
-                    @("Wallet","API_Key","API_Secret","OrganizationID","Password","PartyPassword","Email") | Where-Object {$CurrentPool.$_ -and $CurrentPool.$_.Length -gt 5} | Foreach-Object {$PurgeStrings += $CurrentPool.$_}
+                    $CurrentPool.Wallets.PSObject.Properties.Value | Where-Object {$_} | Foreach-Object {[void]$PurgeStrings.Add([string]$_)}
+                    @("Wallet","API_Key","API_Secret","OrganizationID","Password","PartyPassword","Email") | Where-Object {$CurrentPool.$_ -and $CurrentPool.$_.Length -gt 5} | Foreach-Object {[void]$PurgeStrings.Add([string]$CurrentPool.$_)}
                     @("Username") | Where-Object {$CurrentPool.$_} | Foreach-Object {$CurrentPool.$_ = "XXX"}
                 }
             }
 
             $PurgeStrings = @($PurgeStrings | Select-Object -Unique | Where-Object {$_ -and $_.Length -gt 2} | Foreach-Object {[regex]::Escape($_)} | Sort-Object -Property {$_.Length})
 
-            $PurgeStringsUnique = [System.Collections.ArrayList]@()
+            $PurgeStringsUnique = [System.Collections.Generic.List[string]]::new()
 
             While ($PurgeStrings) {
-                $PurgeUnique = @()
+                $PurgeUnique = [System.Collections.Generic.List[string]]::new()
                 for ($i=0;$i -lt $PurgeStrings.Count;$i++) {
                     if (-not (@($PurgeStrings | Select-Object -Skip ($i+1)) -match $PurgeStrings[$i])) {
-                        $PurgeUnique += $PurgeStrings[$i]
+                        [void]$PurgeUnique.Add($PurgeStrings[$i])
                     }
                 }
                 if ($PurgeUnique.Count) {
-                    [void]$PurgeStringsUnique.Add(@($PurgeUnique))
+                    [void]$PurgeStringsUnique.AddRange($PurgeUnique)
                     $PurgeStrings = @(Compare-Object $PurgeStrings $PurgeUnique | Where-Object SideIndicator -eq "<=" | Foreach-Object {$_.InputObject} | Select-Object)
                 } else {
-                    [void]$PurgeStringsUnique.Add(@($PurgeStrings))
+                    [void]$PurgeStringsUnique.AddRange([string[]]$PurgeStrings)
                     $PurgeStrings = $null
                 }
             }
