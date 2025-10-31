@@ -13,15 +13,15 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.De
 $ManualUri = "https://bitcointalk.org/index.php?topic=5190081.0"
 $Port = "349{0:d2}"
 $DevFee = 0.85
-$Version = "2.9.8"
+$Version = "2.9.9"
 $Cuda = "11.7"
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.9.8-srbminermulti/SRBMiner-Multi-2-9-8-Linux.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.9.9-srbminermulti/SRBMiner-Multi-2-9-9-Linux.tar.gz"
 } else {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.9.8-srbminermulti/SRBMiner-Multi-2-9-8-win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.9.9-srbminermulti/SRBMiner-Multi-2-9-9-win64.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -46,6 +46,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "randomy"          ;              Params = "--randomx-use-1gb-pages"; Fee = 1.00; Vendor = @("CPU")} #RandomY
     [PSCustomObject]@{MainAlgorithm = "randomyada"       ;              Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomYada
     [PSCustomObject]@{MainAlgorithm = "rinhash"          ;              Params = ""; Fee = 1.00;               Vendor = @("CPU")} #RinHash2/RIN
+    [PSCustomObject]@{MainAlgorithm = "tht"              ;              Params = ""; Fee = 5.00;               Vendor = @("CPU")} #ThoughtAI/THT
     [PSCustomObject]@{MainAlgorithm = "verushash"        ;              Params = ""; Fee = 0.85;               Vendor = @("CPU"); ExcludePoolName="LuckPool"; FaultTolerance = 0.5} #Verushash
     [PSCustomObject]@{MainAlgorithm = "xelishashv2"      ;              Params = ""; Fee = 1.50;               Vendor = @("CPU")} #XelisHashV2
     [PSCustomObject]@{MainAlgorithm = "yespower"         ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yespower
@@ -115,6 +116,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "sha3x"            ;              Params = ""; Fee = 0.65;               Vendor = @("AMD","INTEL","NVIDIA")} #SHA3x/XTM
     [PSCustomObject]@{MainAlgorithm = "verthash"         ;              Params = ""; Fee = 1.00;               Vendor = @("AMD","INTEL","NVIDIA")} #Verthash
     [PSCustomObject]@{MainAlgorithm = "walahash"         ;              Params = ""; Fee = 1.00;               Vendor = @("AMD","INTEL","NVIDIA")} #WalaHash/WALA
+    [PSCustomObject]@{MainAlgorithm = "xhash"            ;              Params = ""; Fee = 3.00;               Vendor = @("AMD","INTEL","NVIDIA")} #Xhash/LAX
     [PSCustomObject]@{MainAlgorithm = "yescrypt"         ;              Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","CPU")} #yescrypt
     [PSCustomObject]@{MainAlgorithm = "yescryptr16"      ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #yescryptr16
     [PSCustomObject]@{MainAlgorithm = "yescryptr32"      ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #yescryptr32
