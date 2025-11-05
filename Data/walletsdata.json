@@ -256,11 +256,11 @@
     {
         "symbol":  "XVG",
         "match":  "^D",
-        "rpc":  "https://xvgblockexplorer.com/api/v2/address/{w}?details=basic",
-        "address":  "address",
-        "balance":  "balance",
-        "received":  "totalReceived",
-        "divisor":  100000000
+        "rpc":  "https://verge-blockchain.info/api/balance/{w}",
+        "address":  "",
+        "balance":  "data.balance",
+        "received":  "",
+        "divisor":  1
     },
     {
         "symbol":  "YTN",
