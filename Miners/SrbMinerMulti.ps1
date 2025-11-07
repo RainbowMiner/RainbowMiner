@@ -13,15 +13,15 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.De
 $ManualUri = "https://bitcointalk.org/index.php?topic=5190081.0"
 $Port = "349{0:d2}"
 $DevFee = 0.85
-$Version = "2.9.9"
+$Version = "3.0.2"
 $Cuda = "11.7"
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.9.9-srbminermulti/SRBMiner-Multi-2-9-9-Linux.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.0.2-srbminermulti/SRBMiner-Multi-3-0-2-Linux.tar.gz"
 } else {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.9.9-srbminermulti/SRBMiner-Multi-2-9-9-win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.0.2-srbminermulti/SRBMiner-Multi-3-0-2-win64.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
