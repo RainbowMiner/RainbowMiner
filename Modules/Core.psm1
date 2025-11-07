@@ -6175,6 +6175,8 @@ function Set-Balance {
     try {
         $Stat = $Stat | ConvertFrom-Json -ErrorAction Stop
 
+        $Stat_LastEarnings = [System.Collections.ArrayList]::new(@($Stat.Last_Earnings | Foreach-Object {[PSCustomObject]@{Date = [DateTime]$_.Date;Value = [Decimal]$_.Value}} | Select-Object))
+
         $Stat = [PSCustomObject]@{
                     PoolName = $Balance.Name
                     Currency = $Balance.Currency
@@ -6185,7 +6187,7 @@ function Set-Balance {
                     Earnings_1d   = [Decimal]$Stat.Earnings_1d
                     Earnings_1w   = [Decimal]$Stat.Earnings_1w
                     Earnings_Avg  = [Decimal]$Stat.Earnings_Avg
-                    Last_Earnings = [System.Collections.ArrayList]::new(@($Stat.Last_Earnings | Foreach-Object {[PSCustomObject]@{Date = [DateTime]$_.Date;Value = [Decimal]$_.Value}} | Select-Object))
+                    Last_Earnings = $Stat_LastEarnings
                     Started  = [DateTime]$Stat.Started
                     Updated  = [DateTime]$Stat.Updated
         }

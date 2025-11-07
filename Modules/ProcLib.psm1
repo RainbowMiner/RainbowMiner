@@ -397,7 +397,7 @@ function Start-SubProcessInScreen {
         [void]$ProcessIds.Add([int]$JobOutput.ProcessId)
         if ($MultiProcess) {
             if (-not $Executables) { $Executables = @(Split-Path $FilePath -Leaf) }
-            Get-SubProcessIds -FilePath $FilePath -ArgumentList $ArgumentList -MultiProcess $MultiProcess -Running $ProcessIds -Executables $Executables | Where-Object {$_} | Foreach-Object {
+            Get-SubProcessIds -FilePath $FilePath -ArgumentList $ArgumentList -MultiProcess $MultiProcess -Running $JobOutput.ProcessId -Executables $Executables | Where-Object {$_} | Foreach-Object {
                 if (-not $ProcessIds.Contains([int]$_)) {
                     [void]$ProcessIds.Add([int]$_)
                 }
@@ -607,7 +607,7 @@ function Start-SubProcessInTmux {
         [void]$ProcessIds.Add([int]$JobOutput.ProcessId)
         if ($MultiProcess) {
             if (-not $Executables) { $Executables = @(Split-Path $FilePath -Leaf) }
-            Get-SubProcessIds -FilePath $FilePath -ArgumentList $ArgumentList -MultiProcess $MultiProcess -Running $ProcessIds -Executables $Executables | Where-Object {$_} | Foreach-Object {
+            Get-SubProcessIds -FilePath $FilePath -ArgumentList $ArgumentList -MultiProcess $MultiProcess -Running $JobOutput.ProcessId -Executables $Executables | Where-Object {$_} | Foreach-Object {
                 if (-not $ProcessIds.Contains([int]$_)) {
                     [void]$ProcessIds.Add([int]$_)
                 }
