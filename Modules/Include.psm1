@@ -636,7 +636,7 @@ function Get-ChildItemContent {
         if ($_.Extension -eq ".ps1") {
             $Content = & {
                 foreach ($k in $Parameters.Keys) {Set-Variable $k $Parameters.$k}
-                & $_.FullName @Parameters                
+                & $_.FullName @Parameters
             }
         }
         elseif ($Quick) {
@@ -648,7 +648,7 @@ function Get-ChildItemContent {
         }
         else {
             $Content = & {
-                foreach ($k in $Parameters.Keys) {Set-Variable $k $Parameters.$k}                
+                foreach ($k in $Parameters.Keys) {Set-Variable $k $Parameters.$k}
                 try {
                     (Get-ContentByStreamReader $_.FullName | ConvertFrom-Json -ErrorAction Stop) | ForEach-Object {Invoke-ExpressionRecursive $_}
                 }

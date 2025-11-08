@@ -632,7 +632,7 @@ class Miner {
         $sum = 0
         $count = 0
 
-        foreach ($item in $this.Data) {
+        foreach ($item in @($this.Data)) {
             if ($item.Date -lt $Timeframe) { continue }
 
             if ($item.Difficulty -and ($item.Difficulty.$Algorithm -or ($AlgosDiffer -and $item.Difficulty.$AlgorithmBase))) {
@@ -778,7 +778,7 @@ class Miner {
         $sum = 0
         $count = 0
 
-        foreach ($item in $this.Data) {
+        foreach ($item in @($this.Data)) {
             if ($item.PowerDraw -and $item.Date -ge $TimeFrame) {
                 $sum += $item.PowerDraw
                 $count++
