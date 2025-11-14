@@ -14,14 +14,14 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 0.00
 $Cuda = "11.0"
-$Version = "0.46.7"
+$Version = "0.47.1"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.46.7-wildrigmulti/wildrig-multi-linux-0.46.7.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.47.1-wildrigmulti/wildrig-multi-linux-0.47.1.tar.gz"
 } else {
     $Path = ".\Bin\GPU-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.46.7-wildrigmulti/wildrig-multi-windows-0.46.7.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.47.1-wildrigmulti/wildrig-multi-windows-0.47.1.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -56,7 +56,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "progpow-sero";      DAG = $true; Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 0.75} #ProgPowSero
     [PSCustomObject]@{MainAlgorithm = "progpow-telestai";  DAG = $true; Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 0.75} #Meraki/TLS
     [PSCustomObject]@{MainAlgorithm = "progpowz";          DAG = $true; Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 0.75; ExcludePoolName = "Fairpool"} #ProgPowZ
-    [PSCustomObject]@{MainAlgorithm = "qhash";                     Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; DevFee = 3.00; FaultTolerance = 0.4} #Qhash/QTC, new in v0.43.3
+    [PSCustomObject]@{MainAlgorithm = "qhash";                     Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; DevFee = 2.00; FaultTolerance = 0.4} #Qhash/QTC, new in v0.43.3
     [PSCustomObject]@{MainAlgorithm = "sha512256d";                Vendor = @("AMD","INTEL","NVIDIA"); Params = ""} #SHA512256d
     [PSCustomObject]@{MainAlgorithm = "sha256csm";                 Vendor = @("AMD","INTEL","NVIDIA"); Params = ""} #SHA256csm
     [PSCustomObject]@{MainAlgorithm = "sha256q";                   Vendor = @("AMD","INTEL","NVIDIA"); Params = ""} #SHA256q
