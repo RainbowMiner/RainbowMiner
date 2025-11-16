@@ -382,7 +382,7 @@ function Start-Setup {
 
                         "addcoins3" {
                             if ($addcoins -and $addcoin) {
-                                $CoinsActual.$addcoin.Wallet = Read-HostString -Prompt "Enter your $($addcoin) wallet address " -Default $CoinsActual.$addcoin.Wallet -Characters "A-Z0-9-\._~:/\?#\[\]@!\$&'\(\)\*\+,;=" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                $CoinsActual.$addcoin.Wallet = Read-HostString -Prompt "Enter your ${addcoin} wallet address " -Default $CoinsActual.$addcoin.Wallet -Characters "A-Z0-9-\._~:/\?#\[\]@!\$&'\(\)\*\+,;=" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                 $CoinsActual.$addcoin.Wallet = $CoinsActual.$addcoin.Wallet.Trim()
                                 $CoinsActual.$addcoin | Add-Member EnableAutoPool "1" -Force
                                 $CoinsActualSave = [PSCustomObject]@{}
@@ -730,7 +730,7 @@ function Start-Setup {
                             }
                         }
                         "serverpassword" {
-                            if ($Config.RunMode -eq "client") {
+                            if ($Config.RunMode -eq "client" -and $Config.ServerUser -ne "") {
                                 $Config.ServerPassword = Read-HostString -Prompt "If you have auth enabled on your server's API, enter the password ($(if ($Config.ServerPassword) {"enter 'clear'"} else {"leave empty"}) for no auth)" -Default $Config.ServerPassword -Characters "" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
@@ -845,7 +845,7 @@ function Start-Setup {
                                         Write-Host " "
                                         Get-ConfigArray $Config.ServerConfigName | Foreach-Object {
                                             if ($Var = $ConfigFiles.Keys -match $_) {
-                                                Set-Variable "$($Var)Actual" -Value $(Get-Content $ConfigFiles[$Var].Path -Raw | ConvertFrom-Json)
+                                                Set-Variable "${Var}Actual" -Value $(Get-Content $ConfigFiles[$Var].Path -Raw | ConvertFrom-Json)
                                                 if ($Var -eq "Config") {
                                                     $ConfigActual.PSObject.Properties | Foreach-Object {$Config | Add-Member $_.Name $_.Value -Force}
                                                 } elseif ($Var -eq "Pools") {
@@ -1760,7 +1760,7 @@ function Start-Setup {
                                         $ProductCode = $Matches[1]
                                         $fromto = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssK")
                                         try {
-                                            $OctopusRequest = Invoke-GetUrl "https://api.octopus.energy/v1/products/$($ProductCode)/electricity-tariffs/$($Config.OctopusTariffCode)/standard-unit-rates/?period_from=$($fromto)" -timeout 10
+                                            $OctopusRequest = Invoke-GetUrl "https://api.octopus.energy/v1/products/${ProductCode}/electricity-tariffs/$($Config.OctopusTariffCode)/standard-unit-rates/?period_from=${fromto}" -timeout 10
                                             $OctopusRequest.results | Where-Object {(-not $_.valid_from -or $_.valid_from -le $fromto) -and (-not $_.valid_to -or $_.valid_to -gt $fromto)} | Foreach-Object {
                                                 Write-Host "The tariff code is valid: your current rate is $($_.value_inc_vat) p/kWh" -ForegroundColor Green
                                                 $octopus_ok = $true
@@ -2119,8 +2119,8 @@ function Start-Setup {
                                         if (-not $PoolsActual."$($_.Pool)".$Currency) {
                                             $PoolsActual."$($_.Pool)" | Add-Member $Currency "`$$Currency" -Force
                                         }
-                                        if (-not $PoolsActual."$($_.Pool)"."$($Currency)-Params") {
-                                            $PoolsActual."$($_.Pool)" | Add-Member "$($Currency)-Params" "" -Force
+                                        if (-not $PoolsActual."$($_.Pool)"."${Currency}-Params") {
+                                            $PoolsActual."$($_.Pool)" | Add-Member "${Currency}-Params" "" -Force
                                         }
                                     }
                                 }
@@ -2167,7 +2167,7 @@ function Start-Setup {
                                         }
                         $GlobalSetupStep = $GlobalSetupSteps.IndexOf($NextSetupStep)
                         if ($GlobalSetupStep -lt 0) {
-                            Write-Log -Level Error "Unknown goto command `"$($NextSetupStep)`". You should never reach here. Please open an issue on github.com"
+                            Write-Log -Level Error "Unknown goto command `"$NextSetupStep`". You should never reach here. Please open an issue on github.com"
                             $GlobalSetupStep = $GlobalSetupStepBack[$GlobalSetupStepBack.Count-1];$GlobalSetupStepBack.RemoveAt($GlobalSetupStepBack.Count-1)
                         }
                     }
@@ -2231,7 +2231,7 @@ function Start-Setup {
                                 $EditSecondaryAlgorithm = Get-Algorithm $EditSecondaryAlgorithm
                             }
                             "configure" {
-                                $EditMinerName = "$($Miner_Name)$(if ($EditDeviceName -ne '*'){"-$EditDeviceName"})"                
+                                $EditMinerName = "${Miner_Name}$(if ($EditDeviceName -ne '*'){"-$EditDeviceName"})"                
                                 Write-Host " "
                                 Write-Host "Configuration for $EditMinerName, $(if ($EditAlgorithm -eq '*'){"all algorithms"}else{$EditAlgorithm})$(if($EditSecondaryAlgorithm -ne ''){"+"+$EditSecondaryAlgorithm})" -BackgroundColor Yellow -ForegroundColor Black
                                 Write-Host " "
@@ -2335,7 +2335,7 @@ function Start-Setup {
                                         "Teamred" {"0.01, 0.02, ... 1.00"}
                                     }
                                     if ($Valid_Values) {
-                                        $EditMinerConfig.Intensity = Read-HostArray -Prompt "Enter intensities to benchmark, as comma list ($($Valid_Values), $(if ($EditMinerConfig.Intensity) {"enter 'clear'"} else {"leave empty"}) for all)" -Default $EditMinerConfig.Intensity -Characters "0-9\." | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $EditMinerConfig.Intensity = Read-HostArray -Prompt "Enter intensities to benchmark, as comma list (${Valid_Values}, $(if ($EditMinerConfig.Intensity) {"enter 'clear'"} else {"leave empty"}) for all)" -Default $EditMinerConfig.Intensity -Characters "0-9\." | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                         $EditMinerConfig.Intensity = "$($EditMinerConfig.Intensity -join ",")"
                                         $MinerSetupStepStore = $true
                                     }
@@ -2397,7 +2397,7 @@ function Start-Setup {
                                             }
                             $MinerSetupStep = $MinerSetupSteps.IndexOf($NextSetupStep)
                             if ($MinerSetupStep -lt 0) {
-                                Write-Log -Level Error "Unknown goto command `"$($NextSetupStep)`". You should never reach here. Please open an issue on github.com"
+                                Write-Log -Level Error "Unknown goto command `"$NextSetupStep`". You should never reach here. Please open an issue on github.com"
                                 $MinerSetupStep = $MinerSetupStepBack[$MinerSetupStepBack.Count-1];$MinerSetupStepBack.RemoveAt($MinerSetupStepBack.Count-1)
                             }
                         }
@@ -2565,7 +2565,7 @@ function Start-Setup {
                                                 do {
                                                     $CurrencyEntryDone = $true
                                                     $v = $PoolConfig.$PoolEditCurrency
-                                                    $params = $PoolConfig."$($PoolEditCurrency)-Params"
+                                                    $params = $PoolConfig."${PoolEditCurrency}-Params"
                                                     if ($v -eq "`$Wallet" -or (-not $v -and $PoolEditCurrency -eq "BTC") -or $v -eq "`$$PoolEditCurrency") {$v = "default"}
                                                     elseif ($v -eq "`$$PoolEditCurrency") {$v = "default";$t = "coins.config.txt"}
                                                     $v = Read-HostString -Prompt "Enter your wallet address for $PoolEditCurrency (enter `"remove`" to remove this currency, `"default`" to always use current default wallet from your $(if ($PoolEditCurrency -ne "BTC") {"coins."})config.txt)" -Default $v -Characters "A-Z0-9-\._~:/\?#\[\]@!\$&'\(\)\*\+,;=" | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}
@@ -2573,13 +2573,13 @@ function Start-Setup {
                                                     if (@("back","<") -inotcontains $v) {
                                                         if (@("del","delete","remove","clear","rem") -icontains $v) {
                                                             if (@($PoolConfig.PSObject.Properties.Name) -icontains $PoolEditCurrency) {[void]$PoolConfig.PSObject.Properties.Remove($PoolEditCurrency)}
-                                                            if (@($PoolConfig.PSObject.Properties.Name) -icontains "$($PoolEditCurrency)-Params") {[void]$PoolConfig.PSObject.Properties.Remove("$($PoolEditCurrency)-Params")}
+                                                            if (@($PoolConfig.PSObject.Properties.Name) -icontains "${PoolEditCurrency}-Params") {[void]$PoolConfig.PSObject.Properties.Remove("${PoolEditCurrency}-Params")}
                                                         } else {
                                                             if (@("def","default","wallet","standard") -icontains $v) {$v = "`$$(if ($PoolEditCurrency -eq "BTC") {"Wallet"} else {$PoolEditCurrency})"}
                                                             $PoolConfig | Add-Member $PoolEditCurrency $v -Force
                                                             $params = Read-HostString -Prompt "Enter additional password parameters for $PoolEditCurrency" -Default $params -Characters $false | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}
                                                             if (@("back","<") -inotcontains $params) {
-                                                                $PoolConfig | Add-Member "$($PoolEditCurrency)-Params" "$($params)" -Force
+                                                                $PoolConfig | Add-Member "${PoolEditCurrency}-Params" "$params" -Force
                                                             } else {
                                                                 $CurrencyEntryDone = $false
                                                             }
@@ -2803,7 +2803,7 @@ function Start-Setup {
                                                     }
                                     $PoolSetupStep = $PoolSetupSteps.IndexOf($NextSetupStep)
                                     if ($PoolSetupStep -lt 0) {
-                                        Write-Log -Level Error "Unknown goto command `"$($NextSetupStep)`". You should never reach here. Please open an issue on github.com"
+                                        Write-Log -Level Error "Unknown goto command `"$NextSetupStep`". You should never reach here. Please open an issue on github.com"
                                         $PoolSetupStep = $PoolSetupStepBack[$PoolSetupStepBack.Count-1];$PoolSetupStepBack.RemoveAt($PoolSetupStepBack.Count-1)
                                     }
                                 }
@@ -2926,7 +2926,7 @@ function Start-Setup {
                                                     }
                                     $DeviceSetupStep = $DeviceSetupSteps.IndexOf($NextSetupStep)
                                     if ($DeviceSetupStep -lt 0) {
-                                        Write-Log -Level Error "Unknown goto command `"$($NextSetupStep)`". You should never reach here. Please open an issue on github.com"
+                                        Write-Log -Level Error "Unknown goto command `"$NextSetupStep`". You should never reach here. Please open an issue on github.com"
                                         $DeviceSetupStep = $DeviceSetupStepBack[$DeviceSetupStepBack.Count-1];$DeviceSetupStepBack.RemoveAt($DeviceSetupStepBack.Count-1)
                                     }
                                 }
@@ -3054,7 +3054,7 @@ function Start-Setup {
                                                     }
                                     $AlgorithmSetupStep = $AlgorithmSetupSteps.IndexOf($NextSetupStep)
                                     if ($AlgorithmSetupStep -lt 0) {
-                                        Write-Log -Level Error "Unknown goto command `"$($NextSetupStep)`". You should never reach here. Please open an issue on github.com"
+                                        Write-Log -Level Error "Unknown goto command `"$NextSetupStep`". You should never reach here. Please open an issue on github.com"
                                         $AlgorithmSetupStep = $AlgorithmSetupStepBack[$AlgorithmSetupStepBack.Count-1];$AlgorithmSetupStepBack.RemoveAt($AlgorithmSetupStepBack.Count-1)
                                     }
                                 }
@@ -3117,7 +3117,7 @@ function Start-Setup {
                         $Coin_Symbol = $Coin_Symbol.ToUpper()
 
                         if (-not $CoinsActual.$Coin_Symbol) {
-                            if (Read-HostBool "Do you want to add a new coin `"$($Coin_Symbol)`"?" -Default $true) {
+                            if (Read-HostBool "Do you want to add a new coin `"$Coin_Symbol`"?" -Default $true) {
                                 $CoinsActual | Add-Member $Coin_Symbol ($CoinsDefault | ConvertTo-Json -Depth 10 | ConvertFrom-Json) -Force
                                 Set-ContentJson -PathToFile $ConfigFiles["Coins"].Path -Data $CoinsActual > $null
                             } else {
@@ -3223,9 +3223,9 @@ function Start-Setup {
                                                 $PoolsActualSave | Add-Member $Pool ([PSCustomObject]@{}) -Force
                                                 if ($IsInUse) {
                                                     $PoolsActualSave.$Pool | Add-Member $Coin_Symbol_Base "`$$Coin_Symbol" -Force
-                                                    $PoolsActualSave.$Pool | Add-Member "$($Coin_Symbol_Base)-Params" "$($PoolsActual.$Pool."$($Coin_Symbol_Base)-Params")" -Force
+                                                    $PoolsActualSave.$Pool | Add-Member "${Coin_Symbol_Base}-Params" "$($PoolsActual.$Pool."${Coin_Symbol_Base}-Params")" -Force
                                                 }
-                                                $PoolsActual.$Pool.PSObject.Properties | Where-Object {$_.Name -ne $Coin_Symbol_Base -and $_.Name -ne "$($Coin_Symbol_Base)-Params"} | Foreach-Object {$PoolsActualSave.$Pool | Add-Member $_.Name $_.Value -Force}
+                                                $PoolsActual.$Pool.PSObject.Properties | Where-Object {$_.Name -ne $Coin_Symbol_Base -and $_.Name -ne "${Coin_Symbol_Base}-Params"} | Foreach-Object {$PoolsActualSave.$Pool | Add-Member $_.Name $_.Value -Force}
                                             } else {
                                                 $PoolsActualSave | Add-Member $Pool ($PoolsActual.$Pool) -Force
                                             }
@@ -3258,7 +3258,7 @@ function Start-Setup {
                                                     }
                                     $CoinSetupStep = $CoinSetupSteps.IndexOf($NextSetupStep)
                                     if ($CoinSetupStep -lt 0) {
-                                        Write-Log -Level Error "Unknown goto command `"$($NextSetupStep)`". You should never reach here. Please open an issue on github.com"
+                                        Write-Log -Level Error "Unknown goto command `"$NextSetupStep`". You should never reach here. Please open an issue on github.com"
                                         $CoinSetupStep = $CoinSetupStepBack[$CoinSetupStepBack.Count-1];$CoinSetupStepBack.RemoveAt($CoinSetupStepBack.Count-1)
                                     }
                                 }
@@ -3331,7 +3331,7 @@ function Start-Setup {
                         if ($OCProfile_Device) {$OCProfile_Name += "-$OCProfile_Device"}
 
                         if (-not $OCProfilesActual.$OCProfile_Name) {
-                            if (Read-HostBool "Do you want to create new profile `"$($OCProfile_Name)`"?" -Default $true) {
+                            if (Read-HostBool "Do you want to create new profile `"$OCProfile_Name`"?" -Default $true) {
                                 $OCProfilesActual | Add-Member $OCProfile_Name ([PSCustomObject]@{}) -Force
                                 Set-ContentJson -PathToFile $ConfigFiles["OCProfiles"].Path -Data $OCProfilesActual > $null
                             } else {
@@ -3469,7 +3469,7 @@ function Start-Setup {
                                                     }
                                     $OCProfileSetupStep = $OCProfileSetupSteps.IndexOf($NextSetupStep)
                                     if ($OCProfileSetupStep -lt 0) {
-                                        Write-Log -Level Error "Unknown goto command `"$($NextSetupStep)`". You should never reach here. Please open an issue on github.com"
+                                        Write-Log -Level Error "Unknown goto command `"$NextSetupStep`". You should never reach here. Please open an issue on github.com"
                                         $OCProfileSetupStep = $OCProfileSetupStepBack[$OCProfileSetupStepBack.Count-1];$OCProfileSetupStepBack.RemoveAt($OCProfileSetupStepBack.Count-1)
                                     }
                                 }
@@ -3650,7 +3650,7 @@ function Start-Setup {
                                 "save" {
                                     Write-Host " "
                                     if ($Scheduler_Action -eq "d") {
-                                        if (-not (Read-HostBool -Prompt "Do you really want to delete schedule number $($Index)?" -Default $True | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_})) {throw "cancel"}
+                                        if (-not (Read-HostBool -Prompt "Do you really want to delete schedule number ${Index}?" -Default $True | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_})) {throw "cancel"}
                                         $SchedulerActual = $SchedulerActual | Where Index -ne $Index
                                     } else {
                                         if (-not (Read-HostBool -Prompt "Done! Do you want to save the changed values?" -Default $True | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_})) {throw "cancel"}
@@ -3710,7 +3710,7 @@ function Start-Setup {
                                                 }
                                 $SchedulerSetupStep = $SchedulerSetupSteps.IndexOf($NextSetupStep)
                                 if ($SchedulerSetupStep -lt 0) {
-                                    Write-Log -Level Error "Unknown goto command `"$($NextSetupStep)`". You should never reach here. Please open an issue on github.com"
+                                    Write-Log -Level Error "Unknown goto command `"$NextSetupStep`". You should never reach here. Please open an issue on github.com"
                                     $SchedulerSetupStep = $SchedulerSetupStepBack[$SchedulerSetupStepBack.Count-1];$SchedulerSetupStepBack.RemoveAt($SchedulerSetupStepBack.Count-1)
                                 }
                             }
@@ -3731,7 +3731,7 @@ function Start-Setup {
             $Pool_Name = "MiningRigRentals"
 
             Write-Host " "
-            Write-Host "*** $($Pool_Name) Configuration ***" -BackgroundColor Green -ForegroundColor Black
+            Write-Host "*** $Pool_Name Configuration ***" -BackgroundColor Green -ForegroundColor Black
             Write-HostSetupHints
 
             $MRRSetupDone = $false
@@ -3866,7 +3866,7 @@ function Start-Setup {
                                                 }
                                 $MRRSetupStep = $MRRSetupSteps.IndexOf($NextSetupStep)
                                 if ($MRRSetupStep -lt 0) {
-                                    Write-Log -Level Error "Unknown goto command `"$($NextSetupStep)`". You should never reach here. Please open an issue on github.com"
+                                    Write-Log -Level Error "Unknown goto command `"$NextSetupStep`". You should never reach here. Please open an issue on github.com"
                                     $MRRSetupStep = $MRRSetupStepBack[$MRRSetupStepBack.Count-1];$MRRSetupStepBack.RemoveAt($MRRSetupStepBack.Count-1)
                                 }
                             }
