@@ -106,7 +106,9 @@ function Start-Setup {
         [Parameter(Mandatory = $true)]
         [hashtable]$ConfigFiles,
         [Parameter(Mandatory = $false)]
-        [Switch]$SetupOnly = $false
+        [Switch]$SetupOnly = $false,
+        [Parameter(Mandatory = $false)]
+        [hashtable]$Parameters = @{}
     )
 
     $RunSetup = $true
@@ -847,7 +849,15 @@ function Start-Setup {
                                             if ($Var = $ConfigFiles.Keys -eq $_) {
                                                 Set-Variable "${Var}Actual" -Value $(Get-Content $ConfigFiles[$Var].Path -Raw | ConvertFrom-Json)
                                                 if ($Var -eq "Config") {
-                                                    $ConfigActual.PSObject.Properties | Foreach-Object {$Config | Add-Member $_.Name $_.Value -Force}
+                                                    $NextConfig = Get-ChildItemContent $ConfigFiles[$Var].Path -Force -Parameters $Parameters
+                                                    $NextConfig.PSObject.Properties | Foreach-Object {
+                                                        if ([bool]$Config.PSObject.Properties[$_.Name]) {
+                                                            $Config."$($_.Name)" = $_.Value
+                                                        } else  {
+                                                            $Config | Add-Member $_.Name $_.Value -Force
+                                                        }
+                                                    }
+                                                    $NextConfig = $null
                                                 } elseif ($Var -eq "Pools") {
                                                     if ($PoolsActual | Get-Member Nicehash -MemberType NoteProperty) {
                                                         $NicehashWallet = $PoolsActual.Nicehash.BTC
@@ -874,7 +884,7 @@ function Start-Setup {
 
                                 if ($GlobalSetupStepStore) {
                                     if (Test-TcpServer -Server $Config.ServerName -Port $Config.ServerPort -Timeout 2) {
-                                        if (Read-HostBool "Download server configuration now? This will end the setup." -Default $true | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}) {
+                                        if (Read-HostBool "Download server configuration now? This will restart the setup with the new values loaded." -Default $true | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}) {
                                             $DownloadServerNow = $true
                                             throw "Goto save"
                                         }

@@ -748,7 +748,7 @@ function Invoke-Core {
                 $ReReadConfig = $false
                 if ($Session.RunSetup) {
                     Import-Module .\Modules\Setup.psm1
-                    Start-Setup -Config $Session.Config -ConfigFiles $Session.ConfigFiles -SetupOnly:$Session.SetupOnly
+                    Start-Setup -Config $Session.Config -ConfigFiles $Session.ConfigFiles -SetupOnly:$Session.SetupOnly -Parameters $Parameters
                     Remove-Module "Setup" -ErrorAction Ignore
                     $Session.RestartMiners = $true
                     $ReReadConfig = $true
