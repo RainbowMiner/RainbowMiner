@@ -844,7 +844,7 @@ function Start-Setup {
                                         Write-Host "Configfiles downloaded successfully!" -ForegroundColor Green
                                         Write-Host " "
                                         Get-ConfigArray $Config.ServerConfigName | Foreach-Object {
-                                            if ($Var = $ConfigFiles.Keys -match $_) {
+                                            if ($Var = $ConfigFiles.Keys -eq $_) {
                                                 Set-Variable "${Var}Actual" -Value $(Get-Content $ConfigFiles[$Var].Path -Raw | ConvertFrom-Json)
                                                 if ($Var -eq "Config") {
                                                     $ConfigActual.PSObject.Properties | Foreach-Object {$Config | Add-Member $_.Name $_.Value -Force}
