@@ -871,6 +871,8 @@ function Start-Setup {
                                                         $MRRAPIKey      = $PoolsActual.MiningRigRentals.API_Key
                                                         $MRRAPISecret   = $PoolsActual.MiningRigRentals.API_Secret
                                                     }
+                                                } elseif ($Var -eq "Userpools") {
+                                                    $AvailPools = $Session.AvailPools + @($UserpoolsActual | Where-Object {$_.Name} | Foreach-Object {$_.Name} | Select-Object -Unique) | Sort-Object
                                                 }
                                             }
                                         }
