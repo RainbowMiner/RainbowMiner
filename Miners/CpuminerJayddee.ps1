@@ -12,7 +12,7 @@ if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # 
 $ManualUri = "https://github.com/JayDDee/cpuminer-opt/releases"
 $Port = "200{0:d2}"
 $DevFee = 0.0
-$Version = "25.6"
+$Version = "25.7"
 
 $Path = $null
 
@@ -20,19 +20,19 @@ if ($IsLinux) {
     if ($Global:GlobalCPUInfo.Vendor -eq "ARM" -or $Global:GlobalCPUInfo.Features.ARM) {
         if ($Global:GlobalCPUInfo.Architecture -eq 8) {
             $Path = ".\Bin\CPU-JayDDee\cpuminer-armv8$($f=$Global:GlobalCPUInfo.Features;$(if($f.sha3 -and $f.sve2 -and $f.aes){'.5-crypto-sha3-sve2'}elseif($f.sha3 -and $f.aes){'.4-crypto-sha3'}elseif($f.sha2 -and $f.aes){'-crypto'}))"
-            $Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v25.6-jayddee/cpuminer-opt-25.6-arm.7z"
+            $Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v25.7-jayddee/cpuminer-opt-25.7-arm.7z"
         } elseif ($Global:GlobalCPUInfo.Architecture -eq 9) {
             $Path = ".\Bin\CPU-JayDDee\cpuminer-armv9$($f=$Global:GlobalCPUInfo.Features;$(if($f.sha3 -and $f.aes){'-crypto-sha3'}elseif($f.sha2 -and $f.aes){'-crypto'}))"
-            $Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v25.6-jayddee/cpuminer-opt-25.6-arm.7z"
+            $Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v25.7-jayddee/cpuminer-opt-25.7-arm.7z"
         }
     } else {
         #$Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$v=$Global:GlobalCPUInfo.Vendor;$(if($f.avx512 -and $f.sha -and $f.vaes) {if ($v -eq "AMD"){"zen4"}else{'avx512-sha-vaes'}}elseif($f.avx512){'avx512'}elseif($f.avx2 -and $f.sha -and $f.vaes) {if ($v -eq "AMD"){"zen3"}else{"avx2-sha-vaes"}}elseif($f.avx2 -and $f.sha -and $f.aes){'avx2-sha'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}elseif($f.sse42){'sse42'}elseif($f.ssse3){"ssse3"}else{'sse2'}))"
-        $Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$v=$Global:GlobalCPUInfo.Vendor;$(if($f.avx512 -and $f.sha -and $f.vaes) {'avx512-sha-vaes'}elseif($f.avx512){'avx512'}elseif($f.avx2 -and $f.sha -and $f.vaes) {"avx2-sha-vaes"}elseif($f.avx2 -and $f.sha -and $f.aes){'avx2-sha'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}elseif($f.sse42){'sse42'}elseif($f.ssse3){"ssse3"}else{'sse2'}))"
-        $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v25.6-jayddee/cpuminer-opt-25.6-gc11-linux.7z"
+        $Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$v=$Global:GlobalCPUInfo.Vendor;$(if($f.avx512 -and $f.sha -and $f.vaes) {'avx512-sha-vaes'}elseif($f.avx512){'avx512'}elseif($f.avx2 -and $f.sha -and $f.vaes) {"avx2-sha-vaes"}elseif($f.avx2 -and $f.sha -and $f.aes){'avx2-sha'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes -and $f.sha){'sse42-aes-sha'}elseif($f.sse42 -and $f.aes){'sse42-aes'}elseif($f.sse42){'sse42'}elseif($f.ssse3){"ssse3"}else{'sse2'}))"
+        $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v25.7-jayddee/cpuminer-opt-25.7-gc11-linux.7z"
     }
 } else {
     $Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx512 -and $f.sha -and $f.vaes){'avx512-sha-vaes'}elseif($f.avx512){'avx512'}elseif($f.avx2 -and $f.sha -and $f.vaes){'avx2-sha-vaes'}elseif($f.avx2 -and $f.sha -and $f.aes){'avx2-sha'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}else{'sse2'})).exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v25.6-jayddee/cpuminer-opt-25.6-windows.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v25.7-jayddee/cpuminer-opt-25.7-windows.zip"
 }
 
 if ($Path -eq $null) {return}
