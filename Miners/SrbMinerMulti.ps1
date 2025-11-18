@@ -281,7 +281,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                         $DeviceIDsAll = $Miner_Device.BusId_Type_Vendor_Index -join ','
                         $DeviceIntensity = ($Miner_Device | % {"0"}) -join ','
                         $MallobParam = "$(if ($Pools.$MainAlgorithm_Norm.Mallob) {" --mallob-endpoint $($Pools.$MainAlgorithm_Norm.Mallob)"})"
-                        $SlowStartParam = "$(if ($Miner_Device | Where-Object {$_.OpenCL.$Compute_Param -eq "RDNA4"}) {"  --gpu-table-slow-build"})"
+                        $SlowStartParam = "$(if (($_.DAG -or $MainAlgorithm -eq "verthash") -and ($Miner_Device | Where-Object {$_.OpenCL.$Compute_Param -eq "RDNA4"})) {"  --gpu-table-slow-build"})"
                         $Miner_HR = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Week
                         if ($_.MaxRejectedShareRatio) {
                             $Miner_HR *= 1-$Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Ratio_Live
