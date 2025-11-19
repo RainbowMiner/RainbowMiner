@@ -13,13 +13,13 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.De
 $ManualUri = "https://bitcointalk.org/index.php?topic=4767892.0"
 $Port = "330{0:d2}"
 $DevFee = 2.0
-$Version = "2.5e2"
+$Version = "2.5e3"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-MiniZ\miniZ"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.5e2-miniz/miniZ_v2.5e2_linux-x64.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.5e3-miniz/miniZ_v2.5e3_linux-x64.tar.gz"
             Cuda = "8.0"
         }
     )
@@ -27,7 +27,7 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-MiniZ\miniZ.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.5e2-miniz/miniZ_v2.5e2_win-x64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.5e3-miniz/miniZ_v2.5e3_win-x64.7z"
             Cuda = "8.0"
         }
     )
@@ -46,8 +46,8 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "Equihash16x5";               MinMemGB = 1; Params = "--par=96,5";       Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $true;  Fee = $DevFee;               Compute = @("RDNA2","RDNA3")} #Equihash 96,5
     [PSCustomObject]@{MainAlgorithm = "Equihash24x5";               MinMemGB = 2; Params = "--par=144,5";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $true;  Fee = $DevFee;               Compute = @("GCN4","RDNA2","RDNA3")} #Equihash 144,5
     [PSCustomObject]@{MainAlgorithm = "Equihash24x7";               MinMemGB = 2; Params = "--par=192,7";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $true;  Fee = $DevFee;               Compute = @("RDNA2","RDNA3")} #Equihash 192,7 
-    [PSCustomObject]@{MainAlgorithm = "EquihashR25x4";              MinMemGB = 2; Params = "--par=125,4";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $true;  Fee = $DevFee;               Compute = @("GCN4","RDNA2","RDNA3")} #Equihash 125,4,0 (ZelCash)
-    [PSCustomObject]@{MainAlgorithm = "EquihashR25x5";              MinMemGB = 3; Params = "--par=150,5";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $true;  Fee = $DevFee;               Compute = @("GCN4","RDNA2","RDNA3")} #Equihash 150,5,0 (GRIMM)
+    #[PSCustomObject]@{MainAlgorithm = "EquihashR25x4";              MinMemGB = 2; Params = "--par=125,4";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $true;  Fee = $DevFee;               Compute = @("GCN4","RDNA2","RDNA3")} #Equihash 125,4,0 (ZelCash)
+    #[PSCustomObject]@{MainAlgorithm = "EquihashR25x5";              MinMemGB = 3; Params = "--par=150,5";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $true;  Fee = $DevFee;               Compute = @("GCN4","RDNA2","RDNA3")} #Equihash 150,5,0 (GRIMM)
     [PSCustomObject]@{MainAlgorithm = "Equihash21x9";               MinMemGB = 2; Params = "--par=210,9";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $true;  Fee = $DevFee;               Compute = @("GCN4","RDNA2","RDNA3")} #Equihash 210,9 (AION)
     [PSCustomObject]@{MainAlgorithm = "EvrProgPow";    DAG = $true; MinMemGB = 2; Params = "--par=ProgPow --pers=EVRMORE-PROGPOW"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $false; Fee = 1.00; Compute = @("RDNA2","RDNA3"); ExcludePoolName = "MiningRigRentals"} #EvrProgPow (EVR)
     [PSCustomObject]@{MainAlgorithm = "FishHash";      DAG = $true; MinMemGB = 4; Params = "--par=fishhash";   Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $false; Fee = 1.0;                   Compute = @("RDNA2","RDNA3")} #FishHash/IRON
