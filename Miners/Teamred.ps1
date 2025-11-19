@@ -49,7 +49,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethash";           DAG = $true; MinMemGb = 3;   Params = ""; DevFee = 0.75; ExtendInterval = 3; MainAlgorithmXlat = "ethash4g"; ExcludeCompute = @("GCN1","GCN2")}
     [PSCustomObject]@{MainAlgorithm = "ethash";           DAG = $true; MinMemGb = 4;   Params = ""; DevFee = 0.75; ExtendInterval = 3; MainAlgorithmXlat = "ethash5g"; ExcludeCompute = @("GCN1","GCN2")}
     [PSCustomObject]@{MainAlgorithm = "ethash";           DAG = $true; MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; MainAlgorithmXlat = "ethashlowmemory"; ExcludeCompute = @("GCN1","GCN2")}
-    [PSCustomObject]@{MainAlgorithm = "firopow";          DAG = $true; MinMemGb = 3;   Params = ""; DevFee = 2.0;  ExtendInterval = 3; ExcludeCompute = @("GCN1","GCN2","RDNA3")}
+    #[PSCustomObject]@{MainAlgorithm = "firopow";          DAG = $true; MinMemGb = 3;   Params = ""; DevFee = 2.0;  ExtendInterval = 3; ExcludeCompute = @("GCN1","GCN2","RDNA3")}
     [PSCustomObject]@{MainAlgorithm = "fishhash";         DAG = $true; MinMemGb = 2;   Params = ""; DevFee = 2.0;  ExtendInterval = 3; ExcludeCompute = @("GCN1","GCN2","GCN3","GCN4","RDNA3")}
     [PSCustomObject]@{MainAlgorithm = "karlsen";                       MinMemGb = 1.5; Params = ""; DevFee = 1.0;  ExcludeCompute = @("GCN1","GCN2")}
     [PSCustomObject]@{MainAlgorithm = "kas";                           MinMemGb = 1.5; Params = ""; DevFee = 1.0;  MainAlgorithmXlat = "kHeavyHash"; ExcludeCompute = @("GCN1","GCN2")}

@@ -42,7 +42,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Etchash"       ; DAG = $true; MinMemGB = 3;   Params = "-a ETCHASH";       Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; ExcludePoolName = "MiningRigRentals"} #Etchash 
     [PSCustomObject]@{MainAlgorithm = "EthashLowMemory" ; DAG = $true; MinMemGB = 2;   Params = "-a ETHASH";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; ExcludePoolName = "MiningRigRentals"} #Ethash for low memory coins
     [PSCustomObject]@{MainAlgorithm = "EvrProgPow"    ; DAG = $true; MinMemGB = 3;   Params = "-a EvrProgPow";    Vendor = @("AMD","NVIDIA"); ExtendInterval = 2} #EvrProgPow
-    [PSCustomObject]@{MainAlgorithm = "FiroPow"       ; DAG = $true; MinMemGB = 3;   Params = "-a FiroPow";       Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; ExcludePoolName = "ZergPool|ZPool"} #FiroPow
+    #[PSCustomObject]@{MainAlgorithm = "FiroPow"       ; DAG = $true; MinMemGB = 3;   Params = "-a FiroPow";       Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; ExcludePoolName = "ZergPool|ZPool"} #FiroPow
     [PSCustomObject]@{MainAlgorithm = "SCCPow"        ; DAG = $true; MinMemGB = 3;   Params = "-a FiroPowSCC";    Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; ExcludePoolName = "ZergPool|ZPool"} #SCCPow
     [PSCustomObject]@{MainAlgorithm = "FishHash"      ; DAG = $true; MinMemGB = 3;   Params = "-a FishHash";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2} #FishHash/IRON
     [PSCustomObject]@{MainAlgorithm = "Take2"         ;              MinMemGB = 1;   Params = "-a Ghostrider";    Vendor = @("CPU","NVIDIA"); FaultTolerance = 10; ExtendInterval = 3; DevFee = 1.0} #Ghostrider

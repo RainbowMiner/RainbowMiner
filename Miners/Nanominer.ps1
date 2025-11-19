@@ -36,7 +36,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "EthashB3";        DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","INTEL","NVIDIA");          ExtendInterval = 2; DevFee = 1.0} #EthashB3
     [PSCustomObject]@{MainAlgorithm = "EtcHash";         DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA");                  ExtendInterval = 2; DevFee = 1.0} #EtcHash
     [PSCustomObject]@{MainAlgorithm = "EvrProgPow";      DAG = $true; Params = ""; MinMemGb = 2;  Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; DevFee = 2.0} #EvrProgPow/EVR
-    [PSCustomObject]@{MainAlgorithm = "FiroPow";         DAG = $true; Params = ""; MinMemGb = 2;  Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; DevFee = 1.0; ZombieMode = $true} #FiroPOW
+    #[PSCustomObject]@{MainAlgorithm = "FiroPow";         DAG = $true; Params = ""; MinMemGb = 2;  Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; DevFee = 1.0; ZombieMode = $true} #FiroPOW
     [PSCustomObject]@{MainAlgorithm = "fishhash";                     Params = ""; MinMemGb = 2;  Vendor = @("AMD","NVIDIA");         ExtendInterval = 2; DevFee = 1.0} #FishHash
     [PSCustomObject]@{MainAlgorithm = "karlsenhashv2";                Params = ""; MinMemGb = 2;  Vendor = @("AMD","NVIDIA");         ExtendInterval = 2; DevFee = 1.0} #KarlsenhashV2/KLS
     [PSCustomObject]@{MainAlgorithm = "KawPow";          DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; DevFee = 2.0} #KawPOW

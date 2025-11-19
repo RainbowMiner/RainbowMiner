@@ -41,7 +41,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Ethash4g";        DAG = $true; MinMemGb = 3;                     Params = "--algo ethash";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 1.00} #Ethash
     [PSCustomObject]@{MainAlgorithm = "Ethash5g";        DAG = $true; MinMemGb = 4;                     Params = "--algo ethash";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 1.00} #Ethash
     [PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; MinMemGb = 2;                     Params = "--algo ethash";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 1.00} #Ethash for low memory coins
-    [PSCustomObject]@{MainAlgorithm = "FiroPoW";         DAG = $true; MinMemGb = 3;                     Params = "--algo firo";        Vendor = @("NVIDIA");       ExtendInterval = 2; Fee = 1.00} #FiroPOW
+    #[PSCustomObject]@{MainAlgorithm = "FiroPoW";         DAG = $true; MinMemGb = 3;                     Params = "--algo firo";        Vendor = @("NVIDIA");       ExtendInterval = 2; Fee = 1.00} #FiroPOW
     [PSCustomObject]@{MainAlgorithm = "KarlsenHash";                  MinMemGb = 1;                     Params = "--algo karlsenhash"; Vendor = @("NVIDIA");       ExtendInterval = 2; Fee = 1.00} #KarlsenHash/KLS
     [PSCustomObject]@{MainAlgorithm = "KawPOW";          DAG = $true; MinMemGb = 3;                     Params = "--algo kawpow";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 1.00} #KawPOW
     [PSCustomObject]@{MainAlgorithm = "KawPOW2g";        DAG = $true; MinMemGb = 3;                     Params = "--algo kawpow";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 1.00} #KawPOW
