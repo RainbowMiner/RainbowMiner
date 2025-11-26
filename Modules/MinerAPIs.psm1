@@ -2408,6 +2408,23 @@ class OneZeroMiner : Miner {
             $Accepted_Shares = [Int64]($Data_Algos.total_accepted_shares)
             $Rejected_Shares = [Int64]($Data_Algos.total_rejected_shares)
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
+
+            if ($this.Algorithm[1]) {
+                $HashRate_Name = [String]$this.Algorithm[1]
+                $HashRate_Name_0 = [String]$this.BaseAlgorithm[1]
+
+                $Data_Algos     = $Data.algos | WHere-Object {$HashRate_Name_0 -eq (Get-Algorithm $_.name)}
+
+                $HashRate_Value = [Double]($Data_Algos.total_hashrate)
+
+                if ($HashRate_Name -and $HashRate_Value -gt 0) {
+                    $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+                    $Accepted_Shares = [Int64]($Data_Algos.total_accepted_shares)
+                    $Rejected_Shares = [Int64]($Data_Algos.total_rejected_shares)
+                    $this.UpdateShares(1,$Accepted_Shares,$Rejected_Shares)
+                }
+            }
         }
 
         $this.AddMinerData("",$HashRate,$null,$PowerDraw)

@@ -2344,10 +2344,11 @@ function Start-Setup {
                                     $Valid_Values = switch ($Miner_Name) {
                                         "Gminer" {"1,2,3, ... 100"}
                                         "NBminer" {"1,2,3, ... 10"}
+                                        "OneZeroMiner" {"1_10,2_8, ..."}
                                         "Teamred" {"0.01, 0.02, ... 1.00"}
                                     }
                                     if ($Valid_Values) {
-                                        $EditMinerConfig.Intensity = Read-HostArray -Prompt "Enter intensities to benchmark, as comma list (${Valid_Values}, $(if ($EditMinerConfig.Intensity) {"enter 'clear'"} else {"leave empty"}) for all)" -Default $EditMinerConfig.Intensity -Characters "0-9\." | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $EditMinerConfig.Intensity = Read-HostArray -Prompt "Enter intensities to benchmark, as comma list (${Valid_Values}, $(if ($EditMinerConfig.Intensity) {"enter 'clear'"} else {"leave empty"}) for all)" -Default $EditMinerConfig.Intensity -Characters "0-9\._" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                         $EditMinerConfig.Intensity = "$($EditMinerConfig.Intensity -join ",")"
                                         $MinerSetupStepStore = $true
                                     }

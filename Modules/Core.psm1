@@ -1960,6 +1960,7 @@ function Invoke-Core {
             FullComboModels = [PSCustomObject]@{}
         }
         $Global:DeviceCache.DevicesToVendors = [hashtable]@{}
+        $Global:DeviceCache.MinerDeviceIndex = [hashtable]@{}
 
         $Session.Config | Add-Member DeviceModel @($Global:DeviceCache.Devices | Select-Object -ExpandProperty Model -Unique | Sort-Object) -Force
         $Session.Config | Add-Member CUDAVersion $Session.CUDAVersion -Force
@@ -2082,7 +2083,7 @@ function Invoke-Core {
                                     $CcMinerNameToAdd = "$CcMinerNameToAdd-$(Get-Algorithm $p.MainAlgorithm)"
                                     if ($p.SecondaryAlgorithm) {
                                         $CcMinerNameToAdd = "$CcMinerNameToAdd-$(Get-Algorithm $p.SecondaryAlgorithm)"
-                                        $Intensity = @($p.Intensity -replace "[^0-9\.,;]+" -split "[,;]+" | Where-Object {"$_" -ne ""} | Select-Object -Unique)
+                                        $Intensity = @($p.Intensity -replace "[^0-9\.,;_]+" -split "[,;]+" | Where-Object {"$_" -ne ""} | Select-Object -Unique)
                                         if ($newMiner.Intensity -ne $null) {$newMiner.Intensity = $Intensity} else {$newMiner | Add-Member Intensity $Intensity -Force}
                                     }
                                 }
