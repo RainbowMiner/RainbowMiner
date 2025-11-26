@@ -30,7 +30,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "qhash"; Params = ""; ExtendInterval = 2; Fee = @{NVIDIA=3.0}; Vendor = @("NVIDIA"); FaultTolerance = 0.4} #Qhash/QBC
     [PSCustomObject]@{MainAlgorithm = "xelis"; Params = ""; ExtendInterval = 3; Fee = @{NVIDIA=1.0;AMD=2.0}; Vendor = @("AMD","NVIDIA")} #XelisHashV2/XEL
 
-    [PSCustomObject]@{MainAlgorithm = "xelis"; Params = ""; ExtendInterval = 3; Fee = @{NVIDIA=1.0;AMD=2.0}; Vendor = @("NVIDIA"); SecondaryAlgorithm = "qhash"} #XelisHashV2/XEL + Qhash/QBC
+    [PSCustomObject]@{MainAlgorithm = "xelis"; Params = ""; ExtendInterval = 3; Fee = @{NVIDIA=1.0;AMD=2.0}; Vendor = @("NVIDIA"); SecondaryAlgorithm = "qhash"; SecondaryFee = @{NVIDIA=3.0}} #XelisHashV2/XEL + Qhash/QBC
 )
 
 # $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -115,7 +115,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                                         Penalty        = 0
 					                    DevFee         = [PSCustomObject]@{
 								                            ($MainAlgorithm_Norm) = if ($_.Fee -ne $null) {$_.Fee.$Miner_Vendor} else {$DevFee}
-								                            ($SecondAlgorithm_Norm) = 0
+								                            ($SecondAlgorithm_Norm) = if ($_.SecondaryFee -ne $null) {$_.SecondaryFee.$Miner_Vendor} else {$DevFee}
                                                           }
 					                    ManualUri      = $ManualUri
                                         Version        = $Version
