@@ -1090,7 +1090,11 @@ function Invoke-Core {
             $ForksDB | Where-Object {$_.active} | Foreach-Object {
                 $Fork_Meets_Target = $false
                 if ($_.date) {
-                    $Fork_Meets_Target = (Get-Date) -ge [datetime]::Parse($_.date)
+                    $TargetTime = [datetime]::Parse($_.date)
+                    if ($TargetTime.Kind -ne [DateTimeKind]::Utc) {
+                        $TargetTime = $TargetTime.ToUniversalTime()
+                    }
+                    $Fork_Meets_Target = (Get-Date).ToUniversalTime() -ge $TargetTime
                 } elseif ($_.height) {
                     $Fork_Request = [PSCustomObject]@{}
                     try {
