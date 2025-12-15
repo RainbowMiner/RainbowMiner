@@ -12,7 +12,7 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.De
 
 $ManualURI = "https://github.com/sp-hash/TeamBlackMiner"
 $Port = "365{0:d2}"
-$Version = "2.27"
+$Version = "2.28"
 
 if ($IsLinux) {
     $Path     = ".\Bin\GPU-Teamblack\TBMiner"
@@ -20,14 +20,9 @@ if ($IsLinux) {
 
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.27-teamblack/TeamBlackMiner_2_27_Ubuntu_22_04_Cuda_12.tar.xz"
-            Cuda = "12.6"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.28-teamblack/TeamBlackMiner_2_28_Ubuntu_22_04_Cuda_12_8.tar.xz"
+            Cuda = "12.8"
             Linux = "Ubuntu 22.04"
-        }
-        [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.27-teamblack/TeamBlackMiner_2_27_Ubuntu_20_04_Cuda_12.tar.xz"
-            Cuda = "12.6"
-            Linux = "Ubuntu 20.04"
         }
     )
 } else {
@@ -37,13 +32,18 @@ if ($IsLinux) {
 
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.27-teamblack/TeamBlackMiner_2_27_cuda_12_6.7z"
-            Cuda = "12.6"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.29-teamblack/TeamBlackMiner_2_29_cuda_13_1.7z"
+            Cuda = "13.1"
+            Version = "2.29"
+        }
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.28-teamblack/TeamBlackMiner_2_28_cuda_12_8.7z"
+            Cuda = "12.8"
         }
     )
 }
 
-$ExcludePools = "Binance|Ethwmine|Gteh|Kryptex|KuCoin|NiceHash|Poolin|ProHashing|SoloPool|unMineable|UUpool|ZergPool"
+$ExcludePools = "Binance|Ethwmine|Gtpool|Kryptex|KuCoin|NiceHash|Poolin|SoloPool|unMineable|UUpool"
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethash";          DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; ExcludePoolName = $ExcludePools} #Ethash
