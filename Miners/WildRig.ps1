@@ -14,14 +14,14 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 0.00
 $Cuda = "11.0"
-$Version = "0.47.8"
+$Version = "0.47.9"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.47.8-wildrigmulti/wildrig-multi-linux-0.47.8.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.47.9-wildrigmulti/wildrig-multi-linux-0.47.9.tar.gz"
 } else {
     $Path = ".\Bin\GPU-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.47.8-wildrigmulti/wildrig-multi-windows-0.47.8.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.47.9-wildrigmulti/wildrig-multi-windows-0.47.9.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -29,7 +29,6 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "bitcore";                   Vendor = @("AMD","INTEL");          Params = ""} #BitCore
     [PSCustomObject]@{MainAlgorithm = "bmw512";                    Vendor = @("AMD","INTEL","NVIDIA"); Params = ""} #BMW512
     [PSCustomObject]@{MainAlgorithm = "c11";                       Vendor = @("AMD","INTEL");          Params = ""} #C11
-    #[PSCustomObject]@{MainAlgorithm = "clchash";                   Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; DevFee = 3.00; AmdCompute="RDNA"} #ClcHash/CLC, removed with v0.43.3
     [PSCustomObject]@{MainAlgorithm = "curvehash";                 Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 1.00} #CurveHash
     [PSCustomObject]@{MainAlgorithm = "evohash";                   Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; AmdCompute="RDNA"} #Evohash/EVOAI
     [PSCustomObject]@{MainAlgorithm = "evrprogpow"; DAG = $true;   Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 0.75} #EvrProgPow / Evrmore Coin
@@ -51,8 +50,6 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "minotaur";                  Vendor = @("AMD","INTEL","NVIDIA"); Params = ""} #, new in v0.26.0
     [PSCustomObject]@{MainAlgorithm = "nexapow"; DAG = $true;      Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 0.75} #NexaPow/NEXA
     [PSCustomObject]@{MainAlgorithm = "phi";                       Vendor = @("AMD","INTEL");          Params = ""} #PHI
-    [PSCustomObject]@{MainAlgorithm = "progpow-ethercore"; DAG = $true; Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3} #ProgPowEthercore
-    [PSCustomObject]@{MainAlgorithm = "progpow-quai";      DAG = $true; Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 0.75} #ProgPowQuai
     [PSCustomObject]@{MainAlgorithm = "progpow-sero";      DAG = $true; Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 0.75} #ProgPowSero
     [PSCustomObject]@{MainAlgorithm = "progpow-telestai";  DAG = $true; Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 0.75} #Meraki/TLS
     [PSCustomObject]@{MainAlgorithm = "progpowz";          DAG = $true; Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 0.75; ExcludePoolName = "Fairpool"} #ProgPowZ
@@ -78,6 +75,10 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "x22i";                      Vendor = @("AMD","INTEL");          Params = ""} #X22i
     [PSCustomObject]@{MainAlgorithm = "x25x";                      Vendor = @("AMD","INTEL");          Params = ""; ExtendInterval = 2} #X25x
     [PSCustomObject]@{MainAlgorithm = "x33";                       Vendor = @("AMD","INTEL");          Params = ""} #X33
+
+    #[PSCustomObject]@{MainAlgorithm = "clchash";                   Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; DevFee = 3.00; AmdCompute="RDNA"} #ClcHash/CLC, removed with v0.43.3
+    #[PSCustomObject]@{MainAlgorithm = "progpow-ethercore"; DAG = $true; Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3} #ProgPowEthercore, removed with v0.47.9
+    #[PSCustomObject]@{MainAlgorithm = "progpow-quai";      DAG = $true; Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 0.75} #ProgPowQuai, removed with v0.47.9
 )
 
 # $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
