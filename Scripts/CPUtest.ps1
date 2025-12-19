@@ -258,8 +258,12 @@ $lfnr++
 " " | Out-File $TestFileName -Append
 
 try {
-    $CPUInfo | Add-Member RealCores ([int[]](0..($CPUInfo.Threads - 1))) -Force
-    if ($CPUInfo.Threads -gt $CPUInfo.Cores) {$CPUInfo.RealCores = $CPUInfo.RealCores | Where-Object {-not ($_ % [int]($CPUInfo.Threads/$CPUInfo.Cores))}}
+    if ($IsLinux) {
+        $CPUInfo | Add-Member RealCores ([int[]](0..($CPUInfo.Cores - 1))) -Force
+    } else {
+        $CPUInfo | Add-Member RealCores ([int[]](0..($CPUInfo.Threads - 1))) -Force
+        if ($CPUInfo.Threads -gt $CPUInfo.Cores) {$CPUInfo.RealCores = $CPUInfo.RealCores | Where-Object {-not ($_ % [int]($CPUInfo.Threads/$CPUInfo.Cores))}}
+    }
     $CPUInfo | Add-Member IsRyzen ($CPUInfo.Vendor -eq "AMD" -and $CPUInfo.Name -match "Ryzen")
 } catch {
     "ERROR: $($_.Exception.Message)" | Out-File $TestFileName -Append
