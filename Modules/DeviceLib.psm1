@@ -732,8 +732,14 @@ function Get-Device {
                     }
                 }
 
-                $Global:GlobalCPUInfo | Add-Member RealCores ([int[]](0..($Global:GlobalCPUInfo.Threads - 1))) -Force
-                if ($Global:GlobalCPUInfo.Threads -gt $Global:GlobalCPUInfo.Cores) {$Global:GlobalCPUInfo.RealCores = $Global:GlobalCPUInfo.RealCores | Where-Object {-not ($_ % [int]($Global:GlobalCPUInfo.Threads/$Global:GlobalCPUInfo.Cores))}}
+                if ($IsLinux) {
+                    $Global:GlobalCPUInfo | Add-Member RealCores ([int[]](0..($Global:GlobalCPUInfo.Cores - 1))) -Force
+                } else {
+                    $Global:GlobalCPUInfo | Add-Member RealCores ([int[]](0..($Global:GlobalCPUInfo.Threads - 1))) -Force
+                    if ($Global:GlobalCPUInfo.Threads -gt $Global:GlobalCPUInfo.Cores) {
+                        $Global:GlobalCPUInfo.RealCores = $Global:GlobalCPUInfo.RealCores | Where-Object {-not ($_ % [int]($Global:GlobalCPUInfo.Threads/$Global:GlobalCPUInfo.Cores))}
+                    }
+                }
             }
             $Global:GlobalCPUInfo | Add-Member IsRyzen ($Global:GlobalCPUInfo.Features.iszen -or $Global:GlobalCPUInfo.Features.iszenplus -or $Global:GlobalCPUInfo.Features.iszen2 -or $Global:GlobalCPUInfo.Features.iszen3 -or $Global:GlobalCPUInfo.Features.iszen4)
 

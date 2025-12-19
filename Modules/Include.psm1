@@ -1616,7 +1616,7 @@ function Get-CPUAffinity {
     elseif ($ToInt) {ConvertTo-CPUAffinity @(Get-CPUAffinity $Threads)}
     else {
         @(if ($Threads -and $Threads -ne $Global:GlobalCPUInfo.RealCores.Count) {
-            $a = $r = 0; $b = [Math]::Max(1,[int]($Global:GlobalCPUInfo.Threads/$Global:GlobalCPUInfo.Cores));
+            $a = $r = 0; $b = if ($IsLinux) {1} else {[Math]::Max(1,[int]($Global:GlobalCPUInfo.Threads/$Global:GlobalCPUInfo.Cores))};
             for($i=0;$i -lt [Math]::Min($Threads,$Global:GlobalCPUInfo.Threads);$i++) {$a;$c=($a+$b)%$Global:GlobalCPUInfo.Threads;if ($c -lt $a) {$r++;$a=$c+$r}else{$a=$c}}
         } else {$Global:GlobalCPUInfo.RealCores}) | Sort-Object
     }
