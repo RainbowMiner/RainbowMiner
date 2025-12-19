@@ -26,9 +26,9 @@ if ($IsLinux) {
 
 $Commands = [PSCustomObject[]]@(
     #CPU only mining
-    [PSCustomObject]@{MainAlgorithm = "randomgrft"       ;              Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomGRFT
-    [PSCustomObject]@{MainAlgorithm = "randomkeva"       ;              Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomKEVA
-    [PSCustomObject]@{MainAlgorithm = "randomnevo"       ;              Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomNEVO
+    [PSCustomObject]@{MainAlgorithm = "randomgrft"       ;              Params = ""; Fee = 0.85;               Vendor = @("CPU"); Rx1GbPages = $true} #RandomGRFT
+    [PSCustomObject]@{MainAlgorithm = "randomkeva"       ;              Params = ""; Fee = 0.85;               Vendor = @("CPU"); Rx1GbPages = $true} #RandomKEVA
+    [PSCustomObject]@{MainAlgorithm = "randomnevo"       ;              Params = ""; Fee = 0.85;               Vendor = @("CPU"); Rx1GbPages = $true} #RandomNEVO
 
     #CPU and GPU mining
     [PSCustomObject]@{MainAlgorithm = "blake3_alephium"  ;              Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","INTEL","NVIDIA")} #Alephium/ALPH
@@ -152,6 +152,10 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                     $Compute = $ValidCompute_NVIDIA | Where-Object {-not $_.ExcludeCompute -or $_ -notin $_.ExcludeCompute}
                     $Compute_Param = "Architecture"
                 }
+            }
+
+            if ($_.Rx1GbPages -and $Session.Config.EnableRandomX1GBPages) {
+                $DeviceParams = "$($DeviceParams) --randomx-use-1gb-pages"
             }
 
             $All_MainAlgorithms = if ($Miner_Vendor -eq "CPU") {@($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)")} else {@($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)","$($MainAlgorithm_Norm_0)-GPU")}

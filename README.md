@@ -1004,6 +1004,7 @@ For Server (Runmode=server) setup:
 - **MaxAllowedLuck** = if luck (= time_since_last_block / time_to_find_one_block) is greater than that number, increase the penalty up to 100% (0=disable, inactive for solo pools) [default=3]
 - **MaxTimeSinceLastBlock** = if time_since_last_block is greater than that number, increase the penalty up to 100% (0=disable, time-units allowed in input, inactive for solo pools) [default=12h]
 - **ProfitSpikeProtection** = prevent profit files to be updated, if the actual value is greater than the avg. profit x this factor (0 to disable) [default=0]
+- **EnableRandomX1GBPages** = set to "1" to allow miners to enable 1GB Pages for RandomX like algorithms (currently SrbMinerMulti only, see issue #3158)
 - **RebootOnGPUFailure** = (currently disabled)
 - **EnableOCProfiles** = set to 1, if you plan to use custom overclocking profiles [default=0]
 - **EnableOCVoltage** = set to 1, if you plan to set voltage for overclocking [default=0]

@@ -34,18 +34,18 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "mike"             ;              Params = ""; Fee = 0.85;               Vendor = @("CPU"); FaultTolerance = 8; CpuFeatures = @("aes","sse42"); ExcludePoolName = "C3pool|MoneroOcean"} #Mike/VKAX
     [PSCustomObject]@{MainAlgorithm = "minotaurx"        ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #Minotaurx/LCC
     [PSCustomObject]@{MainAlgorithm = "panthera"         ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #Panthera
-    [PSCustomObject]@{MainAlgorithm = "randomarq"        ;              Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomArq
-    [PSCustomObject]@{MainAlgorithm = "randomepic"       ;              Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomEPIC
-    [PSCustomObject]@{MainAlgorithm = "randomjuno"       ;              Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomJuno
-    [PSCustomObject]@{MainAlgorithm = "randoml"          ;              Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomL/LOZZ
-    [PSCustomObject]@{MainAlgorithm = "randomscash"      ;              Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomScash
-    [PSCustomObject]@{MainAlgorithm = "randomsfx"        ;              Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomSFX
-    #[PSCustomObject]@{MainAlgorithm = "randomtuske"      ;              Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #randomTuske
-    [PSCustomObject]@{MainAlgorithm = "randomvirel"      ;              Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomVirel/VRL
-    [PSCustomObject]@{MainAlgorithm = "randomx"          ;              Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomX
-    [PSCustomObject]@{MainAlgorithm = "randomxeq"        ;              Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU"); ExcludePoolName = "C3pool|Moneroocean"} #RandomXEQ
-    [PSCustomObject]@{MainAlgorithm = "randomy"          ;              Params = "--randomx-use-1gb-pages"; Fee = 1.00; Vendor = @("CPU")} #RandomY
-    [PSCustomObject]@{MainAlgorithm = "randomyada"       ;              Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomYada
+    [PSCustomObject]@{MainAlgorithm = "randomarq"        ;              Params = ""; Fee = 0.85;               Vendor = @("CPU"); Rx1GbPages = $true} #RandomArq
+    [PSCustomObject]@{MainAlgorithm = "randomepic"       ;              Params = ""; Fee = 0.85;               Vendor = @("CPU"); Rx1GbPages = $true} #RandomEPIC
+    [PSCustomObject]@{MainAlgorithm = "randomjuno"       ;              Params = ""; Fee = 0.85;               Vendor = @("CPU"); Rx1GbPages = $true} #RandomJuno
+    [PSCustomObject]@{MainAlgorithm = "randoml"          ;              Params = ""; Fee = 0.85;               Vendor = @("CPU"); Rx1GbPages = $true} #RandomL/LOZZ
+    [PSCustomObject]@{MainAlgorithm = "randomscash"      ;              Params = ""; Fee = 0.85;               Vendor = @("CPU"); Rx1GbPages = $true} #RandomScash
+    [PSCustomObject]@{MainAlgorithm = "randomsfx"        ;              Params = ""; Fee = 0.85;               Vendor = @("CPU"); Rx1GbPages = $true} #RandomSFX
+    #[PSCustomObject]@{MainAlgorithm = "randomtuske"      ;              Params = ""; Fee = 0.85;               Vendor = @("CPU"); Rx1GbPages = $true} #randomTuske
+    [PSCustomObject]@{MainAlgorithm = "randomvirel"      ;              Params = ""; Fee = 0.85;               Vendor = @("CPU"); Rx1GbPages = $true} #RandomVirel/VRL
+    [PSCustomObject]@{MainAlgorithm = "randomx"          ;              Params = ""; Fee = 0.85;               Vendor = @("CPU"); Rx1GbPages = $true} #RandomX
+    [PSCustomObject]@{MainAlgorithm = "randomxeq"        ;              Params = ""; Fee = 0.85;               Vendor = @("CPU"); Rx1GbPages = $true; ExcludePoolName = "C3pool|Moneroocean"} #RandomXEQ
+    [PSCustomObject]@{MainAlgorithm = "randomy"          ;              Params = ""; Fee = 1.00;               Vendor = @("CPU"); Rx1GbPages = $true} #RandomY
+    [PSCustomObject]@{MainAlgorithm = "randomyada"       ;              Params = ""; Fee = 0.85;               Vendor = @("CPU"); Rx1GbPages = $true} #RandomYada
     [PSCustomObject]@{MainAlgorithm = "rinhash"          ;              Params = ""; Fee = 1.00;               Vendor = @("CPU")} #RinHash2/RIN
     [PSCustomObject]@{MainAlgorithm = "tht"              ;              Params = ""; Fee = 5.00;               Vendor = @("CPU")} #ThoughtAI/THT
     [PSCustomObject]@{MainAlgorithm = "verushash"        ;              Params = ""; Fee = 0.85;               Vendor = @("CPU"); ExcludePoolName="LuckPool"; FaultTolerance = 0.5} #Verushash
@@ -267,6 +267,10 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
 
             if ($MainAlgorithm -eq "verthash" -and $VerthashDatFile) {
                 $DeviceParams = " --verthash-dat-path ""$($VerthashDatFile)""$($DeviceParams)"
+            }
+
+            if ($_.Rx1GbPages -and $Session.Config.EnableRandomX1GBPages) {
+                $DeviceParams = "$($DeviceParams) --randomx-use-1gb-pages"
             }
 
             $All_MainAlgorithms = if ($Miner_Vendor -eq "CPU") {@($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)")} else {@($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)","$($MainAlgorithm_Norm_0)-GPU")}
