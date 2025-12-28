@@ -13,13 +13,13 @@ if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return}
 $ManualUri = "https://github.com/rigelminer/rigel/releases"
 $Port = "324{0:d2}"
 $DevFee = 0.7
-$Version = "1.23.0"
+$Version = "1.23.1"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Rigel\rigel"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.23.0-rigel/rigel-1.23.0-linux.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.23.1-rigel/rigel-1.23.1-linux.tar.gz"
             Cuda = "8.0"
         }
     )
@@ -27,7 +27,7 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Rigel\rigel.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.23.0-rigel/rigel-1.23.0-win.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.23.1-rigel/rigel-1.23.1-win.zip"
             Cuda = "8.0"
         }
     )
@@ -56,12 +56,12 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "KawPOW3g";        DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); Algorithm = "kawpow"; Fee = 1.0; ExcludePoolName = "MiningRigRentals"} #KawPOW
     [PSCustomObject]@{MainAlgorithm = "KawPOW4g";        DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); Algorithm = "kawpow"; Fee = 1.0; ExcludePoolName = "MiningRigRentals"} #KawPOW
     [PSCustomObject]@{MainAlgorithm = "KawPOW5g";        DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); Algorithm = "kawpow"; Fee = 1.0; ExcludePoolName = "MiningRigRentals"} #KayPOW
-    [PSCustomObject]@{MainAlgorithm = "quai";            DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); Fee = 1.0} #ProgPowQuai/QUAI
+    #[PSCustomObject]@{MainAlgorithm = "quai";            DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); Fee = 1.0} #ProgPowQuai/QUAI
     [PSCustomObject]@{MainAlgorithm = "progpowz";        DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); Fee = 1.0} #ProgPowZ/ZANO
     [PSCustomObject]@{MainAlgorithm = "sha256ton";                    MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); Fee = 1.0; PoolName = "Icemining"} #SHA256ton/GRAM+CHAPA
     [PSCustomObject]@{MainAlgorithm = "sha3x";                        MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); Fee = 1.0} #SHA3x/XTM
     [PSCustomObject]@{MainAlgorithm = "sha512256d";                   MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); Fee = 1.0} #SHA512256d/RAD
-    [PSCustomObject]@{MainAlgorithm = "xelishashv2";                  MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); Fee = 3.0; ExtendInterval = 3} #XelisHashv2
+    #[PSCustomObject]@{MainAlgorithm = "xelishashv2";                  MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); Fee = 3.0; ExtendInterval = 3} #XelisHashv2
     [PSCustomObject]@{MainAlgorithm = "xelishashv3";                  MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); Fee = 2.0; ExtendInterval = 3} #XelisHashv3/XEL
 
     # Dual mining
@@ -172,9 +172,10 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
 
                 if ($MainAlgorithm_0 -eq "kawpow") {
                     if ($Pools.$MainAlgorithm_Norm.CoinSymbol -eq "AIPG")      {$CoinParams = " --coin aipg"}
-                    elseif ($Pools.$MainAlgorithm_Norm.CoinSymbol -eq "NEOX")  {$CoinParams = " --coin neox"}
-                    elseif ($Pools.$MainAlgorithm_Norm.CoinSymbol -ne "RVN")   {$CoinParams = " --coin ravencoin"}
                     elseif ($Pools.$MainAlgorithm_Norm.CoinSymbol -eq "CLORE") {$CoinParams = " --coin clore"}
+                    elseif ($Pools.$MainAlgorithm_Norm.CoinSymbol -eq "NEOX")  {$CoinParams = " --coin neox"}
+                    elseif ($Pools.$MainAlgorithm_Norm.CoinSymbol -eq "QUAI")  {$CoinParams = " --coin quai"}
+                    elseif ($Pools.$MainAlgorithm_Norm.CoinSymbol -ne "RVN")   {$CoinParams = " --coin ravencoin"}
                     elseif ($Pools.$MainAlgorithm_Norm.CoinSymbol -eq "XNA")   {$CoinParams = " --coin xnaget-coin octa"}
                 
                 } elseif ($MainAlgorithm_0 -eq "ethash") {
