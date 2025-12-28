@@ -125,84 +125,105 @@ function Set-OsFlags {
 }
 
 function Get-LinuxDistroInfo {
-    $distroName = $null
-    $distroVersion = $null
+    $distroName     = $null
+    $distroVersion  = $null
+    $distroCodename = $null
 
-    # Function to extract information from key-value pairs in a file
     function ParseKeyValueFile {
-        param (
-            [string]$FilePath,
-            [string[]]$Keys
+        param(
+            [Parameter(Mandatory)][string]$FilePath,
+            [Parameter(Mandatory)][string[]]$Keys
         )
+
         $result = @{}
-        if (Test-Path $FilePath) {
-            $content = Get-Content $FilePath | ForEach-Object {
-                $parts = $_ -split '='
-                $key = $parts[0]
-                $value = $parts[1] -replace '"', '' -replace '\s+$', '' # remove quotes and trailing spaces
-                if ($Keys -contains $key) {
-                    $result[$key] = $value
-                }
+        if (-not (Test-Path $FilePath)) { return $result }
+
+        foreach ($line in (Get-Content $FilePath -ErrorAction SilentlyContinue)) {
+            if ([string]::IsNullOrWhiteSpace($line)) { continue }
+            if ($line -match '^\s*#') { continue }
+            if ($line -notmatch '=') { continue }
+
+            $parts = $line -split '=', 2
+            $key   = $parts[0].Trim()
+            if ($Keys -notcontains $key) { continue }
+
+            $value = $parts[1].Trim()
+
+            # Remove surrounding quotes if present (supports "..." or '...')
+            if (($value.StartsWith('"') -and $value.EndsWith('"')) -or
+                ($value.StartsWith("'") -and $value.EndsWith("'"))) {
+                $value = $value.Substring(1, $value.Length - 2)
             }
+
+            $result[$key] = $value
         }
+
         return $result
     }
 
     try {
-
-        # 1. Try /etc/os-release
+        # 1. /etc/os-release (best source on most modern distros)
         if (Test-Path "/etc/os-release") {
-            $osRelease = ParseKeyValueFile "/etc/os-release" @('NAME', 'VERSION_ID')
-            if ($osRelease['NAME']) {
-                $distroName = $osRelease['NAME']
-            }
-            if ($osRelease['VERSION_ID']) {
-                $distroVersion = $osRelease['VERSION_ID']
-            }
+            $osRelease = ParseKeyValueFile "/etc/os-release" @(
+                'NAME','VERSION_ID','VERSION_CODENAME','UBUNTU_CODENAME'
+            )
+
+            if ($osRelease['NAME'])        { $distroName    = $osRelease['NAME'] }
+            if ($osRelease['VERSION_ID'])  { $distroVersion = $osRelease['VERSION_ID'] }
+
+            # Prefer VERSION_CODENAME; fallback to UBUNTU_CODENAME
+            if ($osRelease['VERSION_CODENAME'])      { $distroCodename = $osRelease['VERSION_CODENAME'] }
+            elseif ($osRelease['UBUNTU_CODENAME'])   { $distroCodename = $osRelease['UBUNTU_CODENAME'] }
         }
 
-        # 2. Try /etc/lsb-release (common on Ubuntu and some Debian derivatives)
+        # 2. /etc/lsb-release (Ubuntu and some derivatives)
         elseif (Test-Path "/etc/lsb-release") {
-            $lsbRelease = ParseKeyValueFile "/etc/lsb-release" @('DISTRIB_ID', 'DISTRIB_RELEASE')
-            if ($lsbRelease['DISTRIB_ID']) {
-                $distroName = $lsbRelease['DISTRIB_ID']
-            }
-            if ($lsbRelease['DISTRIB_RELEASE']) {
-                $distroVersion = $lsbRelease['DISTRIB_RELEASE']
-            }
+            $lsbRelease = ParseKeyValueFile "/etc/lsb-release" @(
+                'DISTRIB_ID','DISTRIB_RELEASE','DISTRIB_CODENAME'
+            )
+
+            if ($lsbRelease['DISTRIB_ID'])        { $distroName     = $lsbRelease['DISTRIB_ID'] }
+            if ($lsbRelease['DISTRIB_RELEASE'])   { $distroVersion  = $lsbRelease['DISTRIB_RELEASE'] }
+            if ($lsbRelease['DISTRIB_CODENAME'])  { $distroCodename = $lsbRelease['DISTRIB_CODENAME'] }
         }
 
-        # 3. Try /etc/debian_version (specific to Debian)
+        # 3. Debian legacy fallback (codename usually not available from this file alone)
         elseif (Test-Path "/etc/debian_version") {
             $distroName = "Debian"
-            $distroVersion = Get-Content "/etc/debian_version" -Raw
+            $distroVersion = (Get-Content "/etc/debian_version" -Raw).Trim()
+
+            # If you want, you can optionally set distroCodename = $null here (already is)
         }
 
-        # 4. Try /etc/redhat-release (specific to Red Hat-based systems)
+        # 4. RedHat-based
         elseif (Test-Path "/etc/redhat-release") {
-            $content = Get-Content "/etc/redhat-release" -Raw
+            $content = (Get-Content "/etc/redhat-release" -Raw).Trim()
             if ($content -match "(.+)\srelease\s([\d\.]+)") {
                 $distroName = $matches[1].Trim()
                 $distroVersion = $matches[2].Trim()
             }
         }
 
-        # 5. Fallback to /etc/issue if others are not available
+        # 5. /etc/issue fallback
         elseif (Test-Path "/etc/issue") {
-            $content = Get-Content "/etc/issue" -Raw
+            $content = (Get-Content "/etc/issue" -Raw).Trim()
             if ($content -match "(.+)\s([\d\.]+)") {
                 $distroName = $matches[1].Trim()
                 $distroVersion = $matches[2].Trim()
             }
         }
-    } catch {
+    }
+    catch {
     }
 
-    # Return formatted result
+    $info = @($distroName, $distroVersion) -ne $null -join ' '
+    if ($distroCodename) { $info = "$info ($distroCodename)" }
+
     [PSCustomObject]@{
-        distroName = $distroName
-        distroVersion = $distroVersion
-        distroInfo = "$distroName $distroVersion"
+        distroName     = $distroName
+        distroVersion  = $distroVersion
+        distroCodename = $distroCodename
+        distroInfo     = $info
     }
 }
 
