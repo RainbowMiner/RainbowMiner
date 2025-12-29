@@ -1,5 +1,5 @@
 #!/bin/sh
-# cpu-topology.sh - POSIX sh CPU topology exporter (JSON)
+# getcputopo.sh - POSIX sh CPU topology exporter (JSON)
 # Tries (in order):
 #   1) sysfs: /sys/devices/system/cpu (best, uses thread_siblings_list)
 #   2) lscpu: lscpu -p=CPU,SOCKET,CORE
@@ -21,7 +21,30 @@ CPUINFO="/proc/cpuinfo"
 
 have_cmd() { command -v "$1" >/dev/null 2>&1; }
 
-tmp="${TMPDIR:-/tmp}/cpu_topology.$$"
+choose_tmpdir() {
+  pid="$$"
+
+  # Try TMPDIR first (if set), then /tmp, then current dir
+  for d in "${TMPDIR:-}" "/tmp" "."; do
+    [ -n "$d" ] || continue
+    [ -d "$d" ] || continue
+
+    testfile="$d/.cpu_topo_test.$pid"
+
+    # IMPORTANT: redirection errors must be caught by redirecting the subshell
+    if ( : > "$testfile" ) 2>/dev/null; then
+      rm -f "$testfile" 2>/dev/null || true
+      printf '%s\n' "$d"
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+TMPBASE="$(choose_tmpdir 2>/dev/null || printf '%s\n' ".")"
+tmp="$TMPBASE/cpu_topology.$$"
+
 cleanup() { rm -f "$tmp" "$tmp".* 2>/dev/null || true; }
 trap 'cleanup' EXIT INT HUP TERM
 
