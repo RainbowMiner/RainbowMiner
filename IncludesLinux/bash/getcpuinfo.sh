@@ -358,6 +358,93 @@ arm_parts_from_cpuinfo() {
   ' "$CPUINFO" 2>/dev/null
 }
 
+# ---- ARM parts list from sysfs MIDR if available (unique tuples + count) ----
+# Produces same JSON as cpuinfo method.
+arm_parts_from_sysfs_midr() {
+  # candidate MIDR files (non-standard; probe what exists)
+  found=0
+
+  : > "$tmp.midr" 2>/dev/null || true
+
+  for f in \
+    "$SYSCPU"/cpu*/regs/identification/midr_el1 \
+    "$SYSCPU"/cpu*/regs/identification/MIDR_EL1 \
+    "$SYSCPU"/cpu*/identification/midr_el1 \
+    "$SYSCPU"/cpu*/identification/MIDR_EL1
+  do
+    # glob that doesn’t match expands to itself in sh, so test -r
+    if [ -r "$f" ]; then
+      # read first token only
+      v="$(sed -n '1{s/[[:space:]].*$//;p;}' "$f" 2>/dev/null || true)"
+      # accept hex like 0x........ or ........
+      case "$v" in
+        0x*|0X*|[0-9a-fA-F]*) ;;
+        *) continue ;;
+      esac
+      printf '%s\n' "$v" >> "$tmp.midr"
+      found=1
+    fi
+  done
+
+  [ "$found" -eq 1 ] || { echo "[]"; return; }
+
+  awk '
+    function hex2dec(h,   i,c,v) {
+      gsub(/^0x/,"",h); gsub(/^0X/,"",h)
+      v=0
+      for(i=1;i<=length(h);i++){
+        c=substr(h,i,1)
+        if(c>="0" && c<="9") d=c+0
+        else if(c>="a" && c<="f") d=index("abcdef",c)+9
+        else if(c>="A" && c<="F") d=index("ABCDEF",c)+9
+        else return -1
+        v = v*16 + d
+      }
+      return v
+    }
+    function tohex(n, w,   s, r, d) {
+      # n>=0, width w
+      s=""
+      while (n>0) { r = n % 16; n = int(n/16); s = substr("0123456789abcdef", r+1, 1) s }
+      if (s=="") s="0"
+      while (length(s) < w) s="0" s
+      return "0x" s
+    }
+    {
+      midr = hex2dec($0)
+      if (midr < 0) next
+
+      impl = int(midr / 16777216)             # >>24
+      var  = int(midr / 1048576) % 16         # >>20 & 0xF
+      part = int(midr / 16) % 4096            # >>4 & 0xFFF
+      rev  = midr % 16                        # & 0xF
+
+      key = impl "|" part "|" var "|" rev
+      cnt[key]++
+      implv[key]=tohex(impl,2)
+      partv[key]=tohex(part,3)
+      varv[key]=tohex(var,1)
+      revv[key]=rev
+    }
+    END{
+      first=1
+      printf "["
+      for(k in cnt){
+        if(!first) printf ","
+        first=0
+        printf "{"
+        printf "\"implementer\":\"%s\",", implv[k]
+        printf "\"part\":\"%s\",", partv[k]
+        printf "\"variant\":\"%s\",", varv[k]
+        printf "\"revision\":%d,", revv[k]+0
+        printf "\"count\":%d", cnt[k]+0
+        printf "}"
+      }
+      printf "]"
+    }
+  ' "$tmp.midr" 2>/dev/null
+}
+
 # ---- multi model names list from lscpu (unique, preserve order) ----
 lscpu_models_json() {
   init_lscpu >/dev/null 2>&1 || { echo "[]"; return; }
@@ -398,7 +485,10 @@ L3CacheKB="$(sys_l3_kb)"
 Features="$(features_json)"
 Hardware="$(cpuinfo_get_first "Hardware" || echo "")"
 Models="$(lscpu_models_json)"
-ArmParts="$(arm_parts_from_cpuinfo)"
+ArmParts="$(arm_parts_from_sysfs_midr)"
+if [ "$ArmParts" = "[]" ]; then
+  ArmParts="$(arm_parts_from_cpuinfo)"
+fi
 
 # last fallback threads from getconf
 if [ "$Threads" -le 0 ]; then
