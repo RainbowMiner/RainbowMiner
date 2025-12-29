@@ -678,7 +678,9 @@ function Get-Device {
                             }
                         }
 
-                    } else { # Fallback to old code
+                    }
+                    
+                    if (-not $Global:GlobalCPUInfo.Name -or -not $Global:GlobalCPUInfo.Cores -or -not $Global:GlobalCPUInfo.PhysicalCPUs) { # Fallback to old code
                         $Data = Get-Content "/proc/cpuinfo"
                         if ($Data) {
                             $Global:GlobalCPUInfo | Add-Member Name          "$((($Data | Where-Object {$_ -match 'model name'} | Select-Object -First 1) -split ":")[1])".Trim()
