@@ -233,10 +233,52 @@ init_lscpu_p() {
   return 1
 }
 
+LSCPU_FULL_TRIED=0
+LSCPU_FULL_OK=0
+LSCPU_FULL_OUT=""
+
+init_lscpu_full() {
+  if [ "$LSCPU_FULL_TRIED" -eq 1 ]; then
+    [ "$LSCPU_FULL_OK" -eq 1 ] && return 0 || return 1
+  fi
+  LSCPU_FULL_TRIED=1
+
+  command -v lscpu >/dev/null 2>&1 || { LSCPU_FULL_OK=0; return 1; }
+
+  out="$(lscpu 2>/dev/null)"; rc=$?
+  if [ "$rc" -eq 0 ] && [ -n "$out" ]; then
+    LSCPU_FULL_OK=1
+    LSCPU_FULL_OUT="$out"
+    return 0
+  fi
+
+  LSCPU_FULL_OK=0
+  LSCPU_FULL_OUT=""
+  return 1
+}
+
+lscpu_threads_per_core() {
+  # default unknown -> 0
+  init_lscpu_full >/dev/null 2>&1 || { echo 0; return; }
+
+  printf '%s\n' "$LSCPU_FULL_OUT" | awk -F: '
+    function trim(s){ gsub(/^[ \t]+|[ \t]+$/, "", s); return s }
+    tolower(trim($1))=="thread(s) per core" {
+      v=trim($2)
+      if (v ~ /^[0-9]+$/) { print v+0; exit }
+    }
+    END { }
+  ' 2>/dev/null | awk 'NR==1{print; exit}'
+}
+
 # ----- 2) lscpu -----
 try_lscpu() {
   init_lscpu_p >/dev/null 2>&1 || return 1
 
+  tpc="$(lscpu_threads_per_core 2>/dev/null || echo 0)"
+  case "$tpc" in (*[!0-9]*|'') tpc=0;; esac
+
+  # Parse lscpu -p into socket core cpu
   printf '%s\n' "$LSCPU_P_OUT" | awk -F',' '
     $0 ~ /^#/ { next }
     $1 ~ /^[0-9]+$/ {
@@ -249,6 +291,28 @@ try_lscpu() {
 
   [ -s "$tmp.ls.sorted" ] || return 1
 
+  # Detect collisions: if any (socket,core) has >1 cpu but ThreadsPerCore <= 1,
+  # then CORE ids are unreliable (common on ARM clusters) -> force core=cpu.
+  maxgrp=$(awk '
+    { key=$1 ":" $2; c[key]++ }
+    END{
+      m=0
+      for (k in c) if (c[k] > m) m=c[k]
+      print m+0
+    }
+  ' "$tmp.ls.sorted")
+
+  case "$maxgrp" in (*[!0-9]*|'') maxgrp=0;; esac
+
+  if [ "$tpc" -le 1 ] && [ "$maxgrp" -gt 1 ]; then
+    # No SMT expected, but grouping happened -> fix by making each cpu its own core
+    awk '
+      { socket=$1; cpu=$3; printf "%d %d %d\n", socket, cpu, cpu }
+    ' "$tmp.ls.sorted" | sort -n -k1,1 -k2,2 -k3,3 > "$tmp.ls.fixed"
+    mv "$tmp.ls.fixed" "$tmp.ls.sorted"
+  fi
+
+  # Now assign thread index within each (socket,core)
   awk '
     {
       socket=$1; core=$2; cpu=$3
