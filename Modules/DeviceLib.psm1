@@ -660,8 +660,12 @@ function Get-Device {
                                                 $part = [int]$ArmPart.part
                                                 $variant = [int]$ArmPart.variant
 
-                                                if ($ArmDB.variants.$CPUimpl.$part.$variant -ne $null) {[void]$CPUName.Add($ArmDB.variants.$CPUimpl.$part.$variant)}
-                                                elseif ($ArmDB.parts.$CPUimpl.$part -ne $null) {[void]$CPUName.Add($ArmDB.parts.$CPUimpl.$part)}
+                                                $name = if ($ArmDB.variants.$CPUimpl.$part.$variant -ne $null) {$ArmDB.variants.$CPUimpl.$part.$variant}
+                                                        elseif ($ArmDB.parts.$CPUimpl.$part -ne $null) {$ArmDB.parts.$CPUimpl.$part}
+
+                                                if ($name -and -not $CPUName.Contains([string]$name)) {
+                                                    [void]$CPUName.Add([string]$name)
+                                                }
                                             }
                                         }
                                     }
