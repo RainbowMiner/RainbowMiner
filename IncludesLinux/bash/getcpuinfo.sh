@@ -1,6 +1,6 @@
 #!/bin/sh
 # getcpuinfo_raw.sh - POSIX sh CPU info exporter (JSON)
-# Best effort sources: lscpu -> sysfs -> /proc/cpuinfo (if readable) -> getconf
+# Best effort sources: lscpu (ONLY if it actually works) -> sysfs -> /proc/cpuinfo (if readable) -> getconf
 # stdout: JSON only
 # Includes Name/Manufacturer guesses plus ArmParts for armdb.json mapping.
 
@@ -32,6 +32,31 @@ TMPBASE="$(choose_tmpdir 2>/dev/null || printf '%s\n' ".")"
 tmp="$TMPBASE/cpu_raw.$$"
 cleanup() { rm -f "$tmp" "$tmp".* 2>/dev/null || true; }
 trap 'cleanup' EXIT INT HUP TERM
+
+# ---- lscpu cache (treat lscpu as available only if it RUNS successfully) ----
+LSCPU_TRIED=0
+LSCPU_OK=0
+LSCPU_OUT=""
+
+init_lscpu() {
+  if [ "$LSCPU_TRIED" -eq 1 ]; then
+    [ "$LSCPU_OK" -eq 1 ] && return 0 || return 1
+  fi
+  LSCPU_TRIED=1
+
+  if command -v lscpu >/dev/null 2>&1; then
+    out="$(lscpu 2>/dev/null)"; rc=$?
+    if [ "$rc" -eq 0 ] && [ -n "$out" ]; then
+      LSCPU_OK=1
+      LSCPU_OUT="$out"
+      return 0
+    fi
+  fi
+
+  LSCPU_OK=0
+  LSCPU_OUT=""
+  return 1
+}
 
 # ---- minimal JSON string escape ----
 json_escape() {
@@ -104,11 +129,11 @@ sys_l3_kb() {
 # ---- uname architecture ----
 arch="$(uname -m 2>/dev/null || echo "")"
 
-# ---- lscpu get key ----
+# ---- lscpu get key (from cached output) ----
 lscpu_get() {
   key="$1"
-  have_cmd lscpu || return 1
-  lscpu 2>/dev/null | awk -F: -v k="$key" '
+  init_lscpu >/dev/null 2>&1 || return 1
+  printf '%s\n' "$LSCPU_OUT" | awk -F: -v k="$key" '
     function trim(s){ gsub(/^[ \t]+|[ \t]+$/, "", s); return s }
     tolower(trim($1))==tolower(k) { print trim($2); exit }
   ' 2>/dev/null || true
@@ -137,7 +162,7 @@ fi
 
 # ---- Name guess ----
 Name=""
-if have_cmd lscpu; then
+if init_lscpu >/dev/null 2>&1; then
   Name="$(lscpu_get "Model name" || echo "")"
   [ -n "$Name" ] || Name="$(lscpu_get "Model" || echo "")"
 fi
@@ -157,7 +182,7 @@ fi
 
 # ---- Manufacturer guess ----
 Manufacturer=""
-if have_cmd lscpu; then
+if init_lscpu >/dev/null 2>&1; then
   Manufacturer="$(lscpu_get "Vendor ID" || echo "")"
   [ -n "$Manufacturer" ] || Manufacturer="$(lscpu_get "Vendor" || echo "")"
 fi
@@ -180,8 +205,8 @@ fi
 
 # ---- features map ----
 features_json() {
-  if have_cmd lscpu; then
-    lscpu 2>/dev/null | awk -F: '
+  if init_lscpu >/dev/null 2>&1; then
+    printf '%s\n' "$LSCPU_OUT" | awk -F: '
       function trim(s){ gsub(/^[ \t]+|[ \t]+$/, "", s); return s }
       tolower(trim($1)) ~ /^(flags|features)$/ {
         v=trim($2); if(v!=""){ print v; exit }
@@ -277,8 +302,8 @@ arm_parts_from_cpuinfo() {
 
 # ---- multi model names list from lscpu (unique, preserve order) ----
 lscpu_models_json() {
-  if ! have_cmd lscpu; then echo "[]"; return; fi
-  lscpu 2>/dev/null | awk -F: '
+  init_lscpu >/dev/null 2>&1 || { echo "[]"; return; }
+  printf '%s\n' "$LSCPU_OUT" | awk -F: '
     function trim(s){ gsub(/^[ \t]+|[ \t]+$/, "", s); return s }
     tolower(trim($1))=="model name" {
       v=trim($2)
@@ -304,8 +329,8 @@ case "$Threads" in (''|*[!0-9]*) Threads=0;; esac
 Cores="$Threads"
 PhysicalCPUs=1
 
-# prefer lscpu threads if available
-if have_cmd lscpu; then
+# prefer lscpu threads if available (only if lscpu truly works)
+if init_lscpu >/dev/null 2>&1; then
   t="$(lscpu_get "CPU(s)" || echo "")"
   case "$t" in (*[!0-9]*|'') : ;; (*) Threads="$t"; Cores="$t";; esac
 fi
