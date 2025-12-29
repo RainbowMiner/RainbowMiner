@@ -165,6 +165,14 @@ Name=""
 if init_lscpu >/dev/null 2>&1; then
   Name="$(lscpu_get "Model name" || echo "")"
   [ -n "$Name" ] || Name="$(lscpu_get "Model" || echo "")"
+  if [ -n "$Name" ]; then
+    case "$Name" in
+      *[!0-9xX\ ]*)
+        : ;;
+      *)
+        Name="" ;;
+    esac
+  fi
 fi
 
 # Some environments provide multiple model names (big.LITTLE) – keep first as Name guess
