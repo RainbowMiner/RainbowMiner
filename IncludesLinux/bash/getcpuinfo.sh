@@ -68,6 +68,12 @@ json_escape() {
     -e 's/\n/\\n/g'
 }
 
+# ---- normalize int ----
+to_int() {
+  v="$1"
+  case "$v" in (''|*[!0-9]*) echo 0;; (*) echo "$v";; esac
+}
+
 # ---- expand CPU set like 0-3,8,10-11 to count ----
 count_cpuset() {
   awk '
@@ -232,6 +238,28 @@ if [ -z "$Manufacturer" ] && [ "$is_arm" -eq 1 ]; then
   Manufacturer="ARM"
 fi
 [ -n "$Manufacturer" ] || Manufacturer="Unknown"
+
+# ---- Family/Model/Stepping (best effort; mainly x86) ----
+Family=0
+Model=0
+Stepping=0
+
+if init_lscpu >/dev/null 2>&1; then
+  Family="$(to_int "$(lscpu_get "CPU family" || echo "")")"
+  Model="$(to_int "$(lscpu_get "Model" || echo "")")"
+  Stepping="$(to_int "$(lscpu_get "Stepping" || echo "")")"
+fi
+
+if [ "$Family" -eq 0 ] && [ -r "$CPUINFO" ]; then
+  Family="$(to_int "$(cpuinfo_get_first "cpu family" || echo "")")"
+fi
+if [ "$Model" -eq 0 ] && [ -r "$CPUINFO" ]; then
+  # numeric model (NOT "model name")
+  Model="$(to_int "$(cpuinfo_get_first "model" || echo "")")"
+fi
+if [ "$Stepping" -eq 0 ] && [ -r "$CPUINFO" ]; then
+  Stepping="$(to_int "$(cpuinfo_get_first "stepping" || echo "")")"
+fi
 
 # ---- features map ----
 features_json() {
