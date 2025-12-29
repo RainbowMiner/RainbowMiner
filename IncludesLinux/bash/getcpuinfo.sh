@@ -165,36 +165,6 @@ Name=""
 if init_lscpu >/dev/null 2>&1; then
   Name="$(lscpu_get "Model name" || echo "")"
   [ -n "$Name" ] || Name="$(lscpu_get "Model" || echo "")"
-
-  if [ -n "$Name" ]; then
-    # trim leading/trailing spaces (POSIX)
-    Name="$(printf '%s' "$Name" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
-
-    case "$Name" in
-      # only digits
-      ""|*[!0-9]*)
-        : ;;  # not "only digits" (or empty) -> keep checking below
-      *)
-        Name=""
-        ;;
-    esac
-
-    if [ -n "$Name" ]; then
-      case "$Name" in
-        0x*|0X*)
-          # ensure everything after 0x is hex and at least one digit exists
-          rest=${Name#0x}; rest=${rest#0X}
-          case "$rest" in
-            ""|*[!0-9a-fA-F]*)
-              : ;;     # not pure hex -> keep
-            *)
-              Name=""  # pure 0x[hex]+ -> discard
-              ;;
-          esac
-          ;;
-      esac
-    fi
-  fi
 fi
 
 # Some environments provide multiple model names (big.LITTLE) – keep first as Name guess
@@ -206,6 +176,36 @@ fi
 
 if [ -z "$Name" ] && [ -r /sys/devices/virtual/dmi/id/product_name ]; then
   Name="$(cat /sys/devices/virtual/dmi/id/product_name 2>/dev/null | awk 'NR==1{print; exit}')"
+fi
+
+if [ -n "$Name" ]; then
+  # trim leading/trailing spaces (POSIX)
+  Name="$(printf '%s' "$Name" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+
+  case "$Name" in
+    # only digits
+    ""|*[!0-9]*)
+      : ;;  # not "only digits" (or empty) -> keep checking below
+    *)
+      Name=""
+      ;;
+  esac
+
+  if [ -n "$Name" ]; then
+    case "$Name" in
+      0x*|0X*)
+        # ensure everything after 0x is hex and at least one digit exists
+        rest=${Name#0x}; rest=${rest#0X}
+        case "$rest" in
+          ""|*[!0-9a-fA-F]*)
+            : ;;     # not pure hex -> keep
+          *)
+            Name=""  # pure 0x[hex]+ -> discard
+            ;;
+        esac
+        ;;
+    esac
+  fi
 fi
 
 [ -n "$Name" ] || Name="Unknown"
