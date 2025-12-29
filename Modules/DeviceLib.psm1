@@ -1701,12 +1701,7 @@ function Get-CpuInfo {
 function Get-CpuInformation {
     Get-ChildItem ".\IncludesLinux\bash" -Filter "getcpuinfo.sh" -File | Foreach-Object {
         try {
-            if (-not (Test-IsElevated) -and (Test-OCDaemon)) {
-                Invoke-OCDaemon -Cmd "$($_.FullName) 2>/dev/null" | ConvertFrom-Json -ErrorAction Stop
-            } else {
-                Invoke-exe $_.FullName | ConvertFrom-Json -ErrorAction Stop
-            }
-        
+            Invoke-exe $_.FullName | ConvertFrom-Json -ErrorAction Stop
         } catch {}
     }
 }
@@ -1714,12 +1709,7 @@ function Get-CpuInformation {
 function Get-CpuTopology {
     Get-ChildItem ".\IncludesLinux\bash" -Filter "getcputopo.sh" -File | Foreach-Object {
         try {
-            if (-not (Test-IsElevated) -and (Test-OCDaemon)) {
-                Invoke-OCDaemon -Cmd "$($_.FullName) 2>/dev/null" | ConvertFrom-Json -ErrorAction Stop
-            } else {
-                Invoke-exe $_.FullName | ConvertFrom-Json -ErrorAction Stop
-            }
-        
+            Invoke-exe $_.FullName | ConvertFrom-Json -ErrorAction Stop
         } catch {}
     }
 }
