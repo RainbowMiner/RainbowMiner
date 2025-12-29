@@ -1,8 +1,8 @@
 #!/bin/sh
 # getcputopo.sh - POSIX sh CPU topology exporter (JSON)
 # Tries (in order):
-#   1) sysfs: /sys/devices/system/cpu (best, uses thread_siblings_list)
-#   2) lscpu: lscpu -p=CPU,SOCKET,CORE
+#   1) sysfs: /sys/devices/system/cpu (best; uses thread_siblings_list)
+#   2) lscpu: lscpu -p=CPU,SOCKET,CORE (if it runs successfully)
 #   3) /proc/cpuinfo (best effort: physical/core ids if present)
 #   4) dense fallback from /proc/cpuinfo counts (0..cores-1, cores..threads-1)
 #
@@ -10,7 +10,7 @@
 #   {"cpu":N,"socket":S,"core":C,"thread":T,"online":true|false}
 #
 # Notes:
-# - "online" is derived like Linux sysfs: if cpuN/online missing => online=true
+# - "online" is derived like Linux sysfs: if cpuN/online missing/unreadable => online=true
 # - All non-JSON noise is suppressed; stdout should always be valid JSON.
 
 set -eu
@@ -23,22 +23,16 @@ have_cmd() { command -v "$1" >/dev/null 2>&1; }
 
 choose_tmpdir() {
   pid="$$"
-
-  # Try TMPDIR first (if set), then /tmp, then current dir
   for d in "${TMPDIR:-}" "/tmp" "."; do
     [ -n "$d" ] || continue
     [ -d "$d" ] || continue
-
     testfile="$d/.cpu_topo_test.$pid"
-
-    # IMPORTANT: redirection errors must be caught by redirecting the subshell
     if ( : > "$testfile" ) 2>/dev/null; then
       rm -f "$testfile" 2>/dev/null || true
       printf '%s\n' "$d"
       return 0
     fi
   done
-
   return 1
 }
 
@@ -59,7 +53,6 @@ add_online_column() {
       online=1;
       path=sprintf("/sys/devices/system/cpu/cpu%d/online", cpu);
 
-      # POSIX awk: attempt to read cpu online state; if file missing/unreadable -> treat as online
       if ((getline v < path) > 0) {
         v = trim(v);
         if (v != "1") online=0;
@@ -87,6 +80,9 @@ emit_json_from_lines() {
 }
 
 # ----- 1) sysfs -----
+# IMPORTANT FIX:
+# Do NOT trust core_id on some ARM/Android kernels (may repeat per cluster).
+# Instead define the core by thread_siblings_list group, and set core = min(cpu in group).
 try_sysfs() {
   [ -d "$SYSCPU" ] || return 1
   ls "$SYSCPU"/cpu[0-9]* >/dev/null 2>&1 || return 1
@@ -99,35 +95,34 @@ try_sysfs() {
     case "$cpu" in (*[!0-9]*|'') continue;; esac
 
     topo="$d/topology"
-    socket="-1"
-    core="-1"
+    socket="0"
     siblings=""
 
     if [ -r "$topo/physical_package_id" ]; then
-      socket=$(cat "$topo/physical_package_id" 2>/dev/null || echo "-1")
-    fi
-    if [ -r "$topo/core_id" ]; then
-      core=$(cat "$topo/core_id" 2>/dev/null || echo "-1")
+      socket=$(cat "$topo/physical_package_id" 2>/dev/null || echo "0")
     fi
     if [ -r "$topo/thread_siblings_list" ]; then
       siblings=$(cat "$topo/thread_siblings_list" 2>/dev/null || true)
     fi
     [ -n "$siblings" ] || siblings="$cpu"
 
-    case "$socket" in (*[!0-9]*|'') socket="-1";; esac
-    case "$core"   in (*[!0-9]*|'') core="-1";; esac
+    case "$socket" in (*[!0-9]*|'') socket="0";; esac
 
-    printf '%s|%s|%s|%s\n' "$cpu" "$socket" "$core" "$siblings" >> "$tmp.sys.raw"
+    # record: cpu|socket|siblingslist
+    printf '%s|%s|%s\n' "$cpu" "$socket" "$siblings" >> "$tmp.sys.raw"
   done
 
-  # Expand thread_siblings_list per (socket,core) and assign thread index by siblings order.
+  # Expand siblings groups and emit: socket core(mincpu) thread cpu
   awk -F'|' '
     function add_exist(c){ exist[c]=1 }
-    function expand(list, a, n, i, part, lo, hi) {
+
+    # expand "0-3,8,10-11" to sorted unique array sorted[1..sc]
+    function expand(list,   a,n,i,part,lo,hi,j,outn,k,m,t) {
       n = split(list, a, /,/)
       outn = 0
       for (i=1;i<=n;i++) {
         part = a[i]
+        gsub(/^[ \t]+|[ \t]+$/, "", part)
         if (part ~ /^[0-9]+-[0-9]+$/) {
           split(part, r, /-/); lo=r[1]+0; hi=r[2]+0
           for (j=lo;j<=hi;j++) out[++outn]=j
@@ -135,29 +130,68 @@ try_sysfs() {
           out[++outn]=part+0
         }
       }
+
       delete seen
       for (i=1;i<=outn;i++) seen[out[i]]=1
+
       m=0
+      delete arr
       for (k in seen) arr[++m]=k+0
-      for (i=1;i<=m;i++) for (j=i+1;j<=m;j++) if (arr[j] < arr[i]) {t=arr[i];arr[i]=arr[j];arr[j]=t}
+
+      # sort arr ascending (small m)
+      for (i=1;i<=m;i++) for (j=i+1;j<=m;j++) if (arr[j] < arr[i]) { t=arr[i]; arr[i]=arr[j]; arr[j]=t }
+
+      delete sorted
       sc=0
       for (i=1;i<=m;i++) sorted[++sc]=arr[i]
       return sc
     }
-    {
-      cpu=$1+0; socket=$2+0; core=$3+0; sib=$4
-      add_exist(cpu)
-      key = socket SUBSEP core
-      if (!(key in siblist)) siblist[key]=sib
+
+    # join sorted array into canonical key string
+    function join_sorted(sc,   i,s) {
+      s=""
+      for (i=1;i<=sc;i++) {
+        if (s!="") s=s ","
+        s=s sorted[i]
+      }
+      return s
     }
+
+    {
+      cpu=$1+0; socket=$2+0; sib=$3
+      add_exist(cpu)
+
+      # Build a canonical group key: socket + canonical siblings cpu list
+      delete sorted
+      sc = expand(sib)
+      canon = join_sorted(sc)
+      key = socket ":" canon
+
+      if (!(key in group_canon)) {
+        group_canon[key]=canon
+        group_socket[key]=socket
+      }
+    }
+
     END{
-      for (key in siblist) {
-        split(key, kk, SUBSEP); socket=kk[1]+0; core=kk[2]+0
-        delete sorted
-        sc = expand(siblist[key], tmpa)
+      # For each group, emit socket core(mincpu) thread cpu, filtering to CPUs that exist
+      for (key in group_canon) {
+        socket = group_socket[key]+0
+        canon = group_canon[key]
+
+        # rebuild sorted[] from canon (already sorted)
+        n = split(canon, a, /,/)
+        # find min existing cpu to define core id
+        core = -1
+        for (i=1;i<=n;i++) {
+          c = a[i]+0
+          if (exist[c]) { core = c; break }
+        }
+        if (core < 0) continue
+
         tidx=0
-        for (i=1;i<=sc;i++) {
-          c = sorted[i]+0
+        for (i=1;i<=n;i++) {
+          c = a[i]+0
           if (exist[c]) {
             printf "%d %d %d %d\n", socket, core, tidx, c
             tidx++
@@ -174,11 +208,36 @@ try_sysfs() {
   return 0
 }
 
+# ----- lscpu runtime-validated cache -----
+LSCPU_TRIED=0
+LSCPU_OK=0
+LSCPU_P_OUT=""
+
+init_lscpu_p() {
+  if [ "$LSCPU_TRIED" -eq 1 ]; then
+    [ "$LSCPU_OK" -eq 1 ] && return 0 || return 1
+  fi
+  LSCPU_TRIED=1
+
+  command -v lscpu >/dev/null 2>&1 || { LSCPU_OK=0; return 1; }
+
+  out="$(lscpu -p=CPU,SOCKET,CORE 2>/dev/null)"; rc=$?
+  if [ "$rc" -eq 0 ] && [ -n "$out" ]; then
+    LSCPU_OK=1
+    LSCPU_P_OUT="$out"
+    return 0
+  fi
+
+  LSCPU_OK=0
+  LSCPU_P_OUT=""
+  return 1
+}
+
 # ----- 2) lscpu -----
 try_lscpu() {
-  have_cmd lscpu || return 1
+  init_lscpu_p >/dev/null 2>&1 || return 1
 
-  lscpu -p=CPU,SOCKET,CORE 2>/dev/null | awk -F',' '
+  printf '%s\n' "$LSCPU_P_OUT" | awk -F',' '
     $0 ~ /^#/ { next }
     $1 ~ /^[0-9]+$/ {
       cpu=$1+0
@@ -211,7 +270,6 @@ try_lscpu() {
 try_cpuinfo() {
   [ -r "$CPUINFO" ] || return 1
 
-  # Output "socket core cpu" per processor block.
   awk '
     function trim(s) { gsub(/^[ \t]+|[ \t]+$/, "", s); return s }
 
@@ -265,17 +323,14 @@ try_cpuinfo() {
 }
 
 # ----- 4) dense fallback from /proc/cpuinfo counts -----
-# Cores -> 0..(cores-1), extra threads -> cores..(threads-1) where "threads" = total logical CPUs (siblings)
 try_dense_fallback() {
   [ -r "$CPUINFO" ] || return 1
 
-  # processors = count of "processor : N"
   processors=$(awk -F':' '
     $1 ~ /^[ \t]*processor[ \t]*$/ && $2 ~ /^[ \t]*[0-9]+[ \t]*$/ { c++ }
     END { print (c+0) }
   ' "$CPUINFO" 2>/dev/null || echo 0)
 
-  # cores per socket (cpu cores) and threads per socket (siblings) from first occurrence
   cores=$(awk -F':' '
     $1 ~ /^[ \t]*cpu cores[ \t]*$/ && $2 ~ /^[ \t]*[0-9]+[ \t]*$/ { gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2; exit }
   ' "$CPUINFO" 2>/dev/null || echo "")
@@ -291,15 +346,10 @@ try_dense_fallback() {
     return 1
   fi
 
-  # If siblings missing, use processors; if still missing, use cores.
-  if [ "$siblings" -le 0 ]; then
-    if [ "$processors" -gt 0 ]; then siblings=$processors; fi
-  fi
-  if [ "$cores" -le 0 ]; then
-    if [ "$siblings" -gt 0 ]; then cores=$siblings; fi
-  fi
-
+  if [ "$siblings" -le 0 ] && [ "$processors" -gt 0 ]; then siblings=$processors; fi
+  if [ "$cores" -le 0 ] && [ "$siblings" -gt 0 ]; then cores=$siblings; fi
   if [ "$cores" -gt "$siblings" ]; then cores=$siblings; fi
+
   if [ "$cores" -le 0 ] || [ "$siblings" -le 0 ]; then
     return 1
   fi
@@ -307,7 +357,6 @@ try_dense_fallback() {
   : > "$tmp.dense"
   i=0
   while [ "$i" -lt "$cores" ]; do
-    # socket=0, core=i, thread=0, cpu=i
     printf "0 %d 0 %d\n" "$i" "$i" >> "$tmp.dense"
     i=$((i+1))
   done
