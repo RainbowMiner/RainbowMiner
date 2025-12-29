@@ -165,13 +165,35 @@ Name=""
 if init_lscpu >/dev/null 2>&1; then
   Name="$(lscpu_get "Model name" || echo "")"
   [ -n "$Name" ] || Name="$(lscpu_get "Model" || echo "")"
+
   if [ -n "$Name" ]; then
+    # trim leading/trailing spaces (POSIX)
+    Name="$(printf '%s' "$Name" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+
     case "$Name" in
-      *[!0-9xX\ ]*)
-        : ;;
+      # only digits
+      ""|*[!0-9]*)
+        : ;;  # not "only digits" (or empty) -> keep checking below
       *)
-        Name="" ;;
+        Name=""
+        ;;
     esac
+
+    if [ -n "$Name" ]; then
+      case "$Name" in
+        0x*|0X*)
+          # ensure everything after 0x is hex and at least one digit exists
+          rest=${Name#0x}; rest=${rest#0X}
+          case "$rest" in
+            ""|*[!0-9a-fA-F]*)
+              : ;;     # not pure hex -> keep
+            *)
+              Name=""  # pure 0x[hex]+ -> discard
+              ;;
+          esac
+          ;;
+      esac
+    fi
   fi
 fi
 
