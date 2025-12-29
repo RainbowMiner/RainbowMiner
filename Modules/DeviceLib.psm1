@@ -610,92 +610,158 @@ function Get-Device {
                     } catch {
                     }
 
-                    $Data = Get-Content "/proc/cpuinfo"
-                    if ($Data) {
-                        $Global:GlobalCPUInfo | Add-Member Name          "$((($Data | Where-Object {$_ -match 'model name'} | Select-Object -First 1) -split ":")[1])".Trim()
-                        $Global:GlobalCPUInfo | Add-Member Manufacturer  "$((($Data | Where-Object {$_ -match 'vendor_id'}  | Select-Object -First 1) -split ":")[1])".Trim()
-                        $Global:GlobalCPUInfo | Add-Member Cores         ([int]"$((($Data | Where-Object {$_ -match 'cpu cores'}  | Select-Object -First 1) -split ":")[1])".Trim())
-                        $Global:GlobalCPUInfo | Add-Member Threads       ([int]"$((($Data | Where-Object {$_ -match 'siblings'}   | Select-Object -First 1) -split ":")[1])".Trim())
-                        $Global:GlobalCPUInfo | Add-Member PhysicalCPUs  ($Data | Where-Object {$_ -match 'physical id'} | Select-Object -Unique | Measure-Object).Count
-                        $Global:GlobalCPUInfo | Add-Member L3CacheSize   ([int](ConvertFrom-Bytes "$((($Data | Where-Object {$_ -match 'cache size'} | Select-Object -First 1) -split ":")[1])".Trim())/1024)
-                        $Global:GlobalCPUInfo | Add-Member MaxClockSpeed ([int]"$((($Data | Where-Object {$_ -match 'cpu MHz'}    | Select-Object -First 1) -split ":")[1])".Trim())
+                    $ci = Get-CpuInformation
+                    if ($ci) {
+                        $Global:GlobalCPUInfo | Add-Member Name          $ci.Name -Force
+                        $Global:GlobalCPUInfo | Add-Member Manufacturer  $ci.Manufacturer -Force
+                        $Global:GlobalCPUInfo | Add-Member Cores         ([int]$ci.Cores) -Force
+                        $Global:GlobalCPUInfo | Add-Member Threads       ([int]$ci.Threads) -Force
+                        $Global:GlobalCPUInfo | Add-Member PhysicalCPUs  ([int]$ci.PhysicalCPUs) -Force
+                        $Global:GlobalCPUInfo | Add-Member L3CacheSize   ([int]($ci.L3CacheKB/1024)) -Force   # if you want MB
+                        $Global:GlobalCPUInfo | Add-Member MaxClockSpeed ([int]$ci.MaxClockMHz) -Force
                         $Global:GlobalCPUInfo | Add-Member TDP           0
-                        $Global:GlobalCPUInfo | Add-Member Family        "$((($Data | Where-Object {$_ -match 'cpu family'}  | Select-Object -First 1) -split ":")[1])".Trim()
-                        $Global:GlobalCPUInfo | Add-Member Model         "$((($Data | Where-Object {$_ -match 'model\s*:'}  | Select-Object -First 1) -split ":")[1])".Trim()
-                        $Global:GlobalCPUInfo | Add-Member Stepping      "$((($Data | Where-Object {$_ -match 'stepping'}  | Select-Object -First 1) -split ":")[1])".Trim()
-                        $Global:GlobalCPUInfo | Add-Member Architecture  "$((($Data | Where-Object {$_ -match 'CPU architecture'}  | Select-Object -First 1) -split ":")[1])".Trim()
-                        $Global:GlobalCPUInfo | Add-Member Features      @{}
+                        $Global:GlobalCPUInfo | Add-Member Family        $ci.Family -Force
+                        $Global:GlobalCPUInfo | Add-Member Model         $ci.Model -Force
+                        $Global:GlobalCPUInfo | Add-Member Stepping      $ci.Stepping -Force
+                        $Global:GlobalCPUInfo | Add-Member Architecture  $ci.Architecture -Force
+                        $Global:GlobalCPUInfo | Add-Member Features      @{} -Force
 
-                        $Processors = ($Data | Where-Object {$fld = $_ -split ":";$fld.Count -gt 1 -and $fld[0].Trim() -eq "processor" -and $fld[1].Trim() -match "^[0-9]+$"} | Measure-Object).Count
-
-                        if (-not $Global:GlobalCPUInfo.PhysicalCPUs) {$Global:GlobalCPUInfo.PhysicalCPUs = 1}
-                        if (-not $Global:GlobalCPUInfo.Cores)   {$Global:GlobalCPUInfo.Cores = 1}
-                        if (-not $Global:GlobalCPUInfo.Threads) {$Global:GlobalCPUInfo.Threads = 1}
-
-                        @("Family","Model","Stepping","Architecture") | Foreach-Object {
-                            if ($Global:GlobalCPUInfo.$_ -match "^[0-9a-fx]+$") {$Global:GlobalCPUInfo.$_ = [int]$Global:GlobalCPUInfo.$_}
+                        # Features map
+                        if ($ci.Features) {
+                            foreach ($p in $ci.Features.PSObject.Properties) {
+                                $Global:GlobalCPUInfo.Features[$p.Name] = [bool]$p.Value
+                            }
                         }
 
-                        "$((($Data | Where-Object {$_ -like "flags*"} | Select-Object -First 1) -split ":")[1])".Trim() -split "\s+" | ForEach-Object {$ft = "$($_ -replace "[^a-z0-9]+")";if ($ft -ne "") {$Global:GlobalCPUInfo.Features.$ft = $true}}
-                        "$((($Data | Where-Object {$_ -like "Features*"} | Select-Object -First 1) -split ":")[1])".Trim() -split "\s+" | ForEach-Object {$ft = "$($_ -replace "[^a-z0-9]+")";if ($ft -ne "") {$Global:GlobalCPUInfo.Features.$ft = $true}}
-
-                        if (-not $Global:GlobalCPUInfo.Name -or -not $Global:GlobalCPUInfo.Manufacturer) {
-                            try {
-                                $CPUimpl = [int]"$((($Data | Where-Object {$_ -match 'CPU implementer'} | Select-Object -First 1) -split ":")[1])".Trim()
-                                if ($CPUimpl -gt 0) {
-                                    $CPUpart = @($Data | Where-Object {$_ -match "CPU part"} | Foreach-Object {[int]"$(($_ -split ":")[1])".Trim()}) | Select-Object -Unique
-                                    $CPUvariant = @($Data | Where-Object {$_ -match "CPU variant"} | Foreach-Object {[int]"$(($_ -split ":")[1])".Trim()}) | Select-Object -Unique
+                        if ($ci.IsArm) {
+                            $Global:GlobalCPUInfo.Features.ARM = $true
+                            if ($ci.ArmParts -and (-not $Global:GlobalCPUInfo.Name -or -not $Global:GlobalCPUInfo.Manufacturer -or $Global:GlobalCPUInfo.Name -eq "Unknown" -or $Global:GlobalCPUInfo.Manufacturer -eq "Unknown")) {
+                                try {
                                     $ArmDB = Get-Content ".\Data\armdb.json" | ConvertFrom-Json -ErrorAction Stop
-                                    if ($ArmDB.implementers.$CPUimpl -ne $null) {
-                                        $Global:GlobalCPUInfo.Manufacturer = $ArmDB.implementers.$CPUimpl
-                                        $Global:GlobalCPUInfo.Name = "Unknown"
+                                    $CPUName = [System.Collections.Generic.List[string]]::new()
 
-                                        if ($CPUpart.Length -gt 0) {
-                                            $CPUName = [System.Collections.Generic.List[string]]::new()
-                                            for($i=0; $i -lt $CPUpart.Length; $i++) {
-                                                $part = $CPUpart[$i]
-                                                $variant = if ($CPUvariant -and $CPUvariant.length -gt $i) {$CPUvariant[$i]} else {$CPUvariant[0]}
+                                    if (-not $Global:GlobalCPUInfo.Name) {
+                                        $Global:GlobalCPUInfo.Name = "Unknown"
+                                    }
+
+                                    if (-not $Global:GlobalCPUInfo.Manufacturer) {
+                                        $Global:GlobalCPUInfo.Manufacturer = "Unknown"
+                                    }
+
+                                    foreach($ArmPart in $ci.ArmParts) {
+                                        $CPUimpl = [int]$ArmPart.implementer
+                                        if ($CPUimpl -gt 0 -and $ArmDB.implementers.$CPUimpl -ne $null) {
+                                            $Global:GlobalCPUInfo.Manufacturer = $ArmDB.implementers.$CPUimpl
+
+                                    
+                                            if ($ArmDB.implementers.$CPUimpl -ne $null) {
+                                                $Global:GlobalCPUInfo.Manufacturer = $ArmDB.implementers.$CPUimpl
+
+                                                $part = [int]$ArmPart.part
+                                                $variant = [int]$ArmPart.variant
+
                                                 if ($ArmDB.variants.$CPUimpl.$part.$variant -ne $null) {[void]$CPUName.Add($ArmDB.variants.$CPUimpl.$part.$variant)}
                                                 elseif ($ArmDB.parts.$CPUimpl.$part -ne $null) {[void]$CPUName.Add($ArmDB.parts.$CPUimpl.$part)}
                                             }
-                                            if ($CPUName.Length -gt 0) {
-                                                $Global:GlobalCPUInfo.Name = $CPUName -join "/"
-                                                $Global:GlobalCPUInfo.Features.ARM = $true
-                                            }
-                                            $CPUName = $null
                                         }
                                     }
+                                    if ($CPUName.Length -gt 0) {
+                                        $Global:GlobalCPUInfo.Name = $CPUName -join "/"
+                                    }
+                                    $CPUName = $null
+                                } catch {
                                 }
-                            } catch {
-                            }
-                        }                
-
-                        if ((-not $Global:GlobalCPUInfo.Name -or -not $Global:GlobalCPUInfo.Manufacturer -or -not $Processors) -and (Test-Path ".\Data\lscpu.txt")) {
-                            try {
-                                $lscpu = (Get-Content ".\Data\lscpu.txt") -split "[\r\n]+"
-                                $CPUName = @($lscpu | Where-Object {$_ -match 'model name'} | Foreach-Object {"$(($_ -split ":")[1].Trim())"}) | Select-Object -Unique
-                                $Global:GlobalCPUInfo.Name = $CPUName -join "/"
-                                $Global:GlobalCPUInfo.Manufacturer = "$((($lscpu | Where-Object {$_ -match 'vendor id'}  | Select-Object -First 1) -split ":")[1])".Trim()
-                                if (-not $Processors) {
-                                    $Processors = [int]"$((($lscpu | Where-Object {$_ -match '^CPU\(s\)'}  | Select-Object -First 1) -split ":")[1])".Trim()
-                                }
-
-                                "$((($lscpu | Where-Object {$_ -like "flags*"} | Select-Object -First 1) -split ":")[1])".Trim() -split "\s+" | ForEach-Object {$Global:GlobalCPUInfo.Features."$($_ -replace "[^a-z0-9]+")" = $true}
-
-                            } catch {
                             }
                         }
 
-                        if ($Global:GlobalCPUInfo.PhysicalCPUs -gt 1) {
-                            $Global:GlobalCPUInfo.Cores   *= $Global:GlobalCPUInfo.PhysicalCPUs
-                            $Global:GlobalCPUInfo.Threads *= $Global:GlobalCPUInfo.PhysicalCPUs
-                            $Global:GlobalCPUInfo.PhysicalCPUs = 1
-                        }
+                    } else { # Fallback to old code
+                        $Data = Get-Content "/proc/cpuinfo"
+                        if ($Data) {
+                            $Global:GlobalCPUInfo | Add-Member Name          "$((($Data | Where-Object {$_ -match 'model name'} | Select-Object -First 1) -split ":")[1])".Trim()
+                            $Global:GlobalCPUInfo | Add-Member Manufacturer  "$((($Data | Where-Object {$_ -match 'vendor_id'}  | Select-Object -First 1) -split ":")[1])".Trim()
+                            $Global:GlobalCPUInfo | Add-Member Cores         ([int]"$((($Data | Where-Object {$_ -match 'cpu cores'}  | Select-Object -First 1) -split ":")[1])".Trim())
+                            $Global:GlobalCPUInfo | Add-Member Threads       ([int]"$((($Data | Where-Object {$_ -match 'siblings'}   | Select-Object -First 1) -split ":")[1])".Trim())
+                            $Global:GlobalCPUInfo | Add-Member PhysicalCPUs  ($Data | Where-Object {$_ -match 'physical id'} | Select-Object -Unique | Measure-Object).Count
+                            $Global:GlobalCPUInfo | Add-Member L3CacheSize   ([int](ConvertFrom-Bytes "$((($Data | Where-Object {$_ -match 'cache size'} | Select-Object -First 1) -split ":")[1])".Trim())/1024)
+                            $Global:GlobalCPUInfo | Add-Member MaxClockSpeed ([int]"$((($Data | Where-Object {$_ -match 'cpu MHz'}    | Select-Object -First 1) -split ":")[1])".Trim())
+                            $Global:GlobalCPUInfo | Add-Member TDP           0
+                            $Global:GlobalCPUInfo | Add-Member Family        "$((($Data | Where-Object {$_ -match 'cpu family'}  | Select-Object -First 1) -split ":")[1])".Trim()
+                            $Global:GlobalCPUInfo | Add-Member Model         "$((($Data | Where-Object {$_ -match 'model\s*:'}  | Select-Object -First 1) -split ":")[1])".Trim()
+                            $Global:GlobalCPUInfo | Add-Member Stepping      "$((($Data | Where-Object {$_ -match 'stepping'}  | Select-Object -First 1) -split ":")[1])".Trim()
+                            $Global:GlobalCPUInfo | Add-Member Architecture  "$((($Data | Where-Object {$_ -match 'CPU architecture'}  | Select-Object -First 1) -split ":")[1])".Trim()
+                            $Global:GlobalCPUInfo | Add-Member Features      @{}
 
-                        #adapt to virtual CPUs and ARM
-                        if ($Processors -gt $Global:GlobalCPUInfo.Threads -and $Global:GlobalCPUInfo.Threads -eq 1) {
-                            $Global:GlobalCPUInfo.Cores   = $Processors
-                            $Global:GlobalCPUInfo.Threads = $Processors
+                            $Processors = ($Data | Where-Object {$fld = $_ -split ":";$fld.Count -gt 1 -and $fld[0].Trim() -eq "processor" -and $fld[1].Trim() -match "^[0-9]+$"} | Measure-Object).Count
+
+                            if (-not $Global:GlobalCPUInfo.PhysicalCPUs) {$Global:GlobalCPUInfo.PhysicalCPUs = 1}
+                            if (-not $Global:GlobalCPUInfo.Cores)   {$Global:GlobalCPUInfo.Cores = 1}
+                            if (-not $Global:GlobalCPUInfo.Threads) {$Global:GlobalCPUInfo.Threads = 1}
+
+                            @("Family","Model","Stepping","Architecture") | Foreach-Object {
+                                if ($Global:GlobalCPUInfo.$_ -match "^[0-9a-fx]+$") {$Global:GlobalCPUInfo.$_ = [int]$Global:GlobalCPUInfo.$_}
+                            }
+
+                            "$((($Data | Where-Object {$_ -like "flags*"} | Select-Object -First 1) -split ":")[1])".Trim() -split "\s+" | ForEach-Object {$ft = "$($_ -replace "[^a-z0-9]+")";if ($ft -ne "") {$Global:GlobalCPUInfo.Features.$ft = $true}}
+                            "$((($Data | Where-Object {$_ -like "Features*"} | Select-Object -First 1) -split ":")[1])".Trim() -split "\s+" | ForEach-Object {$ft = "$($_ -replace "[^a-z0-9]+")";if ($ft -ne "") {$Global:GlobalCPUInfo.Features.$ft = $true}}
+
+                            if (-not $Global:GlobalCPUInfo.Name -or -not $Global:GlobalCPUInfo.Manufacturer) {
+                                try {
+                                    $CPUimpl = [int]"$((($Data | Where-Object {$_ -match 'CPU implementer'} | Select-Object -First 1) -split ":")[1])".Trim()
+                                    if ($CPUimpl -gt 0) {
+                                        $CPUpart = @($Data | Where-Object {$_ -match "CPU part"} | Foreach-Object {[int]"$(($_ -split ":")[1])".Trim()}) | Select-Object -Unique
+                                        $CPUvariant = @($Data | Where-Object {$_ -match "CPU variant"} | Foreach-Object {[int]"$(($_ -split ":")[1])".Trim()}) | Select-Object -Unique
+                                        $ArmDB = Get-Content ".\Data\armdb.json" | ConvertFrom-Json -ErrorAction Stop
+                                        if ($ArmDB.implementers.$CPUimpl -ne $null) {
+                                            $Global:GlobalCPUInfo.Manufacturer = $ArmDB.implementers.$CPUimpl
+                                            $Global:GlobalCPUInfo.Name = "Unknown"
+
+                                            if ($CPUpart.Length -gt 0) {
+                                                $CPUName = [System.Collections.Generic.List[string]]::new()
+                                                for($i=0; $i -lt $CPUpart.Length; $i++) {
+                                                    $part = $CPUpart[$i]
+                                                    $variant = if ($CPUvariant -and $CPUvariant.length -gt $i) {$CPUvariant[$i]} else {$CPUvariant[0]}
+                                                    if ($ArmDB.variants.$CPUimpl.$part.$variant -ne $null) {[void]$CPUName.Add($ArmDB.variants.$CPUimpl.$part.$variant)}
+                                                    elseif ($ArmDB.parts.$CPUimpl.$part -ne $null) {[void]$CPUName.Add($ArmDB.parts.$CPUimpl.$part)}
+                                                }
+                                                if ($CPUName.Length -gt 0) {
+                                                    $Global:GlobalCPUInfo.Name = $CPUName -join "/"
+                                                    $Global:GlobalCPUInfo.Features.ARM = $true
+                                                }
+                                                $CPUName = $null
+                                            }
+                                        }
+                                    }
+                                } catch {
+                                }
+                            }                
+
+                            if ((-not $Global:GlobalCPUInfo.Name -or -not $Global:GlobalCPUInfo.Manufacturer -or -not $Processors) -and (Test-Path ".\Data\lscpu.txt")) {
+                                try {
+                                    $lscpu = (Get-Content ".\Data\lscpu.txt") -split "[\r\n]+"
+                                    $CPUName = @($lscpu | Where-Object {$_ -match 'model name'} | Foreach-Object {"$(($_ -split ":")[1].Trim())"}) | Select-Object -Unique
+                                    $Global:GlobalCPUInfo.Name = $CPUName -join "/"
+                                    $Global:GlobalCPUInfo.Manufacturer = "$((($lscpu | Where-Object {$_ -match 'vendor id'}  | Select-Object -First 1) -split ":")[1])".Trim()
+                                    if (-not $Processors) {
+                                        $Processors = [int]"$((($lscpu | Where-Object {$_ -match '^CPU\(s\)'}  | Select-Object -First 1) -split ":")[1])".Trim()
+                                    }
+
+                                    "$((($lscpu | Where-Object {$_ -like "flags*"} | Select-Object -First 1) -split ":")[1])".Trim() -split "\s+" | ForEach-Object {$Global:GlobalCPUInfo.Features."$($_ -replace "[^a-z0-9]+")" = $true}
+
+                                } catch {
+                                }
+                            }
+
+                            if ($Global:GlobalCPUInfo.PhysicalCPUs -gt 1) {
+                                $Global:GlobalCPUInfo.Cores   *= $Global:GlobalCPUInfo.PhysicalCPUs
+                                $Global:GlobalCPUInfo.Threads *= $Global:GlobalCPUInfo.PhysicalCPUs
+                                $Global:GlobalCPUInfo.PhysicalCPUs = 1
+                            }
+
+                            #adapt to virtual CPUs and ARM
+                            if ($Processors -gt $Global:GlobalCPUInfo.Threads -and $Global:GlobalCPUInfo.Threads -eq 1) {
+                                $Global:GlobalCPUInfo.Cores   = $Processors
+                                $Global:GlobalCPUInfo.Threads = $Processors
+                            }
                         }
                     }
 
@@ -1629,6 +1695,19 @@ function Get-CpuInfo {
         model    = $model
         stepping = $stepping
         features = $features.Keys.Where({$features.$_})
+    }
+}
+
+function Get-CpuInformation {
+    Get-ChildItem ".\IncludesLinux\bash" -Filter "getcpuinfo.sh" -File | Foreach-Object {
+        try {
+            if (-not (Test-IsElevated) -and (Test-OCDaemon)) {
+                Invoke-OCDaemon -Cmd "$($_.FullName) 2>/dev/null" | ConvertFrom-Json -ErrorAction Stop
+            } else {
+                Invoke-exe $_.FullName | ConvertFrom-Json -ErrorAction Stop
+            }
+        
+        } catch {}
     }
 }
 
