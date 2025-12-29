@@ -599,6 +599,11 @@ function Get-Device {
 
                     $Global:GlobalCPUInfo.Features."$(if ([Environment]::Is64BitOperatingSystem) {"x64"} else {"x86"})" = $true
 
+                    $Global:GlobalCPUInfo | Add-Member RealCores ([int[]](0..($Global:GlobalCPUInfo.Threads - 1))) -Force
+                    if ($Global:GlobalCPUInfo.Threads -gt $Global:GlobalCPUInfo.Cores) {
+                        $Global:GlobalCPUInfo.RealCores = $Global:GlobalCPUInfo.RealCores | Where-Object {-not ($_ % [int]($Global:GlobalCPUInfo.Threads/$Global:GlobalCPUInfo.Cores))}
+                    }
+
                 } elseif ($IsLinux) {
                     try {
                         Write-ToFile -FilePath ".\Data\lscpu.txt" -Message "$(Invoke-Exe "lscpu")" -NoCR > $null
@@ -693,6 +698,45 @@ function Get-Device {
                             $Global:GlobalCPUInfo.Threads = $Processors
                         }
                     }
+
+                    $threadList = $realCores = $null
+
+                    try {
+                        $topo = Get-CpuTopology | Where-Object { $_.online }
+
+                        $allCpus = @(
+                            $topo | 
+                              Sort-Object socket, core, thread, cpu |
+                              Select-Object -ExpandProperty cpu -Unique
+                        )
+
+                        $realCores = @(
+                            $topo |
+                              Group-Object socket, core |
+                              ForEach-Object {
+                                  $g = $_.Group | Sort-Object thread, cpu
+                                  $t0 = $g | Where-Object thread -eq 0 | Select-Object -First 1
+                                  if ($t0) { $t0.cpu } else { $g[0].cpu }
+                              } |
+                              Sort-Object
+                        )
+
+                        $threadList = @(
+                            $allCpus | Where-Object { $_ -notin $realCores }
+                        )
+                    }
+                    catch {
+                    }
+
+                    if (-not $realCores) {
+                        $realCores = [int[]](0..($Global:GlobalCPUInfo.Cores - 1))
+                    }
+                    if ($Global:GlobalCPUInfo.Threads -gt $Global:GlobalCPUInfo.Cores -and -not $threadList) {
+                        $threadList = [int[]]($Global:GlobalCPUInfo.Cores..($Global:GlobalCPUInfo.Threads + $Global:GlobalCPUInfo.Cores - 1))
+                    }
+
+                    $Global:GlobalCPUInfo | Add-Member RealCores  ([int[]]$realCores)  -Force
+                    $Global:GlobalCPUInfo | Add-Member ThreadList ([int[]]$threadList) -Force
                 }
 
                 $Global:GlobalCPUInfo | Add-Member Vendor $(Switch -Regex ("$($Global:GlobalCPUInfo.Manufacturer)") {
@@ -732,14 +776,6 @@ function Get-Device {
                     }
                 }
 
-                if ($IsLinux) {
-                    $Global:GlobalCPUInfo | Add-Member RealCores ([int[]](0..($Global:GlobalCPUInfo.Cores - 1))) -Force
-                } else {
-                    $Global:GlobalCPUInfo | Add-Member RealCores ([int[]](0..($Global:GlobalCPUInfo.Threads - 1))) -Force
-                    if ($Global:GlobalCPUInfo.Threads -gt $Global:GlobalCPUInfo.Cores) {
-                        $Global:GlobalCPUInfo.RealCores = $Global:GlobalCPUInfo.RealCores | Where-Object {-not ($_ % [int]($Global:GlobalCPUInfo.Threads/$Global:GlobalCPUInfo.Cores))}
-                    }
-                }
             }
             $Global:GlobalCPUInfo | Add-Member IsRyzen ($Global:GlobalCPUInfo.Features.iszen -or $Global:GlobalCPUInfo.Features.iszenplus -or $Global:GlobalCPUInfo.Features.iszen2 -or $Global:GlobalCPUInfo.Features.iszen3 -or $Global:GlobalCPUInfo.Features.iszen4)
 
@@ -1593,6 +1629,19 @@ function Get-CpuInfo {
         model    = $model
         stepping = $stepping
         features = $features.Keys.Where({$features.$_})
+    }
+}
+
+function Get-CpuTopology {
+    Get-ChildItem ".\IncludesLinux\bash" -Filter "getcputopo.sh" -File | Foreach-Object {
+        try {
+            if (-not (Test-IsElevated) -and (Test-OCDaemon)) {
+                Invoke-OCDaemon -Cmd "$($_.FullName) 2>/dev/null" | ConvertFrom-Json -ErrorAction Stop
+            } else {
+                Invoke-exe $_.FullName | ConvertFrom-Json -ErrorAction Stop
+            }
+        
+        } catch {}
     }
 }
 
