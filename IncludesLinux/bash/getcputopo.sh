@@ -311,10 +311,10 @@ try_dense_fallback() {
 }
 
 # ----- Main -----
-if try_sysfs; then exit 0; fi
-if try_lscpu; then exit 0; fi
-if try_cpuinfo; then exit 0; fi
-if try_dense_fallback; then exit 0; fi
+if try_sysfs; then exit 1; fi
+if try_lscpu; then exit 2; fi
+if try_cpuinfo; then exit 3; fi
+if try_dense_fallback; then exit 4; fi
 
 # Nothing worked -> still return valid JSON
 echo "[]"
