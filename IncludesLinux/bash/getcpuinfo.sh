@@ -173,7 +173,7 @@ if init_lscpu >/dev/null 2>&1; then
   [ -n "$Name" ] || Name="$(lscpu_get "Model" || echo "")"
 fi
 
-# Some environments provide multiple model names (big.LITTLE) – keep first as Name guess
+# Some environments provide multiple model names (big.LITTLE), keep first as Name guess
 if [ -z "$Name" ] && [ -r "$CPUINFO" ]; then
   Name="$(cpuinfo_get_first "model name" || echo "")"
   [ -n "$Name" ] || Name="$(cpuinfo_get_first "Processor" || echo "")"
@@ -259,6 +259,27 @@ if [ "$Model" -eq 0 ] && [ -r "$CPUINFO" ]; then
 fi
 if [ "$Stepping" -eq 0 ] && [ -r "$CPUINFO" ]; then
   Stepping="$(to_int "$(cpuinfo_get_first "stepping" || echo "")")"
+fi
+
+# ---- ARM arch ----
+ARMarch=0
+if [ "$is_arm" -eq 1 ]; then
+  if [ -r "$CPUINFO" ]; then
+    ARMarch="$(cpuinfo_get_first "CPU architecture" || echo 0)"
+    case "$ARMarch" in (''|*[!0-9]*) ARMarch=0;; esac
+  fi
+
+  if [ "$ARMarch" -eq 0 ]; then
+    case "$arch" in
+      aarch64|arm64) ARMarch=8 ;;
+      armv9*|armv9l) ARMarch=9 ;;
+      armv8*|armv8l) ARMarch=8 ;;
+      armv7*|armv7l) ARMarch=7 ;;
+      armv6*|armv6l) ARMarch=6 ;;
+      armv5*|armv5l) ARMarch=5 ;;
+      *) ARMarch=0 ;;
+    esac
+  fi
 fi
 
 # ---- features map ----
@@ -372,7 +393,7 @@ arm_parts_from_sysfs_midr() {
     "$SYSCPU"/cpu*/identification/midr_el1 \
     "$SYSCPU"/cpu*/identification/MIDR_EL1
   do
-    # glob that doesn’t match expands to itself in sh, so test -r
+    # glob that doesn't match expands to itself in sh, so test -r
     if [ -r "$f" ]; then
       # read first token only
       v="$(sed -n '1{s/[[:space:]].*$//;p;}' "$f" 2>/dev/null || true)"
@@ -502,12 +523,14 @@ jn="$(json_escape "$Name")"
 jm="$(json_escape "$Manufacturer")"
 ja="$(json_escape "$arch")"
 jh="$(json_escape "$Hardware")"
+jaa="$(json_escape "$ARMarch")"
 
 printf '{'
 printf '"Name":"%s",' "$jn"
 printf '"Manufacturer":"%s",' "$jm"
 printf '"Architecture":"%s",' "$ja"
 printf '"IsARM":%s,' "$( [ "$is_arm" -eq 1 ] && echo true || echo false )"
+printf '"ARMarch":"%s",' "$jaa"
 printf '"Family":%d,' "$Family"
 printf '"Model":%d,' "$Model"
 printf '"Stepping":%d,' "$Stepping"

@@ -635,6 +635,7 @@ function Get-Device {
 
                         if ($ci.IsArm) {
                             $Global:GlobalCPUInfo.Features.ARM = $true
+                            $Global:GlobalCPUInfo.Architecture = $ci.ARMarch
                             if ($ci.ArmParts -and (-not $Global:GlobalCPUInfo.Name -or -not $Global:GlobalCPUInfo.Manufacturer -or $Global:GlobalCPUInfo.Name -eq "Unknown" -or $Global:GlobalCPUInfo.Manufacturer -eq "Unknown")) {
                                 try {
                                     $ArmDB = Get-Content ".\Data\armdb.json" | ConvertFrom-Json -ErrorAction Stop
