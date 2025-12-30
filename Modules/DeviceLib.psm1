@@ -537,7 +537,6 @@ function Get-Device {
                         } catch {
                         }
 
-
                         if (-not $Global:GlobalCPUInfo.Features.Count) {
                             try {
                                 $lscpu = Invoke-Exe ".\Includes\list_cpu_features.exe" -ArgumentList "--json" -WorkingDirectory $Pwd | ConvertFrom-Json -ErrorAction Stop
@@ -612,19 +611,19 @@ function Get-Device {
 
                     $ci = Get-CpuInformation
                     if ($ci) {
-                        $Global:GlobalCPUInfo | Add-Member Name          $ci.Name -Force
-                        $Global:GlobalCPUInfo | Add-Member Manufacturer  $ci.Manufacturer -Force
-                        $Global:GlobalCPUInfo | Add-Member Cores         ([int]$ci.Cores) -Force
-                        $Global:GlobalCPUInfo | Add-Member Threads       ([int]$ci.Threads) -Force
-                        $Global:GlobalCPUInfo | Add-Member PhysicalCPUs  ([int]$ci.PhysicalCPUs) -Force
-                        $Global:GlobalCPUInfo | Add-Member L3CacheSize   ([int]($ci.L3CacheKB/1024)) -Force   # if you want MB
-                        $Global:GlobalCPUInfo | Add-Member MaxClockSpeed ([int]$ci.MaxClockMHz) -Force
+                        $Global:GlobalCPUInfo | Add-Member Name          $ci.Name
+                        $Global:GlobalCPUInfo | Add-Member Manufacturer  $ci.Manufacturer
+                        $Global:GlobalCPUInfo | Add-Member Cores         ([int]$ci.Cores)
+                        $Global:GlobalCPUInfo | Add-Member Threads       ([int]$ci.Threads)
+                        $Global:GlobalCPUInfo | Add-Member PhysicalCPUs  ([int]$ci.PhysicalCPUs)
+                        $Global:GlobalCPUInfo | Add-Member L3CacheSize   ([int]($ci.L3CacheKB/1024))
+                        $Global:GlobalCPUInfo | Add-Member MaxClockSpeed ([int]$ci.MaxClockMHz)
                         $Global:GlobalCPUInfo | Add-Member TDP           0
-                        $Global:GlobalCPUInfo | Add-Member Family        $ci.Family -Force
-                        $Global:GlobalCPUInfo | Add-Member Model         $ci.Model -Force
-                        $Global:GlobalCPUInfo | Add-Member Stepping      $ci.Stepping -Force
-                        $Global:GlobalCPUInfo | Add-Member Architecture  $ci.Architecture -Force
-                        $Global:GlobalCPUInfo | Add-Member Features      @{} -Force
+                        $Global:GlobalCPUInfo | Add-Member Family        $ci.Family
+                        $Global:GlobalCPUInfo | Add-Member Model         $ci.Model
+                        $Global:GlobalCPUInfo | Add-Member Stepping      $ci.Stepping
+                        $Global:GlobalCPUInfo | Add-Member Architecture  $ci.Architecture
+                        $Global:GlobalCPUInfo | Add-Member Features      @{}
 
                         # Features map
                         if ($ci.Features) {
@@ -684,19 +683,19 @@ function Get-Device {
                     if (-not $Global:GlobalCPUInfo.Name -or -not $Global:GlobalCPUInfo.Cores -or -not $Global:GlobalCPUInfo.PhysicalCPUs) { # Fallback to old code
                         $Data = Get-Content "/proc/cpuinfo"
                         if ($Data) {
-                            $Global:GlobalCPUInfo | Add-Member Name          "$((($Data | Where-Object {$_ -match 'model name'} | Select-Object -First 1) -split ":")[1])".Trim()
-                            $Global:GlobalCPUInfo | Add-Member Manufacturer  "$((($Data | Where-Object {$_ -match 'vendor_id'}  | Select-Object -First 1) -split ":")[1])".Trim()
-                            $Global:GlobalCPUInfo | Add-Member Cores         ([int]"$((($Data | Where-Object {$_ -match 'cpu cores'}  | Select-Object -First 1) -split ":")[1])".Trim())
-                            $Global:GlobalCPUInfo | Add-Member Threads       ([int]"$((($Data | Where-Object {$_ -match 'siblings'}   | Select-Object -First 1) -split ":")[1])".Trim())
-                            $Global:GlobalCPUInfo | Add-Member PhysicalCPUs  ($Data | Where-Object {$_ -match 'physical id'} | Select-Object -Unique | Measure-Object).Count
-                            $Global:GlobalCPUInfo | Add-Member L3CacheSize   ([int](ConvertFrom-Bytes "$((($Data | Where-Object {$_ -match 'cache size'} | Select-Object -First 1) -split ":")[1])".Trim())/1024)
-                            $Global:GlobalCPUInfo | Add-Member MaxClockSpeed ([int]"$((($Data | Where-Object {$_ -match 'cpu MHz'}    | Select-Object -First 1) -split ":")[1])".Trim())
-                            $Global:GlobalCPUInfo | Add-Member TDP           0
-                            $Global:GlobalCPUInfo | Add-Member Family        "$((($Data | Where-Object {$_ -match 'cpu family'}  | Select-Object -First 1) -split ":")[1])".Trim()
-                            $Global:GlobalCPUInfo | Add-Member Model         "$((($Data | Where-Object {$_ -match 'model\s*:'}  | Select-Object -First 1) -split ":")[1])".Trim()
-                            $Global:GlobalCPUInfo | Add-Member Stepping      "$((($Data | Where-Object {$_ -match 'stepping'}  | Select-Object -First 1) -split ":")[1])".Trim()
-                            $Global:GlobalCPUInfo | Add-Member Architecture  "$((($Data | Where-Object {$_ -match 'CPU architecture'}  | Select-Object -First 1) -split ":")[1])".Trim()
-                            $Global:GlobalCPUInfo | Add-Member Features      @{}
+                            $Global:GlobalCPUInfo | Add-Member Name          "$((($Data | Where-Object {$_ -match 'model name'} | Select-Object -First 1) -split ":")[1])".Trim() -Force
+                            $Global:GlobalCPUInfo | Add-Member Manufacturer  "$((($Data | Where-Object {$_ -match 'vendor_id'}  | Select-Object -First 1) -split ":")[1])".Trim() -Force
+                            $Global:GlobalCPUInfo | Add-Member Cores         ([int]"$((($Data | Where-Object {$_ -match 'cpu cores'}  | Select-Object -First 1) -split ":")[1])".Trim()) -Force
+                            $Global:GlobalCPUInfo | Add-Member Threads       ([int]"$((($Data | Where-Object {$_ -match 'siblings'}   | Select-Object -First 1) -split ":")[1])".Trim()) -Force
+                            $Global:GlobalCPUInfo | Add-Member PhysicalCPUs  ($Data | Where-Object {$_ -match 'physical id'} | Select-Object -Unique | Measure-Object).Count -Force
+                            $Global:GlobalCPUInfo | Add-Member L3CacheSize   ([int](ConvertFrom-Bytes "$((($Data | Where-Object {$_ -match 'cache size'} | Select-Object -First 1) -split ":")[1])".Trim())/1024) -Force
+                            $Global:GlobalCPUInfo | Add-Member MaxClockSpeed ([int]"$((($Data | Where-Object {$_ -match 'cpu MHz'}    | Select-Object -First 1) -split ":")[1])".Trim()) -Force
+                            $Global:GlobalCPUInfo | Add-Member TDP           0 -Force
+                            $Global:GlobalCPUInfo | Add-Member Family        "$((($Data | Where-Object {$_ -match 'cpu family'}  | Select-Object -First 1) -split ":")[1])".Trim() -Force
+                            $Global:GlobalCPUInfo | Add-Member Model         "$((($Data | Where-Object {$_ -match 'model\s*:'}  | Select-Object -First 1) -split ":")[1])".Trim() -Force
+                            $Global:GlobalCPUInfo | Add-Member Stepping      "$((($Data | Where-Object {$_ -match 'stepping'}  | Select-Object -First 1) -split ":")[1])".Trim() -Force
+                            $Global:GlobalCPUInfo | Add-Member Architecture  "$((($Data | Where-Object {$_ -match 'CPU architecture'}  | Select-Object -First 1) -split ":")[1])".Trim() -Force
+                            $Global:GlobalCPUInfo | Add-Member Features      @{} -Force
 
                             $Processors = ($Data | Where-Object {$fld = $_ -split ":";$fld.Count -gt 1 -and $fld[0].Trim() -eq "processor" -and $fld[1].Trim() -match "^[0-9]+$"} | Measure-Object).Count
 
