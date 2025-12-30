@@ -150,9 +150,21 @@ if ($IsLinux) {
     "-"*80 | Out-File $TestFileName -Append
     " " | Out-File $TestFileName -Append
 
-    Invoke-Exe 'lscpu' -ExpandLines -ExcludeEmptyLines | Out-File $TestFileName -Append
-    if (-not (Test-Path ".\Data\lscpu.txt")) {
-        Invoke-Exe 'lscpu' -ExpandLines -ExcludeEmptyLines | Out-File ".\Data\lscpu.txt"
+    if (Get-Command "lscpu" -ErrorAction Ignore) {
+        try {
+            Invoke-Exe 'lscpu' -ExpandLines -ExcludeEmptyLines | Out-File $TestFileName -Append
+            "[Exit $($Global:LASTEXEEXITCODE)]" | Out-File $TestFileName -Append
+            if (-not (Test-Path ".\Data\lscpu.txt")) {
+                Invoke-Exe 'lscpu' -ExpandLines -ExcludeEmptyLines | Out-File ".\Data\lscpu.txt"
+            }
+        } catch {
+            "ERROR: $($_.Exception.Message)" | Out-File $TestFileName -Append
+            "$($_.InvocationInfo.PositionMessage)" | Out-File $TestFileName -Append
+            "$($_.Exception.StackTrace)" | Out-File $TestFileName -Append
+        }
+
+    } else {
+        "command lscpu not found" | Out-File $TestFileName -Append
     }
 
     " " | Out-File $TestFileName -Append
@@ -169,9 +181,52 @@ if ($IsLinux) {
         "$($_.Exception.StackTrace)" | Out-File $TestFileName -Append
     }
 
+    " " | Out-File $TestFileName -Append
+    "3. getcpuinfo.sh" | Out-File $TestFileName -Append
+    "-"*80 | Out-File $TestFileName -Append
+    " " | Out-File $TestFileName -Append
+
+    try {
+        $Data = Invoke-Exe "IncludesLinux/bash/getcpuinfo.sh"
+        try {
+            ConvertFrom-Json $Data -ErrorAction Stop | ConvertTo-Json | Out-File $TestFileName -Append
+        } catch {
+            $Data | Out-File $TestFileName -Append
+            "ERROR: $($_.Exception.Message)" | Out-File $TestFileName -Append
+            "$($_.InvocationInfo.PositionMessage)" | Out-File $TestFileName -Append
+            "$($_.Exception.StackTrace)" | Out-File $TestFileName -Append
+        }
+        "[Exit $($Global:LASTEXEEXITCODE)]" | Out-File $TestFileName -Append
+    } catch {
+        "ERROR: $($_.Exception.Message)" | Out-File $TestFileName -Append
+        "$($_.InvocationInfo.PositionMessage)" | Out-File $TestFileName -Append
+        "$($_.Exception.StackTrace)" | Out-File $TestFileName -Append
+    }
 
     " " | Out-File $TestFileName -Append
-    "3. Fill CPUInfo object" | Out-File $TestFileName -Append
+    "4. getcputopo.sh" | Out-File $TestFileName -Append
+    "-"*80 | Out-File $TestFileName -Append
+    " " | Out-File $TestFileName -Append
+
+    try {
+        $Data = Invoke-Exe "IncludesLinux/bash/getcputopo.sh"
+        try {
+            ConvertFrom-Json $Data -ErrorAction Stop | ConvertTo-Json | Out-File $TestFileName -Append
+        } catch {
+            $Data | Out-File $TestFileName -Append
+            "ERROR: $($_.Exception.Message)" | Out-File $TestFileName -Append
+            "$($_.InvocationInfo.PositionMessage)" | Out-File $TestFileName -Append
+            "$($_.Exception.StackTrace)" | Out-File $TestFileName -Append
+        }
+        "[Exit $($Global:LASTEXEEXITCODE)]" | Out-File $TestFileName -Append
+    } catch {
+        "ERROR: $($_.Exception.Message)" | Out-File $TestFileName -Append
+        "$($_.InvocationInfo.PositionMessage)" | Out-File $TestFileName -Append
+        "$($_.Exception.StackTrace)" | Out-File $TestFileName -Append
+    }
+
+    " " | Out-File $TestFileName -Append
+    "5. Fill CPUInfo object" | Out-File $TestFileName -Append
     "-"*80 | Out-File $TestFileName -Append
     " " | Out-File $TestFileName -Append
 
@@ -346,7 +401,7 @@ if ($IsLinux) {
 
 
     " " | Out-File $TestFileName -Append
-    "4. Add real cores and threadlist to CPUInfo object" | Out-File $TestFileName -Append
+    "6. Add real cores and threadlist to CPUInfo object" | Out-File $TestFileName -Append
     "-"*80 | Out-File $TestFileName -Append
     " " | Out-File $TestFileName -Append
 
@@ -397,7 +452,7 @@ if ($IsLinux) {
         "$($_.Exception.StackTrace)" | Out-File $TestFileName -Append
     }
 
-    $lfnr = 4
+    $lfnr = 6
 }
 
 $lfnr++
