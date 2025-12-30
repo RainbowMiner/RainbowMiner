@@ -415,6 +415,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                                     "keepalive" = $true
                                     "enabled"   = $true
                                     "tls"       = $Pools.$Algorithm_Norm.SSL
+                                    "ip_version"= 4
                                 }
                             )
                             Vendor  = $Miner_Vendor

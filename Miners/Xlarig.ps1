@@ -100,6 +100,7 @@ $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | F
                             "keepalive" = $true
                             "enabled"   = $true
                             "tls"       = $Pools.$Algorithm_Norm.SSL
+                            "ip_version"= 4
                         }
                     )
                     Params  = "$($_.Params)"
