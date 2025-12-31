@@ -598,10 +598,17 @@ function Get-Device {
 
                     $Global:GlobalCPUInfo.Features."$(if ([Environment]::Is64BitOperatingSystem) {"x64"} else {"x86"})" = $true
 
-                    $Global:GlobalCPUInfo | Add-Member RealCores ([int[]](0..($Global:GlobalCPUInfo.Threads - 1))) -Force
+                    $realCores = @(0..($Global:GlobalCPUInfo.Threads - 1))
                     if ($Global:GlobalCPUInfo.Threads -gt $Global:GlobalCPUInfo.Cores) {
-                        $Global:GlobalCPUInfo.RealCores = $Global:GlobalCPUInfo.RealCores | Where-Object {-not ($_ % [int]($Global:GlobalCPUInfo.Threads/$Global:GlobalCPUInfo.Cores))}
+                        $mult = [int]($Global:GlobalCPUInfo.Threads/$Global:GlobalCPUInfo.Cores)
+                        $threadList = @($realCores | Where-Object {$_ % $mult})
+                        $realCores  = @($realCores | Where-Object {-not ($_ % $mult)})
+                    } else {
+                        $threadList = @()
                     }
+
+                    $Global:GlobalCPUInfo | Add-Member RealCores  ([int[]]$realCores)
+                    $Global:GlobalCPUInfo | Add-Member ThreadList ([int[]]$threadList)
 
                 } elseif ($IsLinux) {
                     try {
@@ -801,14 +808,14 @@ function Get-Device {
                     }
 
                     if (-not $realCores) {
-                        $realCores = [int[]](0..($Global:GlobalCPUInfo.Cores - 1))
+                        $realCores = @(0..($Global:GlobalCPUInfo.Cores - 1))
                     }
                     if ($Global:GlobalCPUInfo.Threads -gt $Global:GlobalCPUInfo.Cores -and -not $threadList) {
-                        $threadList = [int[]]($Global:GlobalCPUInfo.Cores..($Global:GlobalCPUInfo.Threads + $Global:GlobalCPUInfo.Cores - 1))
+                        $threadList = @($Global:GlobalCPUInfo.Cores..($Global:GlobalCPUInfo.Threads + $Global:GlobalCPUInfo.Cores - 1))
                     }
 
-                    $Global:GlobalCPUInfo | Add-Member RealCores  ([int[]]$realCores)  -Force
-                    $Global:GlobalCPUInfo | Add-Member ThreadList ([int[]]$threadList) -Force
+                    $Global:GlobalCPUInfo | Add-Member RealCores  ([int[]]$realCores)
+                    $Global:GlobalCPUInfo | Add-Member ThreadList ([int[]]$threadList)
                 }
 
                 $Global:GlobalCPUInfo | Add-Member Vendor $(Switch -Regex ("$($Global:GlobalCPUInfo.Manufacturer)") {
