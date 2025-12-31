@@ -23,7 +23,6 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "LBRT";  port = 4118; fee = 0.9; rpc = "liberty";    user = "{wallet}{=diff}.{worker}"; pass="x"}
     [PSCustomObject]@{symbol = "MCM";   port = 3336; fee = 0.9; rpc = "mochimo";    user = "{wallet}{=diff}.{worker}"; pass="x"}
     [PSCustomObject]@{symbol = "NIR";   port = 3377; fee = 0.9; rpc = "nirmata";    user = "{wallet}.{worker}{.diff}"; pass="x"}
-    [PSCustomObject]@{symbol = "QUAI";  port = 3333; fee = 0.9; rpc = "quai";       user = "{wallet}{=diff}.{worker}"; pass="x"}
     [PSCustomObject]@{symbol = "QTC";   port = 8611; fee = 0.9; rpc = "qtc";        user = "{wallet}{=diff}.{worker}"; pass="x"}
     [PSCustomObject]@{symbol = "R5";    port = 2118; fee = 0.9; rpc = "r5";         user = "{wallet}{=diff}.{worker}"; pass="x"}
     [PSCustomObject]@{symbol = "ALPHA"; port = 2100; fee = 0.9; rpc = "unicity";    user = "{wallet}{=diff}.{worker}"; pass="x"}
@@ -34,6 +33,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "ZANO";  port = 8877; fee = 0.9; rpc = "zano";       user = "{wallet}.{worker}";        pass="x{diff}"}
 
     #[PSCustomObject]@{symbol = "CLC";   port = 5118; fee = 0.9; rpc = "clc";        user = "{wallet}{=diff}.{worker}"; pass="x"}
+    #[PSCustomObject]@{symbol = "QUAI";  port = 3333; fee = 0.9; rpc = "quai";       user = "{wallet}{=diff}.{worker}"; pass="x"}
     #[PSCustomObject]@{symbol = "XE";    port = 3381; fee = 0.9; rpc = "xechain";    user = "{wallet}{=diff}.{worker}"; pass="x"}
 )
 
