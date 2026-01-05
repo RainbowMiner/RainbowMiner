@@ -11,7 +11,7 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.De
 
 $ManualUri = "https://github.com/Bendr0id/xmrigCC/releases"
 $Port = "376{0:d2}"
-$Version = "3.4.8"
+$Version = "3.4.9"
 $DevFee = 0.0
 
 $UriCuda = $null
@@ -33,7 +33,7 @@ if ($IsLinux) {
                 $DevFee = 1.0
             }
 
-            $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.4.8-xmrigcc/xmrigcc-3.4.8-{DISTROCODENAME}-armv8.7z" -replace "{DISTROCODENAME}",$distroCodename
+            $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.4.9-xmrigcc/xmrigcc-3.4.9-{DISTROCODENAME}-armv8.7z" -replace "{DISTROCODENAME}",$distroCodename
         }
     } else {
         if ($Session.LibCVersion -and $Session.LibCVersion -lt (Get-Version "2.25")) {return}
@@ -44,7 +44,7 @@ if ($IsLinux) {
             "focal"
         }
 
-        $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.4.8-xmrigcc/xmrigcc-3.4.8-{DISTROCODENAME}-x64.7z" -replace "{DISTROCODENAME}",$distroCodename
+        $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.4.9-xmrigcc/xmrigcc-3.4.9-{DISTROCODENAME}-x64.7z" -replace "{DISTROCODENAME}",$distroCodename
 
         $CudaData = @(
             [PSCustomObject]@{
@@ -143,7 +143,7 @@ if ($IsLinux) {
     $Executables = @("xmrigMiner")
 } else {
 
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.4.8-xmrigcc/xmrigcc-3.4.8-msvc-win64.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.4.9-xmrigcc/xmrigcc-3.4.9-msvc-win64.7z"
 
     $CudaData = @(
         [PSCustomObject]@{
@@ -266,6 +266,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "rx/0";                       MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "rx/arq";                     MinMemGb = 2.0; Params = ""; ExtendInterval = 3; Vendor = @("AMD","CPU","INTEL","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "rx/grft";                    MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA")} #CUDA Plugin v6.12.0 doesn't support GRFT, v6.15.0 has memory bug
+    [PSCustomObject]@{MainAlgorithm = "rx/scash";                   MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("CPU")}
     [PSCustomObject]@{MainAlgorithm = "rx/sfx";                     MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "rx/tuske";                   MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("CPU")}
     [PSCustomObject]@{MainAlgorithm = "rx/vrl";                     MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("CPU")}
