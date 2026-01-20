@@ -12,7 +12,7 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.De
 
 $ManualURI = "https://github.com/sp-hash/TeamBlackMiner"
 $Port = "365{0:d2}"
-$Version = "2.38"
+$Version = "2.41"
 
 if ($IsLinux) {
     $Path     = ".\Bin\GPU-Teamblack\TBMiner"
@@ -20,7 +20,7 @@ if ($IsLinux) {
 
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.38-teamblack/TeamBlackMiner_2_38_Ubuntu_22_04_Cuda_12_9.tar.xz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.41-teamblack/TeamBlackMiner_2_41_Ubuntu_22_04_Cuda_12_9.tar.xz"
             Cuda = "12.9"
             Linux = "Ubuntu 22.04"
         }
@@ -32,22 +32,10 @@ if ($IsLinux) {
 
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.38-teamblack/TeamBlackMiner_2_38_cuda_12.9.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.41-teamblack/TeamBlackMiner_2_41_cuda_12.9.7z"
             Cuda = "12.9"
         }
     )
-}
-
-$PoolNames = @{
-    "etchash" = @("2miners","antpool","baikalmine","beepool","cominers","cool2mine","crazypool","cruxpool","digipools","e4pool","etcminingclub","etcpool","etcpoolus","ethermine","ethpool","f2pool","flexpool","hashblue","hashcity","hellominer","hellominers","hive
-on","k1pool","kryptex","maxhash","minerall","miningmadness","miningpoolhub","miningrigrentals","myminers","nanopool","okpool","pool2mine","poolin","poolms","prohashing","richppool","skypool","solopool","spiderpool","unmineable","viabtc","woolypo
-oly","zetpool")
-    "ethash" = @("2miners","antpool","coolpool","e4pool","ethwmine","ezil","f2pool","herominers","k1pool","kryptex","miningmadness","molepool","nanopool","poolin","richpool","uamining","woolypooly","xpool")
-    "ethashb3" = @("baikalmine","crazypool","ekapool","vipor")
-    "kawpow" = @("2miners","binarylongevity","bsmith","cool2mine","cruxpool","crypticwizardry","cryptoru","flypool","herominers","kaww","kryptex","miningmadness","miningpoolhub","molepool","nanopool","pool2mine","ravenminer","ravenpool","richpool","skypool","suprnova","walls
-treetv2","woolypooly")
-    "meowpow" = @("rplant","woolypooly")
-    "verthash" = @("badhasher","bbqpool","coinminerz","e4pool","hashalot","hashcryptos","miningdutch","miningpoolhub","miningpoolsweden","suprnova","woolypooly","zpool")
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -60,7 +48,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethashlowmemory"; DAG = $true; Params = ""; MinMemGb = 2;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; Algorithm = "ethash"} #Ethash for low memory DAG
     [PSCustomObject]@{MainAlgorithm = "etchash";         DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5} #EtcHash
     [PSCustomObject]@{MainAlgorithm = "evrprogpow";      DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5} #EvrProgPowe
-    #[PSCustomObject]@{MainAlgorithm = "firopow";         DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5} #FiroPow
+    [PSCustomObject]@{MainAlgorithm = "firopow";         DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5} #FiroPow
     [PSCustomObject]@{MainAlgorithm = "kawpow";          DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5} #KawPow
     [PSCustomObject]@{MainAlgorithm = "kawpow2g";        DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; Algorithm = "kawpow"} #KawPow
     [PSCustomObject]@{MainAlgorithm = "kawpow3g";        DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; Algorithm = "kawpow"} #KawPow
@@ -126,11 +114,7 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
             $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
             $Algorithm_0 = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
 
-            #$LHRCUDA = if (($Miner_Device | Where-Object {$_.IsLHR -or $Session.Config.Devices."$($_.Model_Base)".EnableLHR -ne $null} | Measure-Object).Count -gt 0) {
-            #    ($Miner_Device | Foreach-Object {"$(if (($_.IsLHR -and $Session.Config.Devices."$($_.Model_Base)".EnableLHR -eq $null) -or $Session.Config.Devices."$($_.Model_Base)".EnableLHR) {1} else {0})"}) -join ','
-            #}
-
-            $IncludePoolName = if ($PoolNames[$Algorithm_0]) {"^$($PoolNames[$Algorithm_0] -join "|^")"} else {$null}
+            $IncludePoolName = $null
 
             foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
                 if (-not $Pools.$Algorithm_Norm.Host) {continue}
