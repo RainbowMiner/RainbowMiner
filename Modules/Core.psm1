@@ -6585,7 +6585,7 @@ function Test-CacheGrow {
 function Get-PowerPrice {
     $PowerPrice = $Session.Config.PowerPrice
 
-    if ($Session.Config.PowerPriceApi -ne '') {
+    if ($Session.Config.PowerPriceApi) {
         $cycletime = if ($Session.Config.PowerPriceApiInterval) {$Session.Config.PowerPriceApiInterval} else {$Session.Config.Interval}
 
         try {

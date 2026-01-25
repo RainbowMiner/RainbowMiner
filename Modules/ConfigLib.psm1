@@ -934,6 +934,13 @@ function Get-ServerConfig {
                 if ($_ -eq "config") {
                     $Preset = Get-ConfigContent "config"
                     $Data.PSObject.Properties.Name | Where-Object {$ExcludeConfigVars -inotcontains $_} | Foreach-Object {$Preset | Add-Member $_ $Data.$_ -Force}
+
+                    # add missing config values in case of server/client version mismatch
+                    if ($Session.DefaultValues) {
+                        $Session.DefaultValues.Keys | Where-Object {$_ -ne "SetupOnly" -and $Preset.$_ -eq $null} | ForEach-Object {
+                            $Preset | Add-Member $_ "`$$_" -Force
+                        }
+                    }
                     $Data = $Preset
                 } elseif ($_ -eq "pools") {
                     $Preset = Get-ConfigContent "pools"
