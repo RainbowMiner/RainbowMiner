@@ -57,8 +57,8 @@ $Pools_Request | Where-Object {$_.name -notmatch "solo$" -and ($Wallets."$($_.sy
 
     if (-not $InfoOnly) {
 
-        if ($Pools_StatsRequest.pool.coinBlocktime) {
-            $Pool_BLK        = 86400 / $Pools_StatsRequest.pool.coinBlocktime * $Pools_StatsRequest.pool.poolHashrate / $Pools_StatsRequest.pool.networkSpeed * $Pools_StatsRequest.pool.poolLuck / 100
+        if ($Pools_StatsRequest.pool.coinBlocktime -and $Pools_StatsRequest.pool.networkSpeed) {
+            $Pool_BLK        = 86400 / $Pools_StatsRequest.pool.coinBlocktime * $Pools_StatsRequest.pool.poolHashrate / $Pools_StatsRequest.pool.networkSpeed
         } else {
             $timestamp       = Get-UnixTimestamp
             $timestamp24h    = $timestamp - 86400
