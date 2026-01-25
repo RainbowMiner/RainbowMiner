@@ -527,9 +527,12 @@ function Get-Device {
                         $Global:GlobalCPUInfo | Add-Member Stepping      0
                         $Global:GlobalCPUInfo | Add-Member Architecture  ""
                         $Global:GlobalCPUInfo | Add-Member Features      @{}
+                        $Global:GlobalCPUInfo | Add-Member Topology      $null
+                        $Global:GlobalCPUInfo | Add-Member Information   $null
 
                         try {
                             $lscpu = Get-CpuInfo
+                            $Global:GlobalCPUInfo.Information = $lscpu
                             $Global:GlobalCPUInfo.Family   = $lscpu.family
                             $Global:GlobalCPUInfo.Model    = $lscpu.model
                             $Global:GlobalCPUInfo.Stepping = $lscpu.stepping
@@ -582,11 +585,14 @@ function Get-Device {
                         $Global:GlobalCPUInfo | Add-Member Stepping      0
                         $Global:GlobalCPUInfo | Add-Member Architecture  ""
                         $Global:GlobalCPUInfo | Add-Member Features      @{}
+                        $Global:GlobalCPUInfo | Add-Member Topology      $null
+                        $Global:GlobalCPUInfo | Add-Member Information   $null
 
                         $chkcpu.Keys | Where-Object {"$($chkcpu.$_)" -eq "1" -and $_ -notmatch '_' -and $_ -notmatch "^l\d$"} | Foreach-Object {$Global:GlobalCPUInfo.Features.$_ = $true}
 
                         try {
                             $lscpu = Get-CpuInfo
+                            $Global:GlobalCPUInfo.Information = $lscpu
                             $Global:GlobalCPUInfo.Family   = $lscpu.family
                             $Global:GlobalCPUInfo.Model    = $lscpu.model
                             $Global:GlobalCPUInfo.Stepping = $lscpu.stepping
@@ -616,8 +622,14 @@ function Get-Device {
                     } catch {
                     }
 
+                    $Global:GlobalCPUInfo | Add-Member Topology    $null
+                    $Global:GlobalCPUInfo | Add-Member Information $null
+
                     $ci = Get-CpuInformation
+
                     if ($ci) {
+                        $Global:GlobalCPUInfo.Information = $ci
+
                         $Global:GlobalCPUInfo | Add-Member Name          $ci.Name
                         $Global:GlobalCPUInfo | Add-Member Manufacturer  $ci.Manufacturer
                         $Global:GlobalCPUInfo | Add-Member Cores         ([int]$ci.Cores)
@@ -690,6 +702,8 @@ function Get-Device {
                     if (-not $Global:GlobalCPUInfo.Name -or -not $Global:GlobalCPUInfo.Cores -or -not $Global:GlobalCPUInfo.PhysicalCPUs) { # Fallback to old code
                         $Data = Get-Content "/proc/cpuinfo"
                         if ($Data) {
+                            $Global:GlobalCPUInfo.Information = $Data
+
                             $Global:GlobalCPUInfo | Add-Member Name          "$((($Data | Where-Object {$_ -match 'model name'} | Select-Object -First 1) -split ":")[1])".Trim() -Force
                             $Global:GlobalCPUInfo | Add-Member Manufacturer  "$((($Data | Where-Object {$_ -match 'vendor_id'}  | Select-Object -First 1) -split ":")[1])".Trim() -Force
                             $Global:GlobalCPUInfo | Add-Member Cores         ([int]"$((($Data | Where-Object {$_ -match 'cpu cores'}  | Select-Object -First 1) -split ":")[1])".Trim()) -Force
@@ -781,23 +795,25 @@ function Get-Device {
                     $threadList = $realCores = $null
 
                     try {
-                        $topo = Get-CpuTopology | Where-Object { $_.online }
+                        $topo = Get-CpuTopology
+                        $Global:GlobalCPUInfo.Topology = $topo
+                        $topo_online = $topo | Where-Object { $_.online }
 
                         $allCpus = @(
-                            $topo | 
-                              Sort-Object socket, core, thread, cpu |
-                              Select-Object -ExpandProperty cpu -Unique
+                            $topo_online | 
+                                Sort-Object socket, core, thread, cpu |
+                                Select-Object -ExpandProperty cpu -Unique
                         )
 
                         $realCores = @(
-                            $topo |
-                              Group-Object socket, core |
-                              ForEach-Object {
-                                  $g = $_.Group | Sort-Object thread, cpu
-                                  $t0 = $g | Where-Object thread -eq 0 | Select-Object -First 1
-                                  if ($t0) { $t0.cpu } else { $g[0].cpu }
-                              } |
-                              Sort-Object
+                            $topo_online |
+                                Group-Object socket, core |
+                                ForEach-Object {
+                                    $g = $_.Group | Sort-Object thread, cpu
+                                    $t0 = $g | Where-Object thread -eq 0 | Select-Object -First 1
+                                    if ($t0) { $t0.cpu } else { $g[0].cpu }
+                                } |
+                                Sort-Object
                         )
 
                         $threadList = @(
@@ -903,6 +919,10 @@ function Get-Device {
                                 Utilization = 0
                                 PowerDraw   = 0
                                 Temperature = 0
+                    }
+                    Info = [PSCustomObject]@{
+                        Info = $Global:GLobalCPUInfo.Information
+                        Topo = $Global:GlobalCPUInfo.Topology
                     }
                 }
 
