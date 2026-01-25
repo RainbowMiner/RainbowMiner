@@ -8,13 +8,14 @@ param(
 # $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "ETC";  rpc = "etc";  port = @(19999,19433); fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
-    [PSCustomObject]@{symbol = "ETHW"; rpc = "ethw"; port = @(15555,15433); fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
-    [PSCustomObject]@{symbol = "ZEC";  rpc = "zec";  port = @(6666,6633);   fee = 1; divisor = 1;   useemail = $false; usepid = $false}
-    [PSCustomObject]@{symbol = "XMR";  rpc = "xmr";  port = @(14444,14433); fee = 1; divisor = 1;   useemail = $false; usepid = $true}
-    [PSCustomObject]@{symbol = "RVN";  rpc = "rvn";  port = @(12222,12433); fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
-    [PSCustomObject]@{symbol = "CFX";  rpc = "cfx";  port = @(17777,17433); fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
-    [PSCustomObject]@{symbol = "ERG";  rpc = "ergo"; port = @(11111,11433); fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
+    [PSCustomObject]@{symbol = "XMR";  rpc = "xmr";  port = @(10300,10343); fee = 1; divisor = 1;   useemail = $false; usepid = $true}
+    [PSCustomObject]@{symbol = "RVN";  rpc = "rvn";  port = @(10400,10443); fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
+    [PSCustomObject]@{symbol = "CFX";  rpc = "cfx";  port = @(10500,10543); fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
+    [PSCustomObject]@{symbol = "ERG";  rpc = "ergo"; port = @(10600,10643); fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
+
+    #[PSCustomObject]@{symbol = "ETC";  rpc = "etc";  port = @(19999,19433); fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
+    #[PSCustomObject]@{symbol = "ETHW"; rpc = "ethw"; port = @(15555,15433); fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
+    #[PSCustomObject]@{symbol = "ZEC";  rpc = "zec";  port = @(6666,6633);   fee = 1; divisor = 1;   useemail = $false; usepid = $false}
 )
 
 $Count = 0
