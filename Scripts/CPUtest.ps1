@@ -410,16 +410,17 @@ if ($IsLinux) {
         $threadList = $realCores = $null
 
         try {
-            $topo = Get-CpuTopology | Where-Object { $_.online }
+            $topo = Get-CpuTopology
+            $topo_online = $topo | Where-Object { $_.online }
 
             $allCpus = @(
-                $topo | 
+                $topo_online | 
                     Sort-Object socket, core, thread, cpu |
                     Select-Object -ExpandProperty cpu -Unique
             )
 
             $realCores = @(
-                $topo |
+                $topo_online |
                     Group-Object socket, core |
                     ForEach-Object {
                         $g = $_.Group | Sort-Object thread, cpu
@@ -432,6 +433,13 @@ if ($IsLinux) {
             $threadList = @(
                 $allCpus | Where-Object { $_ -notin $realCores }
             )
+
+            if ($topo_online.Count) {
+                $CPUInfo.Cores = $realCores.Count
+                $CPUInfo.Threads = $allCpus.Count
+                $CPUInfo.PhysicalCPUs = [Math]::Max(1,($topo_online | Select-Object -ExpandProperty socket -Unique).Count)
+
+            }
         }
         catch {
         }
