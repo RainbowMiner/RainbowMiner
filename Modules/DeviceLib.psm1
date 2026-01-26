@@ -819,6 +819,13 @@ function Get-Device {
                         $threadList = @(
                             $allCpus | Where-Object { $_ -notin $realCores }
                         )
+
+                        if ($topo_online.Count) {
+                            $Global:GlobalCPUInfo.Cores = $realCores.Count
+                            $Global:GlobalCPUInfo.Threads = $allCpus.Count
+                            $Global:GlobalCPUInfo.PhysicalCPUs = [Math]::Max(1,($topo_online | Select-Object -ExpandProperty socket -Unique).Count)
+
+                        }
                     }
                     catch {
                     }
