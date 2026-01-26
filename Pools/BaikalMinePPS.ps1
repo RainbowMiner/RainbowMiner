@@ -25,20 +25,20 @@ $Pool_Fee  = 0.75
 $Pool_Request = [PSCustomObject]@{}
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://baikalmine.com/api/pool/menu/getTopMenu" -tag "BaikalMine" -cycletime 3600 -retry 5 -retrywait 250 | Where {$_.alias -eq $Pool_Type}
+    $Pool_Request = Invoke-RestMethodAsync "https://baikalmine.com/api/Pool/GetEntities" -tag "BaikalMine" -body '{"props":["_id","api","active","maintenance","type._id","type.name","type.identifier","coin.symbol","coin.name","coin.identifier","engine.type","ports"]}' -cycletime 3600 -retry 5 -retrywait 250
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
 
-if (-not $Pool_Request) {
+if (-not $Pool_Request.entities) {
     Write-Log -Level Warn "Pool API ($Name) returned nothing. "
     return
 }
 
-$Pool_Request.coins | Where-Object {$Wallets."$($_.name)" -or $InfoOnly} | ForEach-Object {
-    $Pool_Currency = $_.name
+$Pool_Request.entities | Where-Object {$_.type.identifier -eq $Pool_Type -and $_.active -and -not $_.maintenance -and ($Wallets."$($_.coin.symbol)" -or $InfoOnly)} | ForEach-Object {
+    $Pool_Currency = $_.coin.symbol
 
     if ($Pool_Coin = Get-Coin $Pool_Currency) {
         $Pool_Algorithm_Norm = $Pool_Coin.Algo
@@ -50,48 +50,37 @@ $Pool_Request.coins | Where-Object {$Wallets."$($_.name)" -or $InfoOnly} | ForEa
     $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"qtminer"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
 
     $PoolInfo_Request  = [PSCustomObject]@{}
-
     try {
-        $PoolInfo_Request   = Invoke-RestMethodAsync "https://baikalmine.com/api/pool/info/getInfo"  -tag $Name -cycletime 120 -delay 250 -body @{type = $Pool_Type; coin = $_.alias}
+        $PoolInfo_Request   = Invoke-RestMethodAsync "https://baikalmine.com/api/Engines/GetPoolStats"  -tag $Name -body "{`"type`":`"$Pool_Type`",`"coin`":`"$($_.coin.identifier)`",`"engine`":$($_.engine.type)}" -cycletime 120 -delay 250
     }
     catch {
         Write-Log -Level Warn "Pool $($Name): Info API for $($Pool_Currency) has failed. "
         return
     }
 
-    $Pool_RPC      = ($PoolInfo_Request.ports | Where-Object {$_.location -eq "Moscow"} | Select-Object -First 1).server
+    if (-not $PoolInfo_Request.entity) {
+        Write-Log -Level Warn "Pool $($Name): Info API for $($Pool_Currency) has failed. "
+        return
+    }
 
     $Pool_Hashrate = $null
     $Pool_Workers  = $null
     $Pool_TSL      = $null
     $Pool_BLK      = $null
 
-    $PoolStats_Request  = [PSCustomObject]@{}
-    $PoolBlocks_Request = [PSCustomObject]@{}
-
     if (-not $InfoOnly) {
-        try {
-            $PoolStats_Request  = Invoke-RestMethodAsync "https://$($Pool_RPC)/api/stats"  -tag $Name -cycletime 120 -delay 250
-        }
-        catch {
-            Write-Log -Level Warn "Pool $($Name): Stats API for $($Pool_Currency) has failed. "
-        }
-
-        if ($PoolStats_Request.mainStats) {
-            $Pool_Hashrate = $PoolStats_Request.mainStats.hashrate
-            $Pool_Workers  = [int]($PoolStats_Request.charts.workers | Select-Object -Last 1)
-            $Pool_TSL      = $timestamp - $PoolStats_Request.mainStats.lastBlockFound
-        } else {
-            $Pool_Hashrate = $PoolStats_Request.hashrate
-            $Pool_Workers  = $PoolStats_Request.minersTotal
-            $Pool_TSL      = $timestamp - $PoolStats_Request.stats.lastBlockFound
-        }
+        $Pool_Hashrate = $PoolInfo_Request.entity.hashrate.pool
+        $Pool_Workers  = $PoolInfo_Request.entity.miners
+        $Pool_TSL      = (Get-UnixTimestamp) - $PoolInfo_Request.entity.lastBlock
+        $Pool_BLK      = if ($PoolInfo_Request.entity.blocktime -and $PoolInfo_Request.entity.hashrate.network) {86400/$PoolInfo_Request.entity.blocktime*$PoolInfo_Request.entity.hashrate.pool/$PoolInfo_Request.entity.hashrate.network} else {0}
 
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_Hashrate -BlockRate $Pool_BLK -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
     
-    foreach($Pool_Info in $PoolInfo_Request.ports) {
+    foreach($Pool_Info in @($_.ports | Where-Object {-not $_.asic})) {
+        $Pool_Region = $Pool_RegionsTable.Keys | Where-Object {$Pool_Info.location -match $_} | Select-Object -First 1
+        if (-not $Pool_Region) {$Pool_Region = "Moscow"}
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm
             Algorithm0    = $Pool_Algorithm_Norm
@@ -102,11 +91,11 @@ $Pool_Request.coins | Where-Object {$Wallets."$($_.name)" -or $InfoOnly} | ForEa
             StablePrice   = 0
             MarginOfError = 0
             Protocol      = "stratum+$(if ($Pool_Info.ssl) {"ssl"} else {"tcp"})"
-            Host          = $Pool_Info.server
+            Host          = $Pool_Info.ip
             Port          = $Pool_Info.port
             User          = "$($Wallets.$Pool_Currency).{workername:$Worker}"
             Pass          = "x"
-            Region        = $Pool_RegionsTable."$($Pool_Info.location)"
+            Region        = $Pool_RegionsTable.$Pool_Region
             SSL           = $Pool_Info.ssl
             Updated       = (Get-Date).ToUniversalTime()
             PaysLive      = $true
