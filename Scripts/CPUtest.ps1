@@ -249,8 +249,8 @@ if ($IsLinux) {
 
             # Features map
             if ($ci.Features) {
-                foreach ($p in $ci.Features.PSObject.Properties) {
-                    $CPUInfo.Features[$p.Name] = [bool]$p.Value
+                foreach ($p in $ci.Features) {
+                    $CPUInfo.Features[$p] = $true
                 }
             }
 
