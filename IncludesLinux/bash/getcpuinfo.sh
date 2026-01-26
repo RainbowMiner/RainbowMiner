@@ -291,7 +291,7 @@ features_json() {
         v=trim($2); if(v!=""){ print v; exit }
       }
     ' 2>/dev/null | awk '
-      BEGIN{ printf "{"; first=1 }
+      BEGIN{ printf "["; first=1 }
       {
         n=split($0,a,/ +/)
         for(i=1;i<=n;i++){
@@ -300,11 +300,11 @@ features_json() {
           if(f!=""){
             if(!first) printf ","
             first=0
-            printf "\"%s\":true", f
+            printf "\"%s\"", f
           }
         }
       }
-      END{ printf "}" }
+      END{ printf "]" }
     ' 2>/dev/null && return
   fi
 
@@ -315,7 +315,7 @@ features_json() {
         v=trim($2); if(v!=""){ print v; exit }
       }
     ' "$CPUINFO" 2>/dev/null | awk '
-      BEGIN{ printf "{"; first=1 }
+      BEGIN{ printf "["; first=1 }
       {
         n=split($0,a,/ +/)
         for(i=1;i<=n;i++){
@@ -324,15 +324,15 @@ features_json() {
           if(f!=""){
             if(!first) printf ","
             first=0
-            printf "\"%s\":true", f
+            printf "\"%s\"", f
           }
         }
       }
-      END{ printf "}" }
+      END{ printf "]" }
     ' 2>/dev/null && return
   fi
 
-  echo "{}"
+  echo "[]"
 }
 
 # ---- ARM parts list from /proc/cpuinfo (unique tuples + count) ----

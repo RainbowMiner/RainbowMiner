@@ -646,8 +646,8 @@ function Get-Device {
 
                         # Features map
                         if ($ci.Features) {
-                            foreach ($p in $ci.Features.PSObject.Properties) {
-                                $Global:GlobalCPUInfo.Features[$p.Name] = [bool]$p.Value
+                            foreach ($p in $ci.Features) {
+                                $Global:GlobalCPUInfo.Features[$p] = $true
                             }
                         }
 
