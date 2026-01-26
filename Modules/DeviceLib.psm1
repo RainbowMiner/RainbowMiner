@@ -894,7 +894,9 @@ function Get-Device {
         }
    
         try {
-            for ($CPUIndex=0;$CPUIndex -lt $Global:GlobalCPUInfo.PhysicalCPUs;$CPUIndex++) {
+            $PhysicalCPUs = if ($IsLinux) {1} else {$Global:GlobalCPUInfo.PhysicalCPUs}
+
+            for ($CPUIndex=0;$CPUIndex -lt $PhysicalCPUs;$CPUIndex++) {
                 # Vendor and type the same for all CPUs, so there is no need to actually track the extra indexes.  Include them only for compatibility.
                 $Device = [PSCustomObject]@{
                     Name = ""
@@ -912,8 +914,8 @@ function Get-Device {
                     Model_Name = $Global:GlobalCPUInfo.Name
                     Features = $Global:GlobalCPUInfo.Features.Keys
                     Data = [PSCustomObject]@{
-                                Cores       = [int]($Global:GlobalCPUInfo.Cores / $Global:GlobalCPUInfo.PhysicalCPUs)
-                                Threads     = [int]($Global:GlobalCPUInfo.Threads / $Global:GlobalCPUInfo.PhysicalCPUs)
+                                Cores       = [int]($Global:GlobalCPUInfo.Cores / $PhysicalCPUs)
+                                Threads     = [int]($Global:GlobalCPUInfo.Threads / $PhysicalCPUs)
                                 CacheL3     = $Global:GlobalCPUInfo.L3CacheSize
                                 Clock       = 0
                                 Utilization = 0
