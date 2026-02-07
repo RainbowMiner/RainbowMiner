@@ -72,7 +72,7 @@ $Pool_Request | Where-Object {$_.feeType -eq "PPLNSBF" -and ($Wallets."$($_.coin
         $reward   = $_.blockReward
         $btcPrice = if ($Global:Rates.$Pool_Currency) {1/[double]$Global:Rates.$Pool_Currency} else {0}
 
-        $btcRewardLive =  if ($hashrate -gt 0 -and $_.networkHashrate -gt 0 -and $_.networkBlocktime -gt 0) {$btcPrice * $reward * 86400 / $_.networkBlocktime * $hashrate / $_.networkHashrate} else {0}
+        $btcRewardLive =  if ($_.networkHashrate -gt 0 -and $_.networkBlocktime -gt 0) {$btcPrice * $reward * 86400 / $_.networkBlocktime / $_.networkHashrate} else {0}
 
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value $btcRewardLive -Duration $StatSpan -ChangeDetection $false -HashRate $hashrate -BlockRate $Pool_BLK -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
