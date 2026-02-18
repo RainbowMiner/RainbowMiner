@@ -40,7 +40,6 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "ERG";   port = 1180; fee = 0.9; rpc = "ergo"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "ETC";   port = 1150; fee = 0.9; rpc = "etc"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "IRON";  port = 1145; fee = 0.0; rpc = "ironfish"; region = $Pool_AllRegions; pass = "x"}
-    [PSCustomObject]@{symbol = "KLS";   port = 1195; fee = 0.9; rpc = "karlsen"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "KAS";   port = 1206; fee = 0.9; rpc = "kaspa"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "XMR";   port = 1111; fee = 0.9; rpc = "monero"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "NEOX";  port = 1202; fee = 0.9; rpc = "neoxa"; region = $Pool_AllRegions}
@@ -60,6 +59,7 @@ $Pools_Data = @(
     #[PSCustomObject]@{symbol = "CLORE"; port = 1163; fee = 0.9; rpc = "clore"; region = $Pool_AllRegions}
     #[PSCustomObject]@{symbol = "ETHF";  port = 1204; fee = 0.9; rpc = "ethf"; region = $Pool_AllRegions}
     #[PSCustomObject]@{symbol = "FLUX";  port = 1200; fee = 0.9; rpc = "flux"; region = $Pool_AllRegions; wtmmode = "WTM"}
+    #[PSCustomObject]@{symbol = "KLS";   port = 1195; fee = 0.9; rpc = "karlsen"; region = $Pool_AllRegions}
     #[PSCustomObject]@{symbol = "TUBE";  port = 1120; fee = 0.9; rpc = "bittube"; region = $Pool_AllRegions; cycles = 40}
     #[PSCustomObject]@{symbol = "KVA";   port = 1163; fee = 0.9; rpc = "kevacoin"; region = @("de","fi","ca","hk","sg")}    
     #[PSCustomObject]@{symbol = "XWP";   port = 1123; fee = 0.9; rpc = "swap"; region = $Pool_AllRegions; cycles = 32}
