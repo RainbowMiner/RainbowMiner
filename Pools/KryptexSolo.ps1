@@ -36,15 +36,22 @@ if (-not $Pool_Request.crypto) {
 $Pool_Regions = @("eu","ru","sg","us")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
-$Pool_NotMineable = @("BLOCX","BTC","DGB","DOGE","NIR","PYI","SDR","UBQ")
+$Pool_NotMineable = @("BLOCX","BTC","CLORE","DGB","DOGE","KLS","NIR","PYI","SDR","UBQ")
 
 $Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin $Pool_NotMineable -and ($Wallets.$_ -or $InfoOnly)} | Foreach-Object {
-    if ($_ -eq "XTM") {
-        [PSCustomObject]@{symbol=$_; algo="Cuckaroo29"; rpc="xtm-c29"}
-        [PSCustomObject]@{symbol=$_; algo="RandomX"; rpc="xtm-rx"}
-        [PSCustomObject]@{symbol=$_; algo="SHA3x"; rpc="xtm-sha3x"}
-    } else {
-        [PSCustomObject]@{symbol=$_; algo=$null; rpc=$_.ToLower()}
+    Switch($_) { 
+        "XTM" {
+            [PSCustomObject]@{symbol=$_; algo="Cuckaroo29"; rpc="xtm-c29"}
+            [PSCustomObject]@{symbol=$_; algo="RandomX"; rpc="xtm-rx"}
+            [PSCustomObject]@{symbol=$_; algo="SHA3x"; rpc="xtm-sha3x"}
+        }
+        "QUAI" {
+            [PSCustomObject]@{symbol=$_; algo="KawPow"; rpc="quai-kawpow"}
+            [PSCustomObject]@{symbol=$_; algo="Scrypt"; rpc="quai-scrypt"}
+        }
+        Default {
+            [PSCustomObject]@{symbol=$_; algo=$null; rpc=$_.ToLower()}
+        }
     }
 } | ForEach-Object {
     
