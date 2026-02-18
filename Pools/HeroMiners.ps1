@@ -16,7 +16,7 @@ param(
 
 # $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$Pool_AllRegions = @("de","fr","es","fi","ru","ca","us","us2","us3","mx","br","kz","hk","kr","in","sg","tr","au")
+$Pool_AllRegions = @("de","fr","es","fi","ru","ca","us","us2","us3","br","hk","kr","sg","tr","au")
 
 #new es
 
