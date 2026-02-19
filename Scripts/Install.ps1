@@ -1,4 +1,4 @@
-﻿param(
+param(
     [Parameter(Mandatory = $false)]
     [String]$mode = "root" # either "root" (using sudo) or "user"
 )
@@ -174,8 +174,8 @@ if ($IsWindows) {
 
     $StartCmd = "run Start.bat"
 } elseif ($IsLinux) {
-    $StartCmd = if (Get-Command "tmux" -ErrorAction Ignore) {"or start-tmux.sh"}
-                elseif (Get-Command "screen" -ErrorAction Ignore) {"or start-screen.sh"}
+    $StartCmd = if (Get-Command "tmux" -ErrorAction Ignore) {" or start-tmux.sh"}
+                elseif (Get-Command "screen" -ErrorAction Ignore) {" or start-screen.sh"}
     $StartCmd = "run start.sh$($StartCmd)"
 }
 
