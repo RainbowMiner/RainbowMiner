@@ -1087,6 +1087,12 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                 $RigDeviceRam *= 0.8652
                             }
                             $RigDeviceRam = [Math]::Round($RigDeviceRam,3)
+                            foreach ($dRam in @(24,20,16,12,11,10,8,6,5,4,3,5,3,2,1)) {
+                                if ($dRam -le $RigDeviceRam) {
+                                    $RigDeviceRam = $dRam
+                                    break
+                                }
+                            }
                         }
 
                         if (-not $MinersNeedingBenchmark) {$CurrentlyBenchmarking = @()}
