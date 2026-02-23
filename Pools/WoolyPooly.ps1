@@ -50,7 +50,8 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "FIRO"; port = 3104; host = "firo"; rpc = "firo-1"}
     [PSCustomObject]@{symbol = "KAS"; port = 3112; host = "kas"; rpc = "kas-1"}
     [PSCustomObject]@{symbol = "KLS"; port = 3132; host = "kls"; rpc = "kls-1"}
-    [PSCustomObject]@{symbol = "MEWC"; port = 3116; host = "mewc"; rpc = "mewc-1"}
+    [PSCustomObject]@{symbol = "MEWC-MeowPow"; port = 3116; host = "mewc"; rpc = "mewc-1"}
+    [PSCustomObject]@{symbol = "MWC-Cuckatoo31"; port = 11000; host = "mwc"; rpc = "mwc-1"}
     [PSCustomObject]@{symbol = "NEXA"; port = 3124; host = "nexa"; rpc = "nexa-1"}
     [PSCustomObject]@{symbol = "NOVO"; port = 3134; host = "novo"; rpc = "novo-1"}
     [PSCustomObject]@{symbol = "OCTA"; port = 3130; host = "octa"; rpc = "octa-1"}
