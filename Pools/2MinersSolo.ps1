@@ -47,7 +47,6 @@ $Pools_Data = @(
     [PSCustomObject]@{rpc = "beam";  symbol = "BEAM";     port = 5454; fee = 1.0; divisor = 1e8; ssl = $true}
     [PSCustomObject]@{rpc = "btg";   symbol = "BTG";      port = 4040; fee = 1.0; divisor = 1e8}
     [PSCustomObject]@{rpc = "ckb";   symbol = "CKB";      port = 6767; fee = 1.0; divisor = 1e8}
-    [PSCustomObject]@{rpc = "clore"; symbol = "CLORE";    port = 3030; fee = 1.0; divisor = 1e8}
     [PSCustomObject]@{rpc = "ctxc";  symbol = "CTXC";     port = 6666; fee = 1.0; divisor = 1e18}
     [PSCustomObject]@{rpc = "erg";   symbol = "ERG";      port = 9999; fee = 1.0; divisor = 1e9}
     [PSCustomObject]@{rpc = "etc";   symbol = "ETC";      port = 5050; fee = 1.0; divisor = 1e18}
@@ -63,6 +62,8 @@ $Pools_Data = @(
     [PSCustomObject]@{rpc = "xna";   symbol = "XNA";      port = 7070; fee = 1.0; divisor = 1e8}
     [PSCustomObject]@{rpc = "zec";   symbol = "ZEC";      port = 1010; fee = 1.0; divisor = 1e8}
     [PSCustomObject]@{rpc = "zeph";  symbol = "ZEPH";     port = 4444; fee = 1.0; divisor = 1e12}
+
+    #[PSCustomObject]@{rpc = "clore"; symbol = "CLORE";    port = 3030; fee = 1.0; divisor = 1e8}
 )
 
 $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Wallets.$Pool_Currency -or ($_.altsymbol -and $Wallets."$($_.altsymbol)") -or $InfoOnly} | ForEach-Object {

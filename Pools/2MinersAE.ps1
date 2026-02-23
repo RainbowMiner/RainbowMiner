@@ -33,7 +33,6 @@ catch {
 }
 
 $Pools_Data = @(
-    [PSCustomObject]@{rpc = "clore"; symbol = "CLORE"; port = 2020; fee = 1.0; divisor = 1e8;  currencies = @("BTC","TON","CLORE")}
     [PSCustomObject]@{rpc = "erg";   symbol = "ERG";   port = 8888; fee = 1.0; divisor = 1e9;  currencies = @("BTC","TON","ERG")}
     [PSCustomObject]@{rpc = "etc";   symbol = "ETC";   port = 1010; fee = 1.0; divisor = 1e18; currencies = @("BTC","TON","ETC")}
     [PSCustomObject]@{rpc = "ethw";  symbol = "ETHW";  port = 2020; fee = 1.0; divisor = 1e18; currencies = @("BTC","TON","ETHW")}
@@ -43,6 +42,8 @@ $Pools_Data = @(
     [PSCustomObject]@{rpc = "rvn";   symbol = "RVN";   port = 6060; fee = 1.0; divisor = 1e8;  currencies = @("BTC","TON","RVN")}
     [PSCustomObject]@{rpc = "xna";   symbol = "XNA";   port = 6060; fee = 1.0; divisor = 1e8;  currencies = @("BTC","TON","XNA")}
     [PSCustomObject]@{rpc = "zec";   symbol = "ZEC";   port = 1010; fee = 1.0; divisor = 1e8;  currencies = @("BTC","TON","ZEC")}
+
+    #[PSCustomObject]@{rpc = "clore"; symbol = "CLORE"; port = 2020; fee = 1.0; divisor = 1e8;  currencies = @("BTC","TON","CLORE")}
 )
 
 $Pools_Data | ForEach-Object {
