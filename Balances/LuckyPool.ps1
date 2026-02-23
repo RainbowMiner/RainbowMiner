@@ -12,7 +12,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "LAX";   port = 2200; fee = 0.9; rpc = "parallax";   user = "{wallet}{=diff}.{worker}"; pass="x"}
     [PSCustomObject]@{symbol = "LBRT";  port = 4118; fee = 0.9; rpc = "liberty";    user = "{wallet}{=diff}.{worker}"; pass="x"}
     [PSCustomObject]@{symbol = "MCM";   port = 3336; fee = 0.9; rpc = "mochimo";    user = "{wallet}{=diff}.{worker}"; pass="x"}
-    [PSCustomObject]@{symbol = "QTC";   port = 8611; fee = 0.9; rpc = "qtc";        user = "{wallet}{=diff}.{worker}"; pass="x"}
+    [PSCustomObject]@{symbol = "QTC";   port = 8610; fee = 0.9; rpc = "qtc";        user = "{wallet}{=diff}.{worker}"; pass="x"}
     [PSCustomObject]@{symbol = "SNAP";  port = 5110; fee = 0.9; rpc = "snap";       user = "{wallet}.{worker}"; pass="x"}
     [PSCustomObject]@{symbol = "R5";    port = 2118; fee = 0.9; rpc = "r5";         user = "{wallet}{=diff}.{worker}"; pass="x"}
     [PSCustomObject]@{symbol = "ALPHA"; port = 2100; fee = 0.9; rpc = "unicity";    user = "{wallet}{=diff}.{worker}"; pass="x"}
