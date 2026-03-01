@@ -13,15 +13,15 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.De
 $ManualUri = "https://bitcointalk.org/index.php?topic=5190081.0"
 $Port = "349{0:d2}"
 $DevFee = 0.85
-$Version = "3.1.7"
+$Version = "3.1.8"
 $Cuda = "11.7"
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.1.7-srbminermulti/SRBMiner-Multi-3-1-7-Linux.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.1.8-srbminermulti/SRBMiner-Multi-3-1-8-Linux.tar.gz"
 } else {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.1.7-srbminermulti/SRBMiner-Multi-3-1-7-win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.1.8-srbminermulti/SRBMiner-Multi-3-1-8-win64.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -132,10 +132,10 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "autolykos2"       ; DAG = $true; Params = ""; Fee = 1.50;               Vendor = @("AMD","NVIDIA"); SecondaryAlgorithm = "blake3_decred"; ExcludePoolName="Nicehash"} #Autolykos2/ERGO + Decred/DCR
     #[PSCustomObject]@{MainAlgorithm = "autolykos2"       ; DAG = $true; Params = ""; Fee = 1.50;               Vendor = @("AMD","NVIDIA"); SecondaryAlgorithm = "cryptixhash"; ExcludePoolName="Nicehash"} #Autolykos2/ERGO + Cryptixhash
     [PSCustomObject]@{MainAlgorithm = "autolykos2"       ; DAG = $true; Params = ""; Fee = 1.50;               Vendor = @("AMD","NVIDIA"); SecondaryAlgorithm = "heavyhash"; ExcludePoolName="Nicehash"} #Autolykos2/ERGO + HeavyHash/OBTC
-    [PSCustomObject]@{MainAlgorithm = "autolykos2"       ; DAG = $true; Params = ""; Fee = 1.50;               Vendor = @("NVIDIA"); SecondaryAlgorithm = "hoohash"; ExcludePoolName="Nicehash"; ExcludeCompute = @("Pascal","GCN51","GCN50")} #Autolykos2/ERGO + Hoohash/HTN
-    [PSCustomObject]@{MainAlgorithm = "autolykos2"       ; DAG = $true; Params = ""; Fee = 1.50;               Vendor = @("AMD","NVIDIA"); SecondaryAlgorithm = "qhash"; ExcludePoolName="Nicehash"; ExcludeCompute = @("Pascal","GCN51","GCN50")} #Autolykos2/ERGO + Qhash/QTC
+    [PSCustomObject]@{MainAlgorithm = "autolykos2"       ; DAG = $true; Params = ""; Fee = 1.50;               Vendor = @("NVIDIA"); SecondaryAlgorithm = "hoohash"; ExcludePoolName="Nicehash"; ExcludeCompute = @("GCN51","GCN50")} #Autolykos2/ERGO + Hoohash/HTN
+    [PSCustomObject]@{MainAlgorithm = "autolykos2"       ; DAG = $true; Params = ""; Fee = 1.50;               Vendor = @("AMD","NVIDIA"); SecondaryAlgorithm = "qhash"; ExcludePoolName="Nicehash"; ExcludeCompute = @("GCN51","GCN50")} #Autolykos2/ERGO + Qhash/QTC
     [PSCustomObject]@{MainAlgorithm = "autolykos2"       ; DAG = $true; Params = ""; Fee = 1.50;               Vendor = @("AMD","NVIDIA"); SecondaryAlgorithm = "sha256dt"; ExcludePoolName="Nicehash"} #Autolykos2/ERGO + SHA256dt/NOVO
-    [PSCustomObject]@{MainAlgorithm = "autolykos2"       ; DAG = $true; Params = ""; Fee = 1.50;               Vendor = @("AMD","NVIDIA"); SecondaryAlgorithm = "sha3x"; ExcludePoolName="Nicehash"; ExcludeCompute = @("Pascal","GCN51","GCN50")} #Autolykos2/ERGO + SHA3x/XTM
+    [PSCustomObject]@{MainAlgorithm = "autolykos2"       ; DAG = $true; Params = ""; Fee = 1.50;               Vendor = @("AMD","NVIDIA"); SecondaryAlgorithm = "sha3x"; ExcludePoolName="Nicehash"; ExcludeCompute = @("GCN51","GCN50")} #Autolykos2/ERGO + SHA3x/XTM
     [PSCustomObject]@{MainAlgorithm = "autolykos2"       ; DAG = $true; Params = ""; Fee = 1.50;               Vendor = @("AMD","NVIDIA"); SecondaryAlgorithm = "walahash"; ExcludePoolName="Nicehash"} #BlocxAutolykos2/BLOCKX + WalaHash/WALA
 
     #[PSCustomObject]@{MainAlgorithm = "blocx_autolykos2" ; DAG = $true; Params = ""; Fee = 1.50;               Vendor = @("AMD","NVIDIA"); SecondaryAlgorithm = "blake3_decred"; ExcludePoolName="Nicehash"} #BlocxAutolykos2/BLOCKX + Decred/DCR
@@ -180,16 +180,17 @@ $Commands = [PSCustomObject[]]@(
 
     [PSCustomObject]@{MainAlgorithm = "fishhash"         ; DAG = $true; Params = ""; Fee = 1.00; MinMemGb = 3; Vendor = @("AMD","NVIDIA"); SecondaryAlgorithm = "blake3_decred"; ExcludePoolName = "Gteh"} #fishhash + Decred/DCR
     #[PSCustomObject]@{MainAlgorithm = "fishhash"         ; DAG = $true; Params = ""; Fee = 1.00; MinMemGb = 3; Vendor = @("AMD","NVIDIA"); SecondaryAlgorithm = "cryptixhash"; ExcludePoolName = "Gteh"; ExcludeCompute = @("Pascal","GCN51","GCN50")} #FishHash + Cryptixhash
-    [PSCustomObject]@{MainAlgorithm = "fishhash"         ; DAG = $true; Params = ""; Fee = 1.00; MinMemGb = 3; Vendor = @("NVIDIA"); SecondaryAlgorithm = "hoohash"; ExcludePoolName = "Gteh"; ExcludeCompute = @("Pascal","GCN51","GCN50")} #FishHash + Hoohash/HTN
-    [PSCustomObject]@{MainAlgorithm = "fishhash"         ; DAG = $true; Params = ""; Fee = 1.50;               Vendor = @("AMD","NVIDIA"); SecondaryAlgorithm = "qhash"; ExcludePoolName="Nicehash"; ExcludeCompute = @("Pascal","GCN51","GCN50")} #FishHash + Qhash/QTC
+    [PSCustomObject]@{MainAlgorithm = "fishhash"         ; DAG = $true; Params = ""; Fee = 1.00; MinMemGb = 3; Vendor = @("NVIDIA"); SecondaryAlgorithm = "hoohash"; ExcludePoolName = "Gteh"; ExcludeCompute = @("GCN51","GCN50")} #FishHash + Hoohash/HTN
+    [PSCustomObject]@{MainAlgorithm = "fishhash"         ; DAG = $true; Params = ""; Fee = 1.50;               Vendor = @("AMD","NVIDIA"); SecondaryAlgorithm = "qhash"; ExcludePoolName="Gteh"; ExcludeCompute = @("GCN51","GCN50")} #FishHash + Qhash/QTC
     [PSCustomObject]@{MainAlgorithm = "fishhash"         ; DAG = $true; Params = ""; Fee = 1.00; MinMemGb = 3; Vendor = @("AMD","NVIDIA"); SecondaryAlgorithm = "sha256dt"; ExcludePoolName = "Gteh"} #fishhash + NOVO
-    [PSCustomObject]@{MainAlgorithm = "fishhash"         ; DAG = $true; Params = ""; Fee = 1.00; MinMemGb = 3; Vendor = @("AMD","NVIDIA"); SecondaryAlgorithm = "sha3x"; ExcludePoolName = "Gteh"; ExcludeCompute = @("Pascal","GCN51","GCN50")} #FishHash + SHA3x/XTM
-    [PSCustomObject]@{MainAlgorithm = "fishhash"         ; DAG = $true; Params = ""; Fee = 1.00; MinMemGb = 3; Vendor = @("AMD","NVIDIA"); SecondaryAlgorithm = "walahash"; ExcludePoolName = "Gteh"; ExcludeCompute = @("Pascal","GCN51","GCN50")} #fishhash + WALA
+    [PSCustomObject]@{MainAlgorithm = "fishhash"         ; DAG = $true; Params = ""; Fee = 1.00; MinMemGb = 3; Vendor = @("AMD","NVIDIA"); SecondaryAlgorithm = "sha3x"; ExcludePoolName = "Gteh"; ExcludeCompute = @("GCN51","GCN50")} #FishHash + SHA3x/XTM
+    [PSCustomObject]@{MainAlgorithm = "fishhash"         ; DAG = $true; Params = ""; Fee = 1.00; MinMemGb = 3; Vendor = @("AMD","NVIDIA"); SecondaryAlgorithm = "walahash"; ExcludePoolName = "Gteh"; ExcludeCompute = @("GCN51","GCN50")} #fishhash + WALA
 
     [PSCustomObject]@{MainAlgorithm = "karlsenhashv2"    ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","NVIDIA"); SecondaryAlgorithm = "blake3_decred"; ExcludeCompute = @("GCN51","GCN50")} #KarlsenHashV2/KLS + Blake3Decred/DCR
-    [PSCustomObject]@{MainAlgorithm = "karlsenhashv2"    ;              Params = ""; Fee = 0.85;               Vendor = @("NVIDIA"); SecondaryAlgorithm = "hoohash"; ExcludeCompute = @("Pascal","GCN51","GCN50")} #KarlsenHashV2/KLS + Hoohash/HTN
+    [PSCustomObject]@{MainAlgorithm = "karlsenhashv2"    ;              Params = ""; Fee = 0.85;               Vendor = @("NVIDIA"); SecondaryAlgorithm = "hoohash"; ExcludeCompute = @("GCN51","GCN50")} #KarlsenHashV2/KLS + Hoohash/HTN
 
     [PSCustomObject]@{MainAlgorithm = "xhash"            ;              Params = ""; Fee = 3.00; MinMemGb = 3; Vendor = @("AMD","NVIDIA"); SecondaryAlgorithm = "blake3_decred"; ExcludePoolName = "Gteh"} #Xhash + Decred/DCR
+    [PSCustomObject]@{MainAlgorithm = "xhash"            ;              Params = ""; Fee = 3.00; MinMemGb = 3; Vendor = @("AMD","NVIDIA"); SecondaryAlgorithm = "qhash"; ExcludePoolName = "Gteh"; ExcludeCompute = @("GCN51","GCN50")} #Xhash + Qhash/QTC
 )
 
 # $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
