@@ -801,7 +801,7 @@ An example:
 - **APIlockConfig** = set to "1" to lock config and disable save via API/localhost [default=0]
 - **APImaxLoginAttemps** = Maximum number of failed login attempts, until IP gets blocked (0=turn off) [default=3]
 - **APIblockLoginAttemptsTime** = Enter timespan, that an IP gets blocked, after the defined failed login attempts (units allowed, e.h. 1h=one hour, default unit is s=seconds) [default=30m]
-- **APIallowIPs** = Restrict access to the API to specific IP addresses [default=]
+- **APIallowIPs** = Restrict access to the API to specific IP addresses. Comma separated list of IPv4 or IPv6, wildcards (10.0.0.*) and CIDR (192.168.1.0/28, fe80::/10) allowed [default=]
 - **EnableAutoUpdate** = set to 1 if you want RainbowMiner to be updated automatically [default=1]
 - **EnableUpdateDuringPause** = set to 1 if you want RainbowMiner to be updated automatically, even if it is paused [default=1]
 - **EnableUpdateWhenScheduled** = set to 1 if the automatic updates should be scheduled: set EnableUpdate to 1 for a schedule in scheduler.config.txt (also, EnableAutoUpdate must be set to 1) [default=0]
