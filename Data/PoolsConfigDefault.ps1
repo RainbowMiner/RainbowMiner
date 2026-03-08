@@ -65,6 +65,11 @@
         "DeepMinerZSolo" = [PSCustomObject]@{
             Currencies=@("DNX")
         }
+        "EpicMine" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{MiningAlias="";API_Key="";API_Secret=""}
+            SetupFields=[PSCustomObject]@{MiningAlias = "Enter your EpicMine.io mining alias (0x..) or leave empty and put the mining alias into parameter EPIC";API_Key = "Enter your EpicMine.io API public key (pulls balance)";API_Secret = "Enter your EpicMine.io API secret key (pulls balance)"}
+            Currencies=@("EPIC")
+        }
         "Ethwmine" = [PSCustomObject]@{
             Currencies=@("ETHW")
         }
