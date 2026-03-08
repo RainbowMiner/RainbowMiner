@@ -102,3 +102,53 @@ param (
 		$Properties
 	}
 }
+
+function Test-IPInRange {
+    param(
+        [string]$IP,
+        [string]$Pattern
+    )
+
+    # CIDR-notation: IPv4 (10.0.0.0/24) or IPv6 (2001:db8::/32)
+    if ($Pattern -match '^(.+)/(\d{1,3})$') {
+        $NetworkStr = $Matches[1]
+        $PrefixLen  = [int]$Matches[2]
+
+        try {
+            $NetworkAddr = [System.Net.IPAddress]::Parse($NetworkStr)
+            $RemoteAddr  = [System.Net.IPAddress]::Parse($IP)
+
+            if ($NetworkAddr.AddressFamily -ne $RemoteAddr.AddressFamily) {
+                return $false
+            }
+
+            $NetworkBytes = $NetworkAddr.GetAddressBytes()
+            $RemoteBytes  = $RemoteAddr.GetAddressBytes()
+            $TotalBits    = $NetworkBytes.Length * 8   # IPv4: 32, IPv6: 128
+
+            if ($PrefixLen -gt $TotalBits) { return $false }
+
+            $FullBytes = [Math]::Floor($PrefixLen / 8)
+            $RemBits   = $PrefixLen % 8
+
+            for ($i = 0; $i -lt $FullBytes; $i++) {
+                if ($NetworkBytes[$i] -ne $RemoteBytes[$i]) { return $false }
+            }
+
+            if ($RemBits -gt 0 -and $FullBytes -lt $NetworkBytes.Length) {
+                $Mask = [byte](0xFF -shl (8 - $RemBits) -band 0xFF)
+                if (($NetworkBytes[$FullBytes] -band $Mask) -ne
+                    ($RemoteBytes[$FullBytes]  -band $Mask)) {
+                    return $false
+                }
+            }
+
+            return $true
+
+        } catch {
+            return $false
+        }
+    }
+
+    return $IP -like $Pattern
+}

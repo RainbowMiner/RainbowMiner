@@ -57,12 +57,12 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
 
     $IsAuth = $true
 
-    $RemoteIP   = "$($Request.RemoteEndPoint)" -replace ":\d+$" -replace "^\[.+\]$"
+    $RemoteIP   = "$($Request.RemoteEndPoint)" -replace ":\d+$" -replace "^\[(.+)\]$", '$1'
     $RemoteAuth = $API.RemoteAPI -and $API.APIauth
     
     if ($RemoteAuth -or $API.AllowIPs) {
     
-        $IsAuth = (-not $RemoteAuth -or ($Context.User.Identity.IsAuthenticated -and $Context.User.Identity.Name -eq $API.APIuser -and $Context.User.Identity.Password -eq $API.APIpassword)) -and (-not $API.AllowIPs -or $RemoteIP -eq "" -or ($API.AllowIPs | Where-Object {$RemoteIP -like $_} | Measure-Object).Count)
+        $IsAuth = (-not $RemoteAuth -or ($Context.User.Identity.IsAuthenticated -and $Context.User.Identity.Name -eq $API.APIuser -and $Context.User.Identity.Password -eq $API.APIpassword)) -and (-not $API.AllowIPs -or $RemoteIP -eq "" -or ($API.AllowIPs | Where-Object { Test-IPInRange -IP $RemoteIP -Pattern $_ } | Measure-Object).Count)
 
         if ($API.MaxLoginAttempts -gt 0 -and $RemoteIP -ne "") {
 
