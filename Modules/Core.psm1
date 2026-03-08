@@ -1090,7 +1090,11 @@ function Invoke-Core {
             $ForksDB | Where-Object {$_.active} | Foreach-Object {
                 $Fork_Meets_Target = $false
                 if ($_.date) {
-                    $TargetTime = [datetime]::Parse($_.date)
+                    $TargetTime = if ($_.date -is [datetime]) {
+                        $_.date
+                    } else {
+                        [datetime]::Parse($_.date, [System.Globalization.CultureInfo]::InvariantCulture)
+                    }
                     if ($TargetTime.Kind -ne [DateTimeKind]::Utc) {
                         $TargetTime = $TargetTime.ToUniversalTime()
                     }
