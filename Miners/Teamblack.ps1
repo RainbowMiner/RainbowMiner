@@ -134,13 +134,15 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
                     $Pool_Port   = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
                     $Pool_Wallet = if ($Pools.$Algorithm_Norm.Wallet) {$Pools.$Algorithm_Norm.Wallet} else {$Pools.$Algorithm_Norm.User}
                     #if ($Pools.$Algorithm_Norm.Host -match "MiningRigRentals") {$Pool_Wallet = $Pool_Wallet -replace "\.","*"}
+                    $Pool_Passwords = if ($Pools.$Algorithm_Norm.Pass) {" --server-passwd $($Pools.$Algorithm_Norm.Pass)"}
+                    $Pool_Devices   = if ($Miner_Vendor -eq "NVIDIA") {"--cuda-devices [$($DeviceIDsAllCUDA)]"} elseif ($Miner_Vendor -eq "AMD") {"--amd-only --cl-devices [$($DeviceIDsAllOpenCl)]"} else {"--cl-devices [$($DeviceIDsAllOpenCl)]"}
 
                     [PSCustomObject]@{
                         Name             = $Miner_Name
                         DeviceName       = $Miner_Device.Name
                         DeviceModel      = $Miner_Model
                         Path             = $Path
-                        Arguments        = "--algo $($Algorithm_0)$(if ($Pools.$Algorithm_Norm.SSL) {" --ssl --ssl-verify-none"}) --hostname $($Pools.$Algorithm_Norm.Host) $(if ($Pools.$Algorithm_Norm.SSL) {"--ssl-port"} else {"--port"}) $($Pool_Port) --wallet $($Pool_Wallet) --worker-name $($Pools.$Algorithm_Norm.Worker)$(if ($Pools.$Algorithm_Norm.Pass) {" --server-passwd $($Pools.$Algorithm_Norm.Pass)"}) $(if ($Miner_Vendor -eq "NVIDIA") {"--cuda-devices [$($DeviceIDsAllCUDA)]"} elseif ($Miner_Vendor -eq "AMD") {"--amd-only --cl-devices [$($DeviceIDsAllOpenCl)]"} else {"--cl-devices [$($DeviceIDsAllOpenCl)]"})$(if ($_.MainAlgorithm -eq "verthash") {" --verthash-data $($Miner_DatFile)"})$(if ($Miner_Vendor -eq "NVIDIA" -and $Xintensity -ge 1) {" --xintensity $($Xintensity)"})$(if ($LHRCUDA) {" --lhr-unlock [$($LHRCUDA)]"}) --api --api-port `$mport --no-ansi --no-cpu $($_.Params)"
+                        Arguments        = "--algo $($Algorithm_0)$(if ($Pools.$Algorithm_Norm.SSL) {" --ssl --ssl-verify-none"}) --hostname $($Pools.$Algorithm_Norm.Host) $(if ($Pools.$Algorithm_Norm.SSL) {"--ssl-port"} else {"--port"}) $($Pool_Port) --wallet $($Pool_Wallet) --worker-name $($Pools.$Algorithm_Norm.Worker)$($Pool_Passwords) $($Pool_Devices)$(if ($_.MainAlgorithm -eq "verthash") {" --verthash-data $($Miner_DatFile)"})$(if ($Miner_Vendor -eq "NVIDIA" -and $Xintensity -ge 1) {" --xintensity $($Xintensity)"})$(if ($LHRCUDA) {" --lhr-unlock [$($LHRCUDA)]"}) --api --api-port `$mport --no-ansi --no-cpu $($_.Params)"
                         HashRates        = [PSCustomObject]@{$Algorithm_Norm = $($Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week)}
                         API              = "TBMiner"
                         Port             = $Miner_Port
