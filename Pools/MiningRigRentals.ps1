@@ -24,6 +24,7 @@ param(
     [Bool]$EnableAutoCreate = $false,
     [Bool]$EnableAutoUpdate = $false,
     [Bool]$EnableAutoExtend = $false,
+    [Bool]$EnableAutoExtendDifficultyCheck = $false,
     [Bool]$EnableAutoPrice = $false,
     [Bool]$EnableAutoBenchmark = $false,
     [Bool]$EnableMinimumPrice = $false,
@@ -555,6 +556,41 @@ if ($AllRigs_Request) {
                                         }
 
                                         $ExtendBy = [Math]::Min([double]$Rental_Result.length * $AutoExtendMaximumPercent_Value - $Rental_Extended + $Rental_ExtendedBonus,$ExtendBy)
+                                    }
+
+                                    if ($EnableAutoExtendDifficultyCheck) {
+                                        try {
+                                            $Threads_Result = Invoke-MiningRigRentalRequest "/rig/$($Pool_RigId)/threads" $API_Key $API_Secret
+                                            $Pool_Diff = ($Threads_Result.threads | Select-Object -First 1).difficulty.share -as [double]
+                                            $Threads_Result = $null
+                                            if (-not $Pool_Diff -and $Rental_Miner) {
+                                                $Pool_Diff = [double]$Rental_Miner.GetDifficulty($Pool_Algorithm_Norm_With_Model)
+                                            }
+                                            if ($Pool_Diff) {
+                                                $DiffMessageTolerancyPercent_Value  = if ($Session.Config.MRRAlgorithms.$Pool_Algorithm_Norm.DiffMessageTolerancyPercent -ne $null -and $Session.Config.MRRAlgorithms.$Pool_Algorithm_Norm.DiffMessageTolerancyPercent -ne "") {$Session.Config.MRRAlgorithms.$Pool_Algorithm_Norm.DiffMessageTolerancyPercent}
+                                                                                      elseif ($MRRConfig.$Worker1.DiffMessageTolerancyPercent -ne $null -and $MRRConfig.$Worker1.DiffMessageTolerancyPercent -ne "") {$MRRConfig.$Worker1.DiffMessageTolerancyPercent}
+                                                                                      else {$DiffMessageTolerancyPercent}
+                                                $DiffMessageTolerancyPercent_Value  = [Double]("$($DiffMessageTolerancyPercent_Value)" -replace ",","." -replace "[^0-9\.]+") / 100
+
+                                                if ($Optimal_Difficulty.min -gt 0 -and $Optimal_Difficulty.max -gt 0) {
+                                                    $MinDiff_Rounded = if ($Optimal_Difficulty.min -gt 10) {[Math]::Round($Optimal_Difficulty.min,0)} else {$Optimal_Difficulty.min}
+                                                    $MaxDiff_Rounded = if ($Optimal_Difficulty.max -gt 10) {[Math]::Round($Optimal_Difficulty.max,0)} else {$Optimal_Difficulty.max}
+                                                    $CurrentDiff_Rounded = if ($Pool_Diff -ge 10) {[Math]::Round($Pool_Diff,0)} else {$Pool_Diff}
+
+                                                    $Bad_Diff_Msg = if ($Pool_Diff -lt (1 - $DiffMessageTolerancyPercent_Value)*$Optimal_Difficulty.min) {
+                                                                        "$($CurrentDiff_Rounded) < $($MinDiff_Rounded)"
+                                                                    } elseif ($Pool_Diff -gt (1 + $DiffMessageTolerancyPercent_Value)*$Optimal_Difficulty.max) {
+                                                                        "$($CurrentDiff_Rounded) > $($MaxDiff_Rounded)"
+                                                                    }
+                                                    if ($Bad_Diff_Msg) {
+                                                        $ExtendBy = 0
+                                                        Write-Log -Level Info "$($Name): No auto-extention due to renter pool difficulty $($Bad_Diff_Msg) for rental #$($_.rental_id) for $Pool_Algorithm_Norm on $Worker1"
+                                                    }
+                                                }
+                                            }
+                                        } catch {
+                                            Write-Log -Level Warn "$($Name): Unable to check difficulty for auto extend #$($_.rental_id): $($_.Exception.Message)"
+                                        }
                                     }
 
                                     $ExtendBy = [Math]::Round($ExtendBy,2)

@@ -1929,6 +1929,7 @@ The following are the pool parameters:
 - **EnableAutoCreate**: Automatically create MRR-rigs [default=0]
 - **EnableAutoUpdate**: Automatically update MRR-rigs [default=0]
 - **EnableAutoExtend**: Automatically extend MRR rentals, when low average hashrate [default=0]
+- **EnableAutoExtendDifficultyCheck**: Enable check for renter pool difficulty. Only extend rental if difficulty is inside the set range [default=0]
 - **EnableAutoBenchmark**: Enable automatic benchmark of updated miners (it will mine to your wallets only, during benchmark), select the mode with AutoBenchmarkMode [default=0]
 - **AutoBenchmarkMode**: Select mode for auto-benchmark, "all" benchmarks all algorithms, "updated" benchmarks only updated algorithms of an updated miner [default=updated]
 - **AutoExtendTargetPercent**: Extend rentals time, so that the total average hashrate is near this value in percent of advertised hashrate [default=100]
