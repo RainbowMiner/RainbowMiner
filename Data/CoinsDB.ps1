@@ -91,6 +91,7 @@
     "BHD" = [PSCustomObject]@{Algo = "C11"; Name = "Bithold"; Symbol = "BHD"}
     "BIN" = [PSCustomObject]@{Algo = "Binarium"; Name = "Binarium"; Symbol = "BIN"}
     "BITC" = [PSCustomObject]@{Algo = "X25x"; Name = "Bitcash"; Symbol = "BITC"}
+    "BITOK" = [PSCustomObject]@{Algo = "YespowerBITOK"; Name = "Bitok Coin"; Symbol = "BITOK"}
     "BKC" = [PSCustomObject]@{Algo = "SHA256d"; Name = "BriskCoin"; Symbol = "BKC"}
     "BLACK" = [PSCustomObject]@{Algo = "Ethash"; Name = "Blackchain"; Symbol = "BLACK"}
     "BLAS" = [PSCustomObject]@{Algo = "X22"; Name = "Blakestar2"; Symbol = "BLAS"}
@@ -452,6 +453,7 @@
     "KVA" = [PSCustomObject]@{Algo = "RandomKEVA"; Name = "Kevacoin"; Symbol = "KVA"}
     "KYAN" = [PSCustomObject]@{Algo = "X11k"; Name = "Kyanite"; Symbol = "KYAN"}
     "KYF" = [PSCustomObject]@{Algo = "SHA256d"; Name = "Cryptofranc"; Symbol = "KYF"}
+    "KYP" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Krypton"; Symbol = "KYP"}
     "KZC" = [PSCustomObject]@{Algo = "X11"; Name = "KZ Cash"; Symbol = "KZC"}
     "LANA" = [PSCustomObject]@{Algo = "SHA256d"; Name = "Lana"; Symbol = "LANA"}
     "LAX" = [PSCustomObject]@{Algo = "Xhash"; Name = "ParallaxCoin"; Symbol = "LAX"}
@@ -473,6 +475,7 @@
     "LOG" = [PSCustomObject]@{Algo = "Skein2"; Name = "Woodcoin"; Symbol = "LOG"}
     "LOKI" = [PSCustomObject]@{Algo = "RandomXL"; Name = "Loki"; Symbol = "LOKI"}
     "LOZZ" = [PSCustomObject]@{Algo = "RandomL"; Name = "LozzaxCoin"; Symbol = "LOZZ"}
+    "LPEPE" = [PSCustomObject]@{Algo = "YescryptR32"; Name = "Luckypepe"; Symbol = "LPEPE"}
     "LRA" = [PSCustomObject]@{Algo = "C11"; Name = "Learnium"; Symbol = "LRA"}
     "LRS" = [PSCustomObject]@{Algo = "Ethash"; Name = "Larissa"; Symbol = "LRS"}
     "LTC" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Litecoin"; Symbol = "LTC"}
@@ -585,6 +588,7 @@
     "OXC" = [PSCustomObject]@{Algo = "SHA256d"; Name = "Ordex"; Symbol = "OXC"}
     "PAC" = [PSCustomObject]@{Algo = "Ethash"; Name = "Pacman"; Symbol = "PAC"}
     "PARS" = [PSCustomObject]@{Algo = "CryptoNightV7"; Name = "ParsiCoin"; Symbol = "PARS"}
+    "PAS" = [PSCustomObject]@{Algo = "RandomX"; Name = "Pastella"; Symbol = "PAS"}
     "PASC" = [PSCustomObject]@{Algo = "RandomHash2"; Name = "Pascalcoin"; Symbol = "PASC"}
     "PBTC" = [PSCustomObject]@{Algo = "HeavyHash"; Name = "PhotonicBitcoin"; Symbol = "PBTC"}
     "PCOIN" = [PSCustomObject]@{Algo = "X11"; Name = "Pioneercoin"; Symbol = "PCOIN"}
@@ -800,6 +804,7 @@
     "WART" = [PSCustomObject]@{Algo = "JanusHash"; Name = "Warthog"; Symbol = "WART"}
     "WDC" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Worldcoin"; Symbol = "WDC"}
     "WHL" = [PSCustomObject]@{Algo = "Ethash"; Name = "WhaleCoin"; Symbol = "WHL"}
+    "WJK" = [PSCustomObject]@{Algo = "SHA256d"; Name = "Wojak"; Symbol = "WJK"}
     "WLI" = [PSCustomObject]@{Algo = "Ethash"; Name = "Wanliuno"; Symbol = "WLI"}
     "WOW" = [PSCustomObject]@{Algo = "RandomWow"; Name = "Wownero"; Symbol = "WOW"}
     "WRKZ" = [PSCustomObject]@{Algo = "CryptoNightLiteUpx2"; Name = "WrkzCoin"; Symbol = "WRKZ"}
