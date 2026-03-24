@@ -2109,6 +2109,7 @@ Since I changed and optimized the script a lot to suit my needs, I decided to ma
 
 - BTC: 3P7pVVNpExuuHL9wjWKAo7jzQsb9ZziUFC
 - BTC: bc1q6h7k2ul4a4rtmrlaemlxd9kmhtf89nlg6s4ydu (bech32 native segwit)
+- LN-BTC: donations@rbminer.net (Lightning Network)
 - BCH: 1MGRzyaLjQ67ZwwL9QTbXzwLxa8x1qSTBD
 - ETH: 0x3084A8657ccF9d21575e5dD8357A2DEAf1904ef6
 
