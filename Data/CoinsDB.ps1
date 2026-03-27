@@ -71,6 +71,7 @@
     "BCA" = [PSCustomObject]@{Algo = "SHA256d"; Name = "Atom"; Symbol = "BCA"}
     "BCD" = [PSCustomObject]@{Algo = "Bcd"; Name = "Bitdiamond"; Symbol = "BCD"}
     "BCH" = [PSCustomObject]@{Algo = "SHA256d"; Name = "Bitcoincash"; Symbol = "BCH"}
+    "BCH2" = [PSCustomObject]@{Algo = "SHA256d"; Name = "Bitcash II"; Symbol = "BCH2"}
     "BCHA" = [PSCustomObject]@{Algo = "SHA256d"; Name = "e.Cash"; Symbol = "BCHA"}
     "BCHABC" = [PSCustomObject]@{Algo = "SHA256d"; Name = "e.Cash"; Symbol = "BCHABC"}
     "BCHC" = [PSCustomObject]@{Algo = "Blake2b"; Name = "BitcoinClashic"; Symbol = "BCHC"}
@@ -227,6 +228,7 @@
     "DUBX" = [PSCustomObject]@{Algo = "Ethash"; Name = "DubxCoin"; Symbol = "DUBX"}
     "DUO-Scrypt" = [PSCustomObject]@{Algo = "Scrypt"; Name = "ParallelCoin"; Symbol = "DUO"; Multi = $true}
     "DUO-SHA256d" = [PSCustomObject]@{Algo = "SHA256d"; Name = "ParallelCoin"; Symbol = "DUO"; Multi = $true}
+    "DUTA" = [PSCustomObject]@{Algo = "Dutahash"; Name = "Duta"; Symbol = "DUTA"}
     "DVS" = [PSCustomObject]@{Algo = "Lyra2RE2"; Name = "Davies"; Symbol = "DVS"}
     "DVT" = [PSCustomObject]@{Algo = "SHA256d"; Name = "Devault"; Symbol = "DVT"}
     "DYN" = [PSCustomObject]@{Algo = "Argon2dDyn"; Name = "Dynamic"; Symbol = "DYN"}
