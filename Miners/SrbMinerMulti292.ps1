@@ -28,14 +28,21 @@ $Commands = [PSCustomObject[]]@(
     #CPU only mining
     [PSCustomObject]@{MainAlgorithm = "clchash"          ;              Params = ""; Fee = 2.00;               Vendor = @("CPU")} #CLCHash/CLC
     [PSCustomObject]@{MainAlgorithm = "evohash"          ;              Params = ""; Fee = 1.00;               Vendor = @("CPU")} #EvoHash/EVOAI
+    [PSCustomObject]@{MainAlgorithm = "randomsfx"        ;              Params = ""; Fee = 0.85;               Vendor = @("CPU"); Rx1GbPages = $true} #RandomSFX
     [PSCustomObject]@{MainAlgorithm = "yespowerdogemone" ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yespowerDogemone
 
     #CPU and GPU mining
+    [PSCustomObject]@{MainAlgorithm = "argon2id_chukwa"  ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #Argon2Chukwa
+    [PSCustomObject]@{MainAlgorithm = "argon2id_chukwa2" ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #Argon2Chukwa2
     [PSCustomObject]@{MainAlgorithm = "astrixhash"       ;              Params = ""; Fee = 1.00; MinMemGb = 2; Vendor = @("AMD","INTEL","NVIDIA")} #AstrixHash/AIX
     [PSCustomObject]@{MainAlgorithm = "blake3_lbrt"      ;              Params = ""; Fee = 2.00; MinMemGb = 2; Vendor = @("AMD","INTEL","NVIDIA")} #Blake3Lbrt/LBRT
+    [PSCustomObject]@{MainAlgorithm = "cryptonight_ccx"  ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #CryptonightCCX
+    [PSCustomObject]@{MainAlgorithm = "cryptonight_upx"  ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #CryptonightUPX
+    [PSCustomObject]@{MainAlgorithm = "cryptonight_xhv"  ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU","NVIDIA")} #CryptonightXHV
     [PSCustomObject]@{MainAlgorithm = "ethashb3"         ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 3; Vendor = @("AMD","INTEL","NVIDIA")} #ethashb3/RTH
     [PSCustomObject]@{MainAlgorithm = "fphash"           ;              Params = ""; Fee = 1.00; MinMemGb = 3; Vendor = @("AMD","INTEL","NVIDIA")} #FpHash/XCC
     [PSCustomObject]@{MainAlgorithm = "hoohash"          ;              Params = ""; Fee = 2.00;               Vendor = @("AMD","INTEL","NVIDIA")} #Hoohash/HTN (from 09/26/2024)
+    [PSCustomObject]@{MainAlgorithm = "nxlhash"          ;              Params = ""; Fee = 1.00;               Vendor = @("AMD","INTEL","NVIDIA")} #NxlHash/NXL (from 10/15/2024)
     [PSCustomObject]@{MainAlgorithm = "sha256dt"         ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","INTEL","NVIDIA")} #SHA256dt/NOVO
     [PSCustomObject]@{MainAlgorithm = "xehash"           ;              Params = ""; Fee = 1.00; MinMemGb = 3; Vendor = @("AMD","INTEL","NVIDIA")} #XeHash/XE
 
@@ -126,6 +133,10 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
 
             if ($MainAlgorithm -eq "verthash" -and $VerthashDatFile) {
                 $DeviceParams = " --verthash-dat-path ""$($VerthashDatFile)""$($DeviceParams)"
+            }
+
+            if ($_.Rx1GbPages -and $Session.Config.EnableRandomX1GBPages) {
+                $DeviceParams = "$($DeviceParams) --randomx-use-1gb-pages"
             }
 
             $All_MainAlgorithms = if ($Miner_Vendor -eq "CPU") {@($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)")} else {@($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)","$($MainAlgorithm_Norm_0)-GPU")}
