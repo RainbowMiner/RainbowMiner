@@ -445,6 +445,8 @@
     "dpowhash": "DpowHash",
     "drop": "Drop",
     "dropcoin": "Drop",
+    "dutahash": "Dutahash",
+    "dutahashv4": "Dutahash",
     "dynamic": "Argon2dDyn",
     "dynamo": "Dynamo",
     "dynex": "DynexSolve",
