@@ -40,6 +40,7 @@ class Miner {
     [Bool]$Best
     [Bool]$New
     [Int]$Benchmarked
+    [Int]$BenchmarkedOffset = 0
     [string]$LogFile    
     [Bool]$ShowMinerWindow = $false
     [int]$MSIAprofile
@@ -103,6 +104,7 @@ class Miner {
     $Job
     $EthPillJob
     $WrapperJob
+    $MinerInfo
 
     hidden $Data = $null
 
@@ -155,6 +157,7 @@ class Miner {
         $this.Activated++
         $this.Rounds = 0
         $this.IntervalBegin = 0
+        $this.BenchmarkedOffset = 0
         if (-not $this.StartPort) {$this.StartPort = $this.Port}
 
         if (-not $this.Job.XJob) {
@@ -761,7 +764,7 @@ class Miner {
 
         $this.Variance[$this.Algorithm.IndexOf($Algorithm)] = $HashRates_Variance
         
-        if ($Safe -and $this.IsBenchmarking() -and ($this.Benchmarked -lt $Intervals -or $HashRates_Count -lt $this.MinSamples -or $HashRates_Variance -gt $MaxVariance)) {
+        if ($Safe -and $this.IsBenchmarking() -and (($this.Benchmarked - $this.BenchmarkedOffset) -lt $Intervals -or $HashRates_Count -lt $this.MinSamples -or $HashRates_Variance -gt $MaxVariance)) {
             return 0
         }
         else {
@@ -770,7 +773,7 @@ class Miner {
     }
 
     [Bool]IsBenchmarking() {
-        return $this.New -and $this.Benchmarked -lt ($this.MaxBenchmarkRounds + [Math]::Max($this.ExtendInterval,1) - 1)
+        return $this.New -and ($this.Benchmarked - $this.BenchmarkedOffset) -lt ($this.MaxBenchmarkRounds + [Math]::Max($this.ExtendInterval,1) - 1)
     }
 
     [Int64]GetPowerDraw() {
@@ -2802,6 +2805,65 @@ class SrbMiner : Miner {
 
 class SrbMinerMulti : Miner {
 
+    [String]GetArguments() {
+        $Arguments = $this.Arguments -replace "\`$mport",$this.Port
+        if ($Arguments -notlike "{*}") {return $Arguments}
+
+        $Miner_Path        = Split-Path $this.Path
+        $Parameters        = $Arguments | ConvertFrom-Json
+
+        $ConfigName        = "$($this.BaseAlgorithm -join '-')_$($Parameters.HwSig)"
+
+        $ConfigFN          = "config_$($ConfigName).json"
+        $ConfigFile        = Join-Path $Miner_Path $ConfigFN
+
+        $AddParams         = ""
+
+        try {
+            if (-not $this.MinerInfo) {
+                $this.MinerInfo = [PSCustomObject]@{
+                                      config_name = $ConfigFN
+                                      algo_count  = $this.Algorithm.Count
+                                      gpu_count   = $Parameters.Devices.Count
+                                      tuning_done = $false
+                                      failed      = $false
+                                      intensities = [int[][]]::new($this.Algorithm.Count)
+                                  }
+                for ($i = 0; $i -lt $this.MinerInfo.algo_count; $i++) {
+                    $this.MinerInfo.intensities[$i] = [int[]]::new($this.MinerInfo.gpu_count)
+                }
+            }
+            if (Test-Path $ConfigFile) {
+                $MinerInfo = Get-Content $ConfigFile -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+                if ($this.NeedsBenchmark -or $MinerInfo.algo_count -ne $this.MinerInfo.algo_count -or $MinerInfo.gpu_count -ne $this.MinerInfo.gpu_count -or $MinerInfo.config_name -ne $this.MinerInfo.config_name) {
+                    Remove-Item $ConfigFile -Force -ErrorAction Ignore
+                } else {
+                    for ($i=0; $i -lt $this.MinerInfo.algo_count; $i++) {
+                        for ($j=0; $j -lt $this.MinerInfo.gpu_count; $j++) {
+                            $this.MinerInfo.intensities[$i][$j] = $MinerInfo.intensities[$i][$j]
+                        }
+                    }
+                    $this.MinerInfo.tuning_done = $MinerInfo.tuning_done
+                    $this.MinerInfo.failed      = $false
+                    $MinerInfo = $null
+                }
+            }
+        }
+        catch {
+            Write-Log -Level Warn "Reading config file failed ($($this.BaseName) $($this.BaseAlgorithm -join '-')@$($this.Pool -join '-')}) [Error: '$($_.Exception.Message)']."
+        }
+
+        if ($this.MinerInfo.tuning_done -and $Parameters.Arguments -notmatch "--gpu-intensity") {
+            $AddParams = " --gpu-intensity $($this.MinerInfo.intensities[0] -join ",")" 
+        }
+
+        return "$($Parameters.Arguments.Trim())$($AddParams)"
+    }
+
+    [Bool]IsBenchmarking() {
+        return ([Miner]$this).IsBenchmarking() -or ($this.MinerInfo -and $this.MinerInfo.algo_count -eq 1 -and -not $this.MinerInfo.failed -and -not $this.MinerInfo.tuning_done -and $this.RunningTime.TotalMinutes -lt 10)
+    }
+
     [Void]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
@@ -2809,33 +2871,73 @@ class SrbMinerMulti : Miner {
         $Timeout = 10 #seconds
         $DualMining = $this.Algorithm.Count -eq 2
 
-        $Request = ""
         $Response = ""
 
         $HashRate   = [PSCustomObject]@{}
         $Difficulty = [PSCustomObject]@{}
 
+        $Type = if ($this.DeviceModel -eq "CPU") {"cpu"} else {"gpu"}
+
         try {
-            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)" -Timeout $Timeout -ForceHttpClient
+            $Response = Invoke-GetUrl "http://$($Server):$($this.Port)" -Timeout $Timeout -ForceHttpClient
         }
         catch {
+            if ($this.MinerInfo) {$this.MinerInfo.failed = $true}
             Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
-
-        $Type = if ($Data.total_cpu_workers -gt 0) {"cpu"} else {"gpu"}
 
         $BaseAlgorithm0 = [String]$this.BaseAlgorithm[0]
 
         if ($BaseAlgorithm0 -match "^(Ethash|KawPOW)(\d+|low|NH)") {$BaseAlgorithm0 = $Matches[1]}
         elseif ($BaseAlgorithm0 -eq "SCCPow") {$BaseAlgorithm0 = "FiroPow"}
 
-        $Data0 = $Data.algorithms | Where-Object {"$(Get-Algorithm $_.name)" -eq $BaseAlgorithm0} | Select-Object -First 1
+        $Data0 = $Response.algorithms | Where-Object {"$(Get-Algorithm $_.name)" -eq $BaseAlgorithm0} | Select-Object -First 1
 
-        $HashRate_Name = [String]$this.Algorithm[0]
-        $HashRate_Value = if ($Type -eq "cpu" -or $Data.mining_time -gt 20) {[double]$Data0.hashrate.$Type.total} else {0}
+        $HashRate_Name  = [String]$this.Algorithm[0]
+        $HashRate_Value = [double]$Data0.hashrate.$Type.total
 
-        $PowerDraw = if ($Type -eq "gpu") {($Data.gpu_devices | Foreach-Object {$_.asic_power} | Measure-Object -Sum).Sum} else {$null}
+        if ($Type -eq "gpu") {
+            if ($Response.mining_time -lt 20) {
+                $HashRate_Value = 0
+                if ($this.MinerInfo) {$this.MinerInfo.failed = $false}
+            } else {
+                if ($HashRate_Value -gt 0) {
+                    foreach( $gpu in $Response.gpu_devices ) {
+                        $dev = $gpu.device
+                        foreach ( $algo in $Response.algorithms ) {
+                            if (-not $algo.hashrate.gpu.$dev) {
+                                $HashRate_Value = 0
+                                break 2
+                            }
+                        }
+                    }
+                }
+                if ($this.MinerInfo) {$this.MinerInfo.failed = $HashRate_Value -eq 0}
+            }
+        }
+
+        $PowerDraw = if ($Type -eq "gpu") {($Response.gpu_devices | Foreach-Object {$_.asic_power} | Measure-Object -Sum).Sum} else {$null}
+
+        if ($this.MinerInfo -and $Response.gpu_devices.Count -and -not $this.MinerInfo.failed -and -not $this.MinerInfo.tuning_done) {
+            for ($i=0; $i -lt $this.MinerInfo.algo_count; $i++) {
+                for ($j=0; $j -lt $this.MinerInfo.gpu_count; $j++) {
+                    $d = $Response.gpu_devices[$j].device
+                    $this.MinerInfo.intensities[$i][$j] = [int]$Response.algorithms[$i].gpu_autotune_results.$d
+                }
+            }
+            $TuningDone = $this.MinerInfo.tuning_done
+            $this.MinerInfo.tuning_done = ($this.MinerInfo.intensities | ForEach-Object {$_ -notcontains 0}) -notcontains $false
+            if (-not $TuningDone -and $this.MinerInfo.tuning_done) {
+                $ConfigFile = Join-Path (Split-Path $this.Path) $this.MinerInfo.config_name
+                $this.MinerInfo | ConvertTo-Json -Depth 10 | Set-Content $ConfigFile -Force
+                $this.BenchmarkedOffset = $this.Benchmarked
+            }
+
+            if ($this.MinerInfo.algo_count -eq 1 -and -not $this.MinerInfo.tuning_done) {
+                $HashRate_Value = 0
+            }
+        }
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
@@ -2849,7 +2951,7 @@ class SrbMinerMulti : Miner {
 
             if ($DualMining) {
 
-                $Data0 = $Data.algorithms | Where-Object {"$(Get-Algorithm $_.name)" -eq [String]$this.BaseAlgorithm[1]} | Select-Object -First 1
+                $Data0 = $Response.algorithms | Where-Object {"$(Get-Algorithm $_.name)" -eq [String]$this.BaseAlgorithm[1]} | Select-Object -First 1
 
                 $HashRate_Name = [String]$this.Algorithm[1]
                 $HashRate_Value = [double]$Data0.hashrate.$Type.total
