@@ -11,7 +11,7 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.De
 
 $ManualUri = "https://github.com/xmrig/xmrig/releases"
 $Port = "303{0:d2}"
-$Version = "6.26.0"
+$Version = "6.26.0.1"
 $DevFee = 0.0
 
 $UriCuda = $null
@@ -25,7 +25,7 @@ $PathCudaLib = $null
 
 if ($IsLinux) {
 
-    $VersionMO = "6.25.0.1"
+    #$VersionMO = "6.25.0.1"
 
     if ($Global:GlobalCPUInfo.Vendor -eq "ARM" -or $Global:GlobalCPUInfo.Features.ARM) {
         if ($Global:GlobalCPUInfo.Architecture -eq 8) {
@@ -36,7 +36,7 @@ if ($IsLinux) {
                 "jammy"
             }
 
-            $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.26.0-xmrig/xmrig-6.26.0-{DISTROCODENAME}-armv8.7z" -replace "{DISTROCODENAME}",$distroCodename
+            $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.26.0-xmrig/xmrig-6.26.0.1-{DISTROCODENAME}-armv8.7z" -replace "{DISTROCODENAME}",$distroCodename
         }
     } else {
         if ($Session.LibCVersion -and $Session.LibCVersion -lt (Get-Version "2.25")) {return}
@@ -47,7 +47,7 @@ if ($IsLinux) {
             "focal"
         }
 
-        $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.26.0-xmrig/xmrig-6.26.0-{DISTROCODENAME}-x64.7z" -replace "{DISTROCODENAME}",$distroCodename
+        $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.26.0-xmrig/xmrig-6.26.0.1-{DISTROCODENAME}-x64.7z" -replace "{DISTROCODENAME}",$distroCodename
 
         $CudaData = @(
             [PSCustomObject]@{
@@ -146,9 +146,9 @@ if ($IsLinux) {
     $CudaLib = "libxmrig-cuda.so"
 } else {
 
-    $VersionMO = "6.25.0.2"
+    #$VersionMO = "6.25.0.2"
 
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.26.0-xmrig/xmrig-6.26.0-msvc-win64.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.26.0-xmrig/xmrig-6.26.0.1-msvc-win64.7z"
 
     $CudaData = @(
         [PSCustomObject]@{
@@ -459,7 +459,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                                                         "cn/gpu"= 0
                                                         "flex" = 0
                                                         "rx/0"= 0
-                                                        #"rx/2" = 0
+                                                        "rx/2" = 0
                                                         "rx/arq"= 0
                                                         "rx/graft"= 0
                                                         "rx/sfx"= 0
