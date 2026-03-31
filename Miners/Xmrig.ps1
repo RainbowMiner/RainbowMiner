@@ -25,8 +25,6 @@ $PathCudaLib = $null
 
 if ($IsLinux) {
 
-    #$VersionMO = "6.25.0.1"
-
     if ($Global:GlobalCPUInfo.Vendor -eq "ARM" -or $Global:GlobalCPUInfo.Features.ARM) {
         if ($Global:GlobalCPUInfo.Architecture -eq 8) {
 
@@ -146,9 +144,9 @@ if ($IsLinux) {
     $CudaLib = "libxmrig-cuda.so"
 } else {
 
-    #$VersionMO = "6.25.0.2"
+    $Version = "6.26.0.2"
 
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.26.0-xmrig/xmrig-6.26.0.1-msvc-win64.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.26.0-xmrig/xmrig-6.26.0.2-msvc-win64.7z"
 
     $CudaData = @(
         [PSCustomObject]@{
