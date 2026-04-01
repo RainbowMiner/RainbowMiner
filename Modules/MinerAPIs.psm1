@@ -2825,7 +2825,6 @@ class SrbMinerMulti : Miner {
                     config_name = $ConfigFN
                     algo_count  = $this.Algorithm.Count
                     gpu_count   = $Parameters.Devices.Count
-                    devices     = @($Parameters.Devices)
                     tuning_done = $false
                     failed      = $false
                     intensities = @{}   # Hashtable: "$algoIndex|$deviceId" -> int
@@ -2834,21 +2833,17 @@ class SrbMinerMulti : Miner {
             if (Test-Path $ConfigFile) {
                 $MinerInfoRaw = Get-Content $ConfigFile -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
                 if (-not $MinerInfoRaw -or 
-                    $this.NeedsBenchmark -or 
+                    ($this.New -and -not $this.Benchmarked) -or 
                     $MinerInfoRaw.algo_count -ne $this.MinerInfo.algo_count -or 
                     $MinerInfoRaw.gpu_count -ne $this.MinerInfo.gpu_count -or 
-                    $MinerInfoRaw.config_name -ne $this.MinerInfo.config_name -or
-                    $MinerInfoRaw.devices -eq $null -or
-                    $MinerInfoRaw.intensities -is [array]) {
+                    $MinerInfoRaw.config_name -ne $this.MinerInfo.config_name) {
                     Remove-Item $ConfigFile -Force -ErrorAction Ignore
                 } else {
-                    $this.MinerInfo.intensities.Clear()
                     if ($MinerInfoRaw.intensities) {
                         $MinerInfoRaw.intensities.PSObject.Properties | ForEach-Object {
                             $this.MinerInfo.Intensities[$_.Name] = [int]$_.Value
                         }
                     }
-                    $this.MinerInfo.devices      = @($MinerInfoRaw.devices)
                     $this.MinerInfo.tuning_done  = [bool]$MinerInfoRaw.tuning_done
                     $this.MinerInfo.failed       = $false
                     $MinerInfoRaw = $null
