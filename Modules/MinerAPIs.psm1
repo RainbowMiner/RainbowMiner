@@ -2822,30 +2822,36 @@ class SrbMinerMulti : Miner {
         try {
             if (-not $this.MinerInfo) {
                 $this.MinerInfo = [PSCustomObject]@{
-                                      config_name = $ConfigFN
-                                      algo_count  = $this.Algorithm.Count
-                                      gpu_count   = $Parameters.Devices.Count
-                                      tuning_done = $false
-                                      failed      = $false
-                                      intensities = [int[][]]::new($this.Algorithm.Count)
-                                  }
-                for ($i = 0; $i -lt $this.MinerInfo.algo_count; $i++) {
-                    $this.MinerInfo.intensities[$i] = [int[]]::new($this.MinerInfo.gpu_count)
+                    config_name = $ConfigFN
+                    algo_count  = $this.Algorithm.Count
+                    gpu_count   = $Parameters.Devices.Count
+                    devices     = @($Parameters.Devices)
+                    tuning_done = $false
+                    failed      = $false
+                    intensities = @{}   # Hashtable: "$algoIndex|$deviceId" -> int
                 }
             }
             if (Test-Path $ConfigFile) {
-                $MinerInfo = Get-Content $ConfigFile -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
-                if ($this.NeedsBenchmark -or $MinerInfo.algo_count -ne $this.MinerInfo.algo_count -or $MinerInfo.gpu_count -ne $this.MinerInfo.gpu_count -or $MinerInfo.config_name -ne $this.MinerInfo.config_name) {
+                $MinerInfoRaw = Get-Content $ConfigFile -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+                if (-not $MinerInfoRaw -or 
+                    $this.NeedsBenchmark -or 
+                    $MinerInfoRaw.algo_count -ne $this.MinerInfo.algo_count -or 
+                    $MinerInfoRaw.gpu_count -ne $this.MinerInfo.gpu_count -or 
+                    $MinerInfoRaw.config_name -ne $this.MinerInfo.config_name -or
+                    $MinerInfoRaw.devices -eq $null -or
+                    $MinerInfoRaw.intensities -is [array]) {
                     Remove-Item $ConfigFile -Force -ErrorAction Ignore
                 } else {
-                    for ($i=0; $i -lt $this.MinerInfo.algo_count; $i++) {
-                        for ($j=0; $j -lt $this.MinerInfo.gpu_count; $j++) {
-                            $this.MinerInfo.intensities[$i][$j] = $MinerInfo.intensities[$i][$j]
+                    $this.MinerInfo.intensities.Clear()
+                    if ($MinerInfoRaw.intensities) {
+                        $MinerInfoRaw.intensities.PSObject.Properties | ForEach-Object {
+                            $this.MinerInfo.Intensities[$_.Name] = [int]$_.Value
                         }
                     }
-                    $this.MinerInfo.tuning_done = $MinerInfo.tuning_done
-                    $this.MinerInfo.failed      = $false
-                    $MinerInfo = $null
+                    $this.MinerInfo.devices      = @($MinerInfoRaw.devices)
+                    $this.MinerInfo.tuning_done  = [bool]$MinerInfoRaw.tuning_done
+                    $this.MinerInfo.failed       = $false
+                    $MinerInfoRaw = $null
                 }
             }
         }
@@ -2854,7 +2860,12 @@ class SrbMinerMulti : Miner {
         }
 
         if ($this.MinerInfo.tuning_done -and $Parameters.Arguments -notmatch "--gpu-intensity") {
-            $AddParams = " --gpu-intensity $($this.MinerInfo.intensities[0] -join ",")" 
+            for ($i = 0; $i -lt $this.MinerInfo.algo_count; $i++) {
+                $IntensityList = $this.MinerInfo.devices | ForEach-Object { $this.MinerInfo.intensities["$i|$_"] }
+                if ($IntensityList -notcontains $null) {
+                    $AddParams = " --gpu-intensity $($IntensityList -join ",")"
+                }
+            }
         }
 
         return "$($Parameters.Arguments.Trim())$($AddParams)"
@@ -2903,15 +2914,11 @@ class SrbMinerMulti : Miner {
                 if ($this.MinerInfo) {$this.MinerInfo.failed = $false}
             } else {
                 if ($HashRate_Value -gt 0) {
-                    foreach( $gpu in $Response.gpu_devices ) {
-                        $dev = $gpu.device
-                        foreach ( $algo in $Response.algorithms ) {
-                            if (-not $algo.hashrate.gpu.$dev) {
-                                $HashRate_Value = 0
-                                break 2
-                            }
-                        }
-                    }
+                    $AnyMissing = $Response.algorithms | ForEach-Object {
+                        $algo = $_
+                        $Response.gpu_devices.device | Where-Object {-not $algo.hashrate.gpu.$_}
+                    } | Select-Object -First 1
+                    if ($AnyMissing) {$HashRate_Value = 0}
                 }
                 if ($this.MinerInfo) {$this.MinerInfo.failed = $HashRate_Value -eq 0}
             }
@@ -2920,14 +2927,24 @@ class SrbMinerMulti : Miner {
         $PowerDraw = if ($Type -eq "gpu") {($Response.gpu_devices | Foreach-Object {$_.asic_power} | Measure-Object -Sum).Sum} else {$null}
 
         if ($this.MinerInfo -and $Response.gpu_devices.Count -and -not $this.MinerInfo.failed -and -not $this.MinerInfo.tuning_done) {
-            for ($i=0; $i -lt $this.MinerInfo.algo_count; $i++) {
-                for ($j=0; $j -lt $this.MinerInfo.gpu_count; $j++) {
+            $ActualGpuCount  = $Response.gpu_devices.Count
+            $ActualAlgoCount = $Response.algorithms.Count
+ 
+            for ($i = 0; $i -lt $this.MinerInfo.algo_count; $i++) {
+                if ($i -ge $ActualAlgoCount) {break}
+                for ($j = 0; $j -lt $ActualGpuCount; $j++) {
                     $d = $Response.gpu_devices[$j].device
-                    $this.MinerInfo.intensities[$i][$j] = [int]$Response.algorithms[$i].gpu_autotune_results.$d
+                    if (-not $d) {continue}
+                    $val = $Response.algorithms[$i].gpu_autotune_results.$d
+                    $this.MinerInfo.intensities["$i|$d"] = [int]$val
                 }
             }
+
             $TuningDone = $this.MinerInfo.tuning_done
-            $this.MinerInfo.tuning_done = ($this.MinerInfo.intensities | ForEach-Object {$_ -notcontains 0}) -notcontains $false
+
+            $ExpectedCount = $this.MinerInfo.algo_count * $this.MinerInfo.gpu_count
+            $this.MinerInfo.tuning_done = $this.MinerInfo.intensities.Count -ge $ExpectedCount -and ($this.MinerInfo.intensities.Values | Where-Object {$_ -eq 0}).Count -eq 0
+
             if (-not $TuningDone -and $this.MinerInfo.tuning_done) {
                 $ConfigFile = Join-Path (Split-Path $this.Path) $this.MinerInfo.config_name
                 $this.MinerInfo | ConvertTo-Json -Depth 10 | Set-Content $ConfigFile -Force

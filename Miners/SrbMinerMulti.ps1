@@ -275,8 +275,6 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                 $DeviceParams = "$($DeviceParams) --randomx-use-1gb-pages"
             }
 
-            $DeviceParams = "$($DeviceParams) --autotune-no-load"
-
             $All_MainAlgorithms = if ($Miner_Vendor -eq "CPU") {@($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)")} else {@($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)","$($MainAlgorithm_Norm_0)-GPU")}
             $All_SecondAlgorithms = if ($SecondAlgorithm_Norm_0) {if ($Miner_Vendor -eq "CPU") {@($SecondAlgorithm_Norm_0,"$($SecondAlgorithm_Norm_0)-$($Miner_Model)")} else {@($SecondAlgorithm_Norm_0,"$($SecondAlgorithm_Norm_0)-$($Miner_Model)","$($SecondAlgorithm_Norm_0)-GPU")}} else {$null}
 
@@ -291,6 +289,17 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
 				        $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)            
 				    	$Miner_Name = (@($Name) + @($SecondAlgorithm_Norm_0 | Select-Object | Foreach-Object {"$($MainAlgorithm_Norm_0)-$($_)"}) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
                         $DeviceIDsAll = $Miner_Device.BusId_Type_Vendor_Index -join ','
+                        if ($Miner_Vendor -ne "CPU") {
+                            $BusIdStr = "$(($Miner_Device.BusId | %{$_ -replace "[^0-9a-f]"}) -join '')"
+                            if (-not $BusIdStr.Length) {
+                                $BusIdStr = "$(($Miner_Device.BusId_Type_Vendor_Index | %{"{0:x}" -f $_}) -join '')"
+                            }
+                            if ($BusIdStr.Length) {
+                                $BusIdStr = "$(Get-MD5Hash $BusIdStr)".Substring(0,4).ToLower()
+                            }
+                        } else {
+                            $BusIdStr = ""
+                        }
                         $MallobParam = "$(if ($Pools.$MainAlgorithm_Norm.Mallob) {" --mallob-endpoint $($Pools.$MainAlgorithm_Norm.Mallob)"})"
                         $SlowStartParam = "$(if (($_.DAG -or $MainAlgorithm -eq "verthash") -and ($Miner_Device | Where-Object {$_.OpenCL.$Compute_Param -eq "RDNA4"})) {"  --gpu-table-slow-build"})"
                         $Miner_HR = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Week
@@ -350,7 +359,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                                         $Arguments = [PSCustomObject]@{
                                             Arguments = $Arguments
                                             Vendor    = $Miner_Vendor
-                                            HwSig     = "$($Miner_Model)-$(($Miner_Device.Type_Vendor_Index | Sort-Object | %{"{0:x}" -f $_}) -join '')"
+                                            HwSig     = "$($Miner_Model)-$($BusIdStr)"
                                             Devices   = $Miner_Device.BusId_Type_Vendor_Index
                                         }
                                     }
@@ -396,13 +405,13 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                     } else {
                         $Pool_Passwords = if ($Pools.$MainAlgorithm_Norm.Pass) {" --password $($Pools.$MainAlgorithm_Norm.Pass -replace "([;!])","#`$1")"}
 
-                        $Arguments = "--algorithm $(if ($_.Algorithm) {$_.Algorithm} else {$MainAlgorithm}) $(if ($Miner_Vendor -ne "CPU") {"--gpu-id $DeviceIDsAll$WatchdogParams"}) --pool $($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port)$($Miner_Protocol) --wallet $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.Worker -and $Pools.$MainAlgorithm_Norm.Password -eq "x" -and $Pools.$MainAlgorithm_Norm.User -eq $Pools.$MainAlgorithm_Norm.Wallet) {" --worker $($Pools.$MainAlgorithm_Norm.Worker)"})$($Pool_Passwords) --tls $(if ($Pools.$MainAlgorithm_Norm.SSL) {"true"} else {"false"}) --nicehash $(if ($Pools.$MainAlgorithm_Norm.Host -match 'Gteh|NiceHash') {"true"} else {"false"})$($MallobParam)$($SlowStartParam) --retry-time 10 --disable-startup-monitor$DeviceParams --api-enable --api-port `$mport $($_.Params)"
+                        $Arguments = "--algorithm $(if ($_.Algorithm) {$_.Algorithm} else {$MainAlgorithm}) $(if ($Miner_Vendor -ne "CPU") {"--gpu-id $DeviceIDsAll$WatchdogParams"}) --pool $($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port)$($Miner_Protocol) --wallet $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.Worker -and $Pools.$MainAlgorithm_Norm.Password -eq "x" -and $Pools.$MainAlgorithm_Norm.User -eq $Pools.$MainAlgorithm_Norm.Wallet) {" --worker $($Pools.$MainAlgorithm_Norm.Worker)"})$($Pool_Passwords) --tls $(if ($Pools.$MainAlgorithm_Norm.SSL) {"true"} else {"false"}) --nicehash $(if ($Pools.$MainAlgorithm_Norm.Host -match 'Gteh|NiceHash') {"true"} else {"false"})$($MallobParam)$($SlowStartParam) --retry-time 10 --disable-startup-monitor$DeviceParams --autotune-no-load --api-enable --api-port `$mport $($_.Params)"
 
                         if ($Miner_Vendor -ne "CPU") {
                             $Arguments = [PSCustomObject]@{
                                 Arguments = $Arguments
                                 Vendor    = $Miner_Vendor
-                                HwSig     = "$($Miner_Model)-$(($Miner_Device.Type_Vendor_Index | Sort-Object | %{"{0:x}" -f $_}) -join '')"
+                                HwSig     = "$($Miner_Model)-$($BusIdStr)"
                                 Devices   = $Miner_Device.BusId_Type_Vendor_Index
                             }
                         }
