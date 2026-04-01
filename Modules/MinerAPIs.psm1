@@ -2861,7 +2861,7 @@ class SrbMinerMulti : Miner {
 
         if ($this.MinerInfo.tuning_done -and $Parameters.Arguments -notmatch "--gpu-intensity") {
             for ($i = 0; $i -lt $this.MinerInfo.algo_count; $i++) {
-                $IntensityList = $this.MinerInfo.devices | ForEach-Object { $this.MinerInfo.intensities["$i|$_"] }
+                $IntensityList = for ($j = 0; $j -lt $this.MinerInfo.gpu_count; $j++) { $this.MinerInfo.intensities["$i|$j"] }
                 if ($IntensityList -notcontains $null) {
                     $AddParams = " --gpu-intensity $($IntensityList -join ",")"
                 }
@@ -2936,7 +2936,7 @@ class SrbMinerMulti : Miner {
                     $d = $Response.gpu_devices[$j].device
                     if (-not $d) {continue}
                     $val = $Response.algorithms[$i].gpu_autotune_results.$d
-                    $this.MinerInfo.intensities["$i|$d"] = [int]$val
+                    $this.MinerInfo.intensities["$i|$j"] = [int]$val
                 }
             }
 
