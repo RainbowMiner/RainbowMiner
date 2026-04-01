@@ -4476,7 +4476,7 @@ function Invoke-Core {
         @{Label = "Device"; Expression = { @(Get-DeviceModelName $Global:DeviceCache.Devices -Name @($_.DeviceName) -Short) -join ',' }},
         @{Label = "Pool"; Expression = { $_.Pool }},
         @{Label = "Power$(if ($Session.Config.UsePowerPrice -and ($Session.Config.PowerOffset -gt 0 -or $Session.Config.PowerOffsetPercent -gt 0)){"*"})"; Expression = { "{0:d}W" -f [int]$_.PowerDraw }},
-        @{Label = "Command"; Expression = { "$($_.Path.TrimStart((Convert-Path ".\"))) $($_.GetArguments())" }}
+        @{Label = "Command"; Expression = { "$($_.Path.TrimStart((Convert-Path ".\"))) $($_.ArgumentList)" }}
     ) | Out-Host
 
     $FilteredMiners = $null

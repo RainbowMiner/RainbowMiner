@@ -11,6 +11,7 @@ class Miner {
     [string]$Version
     [string]$Path
     [string]$Arguments
+    [string]$ArgumentList
     [string]$API
     [int]$Port
     [string[]]$Algorithm
@@ -208,12 +209,12 @@ class Miner {
 
             $DeviceVendor = $this.GetVendor()
 
-            $ArgumentList = $this.GetArguments()
+            $this.ArgumentList = $this.GetArguments()
             
             $Prescription = if ($this.EthPillEnable    -ne "disable" -and ($this.BaseAlgorithm -match "^Etc?hash|^UbqHash|^Verthash" | Measure-Object).Count) {$this.EthPillEnable}
                         elseif ($this.EthPillEnableMTP -ne "disable" -and (Compare-Object $this.BaseAlgorithm @("MTP")               -IncludeEqual -ExcludeDifferent | Measure-Object).Count) {$this.EthPillEnableMTP}
 
-            if ($Prescription -and -not ($this.Name -match "^ClaymoreDual" -and $ArgumentList -match "-strap")) {
+            if ($Prescription -and -not ($this.Name -match "^ClaymoreDual" -and $this.ArgumentList -match "-strap")) {
                 $Prescription_Device = $Device | Where-Object {$_.Model_Base -in @("GTX1080","GTX1080Ti","TITANXP")}
                 $Prescription = switch ($Prescription) {
                     "RevA" {"revA";Break}
@@ -236,7 +237,7 @@ class Miner {
             $Now = Get-Date
             $this.StartTime = $Now.ToUniversalTime()
             $this.LogFile   = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Logs\$($this.Name)-$($this.Port)_$($Now.ToString("yyyy-MM-dd_HH-mm-ss")).txt")
-            $this.Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentList -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -CPUAffinity $this.Priorities.CPUAffinity -ShowMinerWindow $this.ShowMinerWindow -IsWrapper $this.IsWrapper() -EnvVars $this.EnvVars -MultiProcess $this.MultiProcess -Executables $this.Executables -ScreenName "$($this.DeviceName -join '_')" -BashFileName "start_$($this.DeviceName -join '_')_$($this.Pool -join '_')_$($this.BaseAlgorithm -join '_')" -Vendor $DeviceVendor -SetLDLIBRARYPATH:$this.SetLDLIBRARYPATH -WinTitle "$($this.Name -replace "-.+$") on $($this.DeviceModel) at $($this.Pool -join '+') with $($this.BaseAlgorithm -join '+')".Trim()
+            $this.Job = Start-SubProcess -FilePath $this.Path -ArgumentList $this.ArgumentList -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -CPUAffinity $this.Priorities.CPUAffinity -ShowMinerWindow $this.ShowMinerWindow -IsWrapper $this.IsWrapper() -EnvVars $this.EnvVars -MultiProcess $this.MultiProcess -Executables $this.Executables -ScreenName "$($this.DeviceName -join '_')" -BashFileName "start_$($this.DeviceName -join '_')_$($this.Pool -join '_')_$($this.BaseAlgorithm -join '_')" -Vendor $DeviceVendor -SetLDLIBRARYPATH:$this.SetLDLIBRARYPATH -WinTitle "$($this.Name -replace "-.+$") on $($this.DeviceModel) at $($this.Pool -join '+') with $($this.BaseAlgorithm -join '+')".Trim()
 
             if ($this.Job.XJob) {
                 $this.Status = [MinerStatus]::Running
@@ -304,6 +305,7 @@ class Miner {
     hidden StopMiningPostProcess() {
         $this.ResetOCprofile(500) #reset all overclocking
         $this.New = $false
+        $this.ArgumentList = $null
     }
 
     StopMiningPostCleanup() {
@@ -1635,8 +1637,8 @@ class Fireice : Miner {
             }
             if (-not (Test-Path $HwConfigFile)) {
                 Remove-Item "$Miner_Path\config_$($Miner_Vendor.ToLower())-*.txt" -Force -ErrorAction Ignore
-                $ArgumentList = "--poolconf $PoolConfigFN --config $ConfigFN --$($Miner_Vendor.ToLower()) $HwConfigFN $($Parameters.Params)".Trim()
-                $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentList -LogPath $this.LogFile -WorkingDirectory $Miner_Path -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $true -IsWrapper ($this.API -eq "Wrapper") -Executables $this.Executables -SetLDLIBRARYPATH:$this.SetLDLIBRARYPATH
+                $ArgumentListSP = "--poolconf $PoolConfigFN --config $ConfigFN --$($Miner_Vendor.ToLower()) $HwConfigFN $($Parameters.Params)".Trim()
+                $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentListSP -LogPath $this.LogFile -WorkingDirectory $Miner_Path -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $true -IsWrapper ($this.API -eq "Wrapper") -Executables $this.Executables -SetLDLIBRARYPATH:$this.SetLDLIBRARYPATH
                 if ($Job.XJob) {
                     $wait = 0
                     While ($wait -lt 60) {
@@ -3454,8 +3456,8 @@ class Xmrig : Miner {
             if (-not ($ThreadsConfig | Measure-Object).Count) {
                 $Parameters.Config | ConvertTo-Json -Depth 10 | Set-Content $ThreadsConfigFile -Force
 
-                $ArgumentList = ("$($Parameters.PoolParams) --config=$ThreadsConfigFN $($Parameters.DeviceParams) $($Parameters.Params)" -replace "\s+",' ').Trim()
-                $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentList -WorkingDirectory $Miner_Path -LogPath $LogFile -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $true -IsWrapper ($this.API -eq "Wrapper") -Executables $this.Executables -SetLDLIBRARYPATH:$this.SetLDLIBRARYPATH
+                $ArgumentListSP = ("$($Parameters.PoolParams) --config=$ThreadsConfigFN $($Parameters.DeviceParams) $($Parameters.Params)" -replace "\s+",' ').Trim()
+                $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentListSP -WorkingDirectory $Miner_Path -LogPath $LogFile -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $true -IsWrapper ($this.API -eq "Wrapper") -Executables $this.Executables -SetLDLIBRARYPATH:$this.SetLDLIBRARYPATH
                 if ($Job.XJob) {
                     $wait = 0
                     While ($wait -lt 60) {
@@ -3583,8 +3585,8 @@ class Xmrig3 : Miner {
             if (-not ($ThreadsConfig.$Algo | Measure-Object).Count -and -not ($ThreadsConfig.$Algo0 | Measure-Object).Count) {
                 $Parameters.Config | ConvertTo-Json -Depth 10 | Set-Content $ThreadsConfigFile -Force
 
-                $ArgumentList = ("--algo=$Algo $($Parameters.PoolParams) --config=$ThreadsConfigFN $($Parameters.DeviceParams) $($Parameters.Params)" -replace "\s+",' ').Trim()
-                $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentList -WorkingDirectory $Miner_Path -LogPath (Join-Path $Miner_Path $LogFile) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $true -IsWrapper ($this.API -eq "Wrapper") -Executables $this.Executables -SetLDLIBRARYPATH:$this.SetLDLIBRARYPATH
+                $ArgumentListSP = ("--algo=$Algo $($Parameters.PoolParams) --config=$ThreadsConfigFN $($Parameters.DeviceParams) $($Parameters.Params)" -replace "\s+",' ').Trim()
+                $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentListSP -WorkingDirectory $Miner_Path -LogPath (Join-Path $Miner_Path $LogFile) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $true -IsWrapper ($this.API -eq "Wrapper") -Executables $this.Executables -SetLDLIBRARYPATH:$this.SetLDLIBRARYPATH
                 if ($Job.XJob) {
                     $wait = 0
                     While ($wait -lt 60) {
@@ -3734,8 +3736,8 @@ class Xmrig6 : Miner {
                 $InitConfig = $Parameters.Config | ConvertTo-Json -Depth 10 | ConvertFrom-Json
                 $InitConfig | Add-Member pools $Parameters.Pools -Force -PassThru | ConvertTo-Json -Depth 10 | Set-Content $ThreadsConfigFile -Force
 
-                $ArgumentList = ("--algo=$($Parameters.Algorithm) --config=$ThreadsConfigFN $($Parameters.DeviceParams) $($Parameters.Params)" -replace "\s+",' ').Trim()
-                $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentList -WorkingDirectory $Miner_Path -LogPath (Join-Path $Miner_Path $LogFile) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $true -IsWrapper ($this.API -eq "Wrapper") -MultiProcess $this.MultiProcess -Executables $this.Executables -SetLDLIBRARYPATH:$this.SetLDLIBRARYPATH
+                $ArgumentListSP = ("--algo=$($Parameters.Algorithm) --config=$ThreadsConfigFN $($Parameters.DeviceParams) $($Parameters.Params)" -replace "\s+",' ').Trim()
+                $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentListSP -WorkingDirectory $Miner_Path -LogPath (Join-Path $Miner_Path $LogFile) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $true -IsWrapper ($this.API -eq "Wrapper") -MultiProcess $this.MultiProcess -Executables $this.Executables -SetLDLIBRARYPATH:$this.SetLDLIBRARYPATH
                 if ($Job.XJob) {
                     $WaitProc    = $this.MultiProcess + 1
                     $WaitSeconds = if ($Device -eq "cpu") {30} else {90}
