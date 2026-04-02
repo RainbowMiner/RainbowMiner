@@ -2833,9 +2833,10 @@ class SrbMinerMulti : Miner {
                 }
             }
             if (Test-Path $ConfigFile) {
+                $MinerNew = [Boolean]($this.BaseAlgorithm | Where-Object {-not (Get-Stat -Name "$($this.Name)_$($_)_HashRate" -Sub $Global:DeviceCache.DevicesToVendors[$this.DeviceModel])})
                 $MinerInfoRaw = Get-Content $ConfigFile -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
                 if (-not $MinerInfoRaw -or 
-                    ($this.New -and -not $this.Benchmarked) -or 
+                    ($MinerNew -and -not $this.Benchmarked) -or 
                     $MinerInfoRaw.algo_count -ne $this.MinerInfo.algo_count -or 
                     $MinerInfoRaw.gpu_count -ne $this.MinerInfo.gpu_count -or 
                     $MinerInfoRaw.config_name -ne $this.MinerInfo.config_name) {
