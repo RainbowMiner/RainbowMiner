@@ -60,7 +60,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "SHA3d"         ;              MinMemGB = 2;   Params = "-a Sha3d";         Vendor = @("AMD","NVIDIA"); ExtendInterval = 2} #SHA3d
     [PSCustomObject]@{MainAlgorithm = "SHA3Solidity"  ;              MinMemGB = 2;   Params = "";                 Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Coins = @("EGAZ","ETI")} #SHA3Solidity
     [PSCustomObject]@{MainAlgorithm = "SHA256dt"      ;              MinMemGB = 2;   Params = "-a Sha256dt";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2} #SHA256dt
-    #[PSCustomObject]@{MainAlgorithm = "SHA512256d"    ;              MinMemGB = 2;   Params = "-a Sha512256d";    Vendor = @("AMD","NVIDIA"); ExtendInterval = 2} #Sha512256d
+    [PSCustomObject]@{MainAlgorithm = "SHA512256d"    ;              MinMemGB = 2;   Params = "-a Sha512256d";    Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; ExcludePoolName = "MiningRigRentals"} #Sha512256d
     [PSCustomObject]@{MainAlgorithm = "UbqHash"       ;              MinMemGB = 2.4; Params = "-a UBQHASH";       Vendor = @("AMD","NVIDIA"); ExtendInterval = 2} #Ubqhash
     [PSCustomObject]@{MainAlgorithm = "vProgPoW"      ; DAG = $true; MinMemGB = 3;   Params = "-a vProgPow";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2} #ProgPoWSero (VBK)
 
