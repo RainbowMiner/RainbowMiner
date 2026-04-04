@@ -405,7 +405,7 @@ Import-Module .\Modules\Include.psm1
 
 Initialize-Session
 
-$Session.Version         = "5.0.1.5"
+$Session.Version         = "5.0.1.6"
 $Session.MainWindowTitle = "RainbowMiner v$($Session.Version)"
 $Session.SetupOnly       = $SetupOnly
 $Session.LogLevel        = $LogLevel
