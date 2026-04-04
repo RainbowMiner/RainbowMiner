@@ -6,6 +6,10 @@ cuda_urls=(
     "https://github.com/RainbowMiner/miner-binaries/releases/download/v2025.07.02-cudalibs/cudalibs-linux-12.6.85.tar.gz"
     "https://github.com/RainbowMiner/miner-binaries/releases/download/v2025.07.02-cudalibs/cudalibs-linux-12.8.83.tar.gz"
     "https://github.com/RainbowMiner/miner-binaries/releases/download/v2025.07.02-cudalibs/cudalibs-linux-12.9.86.tar.gz"
+    "https://github.com/RainbowMiner/miner-binaries/releases/download/v2026.04.04-cudalibs/cudalibs-linux-13.0.88.tar.gz"
+    "https://github.com/RainbowMiner/miner-binaries/releases/download/v2026.04.04-cudalibs/cudalibs-linux-13.1.115.tar.gz"
+    "https://github.com/RainbowMiner/miner-binaries/releases/download/v2026.04.04-cudalibs/cudalibs-linux-13.2.51.tar.gz"
+
 )
 
 # Check for required commands
