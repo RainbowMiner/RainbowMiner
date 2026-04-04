@@ -2,7 +2,7 @@
     {
         "symbol":  "AE",
         "match":  "^ak_",
-        "rpc":  "http://www.aeknow.org/api/account/{w}",
+        "rpc":  "https://mainnet.aeternity.io/v3/accounts/{w}",
         "address":  "id",
         "balance":  "balance",
         "received":  "",
