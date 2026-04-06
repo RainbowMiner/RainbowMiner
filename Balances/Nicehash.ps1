@@ -18,14 +18,14 @@ $Request = [PSCustomObject]@{}
 if ($PoolConfig.API_Key -and $PoolConfig.API_Secret -and $PoolConfig.OrganizationID) {
 
     try {
-        $Request = Invoke-NHRequest "/main/api/v2/accounting/account2/BTC/" $PoolConfig.API_Key $PoolConfig.API_Secret $PoolConfig.OrganizationID
+        $Request = Invoke-NHRequest "/main/api/v2/accounting/account2/BTC/" $PoolConfig.API_Key $PoolConfig.API_Secret $PoolConfig.OrganizationID -cache ($Config.BalanceUpdateMinutes*60)
     }
     catch {
         Write-Log -Level Warn "Pool Accounts API ($Name) has failed. "
     }
 	
 	try {
-        $RequestUnpaid = Invoke-NHRequest "/main/api/v2/mining/rigs2/" $PoolConfig.API_Key $PoolConfig.API_Secret $PoolConfig.OrganizationID
+        $RequestUnpaid = Invoke-NHRequest "/main/api/v2/mining/rigs2/" $PoolConfig.API_Key $PoolConfig.API_Secret $PoolConfig.OrganizationID -cache ($Config.BalanceUpdateMinutes*60)
     }
     catch {
         Write-Log -Level Warn "Pool Accounts API ($Name) has failed. "
