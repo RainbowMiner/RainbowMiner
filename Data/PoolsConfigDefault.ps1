@@ -371,7 +371,9 @@
             Currencies=@("BTG")
         }
         "unMineable" = [PSCustomObject]@{
-            Currencies=@("BTC","BTT","ETC","TRX","UNI","XTZ","YFI")
+            Fields=[PSCustomObject]@{User="";API_Key="";API_Secret=""}
+            SetupFields=[PSCustomObject]@{User="Enter your account's alias (legacy: you can still use coin-addresses to mine as well)";API_Key = "Enter your unMineable API key (adds balance)";API_Secret = "Enter your unMineable API secret (pulls balance)"}
+            Currencies=@("BTC")
         }
         "UUpool" = [PSCustomObject]@{
             Currencies=@("VOLLAR")

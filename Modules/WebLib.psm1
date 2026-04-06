@@ -1167,6 +1167,95 @@ param(
     $Global:NHCache[$keystr].request
 }
 
+function Invoke-UnMineableRequest {
+[cmdletbinding()]   
+param(    
+    [Parameter(Mandatory = $True)]
+    [String]$endpoint,
+    [Parameter(Mandatory = $False)]
+    [String]$key,
+    [Parameter(Mandatory = $False)]
+    [String]$secret,
+    [Parameter(Mandatory = $False)]
+    $params = @{},
+    [Parameter(Mandatory = $False)]
+    [String]$method = "GET",
+    [Parameter(Mandatory = $False)]
+    [String]$base = "https://api.unmineable.dev",
+    [Parameter(Mandatory = $False)]
+    [int]$Timeout = 15,
+    [Parameter(Mandatory = $False)]
+    [int]$Cache = 0,
+    [Parameter(Mandatory = $False)]
+    [switch]$ForceLocal
+)
+    $keystr = Get-MD5Hash "$($endpoint)$(Get-HashtableAsJson $params)"
+    if (-not (Test-Path Variable:Global:unMineableCache)) {$Global:unMineableCache = [hashtable]@{}}
+    if (-not $Cache -or -not $Global:unMineableCache[$keystr] -or -not $Global:unMineableCache[$keystr].request -or $Global:unMineableCache[$keystr].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
+
+        $Remote = $false
+
+        if (-not $ForceLocal) {
+            $Config = if ($Session.IsDonationRun) {$Session.UserConfig} else {$Session.Config}
+
+            if ($Config.RunMode -eq "Client" -and $Config.ServerName -and $Config.ServerPort -and (Test-TcpServer $Config.ServerName -Port $Config.ServerPort -Timeout 2)) {
+                $serverbody = @{
+                    endpoint  = $endpoint
+                    key       = $key
+                    secret    = $secret
+                    params    = $params | ConvertTo-Json -Depth 10 -Compress
+                    method    = $method
+                    base      = $base
+                    timeout   = $timeout
+                    machinename = $Session.MachineName
+                    workername  = $Config.Workername
+                    myip      = $Session.MyIP
+                    port      = $Config.APIPort
+                }
+                try {
+                    $Result = Invoke-GetUrl "http://$($Config.ServerName):$($Config.ServerPort)/getunmineable" -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal -Timeout 30
+                    if ($Result.Status) {$Request = $Result.Content;$Remote = $true}
+                } catch {
+                    Write-Log "unMineable server call: $($_.Exception.Message)"
+                }
+            }
+        }
+
+        if (-not $Remote -and $key -and $secret) {
+            $timestamp = Get-UnixTimestamp -Milliseconds
+
+            if ($method -eq "GET") {
+                $paramstr = "$(($params.Keys | Foreach-Object {"$($_)=$([System.Web.HttpUtility]::UrlEncode($params.$_))"}) -join '&')"
+                $bodystr  = ""
+            } else {
+                $paramstr = ""
+                $bodystr  = $params | ConvertTo-Json -Depth 10
+            }
+
+            $str = "$($method.ToUpper())`n$($endpoint)`n$($paramstr)`n$($timestamp)`n$((Get-SHA256Hash $bodystr).ToLower())"
+
+            $headers = [hashtable]@{
+                'x-user-api-key'       = $key
+                'x-user-api-timestamp' = $timestamp
+                'x-user-api-signature' = Get-HMACSignature $str $secret
+                'Cache-Control'        = 'no-cache'
+            }
+            if ($paramstr -ne "") {$paramstr = "?$paramstr"}
+            #if ($bodystr  -eq "") {$bodystr  = $null}
+            try {
+                $Request = Invoke-GetUrl "$base$endpoint$paramstr" -timeout $Timeout -headers $headers -requestmethod $method -body $bodystr
+            } catch {
+                Write-Log "unMineable API call: $($_.Exception.Message)"
+            }
+        }
+
+        if (-not $Global:unMineableCache[$keystr] -or $Request) {
+            $Global:unMineableCache[$keystr] = [PSCustomObject]@{last = (Get-Date).ToUniversalTime(); request = $Request}
+        }
+    }
+    $Global:unMineableCache[$keystr].request
+}
+
 #
 # Web tools and database functions
 #

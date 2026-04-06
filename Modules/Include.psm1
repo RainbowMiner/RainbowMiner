@@ -1689,13 +1689,13 @@ function Get-MD5Hash {
 [CmdletBinding()]
 Param(
     [Parameter(
-        Mandatory = $True,
+        Mandatory = $False,
         Position = 0,
         ValueFromPipeline = $True)]
     [string]$value
 )
 
-    $md5 = [System.Security.Cryptography.MD5CryptoServiceProvider]::new()
+    $md5  = [System.Security.Cryptography.MD5CryptoServiceProvider]::new()
     $utf8 = [System.Text.Encoding]::UTF8
 
     try {
@@ -1703,6 +1703,27 @@ Param(
     }
     finally {
         $md5.Dispose()  # Ensure cleanup
+    }
+}
+
+function Get-SHA256Hash {
+[CmdletBinding()]
+Param(
+    [Parameter(
+        Mandatory = $False,
+        Position = 0,
+        ValueFromPipeline = $True)]
+    [string]$value
+)
+
+    $sha  = [System.Security.Cryptography.SHA256CryptoServiceProvider]::new()
+    $utf8 = [System.Text.Encoding]::UTF8
+
+    try {
+        [System.BitConverter]::ToString($sha.ComputeHash($utf8.GetBytes($value))).ToUpper() -replace '-'
+    }
+    finally {
+        $sha.Dispose()  # Ensure cleanup
     }
 }
 
