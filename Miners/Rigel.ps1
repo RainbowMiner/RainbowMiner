@@ -13,13 +13,13 @@ if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return}
 $ManualUri = "https://github.com/rigelminer/rigel/releases"
 $Port = "324{0:d2}"
 $DevFee = 0.7
-$Version = "1.23.1"
+$Version = "1.23.2"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Rigel\rigel"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.23.1-rigel/rigel-1.23.1-linux.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.23.2-rigel/rigel-1.23.2-linux.tar.gz"
             Cuda = "8.0"
         }
     )
@@ -27,7 +27,7 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Rigel\rigel.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.23.1-rigel/rigel-1.23.1-win.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.23.2-rigel/rigel-1.23.2-win.zip"
             Cuda = "8.0"
         }
     )
@@ -46,7 +46,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Ethash4g";        DAG = $true; MinMemGB = 3; Params = ""; ExtendInterval = 2; Vendor = @("NVIDIA"); Algorithm = "ethash"} #Ethash (ETH)
     [PSCustomObject]@{MainAlgorithm = "Ethash5g";        DAG = $true; MinMemGB = 4; Params = ""; ExtendInterval = 2; Vendor = @("NVIDIA"); Algorithm = "ethash"} #Ethash (ETH)
     [PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; MinMemGB = 1; Params = ""; ExtendInterval = 2; Vendor = @("NVIDIA"); Algorithm = "ethash"} #Ethash (ETH) for low memory coins
-    [PSCustomObject]@{MainAlgorithm = "ethashb3";        DAG = $true; MinMemGB = 2; Params = ""; ExtendInterval = 2; Vendor = @("NVIDIA")} #Ethash3B (RTH)
+    #[PSCustomObject]@{MainAlgorithm = "ethashb3";        DAG = $true; MinMemGB = 2; Params = ""; ExtendInterval = 2; Vendor = @("NVIDIA")} #Ethash3B (RTH) removed with v1.23.2
     [PSCustomObject]@{MainAlgorithm = "fishhash";        DAG = $true; MinMemGB = 5; Params = "";                     Vendor = @("NVIDIA")} #Fishhash/IRON from 2. April 2024
     [PSCustomObject]@{MainAlgorithm = "karlsenhashv2";                MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); Fee = 1.0} #KarlsenHashV2/KLS
     [PSCustomObject]@{MainAlgorithm = "nexapow";         DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); Fee = 2.0} #NexaPoW/NEXA
@@ -96,9 +96,9 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; MinMemGB = 1; Params = ""; ExtendInterval = 2; Vendor = @("NVIDIA"); SecondaryAlgorithm = "alephium"; Algorithm = "ethash"} #Ethash (ETH) for low memory coins
     [PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; MinMemGB = 2; Params = ""; ExtendInterval = 2; Vendor = @("NVIDIA"); SecondaryAlgorithm = "sha512256d"; Algorithm = "ethash"} #Ethash (ETH)
 
-    [PSCustomObject]@{MainAlgorithm = "ethashb3";        DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); SecondaryAlgorithm = "alephium"}   #BlakeB3/HYP + ALPH
-    [PSCustomObject]@{MainAlgorithm = "ethashb3";        DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); SecondaryAlgorithm = "sha256ton"; SecondaryPoolName = "Icemining"} #BlakeB3/HYP + GRAM/CHAPA
-    [PSCustomObject]@{MainAlgorithm = "ethashb3";        DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); SecondaryAlgorithm = "sha512256d"} #BlakeB3/HYP + RXD
+    #[PSCustomObject]@{MainAlgorithm = "ethashb3";        DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); SecondaryAlgorithm = "alephium"}   #BlakeB3/HYP + ALPH
+    #[PSCustomObject]@{MainAlgorithm = "ethashb3";        DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); SecondaryAlgorithm = "sha256ton"; SecondaryPoolName = "Icemining"} #BlakeB3/HYP + GRAM/CHAPA
+    #[PSCustomObject]@{MainAlgorithm = "ethashb3";        DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); SecondaryAlgorithm = "sha512256d"} #BlakeB3/HYP + RXD
 
     [PSCustomObject]@{MainAlgorithm = "fishhash";        DAG = $true; MinMemGB = 5; Params = "";                     Vendor = @("NVIDIA"); SecondaryAlgorithm = "alephium"}   #FishHash/IRON + ALPH
     [PSCustomObject]@{MainAlgorithm = "fishhash";        DAG = $true; MinMemGB = 5; Params = "";                     Vendor = @("NVIDIA"); SecondaryAlgorithm = "sha256ton"; SecondaryPoolName = "Icemining"} #FishHash/IRON + GRAM/CHAPA
