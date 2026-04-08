@@ -11,7 +11,7 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.De
 
 $ManualUri = "https://github.com/xmrig/xmrig/releases"
 $Port = "303{0:d2}"
-$Version = "6.26.0.1"
+$Version = "6.26.0.3"
 $DevFee = 0.0
 
 $UriCuda = $null
@@ -34,7 +34,7 @@ if ($IsLinux) {
                 "jammy"
             }
 
-            $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.26.0-xmrig/xmrig-6.26.0.1-{DISTROCODENAME}-armv8.7z" -replace "{DISTROCODENAME}",$distroCodename
+            $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.26.0-xmrig/xmrig-6.26.0.3-{DISTROCODENAME}-armv8.7z" -replace "{DISTROCODENAME}",$distroCodename
         }
     } else {
         if ($Session.LibCVersion -and $Session.LibCVersion -lt (Get-Version "2.25")) {return}
@@ -45,7 +45,7 @@ if ($IsLinux) {
             "focal"
         }
 
-        $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.26.0-xmrig/xmrig-6.26.0.1-{DISTROCODENAME}-x64.7z" -replace "{DISTROCODENAME}",$distroCodename
+        $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.26.0-xmrig/xmrig-6.26.0.3-{DISTROCODENAME}-x64.7z" -replace "{DISTROCODENAME}",$distroCodename
 
         $CudaData = @(
             [PSCustomObject]@{
@@ -144,9 +144,7 @@ if ($IsLinux) {
     $CudaLib = "libxmrig-cuda.so"
 } else {
 
-    $Version = "6.26.0.2"
-
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.26.0-xmrig/xmrig-6.26.0.2-msvc-win64.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.26.0-xmrig/xmrig-6.26.0.3-msvc-win64.7z"
 
     $CudaData = @(
         [PSCustomObject]@{
