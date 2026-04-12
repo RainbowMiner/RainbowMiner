@@ -463,10 +463,12 @@
     "LBRT" = [PSCustomObject]@{Algo = "Blake3Lbrt"; Name = "Liberty"; Symbol = "LBRT"}
     "LBTC" = [PSCustomObject]@{Algo = "YescryptR32"; Name = "Litebitcoin"; Symbol = "LBTC"}
     "LBW" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Lebowskis"; Symbol = "LBW"}
+    "LC2" = [PSCustomObject]@{Algo = "Scrypt"; Name = "LiteCoin II"; Symbol = "LC2"}
     "LCC-MinotaurX" = [PSCustomObject]@{Algo = "MinotaurX"; Name = "LitecoinCash"; Symbol = "LCC"; Multi = $true}
     "LCC-SHA256d" = [PSCustomObject]@{Algo = "SHA256d"; Name = "LitecoinCash"; Symbol = "LCC"; Multi = $true}
     "LCN" = [PSCustomObject]@{Algo = "Flex"; Name = "Lyn"; Symbol = "LCN"}
     "LDC" = [PSCustomObject]@{Algo = "SHA256csm"; Name = "Leedcoin"; Symbol = "LDC"}
+    "LDG" = [PSCustomObject]@{Algo = "RandomVirel"; Name = "Litedag"; Symbol = "LDG"}
     "LEVO" = [PSCustomObject]@{Algo = "X11"; Name = "Levocoin"; Symbol = "LEVO"}
     "LINC" = [PSCustomObject]@{Algo = "NeoScrypt"; Name = "Linc"; Symbol = "LINC"}
     "LINX" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Linx"; Symbol = "LINX"}
@@ -539,11 +541,12 @@
     "MYNT" = [PSCustomObject]@{Algo = "X16s"; Name = "Mynt"; Symbol = "MYNT"}
     "MYNTA" = [PSCustomObject]@{Algo = "KawPOW"; Name = "Mynta"; Symbol = "MYNTA"}
     "MYS" = [PSCustomObject]@{Algo = "KawPOW"; Name = "Mystery"; Symbol = "MYS"}
-    "MYT" = [PSCustomObject]@{Algo = "SHA256d"; Name = "Mytherra"; Symbol = "MYT"}
+    "MYT" = [PSCustomObject]@{Algo = "RandomX"; Name = "Mytherra"; Symbol = "MYT"}
     "NACA" = [PSCustomObject]@{Algo = "Argon2Chukwa"; Name = "NashCash"; Symbol = "NACA"}
     "NAD" = [PSCustomObject]@{Algo = "SHA256csm"; Name = "Nadir"; Symbol = "NAD"}
     "NBX" = [PSCustomObject]@{Algo = "CryptoNightLiteV7"; Name = "NibbleClassic"; Symbol = "NBX"}
     "NBXC" = [PSCustomObject]@{Algo = "CryptoNightConceal"; Name = "NibbleNibble"; Symbol = "NBXC"}
+    "NBY" = [PSCustomObject]@{Algo = "NeoScrypt"; Name = "Neobytes"; Symbol = "NBY"}
     "NEET" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Neetcoin"; Symbol = "NEET"}
     "NENG" = [PSCustomObject]@{Algo = "Scrypt"; Name = "NewenglandCoin"; Symbol = "NENG"}
     "NEOX" = [PSCustomObject]@{Algo = "KawPOW"; Name = "Neoxa"; Symbol = "NEOX"}
@@ -595,7 +598,7 @@
     "PBTC" = [PSCustomObject]@{Algo = "HeavyHash"; Name = "PhotonicBitcoin"; Symbol = "PBTC"}
     "PCOIN" = [PSCustomObject]@{Algo = "X11"; Name = "Pioneercoin"; Symbol = "PCOIN"}
     "PEP" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Pepe"; Symbol = "PEP"}
-    "PEPEW" = [PSCustomObject]@{Algo = "XelisV2Pepew"; Name = "Pepepow"; Symbol = "PEPEW"}
+    "PEPEW" = [PSCustomObject]@{Algo = "HoohashPepeW"; Name = "Pepepow"; Symbol = "PEPEW"}
     "PEXA" = [PSCustomObject]@{Algo = "X16rv2"; Name = "Pexa Coin"; Symbol = "PEXA"}
     "PGC" = [PSCustomObject]@{Algo = "Ethash"; Name = "Pegascoin"; Symbol = "PGC"}
     "PGN" = [PSCustomObject]@{Algo = "X21s"; Name = "Pigeoncoin"; Symbol = "PGN"}
