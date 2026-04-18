@@ -310,12 +310,19 @@ function Start-SubProcessInScreen {
 
     $EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {$StuffEnv[$matches[1]]=$matches[2]}
 
+    # Extract extra LD_LIBRARY_PATH paths before the export loop, so they don't get exported standalone
+    $ExtraLDPath = if ($StuffEnv.Contains("LD_LIBRARY_PATH")) { $StuffEnv["LD_LIBRARY_PATH"]; $StuffEnv.Remove("LD_LIBRARY_PATH") }
+
     $StuffEnv.GetEnumerator() | Foreach-Object {
         [void]$Stuff.Add("export $($_.Name)=$($_.Value)")
     }
 
     if ($SetLDLIBRARYPATH) {
-        [void]$Stuff.Add("export LD_LIBRARY_PATH=./:$(if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")})")
+        $BaseLDPath = "./:$(if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")})"
+        $FullLDPath = if ($ExtraLDPath) {"$BaseLDPath`:$ExtraLDPath"} else {$BaseLDPath}
+        [void]$Stuff.Add("export LD_LIBRARY_PATH=$FullLDPath")
+    } elseif ($ExtraLDPath) {
+        [void]$Stuff.Add("export LD_LIBRARY_PATH=$ExtraLDPath")
     }
 
     [System.Collections.Generic.List[string]]$Test  = @()
@@ -521,12 +528,19 @@ function Start-SubProcessInTmux {
 
     $EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {$StuffEnv[$matches[1]]=$matches[2]}
 
+    # Extract extra LD_LIBRARY_PATH paths before the export loop, so they don't get exported standalone
+    $ExtraLDPath = if ($StuffEnv.Contains("LD_LIBRARY_PATH")) { $StuffEnv["LD_LIBRARY_PATH"]; $StuffEnv.Remove("LD_LIBRARY_PATH") }
+
     $StuffEnv.GetEnumerator() | Foreach-Object {
         [void]$Stuff.Add("export $($_.Name)=$($_.Value)")
     }
 
     if ($SetLDLIBRARYPATH) {
-        [void]$Stuff.Add("export LD_LIBRARY_PATH=./:$(if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")})")
+        $BaseLDPath = "./:$(if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")})"
+        $FullLDPath = if ($ExtraLDPath) {"$BaseLDPath`:$ExtraLDPath"} else {$BaseLDPath}
+        [void]$Stuff.Add("export LD_LIBRARY_PATH=$FullLDPath")
+    } elseif ($ExtraLDPath) {
+        [void]$Stuff.Add("export LD_LIBRARY_PATH=$ExtraLDPath")
     }
 
     [System.Collections.Generic.List[string]]$Test  = @()
