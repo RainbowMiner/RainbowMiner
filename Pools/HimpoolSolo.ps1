@@ -17,7 +17,7 @@ param(
 # Himpool SOLO — https://himpool.com
 # Multi-algorithm SOLOLoyalty pools (90% finder / 8% loyal / 2% fee distribution).
 # Two regions: EU (eu.himpool.com) and India (in.himpool.com).
-# This file handles SOLO pools. See Himpool.ps1 for PPLNS variants.
+# See Himpool.ps1 for PPLNS variants.
 
 $Pool_Fee  = 2.0
 $Pool_Type = "SOLO"
@@ -31,31 +31,33 @@ $Pool_RegionHosts = [PSCustomObject]@{
     "asia"  = "in.himpool.com"
 }
 
-# Supported coins (SOLO port ranges differ from PPLNS)
+# Supported coins (SOLO port ranges differ from PPLNS). QUAI's two PoW variants use dedicated RM
+# symbols (QUAI-SHA256 / QUAI-SCRYPT) to avoid coin DB override and Set-Stat collisions; same
+# pattern applies to Kerrigan's four PoW variants. coin_symbol maps back to chain for wallet lookup.
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "ALPH";       pid = "alph-solo";                 algo = "Blake3";     port_low = 1361; port_mid = 1362; port_high = 1363; divisor = 1e18}
-    [PSCustomObject]@{symbol = "ARRR";       pid = "arrr-solo";                 algo = "Equihash";   port_low = 1417; port_mid = 1418; port_high = 1419; divisor = 1e8}
-    [PSCustomObject]@{symbol = "BCH";        pid = "bch-solo";                  algo = "Sha256d";    port_low = 1301; port_mid = 1302; port_high = 1303; divisor = 1e8}
-    [PSCustomObject]@{symbol = "BTC";        pid = "btc-solo";                  algo = "Sha256d";    port_low = 1322; port_mid = 1323; port_high = 1324; divisor = 1e8}
-    [PSCustomObject]@{symbol = "BTG";        pid = "btg-solo";                  algo = "Equihash";   port_low = 1465; port_mid = 1466; port_high = 1467; divisor = 1e8}
-    [PSCustomObject]@{symbol = "BUCK";       pid = "buck-solo";                 algo = "Equihash";   port_low = 1453; port_mid = 1454; port_high = 1455; divisor = 1e8}
-    [PSCustomObject]@{symbol = "DGB";        pid = "dgb-solo";                  algo = "Sha256d";    port_low = 1319; port_mid = 1320; port_high = 1321; divisor = 1e8}
-    [PSCustomObject]@{symbol = "EPX";        pid = "epx-solo";                  algo = "Ethash";     port_low = 1429; port_mid = 1430; port_high = 1431; divisor = 1e18}
-    [PSCustomObject]@{symbol = "ETC";        pid = "etc-solo";                  algo = "Etchash";    port_low = 1385; port_mid = 1386; port_high = 1387; divisor = 1e18}
-    [PSCustomObject]@{symbol = "KMD";        pid = "kmd-solo";                  algo = "Equihash";   port_low = 1423; port_mid = 1424; port_high = 1425; divisor = 1e8}
-    [PSCustomObject]@{symbol = "LRS";        pid = "lrs-solo";                  algo = "Ethash";     port_low = 1391; port_mid = 1392; port_high = 1393; divisor = 1e18}
-    [PSCustomObject]@{symbol = "LTC";        pid = "ltc-solo";                  algo = "Scrypt";     port_low = 1411; port_mid = 1412; port_high = 1413; divisor = 1e8}
-    [PSCustomObject]@{symbol = "OCTA";       pid = "octaspace-solo";            algo = "Ethash";     port_low = 1379; port_mid = 1380; port_high = 1381; divisor = 1e18}
-    [PSCustomObject]@{symbol = "PPC";        pid = "ppc-solo";                  algo = "Sha256d";    port_low = 1331; port_mid = 1332; port_high = 1333; divisor = 1e6}
-    [PSCustomObject]@{symbol = "QUAI";       pid = "quai-sha256-solo";          algo = "Sha256d";    port_low = 1367; port_mid = 1368; port_high = 1369; divisor = 1e18}
-    [PSCustomObject]@{symbol = "QUAI";       pid = "quai-scrypt-solo";          algo = "Scrypt";     port_low = 1373; port_mid = 1374; port_high = 1375; divisor = 1e18}
-    [PSCustomObject]@{symbol = "XEC";        pid = "xec-solo";                  algo = "Sha256d";    port_low = 1325; port_mid = 1326; port_high = 1327; divisor = 100}
-    [PSCustomObject]@{symbol = "XMR";        pid = "xmr-solo";                  algo = "RandomX";    port_low = 1459; port_mid = 1460; port_high = 1461; divisor = 1e12}
+    [PSCustomObject]@{symbol = "ALPH";         pid = "alph-solo";                 algo = "Blake3";     port_low = 1361; port_mid = 1362; port_high = 1363; divisor = 1e18}
+    [PSCustomObject]@{symbol = "ARRR";         pid = "arrr-solo";                 algo = "Equihash";   port_low = 1417; port_mid = 1418; port_high = 1419; divisor = 1e8}
+    [PSCustomObject]@{symbol = "BCH";          pid = "bch-solo";                  algo = "Sha256d";    port_low = 1301; port_mid = 1302; port_high = 1303; divisor = 1e8}
+    [PSCustomObject]@{symbol = "BTC";          pid = "btc-solo";                  algo = "Sha256d";    port_low = 1322; port_mid = 1323; port_high = 1324; divisor = 1e8}
+    [PSCustomObject]@{symbol = "BTG";          pid = "btg-solo";                  algo = "Equihash";   port_low = 1465; port_mid = 1466; port_high = 1467; divisor = 1e8}
+    [PSCustomObject]@{symbol = "BUCK";         pid = "buck-solo";                 algo = "Equihash";   port_low = 1453; port_mid = 1454; port_high = 1455; divisor = 1e8}
+    [PSCustomObject]@{symbol = "DGB";          pid = "dgb-solo";                  algo = "Sha256d";    port_low = 1319; port_mid = 1320; port_high = 1321; divisor = 1e8}
+    [PSCustomObject]@{symbol = "EPX";          pid = "epx-solo";                  algo = "Ethash";     port_low = 1429; port_mid = 1430; port_high = 1431; divisor = 1e18}
+    [PSCustomObject]@{symbol = "ETC";          pid = "etc-solo";                  algo = "Etchash";    port_low = 1385; port_mid = 1386; port_high = 1387; divisor = 1e18}
+    [PSCustomObject]@{symbol = "KMD";          pid = "kmd-solo";                  algo = "Equihash";   port_low = 1423; port_mid = 1424; port_high = 1425; divisor = 1e8}
+    [PSCustomObject]@{symbol = "LRS";          pid = "lrs-solo";                  algo = "Ethash";     port_low = 1391; port_mid = 1392; port_high = 1393; divisor = 1e18}
+    [PSCustomObject]@{symbol = "LTC";          pid = "ltc-solo";                  algo = "Scrypt";     port_low = 1411; port_mid = 1412; port_high = 1413; divisor = 1e8}
+    [PSCustomObject]@{symbol = "OCTA";         pid = "octaspace-solo";            algo = "Ethash";     port_low = 1379; port_mid = 1380; port_high = 1381; divisor = 1e18}
+    [PSCustomObject]@{symbol = "PPC";          pid = "ppc-solo";                  algo = "Sha256d";    port_low = 1331; port_mid = 1332; port_high = 1333; divisor = 1e6}
+    [PSCustomObject]@{symbol = "QUAI-SHA256";  pid = "quai-sha256-solo";          algo = "Sha256d";    port_low = 1367; port_mid = 1368; port_high = 1369; divisor = 1e18; coin_symbol = "QUAI"}
+    [PSCustomObject]@{symbol = "QUAI-SCRYPT";  pid = "quai-scrypt-solo";          algo = "Scrypt";     port_low = 1373; port_mid = 1374; port_high = 1375; divisor = 1e18; coin_symbol = "QUAI"}
+    [PSCustomObject]@{symbol = "XEC";          pid = "xec-solo";                  algo = "Sha256d";    port_low = 1325; port_mid = 1326; port_high = 1327; divisor = 100}
+    [PSCustomObject]@{symbol = "XMR";          pid = "xmr-solo";                  algo = "RandomX";    port_low = 1459; port_mid = 1460; port_high = 1461; divisor = 1e12}
     # Kerrigan multi-algo SOLO variants
-    [PSCustomObject]@{symbol = "KRGN-X11";   pid = "kerrigan-x11-solo";         algo = "X11";        port_low = 1447; port_mid = 1448; port_high = 1449; divisor = 1e8; coin_symbol = "KRGN"}
-    [PSCustomObject]@{symbol = "KRGN-KAWPOW";pid = "kerrigan-kawpow-solo";     algo = "KawPow";     port_low = 1435; port_mid = 1436; port_high = 1437; divisor = 1e8; coin_symbol = "KRGN"}
-    [PSCustomObject]@{symbol = "KRGN-EH200"; pid = "kerrigan-equihash200-solo"; algo = "Equihash";   port_low = 1441; port_mid = 1442; port_high = 1443; divisor = 1e8; coin_symbol = "KRGN"}
-    [PSCustomObject]@{symbol = "KRGN-EH192"; pid = "kerrigan-equihash192-solo"; algo = "Equihash";   port_low = 1471; port_mid = 1472; port_high = 1473; divisor = 1e8; coin_symbol = "KRGN"}
+    [PSCustomObject]@{symbol = "KRGN-X11";     pid = "kerrigan-x11-solo";         algo = "X11";        port_low = 1447; port_mid = 1448; port_high = 1449; divisor = 1e8; coin_symbol = "KRGN"}
+    [PSCustomObject]@{symbol = "KRGN-KAWPOW";  pid = "kerrigan-kawpow-solo";      algo = "KawPow";     port_low = 1435; port_mid = 1436; port_high = 1437; divisor = 1e8; coin_symbol = "KRGN"}
+    [PSCustomObject]@{symbol = "KRGN-EH200";   pid = "kerrigan-equihash200-solo"; algo = "Equihash";   port_low = 1441; port_mid = 1442; port_high = 1443; divisor = 1e8; coin_symbol = "KRGN"}
+    [PSCustomObject]@{symbol = "KRGN-EH192";   pid = "kerrigan-equihash192-solo"; algo = "Equihash";   port_low = 1471; port_mid = 1472; port_high = 1473; divisor = 1e8; coin_symbol = "KRGN"}
 )
 
 $Pool_ApiBase = "https://himpool.com/api"
@@ -93,8 +95,10 @@ $Pools_Data | Where-Object {
     if ($Pool_Coin) {
         $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
     } else {
-        $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algo_Hint
+        $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algo_Hint -CoinSymbol $Pool_Symbol_Chain
     }
+
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"qtminer"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
 
     $Pool_Live = $Pool_ById[$Pool_Id]
     if (-not $Pool_Live) {
@@ -144,7 +148,7 @@ $Pools_Data | Where-Object {
             Protocol          = "stratum+tcp"
             Host              = $Host
             Port              = $Pool_Port
-            User              = "$($Pool_Wallet).$($Worker)"
+            User              = "$($Pool_Wallet).{workername:$Worker}"
             Pass              = "x"
             Region            = $Pool_RegionsTable.$Region_Key
             SSL               = $false
@@ -155,6 +159,7 @@ $Pools_Data | Where-Object {
             BLK               = $Stat.BlockRate_Average
             TSL               = $Pool_TSL
             WTM               = $false
+            EthMode           = $Pool_EthProxy
             Name              = $Name
             Penalty           = 0
             PenaltyFactor     = 1
@@ -162,10 +167,11 @@ $Pools_Data | Where-Object {
             HasMinerExclusions= $false
             Price_Bias        = 0.0
             Price_Unbias      = 0.0
+            Price_0           = 0.0
             Wallet            = $Pool_Wallet
-            Worker            = $Worker
+            Worker            = "{workername:$Worker}"
             Email             = $null
-            Solo              = $true
+            SoloMining        = $true
         }
     }
 }

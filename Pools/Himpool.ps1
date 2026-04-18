@@ -15,8 +15,8 @@ param(
 )
 
 # Himpool — https://himpool.com
-# Multi-algorithm mining pool. Two regions: EU (eu.himpool.com) and India (in.himpool.com).
-# This file handles PPLNS pools. See HimpoolSolo.ps1 for SOLO variants.
+# Multi-algorithm PPLNS pool. Two regions: EU (eu.himpool.com) and India (in.himpool.com).
+# See HimpoolSolo.ps1 for SOLOLoyalty variants.
 
 $Pool_Fee  = 2.0
 $Pool_Type = "PPLNS"
@@ -31,27 +31,30 @@ $Pool_RegionHosts = [PSCustomObject]@{
     "asia"  = "in.himpool.com"
 }
 
-# Supported coins: symbol, Himpool pool id, algorithm, port (mid-tier), coin display name
-# Low/mid/high ports are three consecutive numbers; we advertise the mid (index 1) by default
-# and add a low + high alternative via port metadata so RainbowMiner can pick on diff.
+# Supported coins: RainbowMiner symbol, Himpool pool id, algorithm, low/mid/high stratum ports, divisor.
+# All three ports are live on the pool; the mid-tier port is advertised as the default. Low is for
+# low-diff devices and high is for high-diff farms — operators can pick explicitly if needed.
+# QUAI has two PoW variants (Sha256d + Scrypt), disambiguated via dedicated RM symbols so they
+# don't collide in the coin DB or in Set-Stat keys. coin_symbol maps them back to the QUAI chain
+# symbol for wallet lookup. Same pattern used for Kerrigan's four PoW variants (shared KRGN chain).
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "ALPH";      pid = "alph";                 algo = "Blake3";     port_low = 1361; port_mid = 1362; port_high = 1363; divisor = 1e18}
-    [PSCustomObject]@{symbol = "ARRR";      pid = "arrr";                 algo = "Equihash";   port_low = 1417; port_mid = 1418; port_high = 1419; divisor = 1e8}
-    [PSCustomObject]@{symbol = "BCH";       pid = "bch";                  algo = "Sha256d";    port_low = 1307; port_mid = 1308; port_high = 1309; divisor = 1e8}
-    [PSCustomObject]@{symbol = "BTG";       pid = "btg";                  algo = "Equihash";   port_low = 1462; port_mid = 1463; port_high = 1464; divisor = 1e8}
-    [PSCustomObject]@{symbol = "DGB";       pid = "dgb";                  algo = "Sha256d";    port_low = 1316; port_mid = 1317; port_high = 1318; divisor = 1e8}
-    [PSCustomObject]@{symbol = "EPX";       pid = "epx";                  algo = "Ethash";     port_low = 1426; port_mid = 1427; port_high = 1428; divisor = 1e18}
-    [PSCustomObject]@{symbol = "ETC";       pid = "etc";                  algo = "Etchash";    port_low = 1382; port_mid = 1383; port_high = 1384; divisor = 1e18}
-    [PSCustomObject]@{symbol = "LTC";       pid = "ltc";                  algo = "Scrypt";     port_low = 1408; port_mid = 1409; port_high = 1410; divisor = 1e8}
-    [PSCustomObject]@{symbol = "OCTA";      pid = "octaspace";            algo = "Ethash";     port_low = 1376; port_mid = 1377; port_high = 1378; divisor = 1e18}
-    [PSCustomObject]@{symbol = "QUAI";      pid = "quai-sha256";          algo = "Sha256d";    port_low = 1364; port_mid = 1365; port_high = 1366; divisor = 1e18}
-    [PSCustomObject]@{symbol = "QUAI";      pid = "quai-scrypt";          algo = "Scrypt";     port_low = 1370; port_mid = 1371; port_high = 1372; divisor = 1e18}
-    [PSCustomObject]@{symbol = "XEC";       pid = "xec";                  algo = "Sha256d";    port_low = 1304; port_mid = 1305; port_high = 1306; divisor = 100}
-    # Kerrigan multi-algo — three PoW variants under one chain
-    [PSCustomObject]@{symbol = "KRGN-X11";  pid = "kerrigan-x11";         algo = "X11";        port_low = 1444; port_mid = 1445; port_high = 1446; divisor = 1e8; coin_symbol = "KRGN"}
-    [PSCustomObject]@{symbol = "KRGN-KAWPOW";pid = "kerrigan-kawpow";     algo = "KawPow";     port_low = 1432; port_mid = 1433; port_high = 1434; divisor = 1e8; coin_symbol = "KRGN"}
-    [PSCustomObject]@{symbol = "KRGN-EH200";pid = "kerrigan-equihash200"; algo = "Equihash";   port_low = 1438; port_mid = 1439; port_high = 1440; divisor = 1e8; coin_symbol = "KRGN"}
-    [PSCustomObject]@{symbol = "KRGN-EH192";pid = "kerrigan-equihash192"; algo = "Equihash";   port_low = 1468; port_mid = 1469; port_high = 1470; divisor = 1e8; coin_symbol = "KRGN"}
+    [PSCustomObject]@{symbol = "ALPH";        pid = "alph";                 algo = "Blake3";     port_low = 1361; port_mid = 1362; port_high = 1363; divisor = 1e18}
+    [PSCustomObject]@{symbol = "ARRR";        pid = "arrr";                 algo = "Equihash";   port_low = 1417; port_mid = 1418; port_high = 1419; divisor = 1e8}
+    [PSCustomObject]@{symbol = "BCH";         pid = "bch";                  algo = "Sha256d";    port_low = 1307; port_mid = 1308; port_high = 1309; divisor = 1e8}
+    [PSCustomObject]@{symbol = "BTG";         pid = "btg";                  algo = "Equihash";   port_low = 1462; port_mid = 1463; port_high = 1464; divisor = 1e8}
+    [PSCustomObject]@{symbol = "DGB";         pid = "dgb";                  algo = "Sha256d";    port_low = 1316; port_mid = 1317; port_high = 1318; divisor = 1e8}
+    [PSCustomObject]@{symbol = "EPX";         pid = "epx";                  algo = "Ethash";     port_low = 1426; port_mid = 1427; port_high = 1428; divisor = 1e18}
+    [PSCustomObject]@{symbol = "ETC";         pid = "etc";                  algo = "Etchash";    port_low = 1382; port_mid = 1383; port_high = 1384; divisor = 1e18}
+    [PSCustomObject]@{symbol = "LTC";         pid = "ltc";                  algo = "Scrypt";     port_low = 1408; port_mid = 1409; port_high = 1410; divisor = 1e8}
+    [PSCustomObject]@{symbol = "OCTA";        pid = "octaspace";            algo = "Ethash";     port_low = 1376; port_mid = 1377; port_high = 1378; divisor = 1e18}
+    [PSCustomObject]@{symbol = "QUAI-SHA256"; pid = "quai-sha256";          algo = "Sha256d";    port_low = 1364; port_mid = 1365; port_high = 1366; divisor = 1e18; coin_symbol = "QUAI"}
+    [PSCustomObject]@{symbol = "QUAI-SCRYPT"; pid = "quai-scrypt";          algo = "Scrypt";     port_low = 1370; port_mid = 1371; port_high = 1372; divisor = 1e18; coin_symbol = "QUAI"}
+    [PSCustomObject]@{symbol = "XEC";         pid = "xec";                  algo = "Sha256d";    port_low = 1304; port_mid = 1305; port_high = 1306; divisor = 100}
+    # Kerrigan multi-algo — four PoW variants under one chain
+    [PSCustomObject]@{symbol = "KRGN-X11";    pid = "kerrigan-x11";         algo = "X11";        port_low = 1444; port_mid = 1445; port_high = 1446; divisor = 1e8; coin_symbol = "KRGN"}
+    [PSCustomObject]@{symbol = "KRGN-KAWPOW"; pid = "kerrigan-kawpow";      algo = "KawPow";     port_low = 1432; port_mid = 1433; port_high = 1434; divisor = 1e8; coin_symbol = "KRGN"}
+    [PSCustomObject]@{symbol = "KRGN-EH200";  pid = "kerrigan-equihash200"; algo = "Equihash";   port_low = 1438; port_mid = 1439; port_high = 1440; divisor = 1e8; coin_symbol = "KRGN"}
+    [PSCustomObject]@{symbol = "KRGN-EH192";  pid = "kerrigan-equihash192"; algo = "Equihash";   port_low = 1468; port_mid = 1469; port_high = 1470; divisor = 1e8; coin_symbol = "KRGN"}
 )
 
 # Fetch live pool state from Himpool API
@@ -81,19 +84,22 @@ $Pools_Data | Where-Object {
 } | ForEach-Object {
 
     $Pool_Id           = $_.pid
-    $Pool_Symbol_RM    = $_.symbol                                  # what RainbowMiner keys by (e.g. KRGN-X11)
+    $Pool_Symbol_RM    = $_.symbol                                  # what RainbowMiner keys by (e.g. KRGN-X11, QUAI-SHA256)
     $Pool_Symbol_Chain = if ($_.coin_symbol) { $_.coin_symbol } else { $_.symbol }  # actual chain symbol for wallet lookup
     $Pool_Algo_Hint    = $_.algo
     $Pool_Divisor      = $_.divisor
     $Pool_Port         = $_.port_mid
 
-    # RainbowMiner coin DB lookup
+    # RainbowMiner coin DB lookup — prefer exact RM symbol match; fall back to algo hint with chain
+    # symbol so DAG-algo variant normalization (Ethash/KawPow) still gets coin-specific handling.
     $Pool_Coin = Get-Coin $Pool_Symbol_RM
     if ($Pool_Coin) {
         $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
     } else {
-        $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algo_Hint
+        $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algo_Hint -CoinSymbol $Pool_Symbol_Chain
     }
+
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"qtminer"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
 
     # Pool-side live data
     $Pool_Live = $Pool_ById[$Pool_Id]
@@ -147,7 +153,7 @@ $Pools_Data | Where-Object {
             Protocol          = "stratum+tcp"
             Host              = $Host
             Port              = $Pool_Port
-            User              = "$($Pool_Wallet).$($Worker)"
+            User              = "$($Pool_Wallet).{workername:$Worker}"
             Pass              = "x"
             Region            = $Pool_RegionsTable.$Region_Key
             SSL               = $false
@@ -158,6 +164,7 @@ $Pools_Data | Where-Object {
             BLK               = $Stat.BlockRate_Average
             TSL               = $Pool_TSL
             WTM               = $false
+            EthMode           = $Pool_EthProxy
             Name              = $Name
             Penalty           = 0
             PenaltyFactor     = 1
@@ -165,8 +172,9 @@ $Pools_Data | Where-Object {
             HasMinerExclusions= $false
             Price_Bias        = 0.0
             Price_Unbias      = 0.0
+            Price_0           = 0.0
             Wallet            = $Pool_Wallet
-            Worker            = $Worker
+            Worker            = "{workername:$Worker}"
             Email             = $null
         }
     }
