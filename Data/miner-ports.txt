@@ -65,7 +65,7 @@
 234	Nanominer
 235	CpuminerVerus
 236	Nheqminer
-237	
+237	HtnCpu
 238	UlordRig
 239	CpuPower
 240	XmrigUpx
@@ -154,6 +154,8 @@
 376	XmrigCC
 377	SrbMinerMulti268
 378	Xmrig5
+379	HtnNvidia
+380 HtnAmd
 
 400	Sgminer
 401	SgminerBitcore
