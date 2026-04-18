@@ -20,7 +20,7 @@ $Sha256 = if (Test-Path (".\Data\minersha256.json")) {Get-Content ".\Data\miners
 
 [System.Collections.ArrayList]$RunningMiners_Paths = @()
 try {
-    $RunningMiners_Request = Invoke-RestMethod "http://localhost:$($LocalAPIport)/runningminers" -UseBasicParsing -ErrorAction Stop
+    $RunningMiners_Request = Invoke-RestMethod "http://127.0.0.1:$($LocalAPIport)/runningminers" -UseBasicParsing -ErrorAction Stop
     if ($RunningMiners_Request -isnot [array]) {
         if (-not $RunningMiners_Paths.Contains($RunningMiners_Request.Path)) {
             [void]$RunningMiners_Paths.Add($RunningMiners_Request.Path)
