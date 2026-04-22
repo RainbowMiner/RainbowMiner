@@ -29,6 +29,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "clchash"          ;              Params = ""; Fee = 2.00;               Vendor = @("CPU")} #CLCHash/CLC
     [PSCustomObject]@{MainAlgorithm = "evohash"          ;              Params = ""; Fee = 1.00;               Vendor = @("CPU")} #EvoHash/EVOAI
     [PSCustomObject]@{MainAlgorithm = "randomsfx"        ;              Params = ""; Fee = 0.85;               Vendor = @("CPU"); Rx1GbPages = $true} #RandomSFX
+    [PSCustomObject]@{MainAlgorithm = "randomxeq"        ;              Params = ""; Fee = 0.85;               Vendor = @("CPU"); Rx1GbPages = $true; ExcludePoolName = "C3pool|Moneroocean"} #RandomXEQ
     [PSCustomObject]@{MainAlgorithm = "yespowerdogemone" ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yespowerDogemone
 
     #CPU and GPU mining
@@ -44,11 +45,16 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "hoohash"          ;              Params = ""; Fee = 2.00;               Vendor = @("AMD","INTEL","NVIDIA")} #Hoohash/HTN (from 09/26/2024)
     [PSCustomObject]@{MainAlgorithm = "nxlhash"          ;              Params = ""; Fee = 1.00;               Vendor = @("AMD","INTEL","NVIDIA")} #NxlHash/NXL (from 10/15/2024)
     [PSCustomObject]@{MainAlgorithm = "sha256dt"         ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","INTEL","NVIDIA")} #SHA256dt/NOVO
+    [PSCustomObject]@{MainAlgorithm = "sha3x"            ;              Params = ""; Fee = 0.65;               Vendor = @("AMD","INTEL","NVIDIA")} #SHA3x/XTM
     [PSCustomObject]@{MainAlgorithm = "xehash"           ;              Params = ""; Fee = 1.00; MinMemGb = 3; Vendor = @("AMD","INTEL","NVIDIA")} #XeHash/XE
 
     #GPU Dualmining
+    [PSCustomObject]@{MainAlgorithm = "autolykos2"       ; DAG = $true; Params = ""; Fee = 1.50;               Vendor = @("AMD","NVIDIA"); SecondaryAlgorithm = "sha3x"; ExcludePoolName="Nicehash"; ExcludeCompute = @("GCN51","GCN50")} #Autolykos2/ERGO + SHA3x/XTM
+
     [PSCustomObject]@{MainAlgorithm = "ethashb3"         ; DAG = $true; Params = ""; Fee = 1.00; MinMemGb = 3; Vendor = @("AMD","INTEL","NVIDIA"); SecondaryAlgorithm = "blake3_decred"; ExcludePoolName = "Gteh"} #ethashb3 + Decred/DCR
     [PSCustomObject]@{MainAlgorithm = "ethashb3"         ; DAG = $true; Params = ""; Fee = 1.00; MinMemGb = 3; Vendor = @("AMD","INTEL","NVIDIA"); SecondaryAlgorithm = "sha256dt"; ExcludePoolName = "Gteh"} #ethashb3 + NOVO
+
+    [PSCustomObject]@{MainAlgorithm = "fishhash"         ; DAG = $true; Params = ""; Fee = 1.00; MinMemGb = 3; Vendor = @("AMD","NVIDIA"); SecondaryAlgorithm = "sha3x"; ExcludePoolName = "Gteh"; ExcludeCompute = @("GCN51","GCN50")} #FishHash + SHA3x/XTM
 
 )
 
