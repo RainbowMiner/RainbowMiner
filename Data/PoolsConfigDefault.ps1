@@ -115,6 +115,12 @@
         "HeroMiners" = [PSCustomObject]@{
             Currencies=@("DNX","ETC","QUAI","RVN","ERG")
         }
+        "Himpool" = [PSCustomObject]@{
+            Currencies=@("ALPH","ARRR","BCH","BTG","DGB","EPX","ETC","KRGN","LTC","OCTA","QUAI","XEC")
+        }
+        "HimpoolSolo" = [PSCustomObject]@{
+            Currencies=@("ALPH","ARRR","BCH","BTC","BTG","BUCK","DGB","EPX","ETC","KMD","KRGN","LRS","LTC","OCTA","PPC","QUAI","XEC","XMR")
+        }
         "Hiveon" = [PSCustomObject]@{
             Currencies=@("ETC")
         }
