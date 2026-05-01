@@ -815,6 +815,7 @@
     "sha256csm": "SHA256csm",
     "sha256d": "SHA256d",
     "sha256dt": "SHA256dt",
+    "sha256mem": "SHA256mem",
     "sha256q": "SHA256q",
     "sha256t": "SHA256t",
     "sha256ton": "SHA256ton",
