@@ -17,14 +17,14 @@ $ManualUri = "https://github.com/bzminer/bzminer/releases"
 $Port = "332{0:d2}"
 $DevFee = 0.5
 $Cuda = "11.2"
-$Version = "23.0.2"
+$Version = "24.0.2"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-BzMiner\bzminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v23.0.2-bzminer/bzminer_v23.0.2_linux.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v24.0.2-bzminer/bzminer_v24.0.2_linux.tar.gz"
 } else {
     $Path = ".\Bin\GPU-BzMiner\bzminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v23.0.2-bzminer/bzminer_v23.0.2_windows.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v24.0.2-bzminer/bzminer_v24.0.2_windows.zip"
 }
 
 $ExcludePoolName = "prohashing|miningrigrentals"
@@ -86,8 +86,9 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "olhash";                       MinMemGb = 2; Params = ""; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 1.0} #Olhash/Overline
     [PSCustomObject]@{MainAlgorithm = "rethereum";       DAG = $true; MinMemGb = 2; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0} #Rethereum/RTH
     [PSCustomObject]@{MainAlgorithm = "verus";                        MinMemGb = 1; Params = ""; Vendor = @("CPU");                  ExtendInterval = 2; Fee = 1.0} #VerusHash/VRSC
-    [PSCustomObject]@{MainAlgorithm = "warthog";                      MinMemGb = 2; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 2.0; NoCPUMining = $true} #Warthog/WART
+    [PSCustomObject]@{MainAlgorithm = "warthog";                      MinMemGb = 2; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 4.0; NoCPUMining = $true} #Warthog/WART
     [PSCustomObject]@{MainAlgorithm = "woodcoin";                     MinMemGb = 2; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0} #Skein2/WoodCoin LOG
+    [PSCustomObject]@{MainAlgorithm = "xelis";                        MinMemGb = 2; Params = ""; Vendor = @("AMD","CPU","NVIDIA"); mmExtendInterval = 2; Fee = 1.0} #XelisHashV3/XEL
 )
 
 # $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
