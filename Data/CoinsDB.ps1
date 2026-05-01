@@ -100,6 +100,7 @@
     "BLOC" = [PSCustomObject]@{Algo = "CryptoNightHeavyXhv"; Name = "Bloc"; Symbol = "BLOC"}
     "BLOCX" = [PSCustomObject]@{Algo = "BlocxAutolykos2"; Name = "Blocx"; Symbol = "BLOCX"}
     "BMB" = [PSCustomObject]@{Algo = "Pufferfish2"; Name = "Bamboo"; Symbol = "BMB"}
+    "BMC" = [PSCustomObject]@{Algo = "Yespower"; Name = "BobmemeCoin"; Symbol = "BMC"}
     "BMR" = [PSCustomObject]@{Algo = "RandomX"; Name = "Bitmonero"; Symbol = "BMR"}
     "BNODE" = [PSCustomObject]@{Algo = "Honeycomb"; Name = "Beenode"; Symbol = "BNODE"}
     "BOLI" = [PSCustomObject]@{Algo = "X11"; Name = "Bolivar"; Symbol = "BOLI"}
@@ -124,6 +125,7 @@
     "BTE" = [PSCustomObject]@{Algo = "YescryptR16"; Name = "Bitweb"; Symbol = "BTE"}
     "BTFC" = [PSCustomObject]@{Algo = "X11"; Name = "Butterfly"; Symbol = "BTFC"}
     "BTG" = [PSCustomObject]@{Algo = "Equihash24x5"; Name = "Bitcoingold"; Symbol = "BTG"}
+    "BTGS" = [PSCustomObject]@{Algo = "SHA256d"; Name = "BTGS"; Symbol = "BTGS"}
     "BTH" = [PSCustomObject]@{Algo = "Equihash24x5"; Name = "Bithereum"; Symbol = "BTH"}
     "BTM" = [PSCustomObject]@{Algo = "Tensority"; Name = "BTM"; Symbol = "BTM"}
     "BTN" = [PSCustomObject]@{Algo = "Ethash"; Name = "Bitnetmoney"; Symbol = "BTN"}
@@ -276,6 +278,7 @@
     "EVR" = [PSCustomObject]@{Algo = "EvrProgPow"; Name = "Evermore Coin"; Symbol = "EVR"}
     "EXO" = [PSCustomObject]@{Algo = "X16r"; Name = "Exosis"; Symbol = "EXO"}
     "EXP" = [PSCustomObject]@{Algo = "Ethash"; Name = "Expanse"; Symbol = "EXP"}
+    "FAIR" = [PSCustomObject]@{Algo = "SHA256mem"; Name = "Fairchain"; Symbol = "FAIR"}
     "FB" = [PSCustomObject]@{Algo = "SHA256d"; Name = "FractalBitcoin"; Symbol = "FB"}
     "FBIT" = [PSCustomObject]@{Algo = "Take2"; Name = "Fewbit"; Symbol = "FBIT"}
     "FBX" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Fairbrix"; Symbol = "FBX"}
@@ -451,6 +454,10 @@
     "KOTO" = [PSCustomObject]@{Algo = "YescryptR8g"; Name = "koto"; Symbol = "KOTO"}
     "KRB" = [PSCustomObject]@{Algo = "CryptoNight"; Name = "Karbo"; Symbol = "KRB"}
     "KREDS" = [PSCustomObject]@{Algo = "Lyra2RE2"; Name = "Kreds"; Symbol = "KREDS"}
+    "KRGN-Equihash" = [PSCustomObject]@{Algo = "Equihash"; Name = "Kerrigan"; Symbol = "KRGN"; Multi = $true}
+    "KRGN-Equihash24x7" = [PSCustomObject]@{Algo = "Equihash24x7"; Name = "Kerrigan"; Symbol = "KRGN"; Multi = $true}
+    "KRGN-KawPOW" = [PSCustomObject]@{Algo = "KawPOW"; Name = "Kerrigan"; Symbol = "KRGN"; Multi = $true}
+    "KRGN-X11" = [PSCustomObject]@{Algo = "X11"; Name = "Kerrigan"; Symbol = "KRGN"; Multi = $true}
     "KUS" = [PSCustomObject]@{Algo = "Take2"; Name = "Kusa"; Symbol = "KUS"}
     "KVA" = [PSCustomObject]@{Algo = "RandomKEVA"; Name = "Kevacoin"; Symbol = "KVA"}
     "KYAN" = [PSCustomObject]@{Algo = "X11k"; Name = "Kyanite"; Symbol = "KYAN"}
