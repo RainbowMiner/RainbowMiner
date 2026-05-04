@@ -458,6 +458,7 @@
     "KRGN-Equihash24x7" = [PSCustomObject]@{Algo = "Equihash24x7"; Name = "Kerrigan"; Symbol = "KRGN"; Multi = $true}
     "KRGN-KawPOW" = [PSCustomObject]@{Algo = "KawPOW"; Name = "Kerrigan"; Symbol = "KRGN"; Multi = $true}
     "KRGN-X11" = [PSCustomObject]@{Algo = "X11"; Name = "Kerrigan"; Symbol = "KRGN"; Multi = $true}
+    "KRX" = [PSCustomObject]@{Algo = "KeryxHash"; Name = "KERYX"; Symbol = "KRX"}
     "KUS" = [PSCustomObject]@{Algo = "Take2"; Name = "Kusa"; Symbol = "KUS"}
     "KVA" = [PSCustomObject]@{Algo = "RandomKEVA"; Name = "Kevacoin"; Symbol = "KVA"}
     "KYAN" = [PSCustomObject]@{Algo = "X11k"; Name = "Kyanite"; Symbol = "KYAN"}
