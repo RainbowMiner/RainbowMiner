@@ -23,39 +23,23 @@ $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 $Pool_Request = [PSCustomObject]@{}
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "BCI"     ; rpc = "bci"     ; fee = 1.0; port = 9166}
-    [PSCustomObject]@{symbol = "BTG"     ; rpc = "btg"     ; fee = 1.0; port = @(8866,8817)}
-    [PSCustomObject]@{symbol = "BUTK-Take2"     ; rpc = "butk-gr"    ; fee = 1.0; port = 8382}
-    [PSCustomObject]@{symbol = "BUTK-Lyra2z330" ; rpc = "butk-lyra2" ; fee = 1.0; port = 4020}
-	[PSCustomObject]@{symbol = "DASH"    ; rpc = "dash"    ; fee = 1.0; stratum = @([PSCustomObject]@{region="eu";port=@(80,443);host="dash80"})}
-    [PSCustomObject]@{symbol = "DGB-Qubit"      ; rpc = "dgbq"       ; fee = 1.0; port = 8531}
-    [PSCustomObject]@{symbol = "DGB-Skein"      ; rpc = "dgbs"       ; fee = 1.0; port = 5226}
-	[PSCustomObject]@{symbol = "DYN"     ; rpc = "dyn"     ; fee = 1.0; port = 5960}
-	[PSCustomObject]@{symbol = "GAP"     ; rpc = "gap"     ; fee = 1.0; port = 2433}
-	[PSCustomObject]@{symbol = "GRS"     ; rpc = "grs"     ; fee = 0.0; port = 5544}
-    [PSCustomObject]@{symbol = "LUX"     ; rpc = "lux"     ; fee = 1.0; port = 5722}
-    [PSCustomObject]@{symbol = "MONA"    ; rpc = "mona"    ; fee = 1.0; port = 2995}
-    [PSCustomObject]@{symbol = "OBTC"    ; rpc = "obtc"    ; fee = 1.0; port = [PSCustomObject]@{CPU=4074;GPU=4075}}
-	[PSCustomObject]@{symbol = "RIC"     ; rpc = "ric"     ; fee = 1.0; port = 5000}
-    [PSCustomObject]@{symbol = "ROI"     ; rpc = "roi"     ; fee = 1.0; port = 4699}
-    [PSCustomObject]@{symbol = "RTM"     ; rpc = "rtm"     ; fee = 1.0; stratum = @([PSCustomObject]@{region="eu";port=6273;host="rtm"},[PSCustomObject]@{region="us-east";port=6273;host="stratum.us-ny1"},[PSCustomObject]@{region="us-west";port=6273;host="stratum.us-la1"},[PSCustomObject]@{region="asia";port=6273;host="stratum.apac-hkg1"})}
-    [PSCustomObject]@{symbol = "RVN"     ; rpc = "rvn"     ; fee = 0.5; stratum = @([PSCustomObject]@{region="eu";port=8888;host="rvn"},[PSCustomObject]@{region="us-east";port=8855;host="stratum.us-ny1"},[PSCustomObject]@{region="us-west";port=8855;host="stratum.us-la1"},[PSCustomObject]@{region="asia";port=8855;host="stratum.apac-hkg1"})}
-    [PSCustomObject]@{symbol = "VTC"     ; rpc = "vtc"     ; fee = 1.0; stratum = @([PSCustomObject]@{region="eu";port=1777;host="vtc"},[PSCustomObject]@{region="us-west";port=1777;host="stratum.us-la1"})}
-	[PSCustomObject]@{symbol = "XCN"     ; rpc = "xcn"     ; fee = 1.0; port = 8008}
-    [PSCustomObject]@{symbol = "YTN"     ; rpc = "ytn"     ; fee = 1.0; port = 4932}
-	[PSCustomObject]@{symbol = "ZEN"     ; rpc = "zen"     ; fee = 1.0; port = @(3618,3621)}
-    [PSCustomObject]@{symbol = "ZER"     ; rpc = "zero"    ; fee = 1.0; port = @(6568,6569)}
-
-    #Currently disabled
-    #[PSCustomObject]@{symbol = "BEAM"    ; rpc = "beam"    ; fee = 1.0; port = @(7786,7787)}
-    #[PSCustomObject]@{symbol = "BTX"     ; rpc = "btx"     ; fee = 1.0; port = 3629}
-    #[PSCustomObject]@{symbol = "BSD"     ; rpc = "bsd"     ; fee = 1.0; port = 8686}
-    #[PSCustomObject]@{symbol = "ERC"     ; rpc = "erc"     ; fee = 1.0; port = 7674}
-    #[PSCustomObject]@{symbol = "GRLC"    ; rpc = "grlc"    ; fee = 1.0; port = 8600}
-    #[PSCustomObject]@{symbol = "HODL"    ; rpc = "hodl"    ; fee = 1.0; port = 4693}
-    #[PSCustomObject]@{symbol = "MNX"     ; rpc = "mnx"     ; fee = 1.0; port = @(7077,7078)}
-    #[pscustomobject]@{symbol = "VEIL"    ; rpc = "veil"    ; fee = 1.0; port = 7220}
-    #[pscustomobject]@{symbol = "XVG-X17" ; rpc = "xvg-x17" ; fee = 1.0; port = 7477}
+    [PSCustomObject]@{symbol = "C64"      ; rpc = "c64"     ; fee = 1.0; stratum = @([PSCustomObject]@{region="eu";port=@(6464,6469);host="c64"},[PSCustomObject]@{region="us-east";port=@(6464,6469);host="stratum-us"},[PSCustomObject]@{region="asia";port=@(6464,6469);host="stratum-apac"})}
+    [PSCustomObject]@{symbol = "DCR"      ; rpc = "dcr"     ; fee = 1.0; stratum = @([PSCustomObject]@{region="eu";port=@(9332,9336);host="dcr"},[PSCustomObject]@{region="us-east";port=@(9332,9336);host="stratum-us"},[PSCustomObject]@{region="asia";port=@(9332,9336);host="stratum-apac"})}
+    [PSCustomObject]@{symbol = "DGB-Qubit"; rpc = "dgbq"    ; fee = 1.0; port = 8531}
+    [PSCustomObject]@{symbol = "FAIR"     ; rpc = "fair"    ; fee = 1.0; stratum = @([PSCustomObject]@{region="eu";port=@(3833,3834);host="fair"},[PSCustomObject]@{region="asia";port=@(3833,3834);host="stratum-apac"})}
+	[PSCustomObject]@{symbol = "GAP"      ; rpc = "gap"     ; fee = 1.0; port = 2433}
+	[PSCustomObject]@{symbol = "GRS"      ; rpc = "grs"     ; fee = 0.0; stratum = @([PSCustomObject]@{region="eu";port=5544;host="grs"},[PSCustomObject]@{region="us-east";port=5544;host="stratum-us"})}
+    [PSCustomObject]@{symbol = "JUNO"     ; rpc = "juno"    ; fee = 1.0; stratum = @([PSCustomObject]@{region="eu";port=8383;host="juno"},[PSCustomObject]@{region="us-east";port=8383;host="stratum-us"})}
+    [PSCustomObject]@{symbol = "LPEPE"    ; rpc = "lpepe"   ; fee = 1.0; stratum = @([PSCustomObject]@{region="eu";port=@(3633,3634);host="lpepe"},[PSCustomObject]@{region="asia";port=@(3633,3634);host="stratum-apac"})}
+    [PSCustomObject]@{symbol = "OBTC"     ; rpc = "obtc"    ; fee = 1.0; port = [PSCustomObject]@{CPU=4074;GPU=4075}}
+    [PSCustomObject]@{symbol = "PXC"      ; rpc = "pxc"     ; fee = 1.0; port = @(2026,2027)}
+	[PSCustomObject]@{symbol = "RIC"      ; rpc = "ric"     ; fee = 1.0; port = 5000}
+    [PSCustomObject]@{symbol = "RTM"      ; rpc = "rtm"     ; fee = 1.0; port = 6273}
+    [PSCustomObject]@{symbol = "RVN"      ; rpc = "rvn"     ; fee = 0.5; port = @(8888,8889)}
+    [PSCustomObject]@{symbol = "VTC"      ; rpc = "vtc"     ; fee = 1.0; port = @(1777,1780)}
+    [PSCustomObject]@{symbol = "XEL"      ; rpc = "xel"     ; fee = 1.0; stratum = @([PSCustomObject]@{region="eu";port=3333;host="xel"},[PSCustomObject]@{region="us-east";port=3333;host="stratum-us"},[PSCustomObject]@{region="asia";port=3333;host="stratum-apac"})}
+	[PSCustomObject]@{symbol = "ZEC"      ; rpc = "zec"     ; fee = 1.0; port = 3732}
+    [PSCustomObject]@{symbol = "XMR"      ; rpc = "xmr"     ; fee = 1.0; stratum = @([PSCustomObject]@{region="eu";port=@(6665,6666);host="xmr"},[PSCustomObject]@{region="us-east";port=@(6665,6666);host="stratum-us"})}
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "-.+")" -or $InfoOnly} | ForEach-Object {
