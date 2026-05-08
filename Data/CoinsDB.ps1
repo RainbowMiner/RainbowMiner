@@ -574,6 +574,7 @@
     "NOVD" = [PSCustomObject]@{Algo = "SHA256dt"; Name = "Novo"; Symbol = "NOVD"}
     "NOVO" = [PSCustomObject]@{Algo = "SHA256dt"; Name = "Novo"; Symbol = "NOVO"}
     "NOX" = [PSCustomObject]@{Algo = "RandomX"; Name = "NoxCoin"; Symbol = "NOX"}
+    "NPT" = [PSCustomObject]@{Algo = "Tip5"; Name = "NeptuneCash"; Symbol = "NPT"}
     "NSD" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Nasda"; Symbol = "NSD"}
     "NTL" = [PSCustomObject]@{Algo = "KarlsenHash"; Name = "Nautilus"; Symbol = "NTL"}
     "NUKO" = [PSCustomObject]@{Algo = "Ethash"; Name = "Nekonium"; Symbol = "NUKO"}
@@ -599,6 +600,7 @@
     "OSMI" = [PSCustomObject]@{Algo = "X11"; Name = "Osmium"; Symbol = "OSMI"}
     "OSN" = [PSCustomObject]@{Algo = "Take2"; Name = "Osinpay"; Symbol = "OSN"}
     "OXC" = [PSCustomObject]@{Algo = "SHA256d"; Name = "Ordex"; Symbol = "OXC"}
+    "OXG" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Ordexgold"; Symbol = "OXG"}
     "PAC" = [PSCustomObject]@{Algo = "Ethash"; Name = "Pacman"; Symbol = "PAC"}
     "PARS" = [PSCustomObject]@{Algo = "CryptoNightV7"; Name = "ParsiCoin"; Symbol = "PARS"}
     "PAS" = [PSCustomObject]@{Algo = "RandomX"; Name = "Pastella"; Symbol = "PAS"}
@@ -865,6 +867,7 @@
     "XMY-yescrypt" = [PSCustomObject]@{Algo = "Yescrypt"; Name = "Myriad"; Symbol = "XMY"; Multi = $true}
     "XNA" = [PSCustomObject]@{Algo = "KawPOW"; Name = "Neurai"; Symbol = "XNA"}
     "XNC" = [PSCustomObject]@{Algo = "X11"; Name = "Xenios"; Symbol = "XNC"}
+    "XNT" = [PSCustomObject]@{Algo = "Tip5"; Name = "NeptunePrivacy"; Symbol = "XNT"}
     "XOL" = [PSCustomObject]@{Algo = "RandomX"; Name = "Xolentum"; Symbol = "XOL"}
     "XPL" = [PSCustomObject]@{Algo = "Ethash"; Name = "PowLayer"; Symbol = "XPL"}
     "XPP" = [PSCustomObject]@{Algo = "CryptoNightFast"; Name = "PrivatePay"; Symbol = "XPP"}
