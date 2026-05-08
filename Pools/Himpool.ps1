@@ -14,55 +14,56 @@ param(
     [String]$StatAverageStable = "Week"
 )
 
-# Himpool — https://himpool.com
-# Multi-algorithm PPLNS pool. Two regions: EU (eu.himpool.com) and India (in.himpool.com).
-# See HimpoolSolo.ps1 for SOLOLoyalty variants.
+# Himpool — https://himpool.com — Miningcore-based multi-algorithm pool.
+# Driven entirely from the public aggregator endpoint /api/v1/public, which already
+# groups pools by coin, exposes per-coin region availability via stratums[], and
+# returns deduped port metadata. Adding or removing coins on Himpool requires no
+# script changes — RainbowMiner picks up changes on the next refresh cycle.
+#
+# This file emits the PPLNS variants. See HimpoolSolo.ps1 for SOLOLoyalty.
 
-$Pool_Fee  = 2.0
-$Pool_Type = "PPLNS"
+$Pool_Type           = "PPLNS"
 $Pool_Region_Default = "eu"
 
-[hashtable]$Pool_RegionsTable = @{}
-@("eu","us","asia") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
-
-# Map Himpool regional hostnames to RainbowMiner region keys
-$Pool_RegionHosts = [PSCustomObject]@{
-    "eu"    = "eu.himpool.com"
-    "asia"  = "in.himpool.com"
+# Region keys we have stratum hosts for. Stratums returned by the API for any other
+# region are skipped — protects against advertising a region that doesn't actually
+# accept connections for the requested coin.
+$Pool_RegionHosts = @{
+    "eu" = "eu.himpool.com"
+    "in" = "in.himpool.com"
 }
 
-# Supported coins: RainbowMiner symbol, Himpool pool id, algorithm, low/mid/high stratum ports, divisor.
-# All three ports are live on the pool; the mid-tier port is advertised as the default. Low is for
-# low-diff devices and high is for high-diff farms — operators can pick explicitly if needed.
-# QUAI has two PoW variants (Sha256d + Scrypt), disambiguated via dedicated RM symbols so they
-# don't collide in the coin DB or in Set-Stat keys. coin_symbol maps them back to the QUAI chain
-# symbol for wallet lookup. Same pattern used for Kerrigan's four PoW variants (shared KRGN chain).
-$Pools_Data = @(
-    [PSCustomObject]@{symbol = "ALPH";        pid = "alph";                 algo = "Blake3";     port_low = 1361; port_mid = 1362; port_high = 1363; divisor = 1e18}
-    [PSCustomObject]@{symbol = "ARRR";        pid = "arrr";                 algo = "Equihash";   port_low = 1417; port_mid = 1418; port_high = 1419; divisor = 1e8}
-    [PSCustomObject]@{symbol = "BCH";         pid = "bch";                  algo = "Sha256d";    port_low = 1307; port_mid = 1308; port_high = 1309; divisor = 1e8}
-    [PSCustomObject]@{symbol = "BTG";         pid = "btg";                  algo = "Equihash";   port_low = 1462; port_mid = 1463; port_high = 1464; divisor = 1e8}
-    [PSCustomObject]@{symbol = "DGB";         pid = "dgb";                  algo = "Sha256d";    port_low = 1316; port_mid = 1317; port_high = 1318; divisor = 1e8}
-    [PSCustomObject]@{symbol = "EPX";         pid = "epx";                  algo = "Ethash";     port_low = 1426; port_mid = 1427; port_high = 1428; divisor = 1e18}
-    [PSCustomObject]@{symbol = "ETC";         pid = "etc";                  algo = "Etchash";    port_low = 1382; port_mid = 1383; port_high = 1384; divisor = 1e18}
-    [PSCustomObject]@{symbol = "LTC";         pid = "ltc";                  algo = "Scrypt";     port_low = 1408; port_mid = 1409; port_high = 1410; divisor = 1e8}
-    [PSCustomObject]@{symbol = "OCTA";        pid = "octaspace";            algo = "Ethash";     port_low = 1376; port_mid = 1377; port_high = 1378; divisor = 1e18}
-    [PSCustomObject]@{symbol = "QUAI-SHA256"; pid = "quai-sha256";          algo = "Sha256d";    port_low = 1364; port_mid = 1365; port_high = 1366; divisor = 1e18; coin_symbol = "QUAI"}
-    [PSCustomObject]@{symbol = "QUAI-SCRYPT"; pid = "quai-scrypt";          algo = "Scrypt";     port_low = 1370; port_mid = 1371; port_high = 1372; divisor = 1e18; coin_symbol = "QUAI"}
-    [PSCustomObject]@{symbol = "XEC";         pid = "xec";                  algo = "Sha256d";    port_low = 1304; port_mid = 1305; port_high = 1306; divisor = 100}
-    # Kerrigan multi-algo — four PoW variants under one chain
-    [PSCustomObject]@{symbol = "KRGN-X11";    pid = "kerrigan-x11";         algo = "X11";        port_low = 1444; port_mid = 1445; port_high = 1446; divisor = 1e8; coin_symbol = "KRGN"}
-    [PSCustomObject]@{symbol = "KRGN-KAWPOW"; pid = "kerrigan-kawpow";      algo = "KawPow";     port_low = 1432; port_mid = 1433; port_high = 1434; divisor = 1e8; coin_symbol = "KRGN"}
-    [PSCustomObject]@{symbol = "KRGN-EH200";  pid = "kerrigan-equihash200"; algo = "Equihash";   port_low = 1438; port_mid = 1439; port_high = 1440; divisor = 1e8; coin_symbol = "KRGN"}
-    [PSCustomObject]@{symbol = "KRGN-EH192";  pid = "kerrigan-equihash192"; algo = "Equihash";   port_low = 1468; port_mid = 1469; port_high = 1470; divisor = 1e8; coin_symbol = "KRGN"}
-)
+# Per-coin region whitelist override. If a coin appears here, only the listed regions
+# are emitted even if the upstream API reports more. Used when the pool's coinRegions
+# map advertises a region whose stratum daemon hasn't actually been deployed yet.
+$Pool_CoinRegionOverrides = @{
+    "FIRO" = @("eu")
+}
 
-# Fetch live pool state from Himpool API
-$Pool_ApiBase = "https://himpool.com/api"
+# Multi-PoW chains: same chain hosts multiple algorithms under distinct pool ids.
+# Wallet lookup uses the chain symbol; stat keys + RainbowMiner currency code use the
+# variant symbol so different algos don't collide in CoinDB or Set-Stat.
+$Pool_PidToVariant = @{
+    "quai-sha256"               = @{ symbol = "QUAI-SHA256"; chain = "QUAI"; algo = "Sha256" }
+    "quai-sha256-solo"          = @{ symbol = "QUAI-SHA256"; chain = "QUAI"; algo = "Sha256" }
+    "quai-scrypt"               = @{ symbol = "QUAI-SCRYPT"; chain = "QUAI"; algo = "Scrypt" }
+    "quai-scrypt-solo"          = @{ symbol = "QUAI-SCRYPT"; chain = "QUAI"; algo = "Scrypt" }
+    "kerrigan-x11"              = @{ symbol = "KRGN-X11";    chain = "KRGN"; algo = "X11" }
+    "kerrigan-x11-solo"         = @{ symbol = "KRGN-X11";    chain = "KRGN"; algo = "X11" }
+    "kerrigan-kawpow"           = @{ symbol = "KRGN-KAWPOW"; chain = "KRGN"; algo = "KawPow" }
+    "kerrigan-kawpow-solo"      = @{ symbol = "KRGN-KAWPOW"; chain = "KRGN"; algo = "KawPow" }
+    "kerrigan-equihash200"      = @{ symbol = "KRGN-EH200";  chain = "KRGN"; algo = "Equihash" }
+    "kerrigan-equihash200-solo" = @{ symbol = "KRGN-EH200";  chain = "KRGN"; algo = "Equihash" }
+    "kerrigan-equihash192"      = @{ symbol = "KRGN-EH192";  chain = "KRGN"; algo = "Equihash" }
+    "kerrigan-equihash192-solo" = @{ symbol = "KRGN-EH192";  chain = "KRGN"; algo = "Equihash" }
+}
+
+[hashtable]$Pool_RegionLabels = @{}
+$Pool_RegionHosts.Keys | ForEach-Object { $Pool_RegionLabels.$_ = Get-Region $_ }
+
 $Pool_Request = $null
-
 try {
-    $Pool_Request = Invoke-RestMethodAsync "$Pool_ApiBase/pools" -tag $Name -retry 5 -retrywait 250 -cycletime 120
+    $Pool_Request = Invoke-RestMethodAsync "https://himpool.com/api/v1/public" -tag $Name -retry 5 -retrywait 250 -cycletime 120
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed."
@@ -74,108 +75,110 @@ if (-not $Pool_Request.pools) {
     return
 }
 
-# Index pools by id for quick lookup
-$Pool_ById = @{}
-$Pool_Request.pools | ForEach-Object { $Pool_ById[$_.id] = $_ }
+$Pool_Request.pools | ForEach-Object {
+    $Coin_Symbol  = $_.symbol
+    $Coin_Algo    = $_.algorithm
+    $Coin_Name    = $_.name
+    $Coin_Streams = @($_.stratums)
+    $Coin_Schemes = @($_.schemes)
+    $Coin_Ports   = @($_.ports)
 
-$Pools_Data | Where-Object {
-    $Wallet_Symbol = if ($_.coin_symbol) { $_.coin_symbol } else { $_.symbol }
-    $Wallets.$Wallet_Symbol -or $InfoOnly
-} | ForEach-Object {
+    if (-not $Coin_Schemes -or -not $Coin_Streams -or -not $Coin_Ports) { return }
 
-    $Pool_Id           = $_.pid
-    $Pool_Symbol_RM    = $_.symbol                                  # what RainbowMiner keys by (e.g. KRGN-X11, QUAI-SHA256)
-    $Pool_Symbol_Chain = if ($_.coin_symbol) { $_.coin_symbol } else { $_.symbol }  # actual chain symbol for wallet lookup
-    $Pool_Algo_Hint    = $_.algo
-    $Pool_Divisor      = $_.divisor
-    $Pool_Port         = $_.port_mid
-
-    # RainbowMiner coin DB lookup — prefer exact RM symbol match; fall back to algo hint with chain
-    # symbol so DAG-algo variant normalization (Ethash/KawPow) still gets coin-specific handling.
-    $Pool_Coin = Get-Coin $Pool_Symbol_RM
-    if ($Pool_Coin) {
-        $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
+    $Allowed_Regions = if ($Pool_CoinRegionOverrides.ContainsKey($Coin_Symbol)) {
+        $Pool_CoinRegionOverrides[$Coin_Symbol]
     } else {
-        $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algo_Hint -CoinSymbol $Pool_Symbol_Chain
+        @($Pool_RegionHosts.Keys)
     }
 
-    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"qtminer"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
+    # Single port per region: prefer mid-tier (index 1 of 3), else first available.
+    $Pool_Port = if ($Coin_Ports.Count -ge 3) { $Coin_Ports[1] } else { $Coin_Ports[0] }
+    if (-not $Pool_Port) { return }
+    $Pool_PortNumber = [int]$Pool_Port.port
+    $Pool_PortTLS    = [bool]$Pool_Port.tls
 
-    # Pool-side live data
-    $Pool_Live = $Pool_ById[$Pool_Id]
-    if (-not $Pool_Live) {
-        # Pool currently offline / disabled / unknown — skip quietly unless InfoOnly
-        if (-not $InfoOnly) { return }
-    }
+    $Coin_Schemes | Where-Object { $_.scheme -eq "PPLNS" } | ForEach-Object {
+        $Scheme = $_
 
-    $Pool_Wallet = $Wallets.$Pool_Symbol_Chain
-
-    $Pool_Hashrate = 0
-    $Pool_Workers  = 0
-    $Pool_TSL      = $null
-    $Pool_BLK      = 0
-
-    if (-not $InfoOnly -and $Pool_Live) {
-        $Pool_Hashrate   = [double]($Pool_Live.poolStats.poolHashrate    | Select-Object -First 1)
-        $Pool_Workers    = [int]   ($Pool_Live.poolStats.connectedMiners | Select-Object -First 1)
-        $Net_Hashrate    = [double]($Pool_Live.networkStats.networkHashrate | Select-Object -First 1)
-
-        if ($Pool_Live.lastPoolBlockTime) {
-            try {
-                $Pool_TSL = ((Get-Date).ToUniversalTime() - ([datetime]::Parse($Pool_Live.lastPoolBlockTime))).TotalSeconds
-            } catch { $Pool_TSL = $null }
+        if ($Pool_PidToVariant.ContainsKey($Scheme.poolId)) {
+            $Variant        = $Pool_PidToVariant[$Scheme.poolId]
+            $Pool_Symbol_RM = $Variant.symbol
+            $Pool_Chain     = $Variant.chain
+            $Pool_AlgoHint  = $Variant.algo
+        } else {
+            $Pool_Symbol_RM = $Coin_Symbol
+            $Pool_Chain     = $Coin_Symbol
+            $Pool_AlgoHint  = $Coin_Algo
         }
 
-        # Blocks-per-day estimate: 86400 / (network_target_spacing) * pool_share_of_network
-        $Block_Time = if ($Pool_Live.networkStats.blockTime) { [double]$Pool_Live.networkStats.blockTime } else { 600 }
-        if ($Net_Hashrate -gt 0 -and $Block_Time -gt 0) {
-            $Pool_BLK = (86400.0 / $Block_Time) * ($Pool_Hashrate / $Net_Hashrate)
+        $Pool_Wallet = $Wallets.$Pool_Chain
+        if (-not $Pool_Wallet -and -not $InfoOnly) { return }
+
+        $Pool_Coin = Get-Coin $Pool_Symbol_RM
+        if ($Pool_Coin) {
+            $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
+        } else {
+            $Pool_Algorithm_Norm = Get-Algorithm $Pool_AlgoHint -CoinSymbol $Pool_Chain
         }
 
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Symbol_RM)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_Hashrate -BlockRate $Pool_BLK -Quiet
-        if (-not $Stat.HashRate_Live -and -not $AllowZero) { return }
-    }
+        $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"qtminer"}
+                         elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"}
+                         else {$null}
 
-    # Emit one pool object per region
-    foreach ($Region_Key in @("eu","asia")) {
-        $Host = $Pool_RegionHosts.$Region_Key
-        if (-not $Host) { continue }
+        $Pool_Hashrate = [double]$Scheme.hashrate
+        $Pool_Workers  = [int]   $Scheme.workers
+        $Pool_TSL      = $null
+        if ($Scheme.lastBlockTime) {
+            try { $Pool_TSL = ((Get-Date).ToUniversalTime() - ([datetime]::Parse($Scheme.lastBlockTime))).TotalSeconds } catch {}
+        }
 
-        [PSCustomObject]@{
-            Algorithm         = $Pool_Algorithm_Norm
-            Algorithm0        = $Pool_Algorithm_Norm
-            CoinName          = if ($Pool_Coin) { $Pool_Coin.Name } else { $Pool_Symbol_Chain }
-            CoinSymbol        = $Pool_Symbol_Chain
-            Currency          = $Pool_Symbol_Chain
-            Price             = 0
-            StablePrice       = 0
-            MarginOfError     = 0
-            Protocol          = "stratum+tcp"
-            Host              = $Host
-            Port              = $Pool_Port
-            User              = "$($Pool_Wallet).{workername:$Worker}"
-            Pass              = "x"
-            Region            = $Pool_RegionsTable.$Region_Key
-            SSL               = $false
-            Updated           = (Get-Date).ToUniversalTime()
-            PoolFee           = $Pool_Fee
-            Workers           = $Pool_Workers
-            Hashrate          = $Stat.HashRate_Live
-            BLK               = $Stat.BlockRate_Average
-            TSL               = $Pool_TSL
-            WTM               = $false
-            EthMode           = $Pool_EthProxy
-            Name              = $Name
-            Penalty           = 0
-            PenaltyFactor     = 1
-            Disabled          = $false
-            HasMinerExclusions= $false
-            Price_Bias        = 0.0
-            Price_Unbias      = 0.0
-            Price_0           = 0.0
-            Wallet            = $Pool_Wallet
-            Worker            = "{workername:$Worker}"
-            Email             = $null
+        $Stat = $null
+        if (-not $InfoOnly) {
+            $Stat = Set-Stat -Name "$($Name)_$($Pool_Symbol_RM)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_Hashrate -BlockRate 0 -Quiet
+            if (-not $Stat.HashRate_Live -and -not $AllowZero) { return }
+        }
+
+        $Coin_Streams | Where-Object { $Allowed_Regions -contains $_.region } | ForEach-Object {
+            $Region_Key = $_.region
+            $Pool_Host  = $Pool_RegionHosts.$Region_Key
+            if (-not $Pool_Host) { return }
+
+            [PSCustomObject]@{
+                Algorithm         = $Pool_Algorithm_Norm
+                Algorithm0        = $Pool_Algorithm_Norm
+                CoinName          = if ($Pool_Coin) { $Pool_Coin.Name } else { $Coin_Name }
+                CoinSymbol        = $Pool_Chain
+                Currency          = $Pool_Chain
+                Price             = 0
+                StablePrice       = 0
+                MarginOfError     = 0
+                Protocol          = if ($Pool_PortTLS) { "stratum+ssl" } else { "stratum+tcp" }
+                Host              = $Pool_Host
+                Port              = $Pool_PortNumber
+                User              = "$($Pool_Wallet).{workername:$Worker}"
+                Pass              = "x"
+                Region            = $Pool_RegionLabels.$Region_Key
+                SSL               = $Pool_PortTLS
+                Updated           = (Get-Date).ToUniversalTime()
+                PoolFee           = [double]$Scheme.fee
+                Workers           = $Pool_Workers
+                Hashrate          = if ($Stat) { $Stat.HashRate_Live } else { 0 }
+                BLK               = 0
+                TSL               = $Pool_TSL
+                WTM               = $false
+                EthMode           = $Pool_EthProxy
+                Name              = $Name
+                Penalty           = 0
+                PenaltyFactor     = 1
+                Disabled          = $false
+                HasMinerExclusions= $false
+                Price_Bias        = 0.0
+                Price_Unbias      = 0.0
+                Price_0           = 0.0
+                Wallet            = $Pool_Wallet
+                Worker            = "{workername:$Worker}"
+                Email             = $null
+            }
         }
     }
 }

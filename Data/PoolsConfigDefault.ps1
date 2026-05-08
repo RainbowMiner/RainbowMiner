@@ -116,10 +116,10 @@
             Currencies=@("DNX","ETC","QUAI","RVN","ERG")
         }
         "Himpool" = [PSCustomObject]@{
-            Currencies=@("ALPH","ARRR","BCH","BTG","DGB","EPX","ETC","KRGN","LTC","OCTA","QUAI","XEC")
+            Currencies=@("ARRR","BCH","BTG","DGB","EPX","ETC","FIRO","KMD","KRGN","LTC","OCTA","QUAI","XEC","XMR","ZEC")
         }
         "HimpoolSolo" = [PSCustomObject]@{
-            Currencies=@("ALPH","ARRR","BCH","BTC","BTG","BUCK","DGB","EPX","ETC","KMD","KRGN","LRS","LTC","OCTA","PPC","QUAI","XEC","XMR")
+            Currencies=@("ALPH","ARRR","BCH","BTC","BTG","DGB","EPX","ETC","FIRO","KMD","KRGN","LRS","LTC","OCTA","PPC","QUAI","XEC","XMR","ZEC")
         }
         "Hiveon" = [PSCustomObject]@{
             Currencies=@("ETC")
