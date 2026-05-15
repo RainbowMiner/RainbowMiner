@@ -86,6 +86,20 @@ $Pool_Request.pools | Where-Object {-not $_.coming_soon} | Where-Object {$Wallet
 
     $Pool_Hashrate = $_.stats.hashrate.pool
     $Pool_Workers  = $_.stats.workers
+    $Pool_TSL      = $null
+
+    if (-not $InfoOnly -and $_.urls.api) {
+        try {
+            $Pool_SubRequest = Invoke-RestMethodAsync "$($_.urls.api)" -tag $Name -cycletime 120 -delay 250 -timeout 30
+            $lbf = $Pool_SubRequest.pool.lastBlockFound.foundAt
+            if ($lbf -ne $null) {
+                $Pool_TSL = [int]((Get-UnixTimestamp) - [int]$lbf)
+            }
+        }
+        catch {
+            Write-Log -Level Info "Pool API ($Name) has failed for pool $($_.id). "
+        }
+    }
 
     foreach ($Pool_Region in $Pool_Data.regions) {
         $Pool_Stratum = "$(if ($Pools_Region_Stratums[$Pool_Region]) {$Pools_Region_Stratums[$Pool_Region]} else {$_.id}).suprnova.cc"
@@ -113,6 +127,7 @@ $Pool_Request.pools | Where-Object {-not $_.coming_soon} | Where-Object {$Wallet
                 Workers       = $Pool_Workers
                 Hashrate      = $Pool_Hashrate
                 DataWindow    = $DataWindow
+                TSL           = $Pool_TSL
                 WTM           = $true
                 EthMode       = $Pool_EthProxy
                 Name          = $Name
