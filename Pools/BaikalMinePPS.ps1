@@ -39,8 +39,9 @@ if (-not $Pool_Request.entities) {
 
 $Pool_Request.entities | Where-Object {$_.type.identifier -eq $Pool_Type -and $_.active -and -not $_.maintenance -and ($Wallets."$($_.coin.symbol)" -or $InfoOnly)} | ForEach-Object {
     $Pool_Currency = $_.coin.symbol
+    $Pool_MultiAlgo = if ($Pool_Currency -eq "KRGN") {if ($_.coin.algorithm) {$_.coin.algorithm} else {"KawPow"}} else {$null}
 
-    if ($Pool_Coin = Get-Coin $Pool_Currency) {
+    if ($Pool_Coin = Get-Coin $Pool_Currency -Algorithm $Pool_MultiAlgo) {
         $Pool_Algorithm_Norm = $Pool_Coin.Algo
     } else {
         Write-Log -Level Warn "Pool $($Name): missing coin $($Pool_Currency) in db"
