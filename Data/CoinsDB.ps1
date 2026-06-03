@@ -68,6 +68,7 @@
     "BBR" = [PSCustomObject]@{Algo = "Wildkeccak"; Name = "Boolberry"; Symbol = "BBR"}
     "BBS" = [PSCustomObject]@{Algo = "CryptoNightLiteV7"; Name = "BBSCoin"; Symbol = "BBS"}
     "BC2" = [PSCustomObject]@{Algo = "SHA256d"; Name = "BitCoin II"; Symbol = "BC2"}
+    "BC3" = [PSCustomObject]@{Algo = "Sha3256t"; Name = "BitCoiniii"; Symbol = "BC3"}
     "BCA" = [PSCustomObject]@{Algo = "SHA256d"; Name = "Atom"; Symbol = "BCA"}
     "BCD" = [PSCustomObject]@{Algo = "Bcd"; Name = "Bitdiamond"; Symbol = "BCD"}
     "BCH" = [PSCustomObject]@{Algo = "SHA256d"; Name = "Bitcoincash"; Symbol = "BCH"}
@@ -143,6 +144,7 @@
     "BZX" = [PSCustomObject]@{Algo = "Lyra2z"; Name = "Bitcoin Zero"; Symbol = "BZX"}
     "C64" = [PSCustomObject]@{Algo = "RandomC64"; Name = "C64"; Symbol = "C64"}
     "CANN" = [PSCustomObject]@{Algo = "X11"; Name = "Cannabiscoin"; Symbol = "CANN"}
+    "CAP" = [PSCustomObject]@{Algo = "Whirlpoolx2"; Name = "Capstash"; Symbol = "CAP"}
     "CAS-MinotaurX" = [PSCustomObject]@{Algo = "MinotaurX"; Name = "Cas"; Symbol = "CAS"; Multi = $true}
     "CAS-SHA256d" = [PSCustomObject]@{Algo = "SHA256d"; Name = "Cas"; Symbol = "CAS"; Multi = $true}
     "CAT" = [PSCustomObject]@{Algo = "Scrypt"; Name = "CatalansCoin"; Symbol = "CAT"}
@@ -276,6 +278,7 @@
     "EVOAI" = [PSCustomObject]@{Algo = "Evohash"; Name = "EvolveAi"; Symbol = "EVOAI"}
     "EVOX" = [PSCustomObject]@{Algo = "RandomArq"; Name = "Evolution"; Symbol = "EVOX"}
     "EVR" = [PSCustomObject]@{Algo = "EvrProgPow"; Name = "Evermore Coin"; Symbol = "EVR"}
+    "EXFER" = [PSCustomObject]@{Algo = "Argon2Exfer"; Name = "Exfer"; Symbol = "EXFER"}
     "EXO" = [PSCustomObject]@{Algo = "X16r"; Name = "Exosis"; Symbol = "EXO"}
     "EXP" = [PSCustomObject]@{Algo = "Ethash"; Name = "Expanse"; Symbol = "EXP"}
     "FAIR" = [PSCustomObject]@{Algo = "SHA256mem"; Name = "Fairchain"; Symbol = "FAIR"}
@@ -285,6 +288,7 @@
     "FCH" = [PSCustomObject]@{Algo = "SHA256d"; Name = "Freecash"; Symbol = "FCH"}
     "FIRO" = [PSCustomObject]@{Algo = "FiroPoW"; Name = "Firo"; Symbol = "FIRO"}
     "FIURY" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Fiury"; Symbol = "FIURY"}
+    "FJAR" = [PSCustomObject]@{Algo = "SHA256d"; Name = "Fjarcode"; Symbol = "FJAR"}
     "FJC" = [PSCustomObject]@{Algo = "ScryptN11"; Name = "Fujicoin"; Symbol = "FJC"}
     "FLM" = [PSCustomObject]@{Algo = "PHI"; Name = "Folm"; Symbol = "FLM"}
     "FLO" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Florincoin"; Symbol = "FLO"}
@@ -591,6 +595,7 @@
     "OBV" = [PSCustomObject]@{Algo = "CurveHash"; Name = "Oblivioncoin"; Symbol = "OBV"}
     "OCP" = [PSCustomObject]@{Algo = "SHA256t"; Name = "Ocp"; Symbol = "OCP"}
     "OCTA" = [PSCustomObject]@{Algo = "Ethash"; Name = "OctaSpace"; Symbol = "OCTA"}
+    "OGG" = [PSCustomObject]@{Algo = "Oggpow"; Name = "OggCoin"; Symbol = "OGG"}
     "OGVA" = [PSCustomObject]@{Algo = "NeoScrypt"; Name = "OGVA Network"; Symbol = "OGVA"}
     "OL" = [PSCustomObject]@{Algo = "Olhash"; Name = "Overline"; Symbol = "OL"}
     "OMEGA" = [PSCustomObject]@{Algo = "X11"; Name = "Omega"; Symbol = "OMEGA"}
@@ -631,6 +636,7 @@
     "PPC" = [PSCustomObject]@{Algo = "SHA256d"; Name = "Peercoin"; Symbol = "PPC"}
     "PRIV" = [PSCustomObject]@{Algo = "Yespower"; Name = "Privcy"; Symbol = "PRIV"}
     "PRKL" = [PSCustomObject]@{Algo = "Ethash"; Name = "Perkle"; Symbol = "PRKL"}
+    "PRL" = [PSCustomObject]@{Algo = "PearlHash"; Name = "Pearl"; Symbol = "PRL"}
     "PTC" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Pesetacoin"; Symbol = "PTC"}
     "PUG" = [PSCustomObject]@{Algo = "HoohashV1"; Name = "PugDAG"; Symbol = "PUG"}
     "PURA" = [PSCustomObject]@{Algo = "X11"; Name = "Pura"; Symbol = "PURA"}
@@ -657,6 +663,7 @@
     "RACE" = [PSCustomObject]@{Algo = "Lyra2RE2"; Name = "Race"; Symbol = "RACE"}
     "RAD" = [PSCustomObject]@{Algo = "SHA512256d"; Name = "Radiant"; Symbol = "RAD"}
     "RAP" = [PSCustomObject]@{Algo = "NeoScrypt"; Name = "Rapture"; Symbol = "RAP"}
+    "RATR" = [PSCustomObject]@{Algo = "Yespower"; Name = "Ratatoskr"; Symbol = "RATR"}
     "RBL" = [PSCustomObject]@{Algo = "SHA256d"; Name = "Rebel"; Symbol = "RBL"}
     "REA" = [PSCustomObject]@{Algo = "SHA256csm"; Name = "Realcoin"; Symbol = "REA"}
     "REALI" = [PSCustomObject]@{Algo = "FiroPoW"; Name = "Realichain"; Symbol = "REALI"}
