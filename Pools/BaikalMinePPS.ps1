@@ -37,8 +37,16 @@ if (-not $Pool_Request.entities) {
     return
 }
 
-$Pool_Request.entities | Where-Object {$_.type.identifier -eq $Pool_Type -and $_.active -and -not $_.maintenance -and ($Wallets."$($_.coin.symbol)" -or $InfoOnly)} | ForEach-Object {
-    $Pool_Currency = $_.coin.symbol
+[hashtable]$PoolCoins = @{}
+foreach($d in $Pool_Request.entities) {
+    $PoolCoins[$d.coin.symbol] = $d.coin.symbol
+}
+if ($PoolCoins.ContainsKey("PEARL")) {
+    $PoolCoins["PEARL"] = "PRL"
+}
+
+$Pool_Request.entities | Where-Object {$_.type.identifier -eq $Pool_Type -and $_.active -and -not $_.maintenance -and ($Wallets."$($PoolCoins[$_.coin.symbol])" -or $InfoOnly)} | ForEach-Object {
+    $Pool_Currency = $PoolCoins[$_.coin.symbol]
     $Pool_MultiAlgo = if ($Pool_Currency -eq "KRGN") {if ($_.coin.algorithm) {$_.coin.algorithm} else {"KawPow"}} else {$null}
 
     if ($Pool_Coin = Get-Coin $Pool_Currency -Algorithm $Pool_MultiAlgo) {
