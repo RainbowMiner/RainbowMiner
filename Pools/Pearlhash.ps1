@@ -41,7 +41,7 @@ if (-not $InfoOnly) {
     $Network_Request = [PSCustomObject]@{}
     try {
         $Pool_Request    = Invoke-RestMethodAsync "https://pearlhash.xyz/api/stats" -tag $Name -cycletime 120
-        $Network_Request = Invoke-RestMethodAsync "https://pearlhash.xyz/api/chain-info" -tag $Name -cycletime 120
+        $Network_Request = Invoke-RestMethodAsync "https://pearlhash.xyz/api/chain-info" -tag $Name -cycletime 120 -fixbigint
     }
     catch {
         Write-Log -Level Warn "Pool API ($Name) has failed. "
@@ -59,12 +59,16 @@ if (-not $InfoOnly) {
     $timestamp       = Get-UnixTimestamp
     $timestamp24h    = $timestamp - 86400
 
+    $blocks_reward   = ($PoolBlocks_Request.transactions | Where-Object {-not $_.vin[0].isAddress -and $_.vin[0].coinbase} | Select-Object -First 1).value / 1e8
     $blocks          = $PoolBlocks_Request.transactions | Where-Object {-not $_.vin[0].isAddress -and $_.vin[0].coinbase} | Select-Object -ExpandProperty blockTime | Sort-Object -Descending
     $blocks_measure  = $blocks | Where-Object {$_ -gt $timestamp24h} | Measure-Object -Minimum -Maximum
     $Pool_BLK        = [int]$($(if ($blocks_measure.Count -gt 1 -and ($blocks_measure.Maximum - $blocks_measure.Minimum)) {86400/($blocks_measure.Maximum - $blocks_measure.Minimum)} else {1})*$blocks_measure.Count)
     $Pool_TSL        = [int]($timestamp - ($blocks | Select-Object -First 1))
 
-    $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -HashRate $Pool_Request.hashrate -BlockRate $Pool_BLK -Difficulty $Network_Request.difficulty -ChangeDetection $false -Quiet
+    $btcPrice        = if ($Global:Rates.$Pool_Currency) {1/[double]$Global:Rates.$Pool_Currency} else {0}
+    $btcRewardLive   = if ($Network_Request.networkhashps -and $Network_Request.avg_block_time_s) {86400 * $btcPrice * $blocks_reward / $Network_Request.networkhashps / $Network_Request.avg_block_time_s} else {0}
+
+    $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value $btcRewardLive -Duration $StatSpan -HashRate $Pool_Request.hashrate -BlockRate $Pool_BLK -Difficulty $Network_Request.difficulty -ChangeDetection $false -Quiet
     if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
 }
 
@@ -78,9 +82,9 @@ if ($Pool_Wallet -or $InfoOnly) {
                 CoinName      = $Pool_Coin.Name
                 CoinSymbol    = $Pool_Currency
                 Currency      = $Pool_Currency
-                Price         = 0
-                StablePrice   = 0
-                MarginOfError = 0
+                Price         = $Stat.$StatAverage #instead of .Live
+                StablePrice   = $Stat.$StatAverageStable
+                MarginOfError = $Stat.Week_Fluctuation
                 Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
                 Host          = "$($Pool_Host[$Pool_Region])"
                 Port          = $Pool_Port
@@ -95,7 +99,7 @@ if ($Pool_Wallet -or $InfoOnly) {
                 Hashrate      = if (-not $Pool_Solo) {$Stat.HashRate_Live} else {$null}
                 BLK           = if (-not $Pool_Solo) {$Stat.BlockRate_Average} else {$null}
                 TSL           = if (-not $Pool_Solo) {$Pool_TSL} else {$null}
-                WTM           = $true
+                WTM           = $btcRewardLive -eq 0
                 PaysLive      = $Pool_PPS
                 Difficulty    = if ($Pool_Solo) {$Stat.Diff_Average} else {$null}
                 SoloMining    = $Pool_Solo
