@@ -71,8 +71,8 @@ if (-not $InfoOnly) {
         Write-Log -Level Warn "Pool blocks API ($Name) has failed. "
     }
 
-    $timestamp       = Get-UnixTimestamp
-    $timestamp24h    = $timestamp - 86400
+    $timestamp       = Get-UnixTimestamp -Milliseconds
+    $timestamp24h    = $timestamp - 86400000
 
     $blocks          = $PoolBlocks_Request.blocks | Where-Object payment_type -eq 0 | Select-Object -ExpandProperty time | Sort-Object -Descending
     $blocks_measure  = $blocks | Where-Object {$_ -gt $timestamp24h} | Measure-Object -Minimum -Maximum
