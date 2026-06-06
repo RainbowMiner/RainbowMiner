@@ -35,7 +35,6 @@ $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 $Pool_TLS = $Pool_BLK  = $null
 $Pool_PPS = $Pool_Solo = $false
 
-
 if (-not $InfoOnly) {
 
     $Pool_Request    = [PSCustomObject]@{}
@@ -69,7 +68,7 @@ if (-not $InfoOnly) {
     if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
 }
 
-if ($Pool_Wallet -or $Info_Only) {
+if ($Pool_Wallet -or $InfoOnly) {
     foreach($Pool_Region in $Pool_Regions) {
         $Pool_SSL = $false
         foreach($Pool_Port in $Pool_Ports) {
