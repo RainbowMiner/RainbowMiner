@@ -2829,6 +2829,7 @@ class SrbMinerMulti : Miner {
                     gpu_count   = $Parameters.Devices.Count
                     tuning_done = $false
                     failed      = $false
+                    autotune    = $Parameters.AutoTune
                     intensities = @{}   # Hashtable: "$algoIndex|$deviceId" -> int
                 }
             }
@@ -2949,7 +2950,7 @@ class SrbMinerMulti : Miner {
                 $this.BenchmarkedOffset = $this.Benchmarked
             }
 
-            if ($this.MinerInfo.algo_count -eq 1 -and -not $this.MinerInfo.tuning_done) {
+            if ($this.MinerInfo.autotune -and -not $this.MinerInfo.tuning_done) {
                 $HashRate_Value = 0
             }
         }

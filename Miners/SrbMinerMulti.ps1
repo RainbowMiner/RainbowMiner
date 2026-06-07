@@ -13,16 +13,15 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.De
 $ManualUri = "https://bitcointalk.org/index.php?topic=5190081.0"
 $Port = "349{0:d2}"
 $DevFee = 0.85
-$Version = "3.3.0"
+$Version = "3.3.5"
 $Cuda = "11.7"
 
 if ($IsLinux) {
-    $Version = "3.3.4"
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.3.4-srbminermulti/SRBMiner-Multi-3-3-4-Linux.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.3.5-srbminermulti/SRBMiner-Multi-3-3-5-Linux.tar.gz"
 } else {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.3.0-srbminermulti/SRBMiner-Multi-3-3-0-win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.3.5-srbminermulti/SRBMiner-Multi-3-3-5-win64.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -101,7 +100,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "lyra2v2_webchain" ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","NVIDIA")} #Mintme.com/MINTME
     [PSCustomObject]@{MainAlgorithm = "memehash"         ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU","INTEL","NVIDIA")} #MemeHash/PEPEPOW
     [PSCustomObject]@{MainAlgorithm = "meowpow"          ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","INTEL","NVIDIA")} #MeowPow/MEWC
-    [PSCustomObject]@{MainAlgorithm = "pearlhash"        ;              Params = ""; Fee = 3.00;               Vendor = @("NVIDIA"); ExcludeCompute = @("Pascal");  LinuxOnly = $true} #PearlHash/PRL
+    [PSCustomObject]@{MainAlgorithm = "pearlhash"        ;              Params = ""; Fee = 3.00;               Vendor = @("AMD","NVIDIA"); ExcludePoolName = "84.32.220.219|129.226.55.135"; ExcludeCompute = @("Pascal","RDNA4","RDNA3","RDNA1","GCN51","GCN50"); NoAutoTune = $true} #PearlHash/PRL
     [PSCustomObject]@{MainAlgorithm = "phihash"          ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","NVIDIA")} #PhilHashV2/PHI (from 01/30/2025)
     [PSCustomObject]@{MainAlgorithm = "progpow_epic"     ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","INTEL","NVIDIA")} #ProgPowEPIC/EPIC
     #[PSCustomObject]@{MainAlgorithm = "progpow_quai"     ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","INTEL","NVIDIA")} #ProgPowQuai/QUAI
@@ -361,6 +360,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                                             Vendor    = $Miner_Vendor
                                             HwSig     = "$($Miner_Model)-$($BusIdStr)"
                                             Devices   = $Miner_Device.BusId_Type_Vendor_Index
+                                            AutoTune  = $false
                                         }
                                     }
 
@@ -413,6 +413,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                                 Vendor    = $Miner_Vendor
                                 HwSig     = "$($Miner_Model)-$($BusIdStr)"
                                 Devices   = $Miner_Device.BusId_Type_Vendor_Index
+                                AutoTune  = -not $_.NoAutotune
                             }
                         }
 
