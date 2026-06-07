@@ -49,7 +49,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "mike";                      Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 1.00; FaultTolerance = 8} #Mike
     [PSCustomObject]@{MainAlgorithm = "minotaur";                  Vendor = @("AMD","INTEL","NVIDIA"); Params = ""} #, new in v0.26.0
     [PSCustomObject]@{MainAlgorithm = "nexapow"; DAG = $true;      Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 0.75} #NexaPow/NEXA
-    [PSCustomObject]@{MainAlgorithm = "pearlhash";                 Vendor = @("NVIDIA");               Params = ""; DevFee = 0.00} #Pearlhash/PRL
+    [PSCustomObject]@{MainAlgorithm = "pearlhash";                 Vendor = @("NVIDIA");               Params = ""; DevFee = 0.00; ExcludePoolName = "BaikalMine|HeroMiners|K1Pool|K1PoolSolo|Kryptex|KryptexSolo|Mining4people|RPlant|RPlantSolo|SuprNova"; UseWorker = $true} #Pearlhash/PRL
     [PSCustomObject]@{MainAlgorithm = "phi";                       Vendor = @("AMD","INTEL");          Params = ""} #PHI
     [PSCustomObject]@{MainAlgorithm = "progpow-sero";      DAG = $true; Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 0.75} #ProgPowSero
     [PSCustomObject]@{MainAlgorithm = "progpow-telestai";  DAG = $true; Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 0.75} #Meraki/TLS
@@ -123,7 +123,7 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
 		    foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
                 if (-not $Pools.$Algorithm_Norm.Host) {continue}
 
-                $QhashParams = ""
+                $QhashParams = $Worker = ""
 
                 $MinMemGB = if ($_.DAG) {if ($Pools.$Algorithm_Norm.DagSizeMax) {$Pools.$Algorithm_Norm.DagSizeMax} else {Get-EthDAGSize -CoinSymbol $Pools.$Algorithm_Norm.CoinSymbol -Algorithm $Algorithm_Norm_0 -Minimum $_.MinMemGb}} else {$_.MinMemGb}
                 $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
@@ -163,6 +163,10 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
                         $First = $false
                     }
 
+                    if ($_.UseWorker) {
+                        $Worker = " --worker $($Pools.$Algorithm_Norm.Worker)"
+                    }
+
 				    $Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
 
 				    [PSCustomObject]@{
@@ -170,7 +174,7 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
 					    DeviceName     = $Miner_Device.Name
 					    DeviceModel    = $Miner_Model
 					    Path           = $Path
-					    Arguments      = "--api-port `$mport -a $($Algorithm) -o stratum+tcp$(if ($Pools.$Algorithm_Norm.SSL) {"s"})://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User -replace "^nexa:")$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) -r 4 -R 5 --max-rejects 10 --multiple-instance --opencl-devices $($DeviceIDsAll) $($DeviceParams)$($QhashParams) --opencl-threads auto --gpu-temp-limit=95 $($Params)"
+					    Arguments      = "--api-port `$mport -a $($Algorithm) -o stratum+tcp$(if ($Pools.$Algorithm_Norm.SSL) {"s"})://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User -replace "^nexa:")$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) -r 4 -R 5 --max-rejects 10 --multiple-instance --opencl-devices $($DeviceIDsAll) $($DeviceParams)$($QhashParams)$($Worker) --opencl-threads auto --gpu-temp-limit=95 $($Params)"
 					    HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate"."$(if ($_.HashrateDuration){$_.HashrateDuration}else{"Week"})"}
 					    API            = "Xmrig"
 					    Port           = $Miner_Port
