@@ -55,7 +55,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $Pool_Request = [PSCustomObject]@{}
 
     try {
-        $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).luckypool.io/api/stats" -tag $Name -timeout 15 -cycletime 120
+        $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).luckypool.io/api/stats" -tag $Name -timeout 15 -cycletime 120 -fixbigint
     }
     catch {
         Write-Log -Level Warn "Pool API ($Name) for $Pool_Currency has failed. "
@@ -69,8 +69,41 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
 
         $Pool_StatFn = "$($Name)_$($Pool_Currency)_Profit"
         $Pool_Reward = "Live"
-        $Pool_Data   = Get-PoolDataFromRequest $Pool_Request -Currency $Pool_Currency -Divisor $Pool_Divisor -Timestamp $timestamp -addBlockData
-        $Pool_WTM    = -not $Pool_Data.$Pool_Reward.reward
+
+        $networkHashrate = [decimal]$Pool_Request.network.hashrate
+        $blockTime       = [decimal]$Pool_Request.network.blockTime
+        $reward          = [decimal]$Pool_Request.network.reward
+        $coinUnits       = if ($Pool_Request.config.coinUnits) {[decimal]$Pool_Request.config.coinUnits} else {1}
+
+        if ($networkHashrate -and $blockTime -and $reward) {
+            $amountLive   = 86400 / $blockTime * $reward / 1e8 / $networkHashrate / $coinUnits
+
+            $lastSatPrice = if ($Global:Rates.$Pool_Currency) {
+                1 / $Global:Rates.$Pool_Currency * 1e8
+            } elseif ($Pool_Request.markets.btc -and $Pool_Request.markets.price) {
+                1e8 * [decimal]$Pool_Request.markets.price / [decimal]$Pool_Request.markets.btc
+            } else {0}
+
+            $rewardLive = $amountLive * $lastSatPrice
+
+            $Pool_Data = [PSCustomObject]@{
+                Live    = @{reward = $rewardLive; hashrate = $Pool_Request.pool.hashrate}
+                Day     = @{reward = $rewardLive; hashrate = $Pool_Request.pool.hashrate}
+                Workers = if ($Pool_Request.pool.workers) {$Pool_Request.pool.workers} else {$Pool_Request.pool.miners}
+                BLK     = 0
+                TSL     = 0
+            }
+
+            $blocks = $Pool_Request.pool.blocks | Where-Object {$_ -match '^.*?\:(\d+?)\:'} | ForEach-Object {$Matches[1]} | Sort-Object -Descending
+            $blocks_measure = $blocks | Where-Object {$_ -gt ($timestamp - 86400)} | Measure-Object -Minimum -Maximum
+            $Pool_Data.BLK = [int]$($(if ($blocks_measure.Count -gt 1 -and ($blocks_measure.Maximum - $blocks_measure.Minimum)) {86400/($blocks_measure.Maximum - $blocks_measure.Minimum)} else {1})*$blocks_measure.Count)
+            $Pool_Data.TSL = if ($blocks.Count) {$timestamp - $blocks[0]}
+
+        } else {
+            $Pool_Data = Get-PoolDataFromRequest $Pool_Request -Currency $Pool_Currency -Divisor $Pool_Divisor -Timestamp $timestamp -addBlockData
+        }
+
+        $Pool_WTM = -not $Pool_Data.$Pool_Reward.reward
 
         $Stat = Set-Stat -Name $Pool_StatFn -Value ($Pool_Data.$Pool_Reward.reward/1e8) -Duration $StatSpan -HashRate $Pool_Data.$Pool_Reward.hashrate -BlockRate $Pool_Data.BLK -ChangeDetection $false -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
