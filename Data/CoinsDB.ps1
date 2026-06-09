@@ -595,7 +595,7 @@
     "OBV" = [PSCustomObject]@{Algo = "CurveHash"; Name = "Oblivioncoin"; Symbol = "OBV"}
     "OCP" = [PSCustomObject]@{Algo = "SHA256t"; Name = "Ocp"; Symbol = "OCP"}
     "OCTA" = [PSCustomObject]@{Algo = "Ethash"; Name = "OctaSpace"; Symbol = "OCTA"}
-    "OGG" = [PSCustomObject]@{Algo = "Oggpow"; Name = "OggCoin"; Symbol = "OGG"}
+    "OGG" = [PSCustomObject]@{Algo = "OggPoW"; Name = "OggCoin"; Symbol = "OGG"}
     "OGVA" = [PSCustomObject]@{Algo = "NeoScrypt"; Name = "OGVA Network"; Symbol = "OGVA"}
     "OL" = [PSCustomObject]@{Algo = "Olhash"; Name = "Overline"; Symbol = "OL"}
     "OMEGA" = [PSCustomObject]@{Algo = "X11"; Name = "Omega"; Symbol = "OMEGA"}
@@ -636,7 +636,7 @@
     "PPC" = [PSCustomObject]@{Algo = "SHA256d"; Name = "Peercoin"; Symbol = "PPC"}
     "PRIV" = [PSCustomObject]@{Algo = "Yespower"; Name = "Privcy"; Symbol = "PRIV"}
     "PRKL" = [PSCustomObject]@{Algo = "Ethash"; Name = "Perkle"; Symbol = "PRKL"}
-    "PRL" = [PSCustomObject]@{Algo = "PearlHash"; Name = "Pearl"; Symbol = "PRL"}
+    "PRL" = [PSCustomObject]@{Algo = "Pearl"; Name = "Pearl"; Symbol = "PRL"}
     "PTC" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Pesetacoin"; Symbol = "PTC"}
     "PUG" = [PSCustomObject]@{Algo = "HoohashV1"; Name = "PugDAG"; Symbol = "PUG"}
     "PURA" = [PSCustomObject]@{Algo = "X11"; Name = "Pura"; Symbol = "PURA"}
