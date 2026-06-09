@@ -14,14 +14,14 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 0.00
 $Cuda = "11.0"
-$Version = "0.48.0"
+$Version = "0.48.1"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.48.0-wildrigmulti/wildrig-multi-linux-0.48.0.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.48.1-wildrigmulti/wildrig-multi-linux-0.48.1.tar.gz"
 } else {
     $Path = ".\Bin\GPU-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.48.0-wildrigmulti/wildrig-multi-windows-0.48.0.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.48.1-wildrigmulti/wildrig-multi-windows-0.48.1.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -49,7 +49,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "mike";                      Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 1.00; FaultTolerance = 8} #Mike
     [PSCustomObject]@{MainAlgorithm = "minotaur";                  Vendor = @("AMD","INTEL","NVIDIA"); Params = ""} #, new in v0.26.0
     [PSCustomObject]@{MainAlgorithm = "nexapow"; DAG = $true;      Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 0.75} #NexaPow/NEXA
-    [PSCustomObject]@{MainAlgorithm = "pearlhash";                 Vendor = @("NVIDIA");               Params = ""; DevFee = 0.00; ExcludePoolName = "BaikalMine|HeroMiners|K1Pool|K1PoolSolo|Kryptex|KryptexSolo|Mining4people|RPlant|RPlantSolo|SuprNova"; UseWorker = $true} #Pearlhash/PRL
+    [PSCustomObject]@{MainAlgorithm = "pearlhash";                 Vendor = @("NVIDIA");               Params = ""; DevFee = 0.00; ExcludePoolName = "BaikalMine|HeroMiners|K1Pool|K1PoolSolo|Kryptex|KryptexSolo|Mining4people|RPlant|RPlantSolo|SuprNova"} #Pearlhash/PRL
     [PSCustomObject]@{MainAlgorithm = "phi";                       Vendor = @("AMD","INTEL");          Params = ""} #PHI
     [PSCustomObject]@{MainAlgorithm = "progpow-sero";      DAG = $true; Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 0.75} #ProgPowSero
     [PSCustomObject]@{MainAlgorithm = "progpow-telestai";  DAG = $true; Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 0.75} #Meraki/TLS
@@ -163,7 +163,7 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
                         $First = $false
                     }
 
-                    if ($_.UseWorker) {
+                    if ($Pools.$Algorithm_Norm.Worker -and $Pools.$Algorithm_Norm.Password -eq "x" -and $Pools.$Algorithm_Norm.User -eq $Pools.$Algorithm_Norm.Wallet) {
                         $Worker = " --worker $($Pools.$Algorithm_Norm.Worker)"
                     }
 
