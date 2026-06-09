@@ -869,6 +869,7 @@
     "trtlchukwa": "Argon2Chukwa",
     "trtlchukwa2": "Argon2ChukwaV2",
     "trtlchukwav2": "Argon2ChukwaV2",
+    "oggpow": "OggPoW",
     "unitus": "Argon2d4096",
     "ubiqhash": "UbqHash",
     "ubqhash": "UbqHash",
