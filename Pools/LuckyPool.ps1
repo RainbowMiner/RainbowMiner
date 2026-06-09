@@ -76,12 +76,12 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         $coinUnits       = if ($Pool_Request.config.coinUnits) {[decimal]$Pool_Request.config.coinUnits} else {1}
 
         if ($networkHashrate -and $blockTime -and $reward) {
-            $amountLive   = 86400 / $blockTime * $reward / 1e8 / $networkHashrate / $coinUnits
+            $amountLive   = 86400 / $blockTime * $reward / $networkHashrate / $coinUnits
 
             $lastSatPrice = if ($Global:Rates.$Pool_Currency) {
-                1 / $Global:Rates.$Pool_Currency * 1e8
+                1 / $Global:Rates.$Pool_Currency
             } elseif ($Pool_Request.markets.btc -and $Pool_Request.markets.price) {
-                1e8 * [decimal]$Pool_Request.markets.price / [decimal]$Pool_Request.markets.btc
+                [decimal]$Pool_Request.markets.price / [decimal]$Pool_Request.markets.btc
             } else {0}
 
             $rewardLive = $amountLive * $lastSatPrice
