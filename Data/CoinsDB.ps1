@@ -100,12 +100,14 @@
     "BLAST" = [PSCustomObject]@{Algo = "SHA256d"; Name = "Blast"; Symbol = "BLAST"}
     "BLOC" = [PSCustomObject]@{Algo = "CryptoNightHeavyXhv"; Name = "Bloc"; Symbol = "BLOC"}
     "BLOCX" = [PSCustomObject]@{Algo = "BlocxAutolykos2"; Name = "Blocx"; Symbol = "BLOCX"}
+    "BLOZ" = [PSCustomObject]@{Algo = "Randomzero"; Name = "Blockzero"; Symbol = "BLOZ"}
     "BMB" = [PSCustomObject]@{Algo = "Pufferfish2"; Name = "Bamboo"; Symbol = "BMB"}
     "BMC" = [PSCustomObject]@{Algo = "Yespower"; Name = "BobmemeCoin"; Symbol = "BMC"}
     "BMR" = [PSCustomObject]@{Algo = "RandomX"; Name = "Bitmonero"; Symbol = "BMR"}
     "BNODE" = [PSCustomObject]@{Algo = "Honeycomb"; Name = "Beenode"; Symbol = "BNODE"}
     "BOLI" = [PSCustomObject]@{Algo = "X11"; Name = "Bolivar"; Symbol = "BOLI"}
     "BONC" = [PSCustomObject]@{Algo = "Scrypt"; Name = "BonkCoin"; Symbol = "BONC"}
+    "BOSKA" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Boska"; Symbol = "BOSKA"}
     "BQC" = [PSCustomObject]@{Algo = "Scrypt"; Name = "BBQ"; Symbol = "BQC"}
     "BRAZ" = [PSCustomObject]@{Algo = "HMQ1725"; Name = "Brazio"; Symbol = "BRAZ"}
     "BRC" = [PSCustomObject]@{Algo = "Scrypt"; Name = "BeersCoin"; Symbol = "BRC"}
@@ -175,6 +177,7 @@
     "COSA" = [PSCustomObject]@{Algo = "Cosa"; Name = "Cosanta"; Symbol = "COSA"}
     "CPAY" = [PSCustomObject]@{Algo = "CryptixOX8"; Name = "Cryptix"; Symbol = "CPAY"}
     "CPU" = [PSCustomObject]@{Algo = "CpuPower"; Name = "Cpuchain"; Symbol = "CPU"}
+    "CRB" = [PSCustomObject]@{Algo = "Neuromorph"; Name = "Cereblix"; Symbol = "CRB"}
     "CRC" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Craft"; Symbol = "CRC"}
     "CRDS" = [PSCustomObject]@{Algo = "Argon2d250"; Name = "Credits"; Symbol = "CRDS"}
     "CRM" = [PSCustomObject]@{Algo = "Skein"; Name = "CREAM"; Symbol = "CRM"}
@@ -312,6 +315,7 @@
     "FXTC-SHA256d" = [PSCustomObject]@{Algo = "SHA256d"; Name = "Fxtc Coin"; Symbol = "FXTC"; Multi = $true}
     "FXTC-X11" = [PSCustomObject]@{Algo = "X11"; Name = "Fxtc Coin"; Symbol = "FXTC"; Multi = $true}
     "FXTC-X16R" = [PSCustomObject]@{Algo = "X16r"; Name = "Fxtc Coin"; Symbol = "FXTC"; Multi = $true}
+    "GAEL" = [PSCustomObject]@{Algo = "KawPOW"; Name = "Gaelium"; Symbol = "GAEL"}
     "GALE" = [PSCustomObject]@{Algo = "SHA256csm"; Name = "Galleon"; Symbol = "GALE"}
     "GAME" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Gamecredits"; Symbol = "GAME"}
     "GAP" = [PSCustomObject]@{Algo = "GapSearch"; Name = "GapCoin"; Symbol = "GAP"}
