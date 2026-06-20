@@ -49,7 +49,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "mike";                      Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 1.00; FaultTolerance = 8} #Mike
     [PSCustomObject]@{MainAlgorithm = "minotaur";                  Vendor = @("AMD","INTEL","NVIDIA"); Params = ""} #, new in v0.26.0
     [PSCustomObject]@{MainAlgorithm = "nexapow"; DAG = $true;      Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 0.75} #NexaPow/NEXA
-    [PSCustomObject]@{MainAlgorithm = "pearlhash";                 Vendor = @("NVIDIA");               Params = ""; DevFee = 0.00; ExcludePoolName = "BaikalMine|HeroMiners|K1Pool|K1PoolSolo|Kryptex|KryptexSolo|Mining4people|RPlant|RPlantSolo|SuprNova"} #Pearlhash/PRL
+    [PSCustomObject]@{MainAlgorithm = "pearlhash";                 Vendor = @("NVIDIA");               Params = ""; DevFee = 0.00; ExcludePoolName = "BaikalMine|HeroMiners|K1Pool|K1PoolSolo|Kryptex|KryptexSolo|Mining4people|RPlant|RPlantSolo|SuprNova|unMineable"} #Pearlhash/PRL
     [PSCustomObject]@{MainAlgorithm = "phi";                       Vendor = @("AMD","INTEL");          Params = ""} #PHI
     [PSCustomObject]@{MainAlgorithm = "progpow-sero";      DAG = $true; Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 0.75} #ProgPowSero
     [PSCustomObject]@{MainAlgorithm = "progpow-telestai";  DAG = $true; Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 0.75} #Meraki/TLS

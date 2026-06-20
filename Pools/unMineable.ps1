@@ -50,6 +50,7 @@ $Pools_Data = @(
     [PSCustomObject]@{algo = "kheavyhash"; coin = "KAS"; port = @(3333,4444); ethproxy = $null;           rpc = "kheavyhash"; divisor = 1;   mh = 1e9; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "nexapow";    coin = "NEXA"; port = @(3333,4444); ethproxy = $null;          rpc = "nexapow";    divisor = 1;   mh = 1e9; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "octopus";    coin = "CFX"; port = @(3333,4444); ethproxy = $null;           rpc = "octopus";    divisor = 1;   mh = 1e9; region = @("us","ca","eu","asia")}
+    [PSCustomObject]@{algo = "pearlhash";  coin = "PRL"; port = @(3333,4444); ethproxy = $null;           rpc = "pearlpow";   divisor = 1;   mh = 1e9; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "randomx";    coin = "XMR"; port = @(3333,4444); ethproxy = $null;           rpc = "rx";         divisor = 1;   mh = 5e4; region = @("us","ca","eu","asia")}    
     [PSCustomObject]@{algo = "xelishashv3";coin = "XEL"; port = @(3333,4444); ethproxy = $null;           rpc = "xelishash";  divisor = 1;   mh = 1e4; region = @("us","ca","eu","asia"); rewardalgo = "xelishash"}
 )
