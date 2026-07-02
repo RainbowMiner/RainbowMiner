@@ -5940,7 +5940,7 @@ function Update-Rates {
     try {
         $NewCoinbase = (Invoke-RestMethodAsync "https://api.coinbase.com/v2/exchange-rates?currency=BTC" -Jobkey "coinbase").data.rates
         if ($NewCoinbase.BTC) {
-            $NewCoinbase.PSObject.Properties | Where-Object {($_.Name -notin $WCSymbols -or $_.Name -in $BaseSymbols) -and $_.Name -ne "BIT"} | Foreach-Object {$NewRates[$_.Name] = [Double]$_.Value}
+            $NewCoinbase.PSObject.Properties | Where-Object {($_.Name -notin $WCSymbols -or $_.Name -in $BaseSymbols) -and $_.Name -notin $Session.Config.ExcludeCurrencyRateFromCoinbase} | Foreach-Object {$NewRates[$_.Name] = [Double]$_.Value}
         }
     } catch {}
 

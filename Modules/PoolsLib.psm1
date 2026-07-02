@@ -318,6 +318,7 @@ function Get-PoolDataFromRequest {
         elseif ($Request.coinPrice.priceSats) {$lastSatPrice = [decimal]$Request.coinPrice.priceSats}
         elseif ($Request.coinPrice.price)     {$lastSatPrice = 1e8*[decimal]$Request.coinPrice.price}
         elseif ($Request.coinPrice."coin-btc"){$lastSatPrice = 1e8*[decimal]$Request.coinPrice."coin-btc"}
+        elseif ($Request.markets.btc -and $Request.markets.price) {$lastSatPrice = 1e8*[decimal]$Request.markets.price/[decimal]$Request.markets.btc}
         else {
             $lastSatPrice = if ($Request.charts.price) {[decimal]($Request.charts.price | Select-Object -Last 1)[1]} else {0}
             if ($chartCurrency -and $chartCurrency -ne "BTC" -and $Global:Rates.$chartCurrency) {$lastSatPrice *= 1e8/$Global:Rates.$chartCurrency}

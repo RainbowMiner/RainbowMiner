@@ -992,6 +992,13 @@
                         </div>
                     </div>
 
+                    <div class="mb-3 row">
+                        <label for="inputExcludeCurrencyRateFromCoinbase" class="col-sm-2 col-form-label">Exclude rate from Coinbase</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="inputExcludeCurrencyRateFromCoinbase" name="ExcludeCurrencyRateFromCoinbase">
+                            <div class="form-text">Coinbase is the main currency provider, only if a symbol is not delivered from this API it will get called from api.rbminer.net. Sometimes there are false values due to ident symbols. Please leave as-is, since the RainbowMiner will update the defaults asap in case of false rates.</div>
+                        </div>
+                    </div>
                     <!-- Switching Prevention -->
                     <div class="mb-3 row">
                         <label for="inputSwitchingPrevention" class="col-sm-2 col-form-label">Switching Prevention</label>
