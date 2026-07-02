@@ -65,8 +65,16 @@ if (-not $InfoOnly) {
     $Pool_BLK        = [int]$($(if ($blocks_measure.Count -gt 1 -and ($blocks_measure.Maximum - $blocks_measure.Minimum)) {86400/($blocks_measure.Maximum - $blocks_measure.Minimum)} else {1})*$blocks_measure.Count)
     $Pool_TSL        = [int]($timestamp - ($blocks | Select-Object -First 1))
 
-    $btcPrice        = if ($Global:Rates.$Pool_Currency) {1/[double]$Global:Rates.$Pool_Currency} else {0}
-    $btcRewardLive   = if ($Network_Request.networkhashps -and $Network_Request.avg_block_time_s) {86400 * $btcPrice * $blocks_reward / $Network_Request.networkhashps / $Network_Request.avg_block_time_s} else {0}
+    # $Global:Rates.PRL is ambiguous — multiple coins share the PRL ticker.
+    # Fetch price directly from CoinGecko using the unambiguous 'pearl-2' coin ID.
+    $btcPrice = 0
+    try {
+        $PRL_CG = Invoke-RestMethod "https://api.coingecko.com/api/v3/simple/price?ids=pearl-2&vs_currencies=btc" -TimeoutSec 10 -ErrorAction Stop
+        $btcPrice = [double]$PRL_CG.'pearl-2'.btc
+    } catch {
+        if ($Global:Rates.$Pool_Currency) {$btcPrice = 1/[double]$Global:Rates.$Pool_Currency}
+    }
+    $btcRewardLive   = if ($Network_Request.networkhashps -and $Network_Request.avg_block_time_s -and $btcPrice) {86400 * $btcPrice * $blocks_reward / $Network_Request.networkhashps / $Network_Request.avg_block_time_s} else {0}
 
     $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value $btcRewardLive -Duration $StatSpan -HashRate $Pool_Request.hashrate -BlockRate $Pool_BLK -Difficulty $Network_Request.difficulty -ChangeDetection $false -Quiet
     if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
