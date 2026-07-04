@@ -989,6 +989,7 @@ For Server (Runmode=server) setup:
 - **Watchdog** = use (1) or do not use (0) watchdog [default=1]
 - **UseTimeSync** = set to 1, if RainbowMiner should adjust the windows clock by rtp [default=1]
 - **WebsitesForOnlineCheck** = list of websites, that RainbowMiner pings for testing the internet connection [default=www.google.com,www.amazon.com,www.baidu.com,www.coinbase.com,rbminer.net]
+- **ExcludeCurrencyRateFromCoinbase** = Coinbase is the main currency provider, only if a symbol is not delivered from this API it will get called from api.rbminer.net. Sometimes there are false values due to ident symbols. Please leave as-is, since the RainbowMiner will update the defaults asap in case of false rates.
 - **SwitchingPrevention** = finetune the switching prevention algorithm. Set to zero to disable [default=2]
 - **PoolSwitchingHysteresis** = prevention of pool-to-pool hopping: the higher, the less switching (in %, 0 to disable, can be overwritten per pool) [default=3]
 - **MinerSwitchingHysteresis** = prevention of on-pool miner-to-miner hopping: the higher, the less switching (in %, 0 to disable) [default=3]
