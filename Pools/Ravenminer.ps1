@@ -77,7 +77,7 @@ if (-not $InfoOnly) {
     $blocks          = $PoolBlocks_Request.blocks | Where-Object payment_type -eq 0 | Select-Object -ExpandProperty time | Sort-Object -Descending
     $blocks_measure  = $blocks | Where-Object {$_ -gt $timestamp24h} | Measure-Object -Minimum -Maximum
     $Pool_BLK        = [int]$($(if ($blocks_measure.Count -gt 1 -and ($blocks_measure.Maximum - $blocks_measure.Minimum)) {86400000/($blocks_measure.Maximum - $blocks_measure.Minimum)} else {1})*$blocks_measure.Count)
-    $Pool_TSL        = [int]($timestamp - ($blocks | Select-Object -First 1)/1000)
+    $Pool_TSL        = [int](($timestamp - ($blocks | Select-Object -First 1))/1000)
 
     $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -HashRate $Pool_Request.hashrate -BlockRate $Pool_BLK -Difficulty $Pool_Request.coin.difficulty -ChangeDetection $false -Quiet
     if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
