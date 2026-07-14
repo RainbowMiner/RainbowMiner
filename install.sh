@@ -205,6 +205,7 @@ if ! command -v pwsh >/dev/null 2>&1; then
       *) wget "https://github.com/PowerShell/PowerShell/releases/download/v${pwsh_version}/powershell-${pwsh_version}-linux-x64.tar.gz" -O "$PWD/powershell.tar.gz" ;;
     esac
 
+    [ -d "$INSTALL_PATH" ] && $SUDO rm -rf "$INSTALL_PATH"
     $SUDO mkdir -p "$INSTALL_PATH"
     $SUDO tar zxf "$PWD/powershell.tar.gz" -C "$INSTALL_PATH" --overwrite
     $SUDO chmod +x "$INSTALL_PATH/pwsh"
@@ -213,7 +214,7 @@ if ! command -v pwsh >/dev/null 2>&1; then
   fi
 fi
 
-if [ "$pwsh_update" = "1" ]; then
+if [ "$pwsh_update" = true ]; then
   exit
 fi
 
