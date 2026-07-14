@@ -1,10 +1,18 @@
-﻿param($RequestUrl, $useragent, $timeout, $requestmethod, $method, $headers, $body, $IsForm, $IsPS7, $IsCore, $fixbigint)
+﻿param($RequestUrl, $useragent, $timeout, $requestmethod, $method, $headers, $body, $IsForm, $fixbigint)
 
 
 if ($Global:IsWindows -eq $null) {
     $Global:IsWindows = [System.Environment]::OSVersion.Platform -eq "Win32NT" -or [System.Boolean](Get-CimInstance -ClassName Win32_OperatingSystem -ErrorAction Ignore)
     $Global:IsLinux   = -not $IsWindows
     $Global:IsMacOS   = $false
+}
+
+if ($timeout -eq $null) {
+    $timeout = 60
+}
+
+if ($requestmethod -eq $null) {
+    $requestmethod = if ($body) {"POST"} else {"GET"}
 }
 
 if ("$((Get-Culture).NumberFormat.NumberGroupSeparator)$((Get-Culture).NumberFormat.NumberDecimalSeparator)" -notmatch "^[,.]{2}$") {
@@ -24,6 +32,9 @@ $Result = [PSCustomObject]@{
     ErrorMessage = ""
 }
 
+$IsCore = $PSVersionTable.PSVersion -ge ([System.Version]"6.1")
+$IsPS7  = $PSVersionTable.PSVersion -ge ([System.Version]"7.0")
+
 $oldProgressPreference = $null
 if ($Global:ProgressPreference -ne "SilentlyContinue") {
     $oldProgressPreference = $Global:ProgressPreference
@@ -32,19 +43,16 @@ if ($Global:ProgressPreference -ne "SilentlyContinue") {
 
 if ($IsCore) {
     try {
+        $Script:IWRCompat = @{}
+        $IWRCmd = Get-Command Invoke-WebRequest
+        if ($IWRCmd.Parameters.ContainsKey("SkipHttpErrorCheck"))    { $Script:IWRCompat["SkipHttpErrorCheck"]    = $true }
+        if ($IWRCmd.Parameters.ContainsKey("AllowInsecureRedirect")) { $Script:IWRCompat["AllowInsecureRedirect"] = $true }
+
         $Response   = $null
-        if ($IsPS7) {
-            if ($IsForm) {
-                $Response = Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -UseBasicParsing -DisableKeepAlive -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers -Form $body
-            } else {
-                $Response = Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -UseBasicParsing -DisableKeepAlive -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers -Body $body
-            }
+        if ($IsForm) {
+            $Response = Invoke-WebRequest $RequestUrl -UseBasicParsing -DisableKeepAlive -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers -Form $body @Script:IWRCompat
         } else {
-            if ($IsForm) {
-                $Response = Invoke-WebRequest $RequestUrl -UseBasicParsing -DisableKeepAlive -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers -Form $body
-            } else {
-                $Response = Invoke-WebRequest $RequestUrl -UseBasicParsing -DisableKeepAlive -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers -Body $body
-            }
+            $Response = Invoke-WebRequest $RequestUrl -UseBasicParsing -DisableKeepAlive -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers -Body $body @Script:IWRCompat
         }
 
         $Result.Status     = $true

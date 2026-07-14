@@ -22,7 +22,7 @@ param(
     }
     Initialize-User32Dll
     try {
-        $hwnd = (ps -Id $Id)[0].MainWindowHandle
+        $hwnd = (Get-Process -Id $Id)[0].MainWindowHandle
         if ($hwnd -eq 0) {
             $zero = [IntPtr]::Zero
             $hwnd = [User32.WindowManagement]::FindWindowEx($zero,$zero,$zero,$Title)

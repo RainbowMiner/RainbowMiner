@@ -2,6 +2,18 @@
 # Invoke functions for web access
 #
 
+function Initialize-IWRCompat {
+    $Script:IWRCompat = @{}
+    $IWRCmd = Get-Command Invoke-WebRequest -ErrorAction Ignore
+    if ($IWRCmd -and $IWRCmd.Parameters.ContainsKey("AllowInsecureRedirect")) {
+        $Script:IWRCompat["AllowInsecureRedirect"] = $true
+    }
+    $Script:IWRCompatSkipError = $Script:IWRCompat.Clone()
+    if ($IWRCmd -and $IWRCmd.Parameters.ContainsKey("SkipHttpErrorCheck")) {
+        $Script:IWRCompatSkipError["SkipHttpErrorCheck"] = $true
+    }
+}
+
 function Invoke-RestMethodAsync {
 [cmdletbinding()]
 Param(   
@@ -744,20 +756,13 @@ Param(
             $Proxy = Get-Proxy
 
             if (Test-IsCore) {
+                if ($Script:IWRCompat -eq $null) { Initialize-IWRCompat }
                 try {
                     $Response   = $null
-                    if (Test-IsPS7) {
-                        if ($IsForm) {
-                            $Response = Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -SkipCertificateCheck -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Form $body -Proxy $Proxy.Proxy -ProxyCredential $Proxy.Credentials
-                        } else {
-                            $Response = Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -SkipCertificateCheck -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body -Proxy $Proxy.Proxy -ProxyCredential $Proxy.Credentials
-                        }
+                    if ($IsForm) {
+                        $Response = Invoke-WebRequest $RequestUrl -SkipCertificateCheck -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Form $body -Proxy $Proxy.Proxy -ProxyCredential $Proxy.Credentials @Script:IWRCompat
                     } else {
-                        if ($IsForm) {
-                            $Response = Invoke-WebRequest $RequestUrl -SkipCertificateCheck -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Form $body -Proxy $Proxy.Proxy -ProxyCredential $Proxy.Credentials
-                        } else {
-                            $Response = Invoke-WebRequest $RequestUrl -SkipCertificateCheck -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body -Proxy $Proxy.Proxy -ProxyCredential $Proxy.Credentials
-                        }
+                        $Response = Invoke-WebRequest $RequestUrl -SkipCertificateCheck -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body -Proxy $Proxy.Proxy -ProxyCredential $Proxy.Credentials @Script:IWRCompat
                     }
 
                     $Result.Status     = $true
