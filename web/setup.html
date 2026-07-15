@@ -82,8 +82,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                     } else {
                         res = result[conf];
                     }
+                    // a schema field may be missing from an older config.txt:
+                    // jQuery's .val(undefined) silently did nothing - writing
+                    // it would display and then SAVE a literal "undefined"
+                    if (res === undefined || res === null) { res = ''; }
                     if (typeof res == "boolean") { res = res? 1:0 }
-                    else if (conf == "RunMode" || conf == "MiningMode") { res = res.toLowerCase(); }
+                    else if ((conf == "RunMode" || conf == "MiningMode") && typeof res == "string") { res = res.toLowerCase(); }
                     el.value = res;
                 }
 
