@@ -1,4 +1,4 @@
-﻿using module .\Modules\MinerAPIs.psm1
+using module .\Modules\MinerAPIs.psm1
 
 param([int]$ThreadID,$APIHttpListener,$CurrentPwd)
 
@@ -52,6 +52,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
     $ContentType     = "application/json"
     $StatusCode      = [System.Net.HttpStatusCode]::OK
     $ContentFileName = ""
+    $CacheControl    = $null
+    $LastModified    = $null
 
     if ($Path -match $API.RandTag) {$Path = "/stop";$API.APIauth = $false}
 
@@ -1891,25 +1893,55 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 # Otherwise, just return the contents of the file
                 $File = Get-ChildItem $Filename -ErrorAction Ignore
 
-                If ($File.Extension -eq ".ps1") {
-                    $Data = (& $File.FullName -Parameters $Parameters) -join "`r`n"
-                } elseif (@(".html",".css",".js",".json",".xml",".txt") -icontains $File.Extension) {
-                    $Data = Get-ContentByStreamReader $Filename
+                # --- static file caching ------------------------------------------------
+                # /vendor/ libraries live in versioned folders -> safe to cache forever.
+                # Own assets get a short freshness window plus a Last-Modified validator,
+                # so repeat visits revalidate with cheap 304 responses instead of full
+                # downloads. HTML is assembled from server side includes (multiple source
+                # files), so a single file date is no valid validator -> always no-cache.
+                # .ps1 endpoints are actions and must never be cached.
+                if ($File.Extension -eq ".ps1") {
+                    $CacheControl = "no-store"
+                } elseif ($Path -match '^/vendor/') {
+                    $CacheControl = "public, max-age=31536000, immutable"
+                } elseif ($File.Extension -match '^\.(js|css|png|jpe?g|gif|svg|ico|woff2?|json)$') {
+                    $CacheControl = "public, max-age=300"
+                    $LastModified = $File.LastWriteTimeUtc
+                } else {
+                    $CacheControl = "no-cache"
+                }
 
-                    if ($Data -and $File.Extension -match "htm") {
-                        # Process server side includes for html files
-                        # Includes are in the traditional '<!-- #include file="/path/filename.html" -->' format used by many web servers
-                        $IncludeRegex = [regex]'<!-- *#include *file="(.*?)" *-->'
-                        $IncludeRegex.Matches($Data) | Foreach-Object {
-                            $IncludeFile = Join-Path $BasePath $_.Groups[1].Value
-                            If (Test-Path $IncludeFile -PathType Leaf) {
-                                $IncludeData = Get-ContentByStreamReader $IncludeFile
-                                $Data = $Data -Replace $_.Value, $IncludeData
+                if ($LastModified -and ($IfModifiedSince = $Request.Headers["If-Modified-Since"])) {
+                    try {
+                        # compare at whole-second precision (http dates have no milliseconds)
+                        if ([DateTime]::Parse($IfModifiedSince).ToUniversalTime() -ge [DateTime]::Parse($LastModified.ToString("R")).ToUniversalTime()) {
+                            $Data        = ""
+                            $StatusCode  = [System.Net.HttpStatusCode]::NotModified
+                        }
+                    } catch {}
+                }
+
+                if ($StatusCode -ne [System.Net.HttpStatusCode]::NotModified) {
+                    If ($File.Extension -eq ".ps1") {
+                        $Data = (& $File.FullName -Parameters $Parameters) -join "`r`n"
+                    } elseif (@(".html",".css",".js",".json",".xml",".txt") -icontains $File.Extension) {
+                        $Data = Get-ContentByStreamReader $Filename
+
+                        if ($Data -and $File.Extension -match "htm") {
+                            # Process server side includes for html files
+                            # Includes are in the traditional '<!-- #include file="/path/filename.html" -->' format used by many web servers
+                            $IncludeRegex = [regex]'<!-- *#include *file="(.*?)" *-->'
+                            $IncludeRegex.Matches($Data) | Foreach-Object {
+                                $IncludeFile = Join-Path $BasePath $_.Groups[1].Value
+                                If (Test-Path $IncludeFile -PathType Leaf) {
+                                    $IncludeData = Get-ContentByStreamReader $IncludeFile
+                                    $Data = $Data -Replace $_.Value, $IncludeData
+                                }
                             }
                         }
+                    } else {
+                        $Data = [System.IO.File]::ReadAllBytes($File.FullName)
                     }
-                } else {
-                    $Data = [System.IO.File]::ReadAllBytes($File.FullName)
                 }
 
                 $ContentType = Get-MimeType $File.Extension
@@ -1933,6 +1965,13 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
     try {
         if ($ContentFileName -ne "") {
             [void]$Response.Headers.Add("Content-Disposition", "attachment; filename=$($ContentFileName)")
+        }
+
+        # cache policy: static files set $CacheControl above; everything else
+        # (all live API data endpoints) defaults to no-cache
+        [void]$Response.Headers.Add("Cache-Control", $(if ($CacheControl) {$CacheControl} else {"no-cache"}))
+        if ($LastModified) {
+            [void]$Response.Headers.Add("Last-Modified", $LastModified.ToString("R"))
         }
 
         $Response.ContentType = $ContentType
