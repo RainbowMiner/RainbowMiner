@@ -63,9 +63,8 @@ document.addEventListener("DOMContentLoaded", () => {
     last_uptime  = 0;
     last_iso = '';
 
-    (async function p() {
-        try {
-            const response = await fetch('/currentprofit');
+    rbmPoll("currentprofit", 10000, async () => {
+            const response = await rbmFetch('/currentprofit');
             const result = await response.json();
             {
                 if (!last_uptime || parseInt(result.Uptime.Seconds) < last_uptime) {
@@ -154,12 +153,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 updateProfitHead();
             }
-        } catch (error) {
-            console.error("currentprofit:", error);
-        } finally {
-            setTimeout(p, 10000);
-        }
-    })();
+        });
 
     (function q() {
         ConfigLoader.whenReady().then(function(cfg) {

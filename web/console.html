@@ -74,9 +74,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    (async function updateConsole() {
-        try {
-            const response = await fetch('/console?ts=' + cmdts);
+    rbmPoll("console", 5000, async () => {
+            const response = await rbmFetch('/console?ts=' + cmdts);
             const result = await response.json();
 
             cmdkey = result.CmdKey.toUpperCase()
@@ -109,13 +108,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
             miners.hidden = !(result.Miners && result.Miners.length);
-        } catch (error) {
-            console.error("console:", error);
-        } finally {
-            // reschedule even after errors, so the console recovers from server restarts
-            window.setTimeout(updateConsole, 5000);
-        }
-    })();
+        });
 });
 </script>
 <!--#include file="/parts/foot.html" -->

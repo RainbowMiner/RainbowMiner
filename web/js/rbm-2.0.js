@@ -77,6 +77,47 @@ function copyToClipboard(text) {
  * ------------------------------------------------------------------------- */
 var selected_currency = { currency: null, rate: 0 };
 
+/* ---------------------------------------------------------------------------
+ * Network helpers
+ * ------------------------------------------------------------------------- */
+
+// fetch with a timeout: a request hung on flaky WLAN aborts after ~10s
+// instead of freezing its poll loop for the browser's default (30-300s)
+function rbmFetch(url, options) {
+    const opts = Object.assign({}, options);
+    const timeout = opts.timeout || 10000;
+    delete opts.timeout;
+    const controller = new AbortController();
+    opts.signal = controller.signal;
+    const timer = setTimeout(() => controller.abort(), timeout);
+    return fetch(url, opts).finally(() => clearTimeout(timer));
+}
+
+// Self-scheduling poll loop with exponential backoff:
+// - fn() is awaited; on success the next run is `interval` away
+// - on failure the delay doubles up to 8x interval and only the first
+//   failure of a streak is logged (no console storm while the RainbowMiner
+//   server restarts), recovery is logged once
+// - nothing is fetched while the tab is hidden
+function rbmPoll(name, interval, fn) {
+    let failures = 0;
+    (async function run() {
+        let delay = interval;
+        if (!document.hidden) {
+            try {
+                await fn();
+                if (failures) console.info(name + ": recovered after " + failures + " failed attempt(s)");
+                failures = 0;
+            } catch (error) {
+                failures++;
+                if (failures === 1) console.warn(name + ":", error.message || error, "- backing off");
+                delay = Math.min(interval * Math.pow(2, failures), interval * 8);
+            }
+        }
+        window.setTimeout(run, delay);
+    })();
+}
+
 const ConfigLoader = (function () {
     let config = null;
     let ready = false;
@@ -91,7 +132,7 @@ const ConfigLoader = (function () {
     const REFRESH_INTERVAL_MS = 300000;
 
     function loadConfig(attempt) {
-        fetch("/info")
+        rbmFetch("/info")
         .then(response => {
             if (!response.ok) throw new Error("Server responded with error");
             return response.json();

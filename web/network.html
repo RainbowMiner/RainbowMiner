@@ -79,9 +79,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    (async function updateMachines() {
-        try {
-            const response = await fetch('/clients?include_server=true');
+    rbmPoll("network", 60000, async () => {
+            const response = await rbmFetch('/clients?include_server=true');
             const result = await response.json();
 
             machinesboxes.replaceChildren();
@@ -100,12 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (!isserver) a.target = "_blank";
                 machinesboxes.appendChild(box);
             }
-        } catch (error) {
-            console.error("clients:", error);
-        } finally {
-            window.setTimeout(updateMachines, 60000);
-        }
-    })();
+        });
 });
 </script>
 <!--#include file="/parts/foot.html" -->

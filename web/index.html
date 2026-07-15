@@ -253,23 +253,16 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    (async function updateStatus() {
-        try {
-            const response = await fetch('/status');
+    rbmPoll("status", 10000, async () => {
+            const response = await rbmFetch('/status');
             const result = await response.json();
             document.getElementById("pauseminers").textContent = result.Pause ? "Restart" : "Pause";
             document.getElementById("lockminers").textContent = result.LockMiners.Locked ? "Unlock" : "Lock";
             rbmToggleDisplay("#lockminers", !(result.IsExclusiveRun || result.IsDonationRun));
-        } catch (error) {
-            console.error("status:", error);
-        } finally {
-            window.setTimeout(updateStatus, 10000);
-        }
-    })();
+        });
 
-    (async function updateSysinfo() {
-        try {
-            const response = await fetch('/sysinfo');
+    rbmPoll("sysinfo", 30000, async () => {
+            const response = await rbmFetch('/sysinfo');
             const result = await response.json();
             const boxes = document.getElementById("sysinfoboxes");
             boxes.replaceChildren();
@@ -284,18 +277,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     boxes.appendChild(renderSysinfoBox(item.Drive, item.UsedGB + '/' + item.TotalGB + ' GB (' + item.UsedPercent + '%)'));
                 }
             }
-        } catch (error) {
-            console.error("sysinfo:", error);
-        } finally {
-            window.setTimeout(updateSysinfo, 30000);
-        }
-    })();
+        });
 
     ConfigLoader.whenReady().then(function(cfg) {
 
-        async function updatePoolBalances() {
-            try {
-                const response = await fetch('/balances?add_total=1&add_wallets=1&add_btc=1');
+        function updatePoolBalances() {
+            rbmPoll("balances", 60000, async () => {
+                const response = await rbmFetch('/balances?add_total=1&add_wallets=1&add_btc=1');
                 const result = await response.json();
                 {
                     // Clear and rebuild balance boxes
@@ -372,11 +360,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         document.getElementById(add_to_id).appendChild(renderBalanceBox(item));
                     }
                 }
-            } catch (error) {
-                console.error("balances:", error);
-            } finally {
-                window.setTimeout(updatePoolBalances, 60000);
-            }
+            });
         }
 
         updatePoolBalances();

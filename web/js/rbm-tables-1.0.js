@@ -507,6 +507,9 @@ const RbmTables = (function () {
     function refreshKeepScroll(container, table) {
         if (container._rbmRefreshing) return Promise.resolve(); // fetch overlap guard
         container._rbmRefreshing = true;
+        // safety: a request hung on flaky WLAN must not wedge the refresh
+        // loop until the browser's own timeout - release the guard after 20s
+        setTimeout(() => { container._rbmRefreshing = false; }, 20000);
 
         const pinned = container.offsetHeight;
         container.style.minHeight = pinned + "px";
@@ -544,8 +547,10 @@ const RbmTables = (function () {
             const holder = container.querySelector(".tabulator-tableholder");
             const x = container._rbmScrollX || 0;
             if (holder && Math.abs(holder.scrollLeft - x) > 1) holder.scrollLeft = x;
+            return true;   // signals success to autoRefresh's backoff
         }).catch(() => {
             restoreRedraw();
+            return false;  // signals failure to autoRefresh's backoff
         }).finally(() => {
             restoreRedraw(); // never leave a table blocked
             return releasePin();
@@ -557,15 +562,28 @@ const RbmTables = (function () {
     // bootstrap-table based rbmAutoRefreshTable)
     function autoRefresh(selector, interval) {
         ConfigLoader.whenReady().then(function () {
+            let failures = 0;
+            let backoffUntil = 0;
             setInterval(function () {
                 if (document.hidden) return;          // no work in background tabs
                 if (userIsInteracting()) return;      // never swap mid-gesture
+                if (Date.now() < backoffUntil) return; // backing off after failures
                 const sel = selector.replace(/^table/, "").trim() || selector;
                 const el = document.querySelector(sel);
                 const table = getTable(sel);
                 if (!el || !table) return;
                 if (el.querySelector(".rbm-detail")) return; // a detail row is open
-                refreshKeepScroll(el, table);
+                refreshKeepScroll(el, table).then((ok) => {
+                    if (ok === false) {
+                        failures++;
+                        // 2x, 4x, ... up to 8x interval - quiet probing while
+                        // the server restarts instead of firing every tick
+                        backoffUntil = Date.now() + Math.min(interval * Math.pow(2, failures), interval * 8);
+                    } else if (ok === true) {
+                        failures = 0;
+                        backoffUntil = 0;
+                    }
+                });
             }, interval);
         });
     }
