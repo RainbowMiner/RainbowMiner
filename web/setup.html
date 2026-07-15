@@ -1,1276 +1,173 @@
-<!--#include file="/parts/head.html" -->
+﻿<!--#include file="/parts/head.html" -->
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
   <h1 id="title" data-navbaractive="navsetup" class="h2">Setup</h1>
 </div>
 <div class="alert alert-info" role="none" id="loadingMessage">Loading, please wait ...</div>
 
-<form id="formConfig" class="d-none">
-    <input type="hidden" name="savearrays[]" value="DeviceName" />
-    <input type="hidden" name="savearrays[]" value="ExcludeDeviceName" />
-    <input type="hidden" name="savearrays[]" value="PoolName" />
-    <input type="hidden" name="savearrays[]" value="ExcludePoolName" />
-    <div class="accordion" id="accordionExample">
+<form id="formConfig" class="d-none"></form>
 
-        <!-- Basic Setup -->
-        <div class="accordion-item">
-            <h2 class="accordion-header" id="headingOne">
-                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                    Basic Setup
-                </button>
-            </h2>
-            <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
-                <div class="accordion-body">
-                    <!-- Form elements for Basic Setup -->
-                    <div class="mb-3 row">
-                        <label for="inputWallet" class="col-sm-2 col-form-label">BTC Wallet</label>
-                        <div class="col-sm-10">
-                            <input type="text" class="form-control" id="inputWallet" name="Wallet" placeholder="Enter your BTC wallet address">
-                        </div>
-                    </div>
-                    <div class="mb-3 row">
-                        <label for="inputWorkerName" class="col-sm-2 col-form-label">Worker Name</label>
-                        <div class="col-sm-10">
-                            <input type="text" class="form-control" id="inputWorkerName" name="WorkerName" placeholder="Enter your worker's name">
-                        </div>
-                    </div>
-                    <div class="mb-3 row">
-                        <label for="inputRegion" class="col-sm-2 col-form-label">Region</label>
-                        <div class="col-sm-10">
-                            <input type="text" class="form-control" id="inputRegion" name="Region" placeholder="Enter your region" autocomplete="off">
-                        </div>
-                    </div>
-                    <div class="mb-3 row">
-                        <label for="inputCurrency" class="col-sm-2 col-form-label">Currencies</label>
-                        <div class="col-sm-10">
-                            <input type="text" class="form-control" id="inputCurrency" name="Currency" placeholder="Enter all currencies to be displayed (e.g., EUR,USD,BTC)">
-                        </div>
-                    </div>
-                    <div class="mb-3 row">
-                        <label for="inputMiningMode" class="col-sm-2 col-form-label">Mining Mode</label>
-                        <div class="col-sm-10">
-                            <select class="form-select" id="inputMiningMode" name="MiningMode">
-                                <option value="legacy">Legacy (all CPU and all NVIDIA/AMD are handled as one)</option>
-                                <option value="device">Device (each CPU/GPU is handled separately)</option>
-                                <option value="combo">Combo (like "Device", plus equal GPU types are handled as combos)</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="is--linux">
-                        <div class="mb-3 row">
-                            <label for="inputEnableLinuxHeadless" class="col-sm-2 col-form-label">Headless Linux</label>
-                            <div class="col-sm-10">
-                                <select class="form-select" id="inputEnableLinuxHeadless" name="EnableLinuxHeadless">
-                                    <option value="0">Disable</option>
-                                    <option value="1">Enable</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="mb-3 row">
-                            <label for="inputLinuxMinerTerminal" class="col-sm-2 col-form-label">Prefered miner terminal</label>
-                            <div class="col-sm-10">
-                                <select class="form-select" id="inputLinuxMinerTerminal" name="LinuxMinerTerminal">
-                                    <option value="auto">auto</option>
-                                    <option value="screen">screen</option>
-                                    <option value="tmux">tmux</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="mb-3 row">
-                            <label for="inputEnableMinersAsRoot" class="col-sm-2 col-form-label">Miners as Root</label>
-                            <div class="col-sm-10">
-                                <select class="form-select" id="inputEnableMinersAsRoot" name="EnableMinersAsRoot">
-                                    <option value="0">Disable</option>
-                                    <option value="1">Enable</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Devices -->
-        <div class="accordion-item">
-            <h2 class="accordion-header" id="headingTwo">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                    Devices
-                </button>
-            </h2>
-            <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
-                <div class="accordion-body">
-                    <!-- Form elements for Devices -->
-                    <div class="mb-3 row">
-                        <div class="col-sm-2 col-form-label">Devices</div>
-                        <div class="col-sm-10" id="devices"></div>
-                    </div>
-                    <div class="mb-3 row">
-                        <div class="col-sm-2 col-form-label">Exclude Devices</div>
-                        <div class="col-sm-10" id="excludedevices"></div>
-                    </div>
-                    <div class="mb-3 row is--cpu">
-                        <label for="inputCPUMiningThreads" class="col-sm-2 col-form-label">CPU Mining Threads</label>
-                        <div class="col-sm-10">
-                            <input type="number" class="form-control" id="inputCPUMiningThreads" name="CPUMiningThreads" min="1" max="255" step="1" placeholder="Enter number of CPU threads for mining on CPU">
-                        </div>
-                    </div>
-                    <div class="mb-3 row is--cpu">
-                        <label for="inputCPUMiningAffinity" class="col-sm-2 col-form-label">CPU Mining Affinity</label>
-                        <div class="col-sm-10">
-                            <input type="text" class="form-control" id="inputCPUMiningAffinity" name="CPUMiningAffinity">
-                            <div id="inputCPUMiningAffinityHelp" class="form-text">Enter the CPU mining affinity as a hex string starting with 0x... or leave empty for automatic affinity</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Pools, Miners, and Algorithms -->
-        <div class="accordion-item">
-            <h2 class="accordion-header" id="headingThree">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-                    Pools, Miners and Algorithms
-                </button>
-            </h2>
-            <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#accordionExample">
-                <div class="accordion-body">
-                    <!-- Pools -->
-                    <div class="mb-3 row">
-                        <div class="col-sm-2 col-form-label">Pools</div>
-                        <div class="col-sm-10" id="pools">
-                            <!-- Add dynamic content here -->
-                        </div>
-                    </div>
-
-                    <!-- Exclude Pools -->
-                    <div class="mb-3 row">
-                        <div class="col-sm-2 col-form-label">Exclude Pools</div>
-                        <div class="col-sm-10" id="excludepools">
-                            <!-- Add dynamic content here -->
-                        </div>
-                    </div>
-
-                    <!-- Algorithm -->
-                    <div class="mb-3 row">
-                        <label for="inputAlgorithm" class="col-sm-2 col-form-label">Algorithm</label>
-                        <div class="col-sm-10">
-                            <input type="text" class="form-control" id="inputAlgorithm" name="Algorithm" placeholder="Enter the algorithm you want to mine (leave empty for all)">
-                        </div>
-                    </div>
-
-                    <!-- Exclude Algorithm -->
-                    <div class="mb-3 row">
-                        <label for="inputExcludeAlgorithm" class="col-sm-2 col-form-label">Exclude Algorithm</label>
-                        <div class="col-sm-10">
-                            <input type="text" class="form-control" id="inputExcludeAlgorithm" name="ExcludeAlgorithm" placeholder="Enter the algorithm you do not want to exclude">
-                        </div>
-                    </div>
-
-                    <!-- Enable Algorithm Variants -->
-                    <div class="mb-3 row">
-                        <label for="inputEnableAlgorithmVariants" class="col-sm-2 col-form-label">Enable automatic Algo-Variants</label>
-                        <div class="col-sm-10">
-                            <select class="form-select" id="inputEnableAlgorithmVariants" name="EnableAlgorithmVariants">
-                                <option value="0">Disable</option>
-                                <option value="1">Enable</option>
-                            </select>
-                            <div id="inputEnableAlgorithmVariantsHelp" class="form-text">Enable automatic use of algorithm variants (e.g., if you exclude/select Ethash, all variants like Ethash2g, EthasLowMemory, ... will be excluded/selected too)</div>
-                        </div>
-                    </div>
-
-                    <!-- Disable Unprofitable Algo List -->
-                    <div class="mb-3 row">
-                        <label for="inputDisableUnprofitableAlgolist" class="col-sm-2 col-form-label">Disable the built-in list of unprofitable algorithms</label>
-                        <div class="col-sm-10">
-                            <select class="form-select" id="inputDisableUnprofitableAlgolist" name="DisableUnprofitableAlgolist">
-                                <option value="0">Disable</option>
-                                <option value="1">Enable</option>
-                            </select>
-                            <div id="inputDisableUnprofitableAlgolistHelp" class="form-text">RainbowMiner uses an internally updated list of algorithms that are unprofitable or currently not working. The list can be disabled with this setting.</div>
-                        </div>
-                    </div>
-
-                    <!-- Disable Unprofitable CPU Algo List -->
-                    <div class="mb-3 row">
-                        <label for="inputDisableUnprofitableCpuAlgolist" class="col-sm-2 col-form-label">Disable the built-in list of unprofitable CPU algorithms</label>
-                        <div class="col-sm-10">
-                            <select class="form-select" id="inputDisableUnprofitableCpuAlgolist" name="DisableUnprofitableCpuAlgolist">
-                                <option value="0">Disable</option>
-                                <option value="1">Enable</option>
-                            </select>
-                            <div id="inputDisableUnprofitableCpuAlgolistHelp" class="form-text">RainbowMiner uses an internally updated list of CPU algorithms that are unprofitable or currently not working. The list can be disabled with this setting.</div>
-                        </div>
-                    </div>
-
-                    <!-- Enable Never Profitable Algos -->
-                    <div class="mb-3 row">
-                        <label for="inputEnableNeverprofitableAlgos" class="col-sm-2 col-form-label">Enable never profitable algorithms</label>
-                        <div class="col-sm-10">
-                            <select class="form-select" id="inputEnableNeverprofitableAlgos" name="EnableNeverprofitableAlgos">
-                                <option value="0">Disable</option>
-                                <option value="1">Enable</option>
-                            </select>
-                            <div id="inputEnableNeverprofitableAlgosHelp" class="form-text">Enable never profitable algorithms (e.g. BMW512 for CPUs). This setting overrides DisableUnprofitableCpuAlgoslist.</div>
-                        </div>
-                    </div>
-
-                    <!-- Miner Name -->
-                    <div class="mb-3 row">
-                        <label for="inputMinerName" class="col-sm-2 col-form-label">Miner Name</label>
-                        <div class="col-sm-10">
-                            <input type="text" class="form-control" id="inputMinerName" name="MinerName" placeholder="Enter the miners you want to use (leave empty for all)">
-                        </div>
-                    </div>
-
-                    <!-- Exclude Miner Name -->
-                    <div class="mb-3 row">
-                        <label for="inputExcludeMinerName" class="col-sm-2 col-form-label">Exclude Miner Name</label>
-                        <div class="col-sm-10">
-                            <input type="text" class="form-control" id="inputExcludeMinerName" name="ExcludeMinerName" placeholder="Enter the miners you do want to exclude">
-                        </div>
-                    </div>
-
-                    <!-- Disable Dual Mining -->
-                    <div class="mb-3 row">
-                        <label for="inputDisableDualMining" class="col-sm-2 col-form-label">Disable Dual Mining</label>
-                        <div class="col-sm-10">
-                            <select class="form-select" id="inputDisableDualMining" name="DisableDualMining">
-                                <option value="0">Disable</option>
-                                <option value="1">Enable</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Dual Mining During Rental -->
-                    <div class="mb-3 row">
-                        <label for="inputEnableDualMiningDuringRentals" class="col-sm-2 col-form-label">Dual Mining During Rental</label>
-                        <div class="col-sm-10">
-                            <select class="form-select" id="inputEnableDualMiningDuringRentals" name="EnableDualMiningDuringRentals">
-                                <option value="0">Disable</option>
-                                <option value="1">Enable</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Disable 0-Watt Miners -->
-                    <div class="mb-3 row">
-                        <label for="inputDisableZeroWattMiners" class="col-sm-2 col-form-label">Disable 0-Watt Miners</label>
-                        <div class="col-sm-10">
-                            <select class="form-select" id="inputDisableZeroWattMiners" name="DisableZeroWattMiners">
-                                <option value="0">Disable</option>
-                                <option value="1">Enable</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Exclude Miners with Fee -->
-                    <div class="mb-3 row">
-                        <label for="inputExcludeMinersWithFee" class="col-sm-2 col-form-label">Exclude Miners with Fee</label>
-                        <div class="col-sm-10">
-                            <select class="form-select" id="inputExcludeMinersWithFee" name="ExcludeMinersWithFee">
-                                <option value="0">Disable</option>
-                                <option value="1">Enable</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Check CPU/GPU Conflicts -->
-                    <div class="mb-3 row">
-                        <label for="inputEnableCheckMiningConflict" class="col-sm-2 col-form-label">Check CPU/GPU Conflicts</label>
-                        <div class="col-sm-10">
-                            <select class="form-select" id="inputEnableCheckMiningConflict" name="EnableCheckMiningConflict">
-                                <option value="0">Disable</option>
-                                <option value="1">Enable</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Enable Ethash Zombie Mode -->
-                    <div class="mb-3 row">
-                        <label for="inputEnableEthashZombieMode" class="col-sm-2 col-form-label">Enable Ethash Zombie Mode</label>
-                        <div class="col-sm-10">
-                            <select class="form-select" id="inputEnableEthashZombieMode" name="EnableEthashZombieMode">
-                                <option value="0">Disable</option>
-                                <option value="1">Enable</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Allow Miners to Save DAG -->
-                    <div class="mb-3 row">
-                        <label for="inputEnableMinersToSaveDAG" class="col-sm-2 col-form-label">Allow Miners to Save DAGs to Disk</label>
-                        <div class="col-sm-10">
-                            <select class="form-select" id="inputEnableMinersToSaveDAG" name="EnableMinersToSaveDAG">
-                                <option value="0">Disallow</option>
-                                <option value="1">Allow</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Allow Miners to enable 1GB pages for RandomX like algorithms -->
-                    <div class="mb-3 row">
-                        <label for="inputEnableRandomX1GBPages" class="col-sm-2 col-form-label">Allow miners to enable 1GB Pages for RandomX</label>
-                        <div class="col-sm-10">
-                            <select class="form-select" id="inputEnableRandomX1GBPages" name="EnableRandomX1GBPages">
-                                <option value="0">Disallow</option>
-                                <option value="1">Allow</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="is--linux">
-                        <!-- Enable miner niceness -->
-                        <div class="mb-3 row">
-                            <label for="inputEnableLinuxMinerNiceness" class="col-sm-2 col-form-label">Enable nice for miners</label>
-                            <div class="col-sm-10">
-                                <select class="form-select" id="inputEnableLinuxMinerNiceness" name="EnableLinuxMinerNiceness">
-                                    <option value="0">Disable</option>
-                                    <option value="1">Enable</option>
-                                </select>
-                            </div>
-                        </div>
-                        <!-- niceness for miners -->
-                        <div class="mb-3 row">
-                            <label for="inputLinuxMinerNiceness" class="col-sm-2 col-form-label">Miner niceness</label>
-                            <div class="col-sm-10">
-                                <input type="number" min="-20" max="19" step="1" class="form-control" id="inputLinuxMinerNiceness" name="LinuxMinerNiceness">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="accordion-item">
-            <h2 class="accordion-header" id="headingFour">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
-                    Enable Overclocking
-                </button>
-            </h2>
-            <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#accordionExample">
-                <div class="accordion-body">
-                    <!-- Enable OC-Profiles -->
-                    <div class="mb-3 row">
-                        <label for="inputEnableOCProfiles" class="col-sm-2 col-form-label">Enable OC-Profiles</label>
-                        <div class="col-sm-10">
-                            <select class="form-select" id="inputEnableOCProfiles" name="EnableOCProfiles">
-                                <option value="0">Disable</option>
-                                <option value="1">Enable</option>
-                            </select>
-                            <div id="inputEnableOCProfilesHelp" class="form-text">Enable custom overclocking profiles in ocprofiles.config.txt</div>
-                        </div>
-                    </div>
-
-                    <!-- Enable Voltage OC -->
-                    <div class="mb-3 row is--ocprofiles">
-                        <label for="inputEnableOCVoltage" class="col-sm-2 col-form-label">Enable Voltage OC</label>
-                        <div class="col-sm-10">
-                            <select class="form-select" id="inputEnableOCVoltage" name="EnableOCVoltage">
-                                <option value="0">Disable</option>
-                                <option value="1">Enable</option>
-                            </select>
-                            <div id="inputEnableOCVoltageHelp" class="form-text">Enable custom overclocking voltage setting in ocprofiles.config.txt</div>
-                        </div>
-                    </div>
-
-                    <!-- Linux Specific Options -->
-                    <div class="is--linux">
-                        <!-- Set All PStates -->
-                        <div class="mb-3 row is--ocprofiles">
-                            <label for="inputEnableOCLinuxSetAllPStates" class="col-sm-2 col-form-label">Set All PStates</label>
-                            <div class="col-sm-10">
-                                <select class="form-select" id="inputEnableOCLinuxSetAllPStates" name="EnableOCLinuxSetAllPStates">
-                                    <option value="0">Disable</option>
-                                    <option value="1">Enable</option>
-                                </select>
-                                <div id="inputEnableOCLinuxSetAllPStatesHelp" class="form-text">Enable setting memory/core offsets to all PStates, instead of the highest only.</div>
-                            </div>
-                        </div>
-
-                        <!-- Force PState -->
-                        <div class="mb-3 row is--ocprofiles">
-                            <label for="inputEnableOCLinuxForcePState" class="col-sm-2 col-form-label">Force PState</label>
-                            <div class="col-sm-10">
-                                <select class="form-select" id="inputEnableOCLinuxForcePState" name="EnableOCLinuxForcePState">
-                                    <option value="0">Disable</option>
-                                    <option value="1">Enable</option>
-                                </select>
-                                <div id="inputEnableOCLinuxForcePStateHelp" class="form-text">Force all GPUs into workload P-State, even when not mining.</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="accordion-item">
-            <h2 class="accordion-header" id="headingFive">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
-                    Set Electricity Cost Handling
-                </button>
-            </h2>
-            <div id="collapseFive" class="accordion-collapse collapse" aria-labelledby="headingFive" data-bs-parent="#accordionExample">
-                <div class="accordion-body">
-                    <!-- Powerprice -->
-                    <div class="mb-3 row">
-                        <label for="inputPowerPrice" class="col-sm-2 col-form-label">Powerprice</label>
-                        <div class="col-sm-10">
-                            <div class="input-group">
-                                <input type="number" class="form-control" id="inputPowerPrice" name="PowerPrice" min="0" step="0.00000001"
-                                       data-number-to-fixed="8" data-number-stepfactor="100000000"
-                                       placeholder="Price of 1kW/h (kilowatt per hour) that your electricity supplier charges"
-                                       aria-describedby="addto-inputPowerPrice" style="width:auto;">
-                                <input type="text" class="form-control" id="inputPowerPriceCurrency" name="PowerPriceCurrency" maxlength="3"
-                                       placeholder="ISO currency code (three letters) of your PowerPrice" style="width:64px;text-transform:uppercase;">
-                                <span class="input-group-text" id="addto-inputPowerPrice">per kW/h</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Power Offset Watt -->
-                    <div class="mb-3 row">
-                        <label for="inputPowerOffset" class="col-sm-2 col-form-label">Power Offset Watt</label>
-                        <div class="col-sm-10">
-                            <div class="input-group">
-                                <input type="number" class="form-control" id="inputPowerOffset" name="PowerOffset" min="0" step="1"
-                                       data-number-to-fixed="0" data-number-stepfactor="1"
-                                       placeholder="Power offset to allow consideration for overhead power" aria-describedby="addto-inputPowerOffset">
-                                <span class="input-group-text" id="addto-inputPowerOffset">Watt</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Power Offset Percent -->
-                    <div class="mb-3 row">
-                        <label for="inputPowerOffsetPercent" class="col-sm-2 col-form-label">Power Offset Percent</label>
-                        <div class="col-sm-10">
-                            <div class="input-group">
-                                <input type="number" class="form-control" id="inputPowerOffsetPercent" name="PowerOffsetPercent" min="0" max="100" step="1"
-                                       data-number-to-fixed="0" data-number-stepfactor="1"
-                                       placeholder="Power offset to allow consideration for overhead power in percent"
-                                       aria-describedby="addto-inputPowerOffsetPercent">
-                                <span class="input-group-text" id="addto-inputPowerOffsetPercent">%</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- CPU Power/TDP -->
-                    <div class="mb-3 row">
-                        <label for="inputPowerCPUtdp" class="col-sm-2 col-form-label">CPU max. Power/TDP</label>
-                        <div class="col-sm-10">
-                            <div class="input-group">
-                                <input type="number" class="form-control" id="inputPowerCPUtdp" name="PowerCPUtdp" min="0" step="1"
-                                       data-number-to-fixed="0" data-number-stepfactor="1" aria-describedby="addto-inputPowerCPUtdp">
-                                <span class="input-group-text" id="addto-inputPowerCPUtdp">Watt</span>
-                            </div>
-                            <div id="inputPowerCPUtdpHelp" class="form-text">
-                                Enter your CPU's TDP/maximum power consumption in W
-                                (set to 0 to use internal TDP tables, set to value if that fails).
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Octopus Tariff Code -->
-                    <div class="mb-3 row">
-                        <label for="inputOctopusTariffCode" class="col-sm-2 col-form-label">Octopus Tariff Code</label>
-                        <div class="col-sm-10">
-                            <input type="text" class="form-control" id="inputOctopusTariffCode" name="OctopusTariffCode" placeholder="E-1R-...">
-                            <div id="inputOctopusTariffCodeHelp" class="form-text">
-                                If you live in the UK and are an Octopus customer, you can let RainbowMiner pull the variable energy prices.
-                                Just enter your current tariff code.<br />
-                                It's in the format E-1R-{product_code}-{region_code}, where product code is something like SILVER-2017-1, AGILE-18-02-21, ... and
-                                region code is a capital letter, range A to P.
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Power Price API -->
-                    <div class="mb-3 row">
-                        <label for="inputPowerPriceApi" class="col-sm-2 col-form-label">Power Price API</label>
-                        <div class="col-sm-10">
-                            <input type="text" class="form-control" id="inputPowerPriceApi" name="PowerPriceApi" placeholder="http://..">
-                            <div id="inputPowerPriceApiHelp" class="form-text">
-                                Connect RainbowMiner to a power price API like NodeRed. The API needs to return either a plain number or a JSON formatted string
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Power Price API Value -->
-                    <div class="mb-3 row">
-                        <label for="inputPowerPriceApiValue" class="col-sm-2 col-form-label">Power Price API Value</label>
-                        <div class="col-sm-10">
-                            <input type="text" class="form-control" id="inputPowerPriceApiValue" name="PowerPriceApiValue" placeholder="">
-                            <div id="inputPowerPriceApiValueHelp" class="form-text">
-                                Define where to find the power price value inside the JSON formatted string that the Power Price API returns. Use dot notation e.g. prices[1].value<br />
-                                If the API returns a plain number, leave this value empty (or set it to #)
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Power Price API Interval -->
-                    <div class="mb-3 row">
-                        <label for="inputPowerPriceApiInterval" class="col-sm-2 col-form-label">Power Price API Interval</label>
-                        <div class="col-sm-10">
-                            <div class="input-group">
-                                <input type="number" min="0" step="30" class="form-control" id="inputPowerPriceApiInterval" name="PowerPriceApiInterval" placeholder="Enter interval in seconds">
-                                <span class="input-group-text">seconds</span>
-                            </div>
-                            <div id="inputPowerPriceApiIntervalHelp" class="form-text">
-                                Enter the call-interval for the PowerPriceApi in seconds. Set to 0 to use RainbowMiner's base interval.
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Fixed Cost per Day -->
-                    <div class="mb-3 row">
-                        <label for="inputFixedCostPerDay" class="col-sm-2 col-form-label">Fixed Cost per Day</label>
-                        <div class="col-sm-10">
-                            <div class="input-group">
-                                <input type="number" class="form-control" id="inputFixedCostPerDay" name="FixedCostPerDay" min="0" step="0.00000001"
-                                       data-number-to-fixed="8" data-number-stepfactor="100000000"
-                                       placeholder="Enter cumulative fixed costs per day" aria-describedby="addto-inputFixedCostPerDay">
-                                <span class="input-group-text" id="addto-inputFixedCostPerDay">per day</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Use Powerprice -->
-                    <div class="mb-3 row">
-                        <label for="inputUsePowerPrice" class="col-sm-2 col-form-label">Use Powerprice</label>
-                        <div class="col-sm-10">
-                            <select class="form-select" id="inputUsePowerPrice" name="UsePowerPrice">
-                                <option value="0">Disable</option>
-                                <option value="1">Enable</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Check Profitability -->
-                    <div class="mb-3 row">
-                        <label for="inputCheckProfitability" class="col-sm-2 col-form-label">Check Profitability</label>
-                        <div class="col-sm-10">
-                            <select class="form-select" id="inputCheckProfitability" name="CheckProfitability">
-                                <option value="0">Disable</option>
-                                <option value="1">Enable</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Profitability Level -->
-                    <div class="mb-3 row">
-                        <label for="inputProfitabilityLevel" class="col-sm-2 col-form-label">Profitability Level</label>
-                        <div class="col-sm-10">
-                            <div class="input-group">
-                                <input type="number" class="form-control" id="inputProfitabilityLevel" name="ProfitabilityLevel" step="0.00000001"
-                                       data-number-to-fixed="8" data-number-stepfactor="100000000"
-                                       placeholder="Enter profitability level in BTC" aria-describedby="addto-inputFixedCostPerDay">
-                                <span class="input-group-text" id="addto-inputProfitabilityLevel">BTC</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Enable Heat Control -->
-                    <div class="mb-3 row">
-                        <label for="inputEnableMiningHeatControl" class="col-sm-2 col-form-label">Enable Heat Control</label>
-                        <div class="col-sm-10">
-                            <select class="form-select" id="inputEnableMiningHeatControl" name="EnableMiningHeatControl">
-                                <option value="0">Disable</option>
-                                <option value="1">Enable</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Heat Control -->
-                    <div class="mb-3 row">
-                        <label for="inputMiningHeatControl" class="col-sm-2 col-form-label">Heat Control</label>
-                        <div class="col-sm-6">
-                            <input type="range" class="form-range" min="0" max="5" step="0.1" id="inputMiningHeatControl" name="MiningHeatControl">
-                        </div>
-                        <div class="col d-flex" style="width:110px">
-                            <span class="input-group-text" id="inputMiningHeatControlValue">2</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="accordion-item">
-            <h2 class="accordion-header" id="headingSix">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSix" aria-expanded="false" aria-controls="collapseSix">
-                    Machine's localhost API setup
-                </button>
-            </h2>
-            <div id="collapseSix" class="accordion-collapse collapse" aria-labelledby="headingSix" data-bs-parent="#accordionExample">
-                <div class="accordion-body">
-                    <!-- Machine's API Port -->
-                    <div class="mb-3 row">
-                        <label for="inputAPIport" class="col-sm-2 col-form-label">Machine's API port</label>
-                        <div class="col-sm-10">
-                            <input type="number" min="80" max="65535" step="1" class="form-control" id="inputAPIport" name="APIport" placeholder="If needed, choose a different API port">
-                        </div>
-                    </div>
-
-                    <!-- Enable Auth -->
-                    <div class="mb-3 row">
-                        <label for="inputAPIauth" class="col-sm-2 col-form-label">Enable Auth</label>
-                        <div class="col-sm-10">
-                            <select class="form-select" id="inputAPIauth" name="APIauth">
-                                <option value="0">Disable</option>
-                                <option value="1">Enable</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Username -->
-                    <div class="mb-3 row is--auth">
-                        <label for="inputAPIuser" class="col-sm-2 col-form-label">Machine's Username</label>
-                        <div class="col-sm-10">
-                            <input type="text" class="form-control" id="inputAPIuser" name="APIuser" placeholder="Enter an API username">
-                        </div>
-                    </div>
-
-                    <!-- Password -->
-                    <div class="mb-3 row is--auth">
-                        <label for="inputAPIpassword" class="col-sm-2 col-form-label">Machine's Password</label>
-                        <div class="col-sm-10">
-                            <input type="password" class="form-control" id="inputAPIpassword" name="APIpassword">
-                            <div class="form-text" id="helpAPIpassword">Leave empty for no change or check &rarr; <input type="checkbox" class="form-check-input" id="inputResetAPIpassword" name="ResetAPIpassword" /> to clear password</div>
-                        </div>
-                    </div>
-
-                    <!-- Max Login Attempts -->
-                    <div class="mb-3 row is--auth">
-                        <label for="inputAPImaxLoginAttemps" class="col-sm-2 col-form-label">Max. Login Attempts</label>
-                        <div class="col-sm-10">
-                            <input type="number" min="0" step="1" class="form-control" id="inputAPImaxLoginAttemps" name="APImaxLoginAttemps" placeholder="Maximum number of failed login attempts">
-                            <div id="inputAPImaxLoginAttempsHelp" class="form-text">Maximum number of failed login attempts, until IP gets blocked (0=turn off).</div>
-                        </div>
-                    </div>
-
-                    <!-- Block IP Time -->
-                    <div class="mb-3 row is--auth">
-                        <label for="inputAPIblockLoginAttemptsTime" class="col-sm-2 col-form-label">Block IP Time</label>
-                        <div class="col-sm-10">
-                            <input type="text" class="form-control" id="inputAPIblockLoginAttemptsTime" name="APIblockLoginAttemptsTime" placeholder="Enter block time">
-                            <div class="form-text">Enter timespan for IP blocking after failed login attempts (e.g., 1h=one hour, default unit is seconds).</div>
-                        </div>
-                    </div>
-
-                    <!-- Parallel API Threads -->
-                    <div class="mb-3 row">
-                        <label for="inputAPIthreads" class="col-sm-2 col-form-label">Parallel API Threads</label>
-                        <div class="col-sm-10">
-                            <input type="number" min="0" max="100" step="1" class="form-control" id="inputAPIthreads" name="APIthreads" placeholder="Maximum number of parallel API threads (0=automatic)">
-                            <div class="form-text">Enter the maximum parallel API threads (or set to 0 for automatic).</div>
-                        </div>
-                    </div>
-
-                    <!-- Lock Config -->
-                    <div class="mb-3 row">
-                        <label for="inputAPIlockConfig" class="col-sm-2 col-form-label">Lock Config</label>
-                        <div class="col-sm-10">
-                            <select class="form-select" id="inputAPIlockConfig" name="APIlockConfig">
-                                <option value="0">Disable</option>
-                                <option value="1">Enable</option>
-                            </select>
-                            <div class="form-text">Lock config files to prevent API/localhost changes. Warning: config.txt must be edited manually to reset.</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="accordion-item">
-            <h2 class="accordion-header" id="headingSeven">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSeven" aria-expanded="false" aria-controls="collapseSeven">
-                    Client / Server setup
-                </button>
-            </h2>
-            <div id="collapseSeven" class="accordion-collapse collapse" aria-labelledby="headingSeven" data-bs-parent="#accordionExample">
-                <div class="accordion-body">
-                    <!-- Run Mode -->
-                    <div class="mb-3 row">
-                        <label for="inputRunMode" class="col-sm-2 col-form-label">Run Mode</label>
-                        <div class="col-sm-10">
-                            <select class="form-select" id="inputRunMode" name="RunMode">
-                                <option value="standalone">Standalone</option>
-                                <option value="client">Machine is a Client</option>
-                                <option value="server">Machine is a Server</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="is--client">
-                        <!-- Server Name or IP -->
-                        <div class="mb-3 row">
-                            <label for="inputServerName" class="col-sm-2 col-form-label">Server Name or IP</label>
-                            <div class="col-sm-10">
-                                <input type="text" class="form-control" id="inputServerName" name="MinerServerName" placeholder="Enter the server's name or IP-address">
-                            </div>
-                        </div>
-
-                        <!-- Server's API Port -->
-                        <div class="mb-3 row">
-                            <label for="inputServerPort" class="col-sm-2 col-form-label">Server's API Port</label>
-                            <div class="col-sm-10">
-                                <input type="number" min="80" max="65535" step="1" class="form-control" id="inputServerPort" name="ServerPort" placeholder="Enter the server's API port">
-                            </div>
-                        </div>
-
-                        <!-- Server Username -->
-                        <div class="mb-3 row">
-                            <label for="inputServerUser" class="col-sm-2 col-form-label">Server's Username</label>
-                            <div class="col-sm-10">
-                                <input type="text" class="form-control" id="inputServerUser" name="MinerServerUser" placeholder="If auth is enabled, enter username">
-                            </div>
-                        </div>
-
-                        <!-- Server Password -->
-                        <div class="mb-3 row">
-                            <label for="inputServerPassword" class="col-sm-2 col-form-label">Server's Password</label>
-                            <div class="col-sm-10">
-                                <input type="password" class="form-control" id="inputServerPassword" name="ServerPassword">
-                                <div class="form-text" id="helpServerPassword">Leave empty for no change or check &rarr; <input type="checkbox" class="form-check-input" id="inputResetServerPassword" name="ResetServerPassword" /> to clear password</div>
-                            </div>
-                        </div>
-
-                        <!-- Use Server's Config -->
-                        <div class="mb-3 row">
-                            <label for="inputEnableServerConfig" class="col-sm-2 col-form-label">Use Server's Config</label>
-                            <div class="col-sm-10">
-                                <select class="form-select" id="inputEnableServerConfig" name="EnableServerConfig">
-                                    <option value="0">Disable</option>
-                                    <option value="1">Enable</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- Client-Group Name -->
-                        <div class="mb-3 row is--serverconfig">
-                            <label for="inputGroupName" class="col-sm-2 col-form-label">Client-Group Name</label>
-                            <div class="col-sm-10">
-                                <input type="text" class="form-control" id="inputGroupName" name="GroupName" placeholder="Group name for shared config">
-                            </div>
-                        </div>
-
-                        <!-- Server Config Files -->
-                        <div class="mb-3 row is--serverconfig">
-                            <div class="col-sm-2 col-form-label">Select Server Config Files</div>
-                            <div class="col-sm-10" id="serverconfigname">
-                                <!-- Add dynamic content here -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="accordion-item">
-            <h2 class="accordion-header" id="headingEight">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEight" aria-expanded="false" aria-controls="collapseEight">
-                    Reporting / Monitoring
-                </button>
-            </h2>
-            <div id="collapseEight" class="accordion-collapse collapse" aria-labelledby="headingEight" data-bs-parent="#accordionExample">
-                <div class="accordion-body">
-                    <!-- Enable Reporting -->
-                    <div class="mb-3 row">
-                        <label for="inputEnableMinerStatus" class="col-sm-2 col-form-label">Enable Reporting</label>
-                        <div class="col-sm-10">
-                            <select class="form-select" id="inputEnableMinerStatus" name="EnableMinerStatus">
-                                <option value="0">Disable</option>
-                                <option value="1">Enable</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Miner Status Key -->
-                    <div class="mb-3 row is--reporting">
-                        <label for="inputMinerStatusKey" class="col-sm-2 col-form-label">Miner Status Key</label>
-                        <div class="col-sm-10">
-                            <input type="text" class="form-control" id="inputMinerStatusKey" name="MinerStatusKey" placeholder="Enter your miner monitoring status key (or 'new' to create one)">
-                            <div id="inputMinerStatusKeyHelp" class="form-text">Enter your miner monitoring status key (or 'new' to create one).</div>
-                        </div>
-                    </div>
-
-                    <!-- Show Remote Machines -->
-                    <div class="mb-3 row">
-                        <label for="inputShowRemoteMachines" class="col-sm-2 col-form-label">Show Remote Machines</label>
-                        <div class="col-sm-10">
-                            <select class="form-select" id="inputShowRemoteMachines" name="ShowRemoteMachines">
-                                <option value="">Only if is Server</option>
-                                <option value="0">Disable</option>
-                                <option value="1">Enable</option>
-                            </select>
-                            <div id="inputShowRemoteMachinesHelp" class="form-text">Controls whether this machine displays the status of other machines using the same Miner Status Key.<br />
-                                <ul>
-                                    <li>Server mode: By default, only Server machines show connected Clients.</li>
-                                    <li>Standalone/Client mode: Normally show only their own status. Enabling this option lets them display all other machines with the same Miner Status Key.</li>
-                                </ul>
-                                <strong>Warning:</strong> Enabling this on many machines can cause significant extra web traffic.
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Miner Status Email -->
-                    <div class="mb-3 row is--reporting">
-                        <label for="inputMinerStatusEmail" class="col-sm-2 col-form-label">Miner Status Email</label>
-                        <div class="col-sm-10">
-                            <input type="email" class="form-control" id="inputMinerStatusEmail" name="MinerStatusEmail" placeholder="Enter an offline notification email">
-                        </div>
-                    </div>
-
-                    <!-- Pushover Key -->
-                    <div class="mb-3 row is--reporting">
-                        <label for="inputPushOverUserKey" class="col-sm-2 col-form-label">Pushover Key</label>
-                        <div class="col-sm-10">
-                            <input type="text" class="form-control" id="inputPushOverUserKey" name="PushOverUserKey" placeholder="Enter your https://pushover.net user key">
-                        </div>
-                    </div>
-
-                    <!-- Miner Status Max Temp -->
-                    <div class="mb-3 row is--reporting">
-                        <label for="inputMinerStatusMaxTemp" class="col-sm-2 col-form-label">Miner Status Max-Temp</label>
-                        <div class="col-sm-10">
-                            <div class="input-group">
-                                <input type="number" min="0" max="100" step="1" class="form-control" id="inputMinerStatusMaxTemp" name="MinerStatusMaxTemp" placeholder="Enter maximum allowed GPU temperature">
-                                <span class="input-group-text">°C</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Max Crashes Per Hour -->
-                    <div class="mb-3 row is--reporting">
-                        <label for="inputMinerStatusMaxCrashesPerHour" class="col-sm-2 col-form-label">Max. Crashes Per Hour</label>
-                        <div class="col-sm-10">
-                            <div class="input-group">
-                                <input type="number" min="-1" step="1" class="form-control" id="inputMinerStatusMaxCrashesPerHour" name="MinerStatusMaxCrashesPerHour" placeholder="Enter maximum allowed crashes per hour">
-                                <span class="input-group-text">cph</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Hard Disk Min Free Space -->
-                    <div class="mb-3 row is--reporting">
-                        <label for="inputDiskMinGB" class="col-sm-2 col-form-label">Hard Disk Min. Free Space</label>
-                        <div class="col-sm-10">
-                            <div class="input-group">
-                                <input type="number" min="0" step="0.5" class="form-control" id="inputDiskMinGB" name="DiskMinGB" placeholder="Enter minimum free space on Hard Drive">
-                                <span class="input-group-text">GB</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="accordion-item">
-            <h2 class="accordion-header" id="headingNine">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNine" aria-expanded="false" aria-controls="collapseNine">
-                    Automatic Updates
-                </button>
-            </h2>
-            <div id="collapseNine" class="accordion-collapse collapse" aria-labelledby="headingNine" data-bs-parent="#accordionExample">
-                <div class="accordion-body">
-                    <!-- Enable Automatic Update -->
-                    <div class="mb-3 row">
-                        <label for="inputEnableAutoUpdate" class="col-sm-2 col-form-label">Enable Automatic Update</label>
-                        <div class="col-sm-10">
-                            <select class="form-select" id="inputEnableAutoUpdate" name="EnableAutoUpdate">
-                                <option value="0">Disable</option>
-                                <option value="1">Enable</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Updates During Pause -->
-                    <div class="mb-3 row">
-                        <label for="inputEnableUpdateDuringPause" class="col-sm-2 col-form-label">Updates During Pause</label>
-                        <div class="col-sm-10">
-                            <select class="form-select" id="inputEnableUpdateDuringPause" name="EnableUpdateDuringPause">
-                                <option value="0">Disable</option>
-                                <option value="1">Enable</option>
-                            </select>
-                            <div id="inputEnableUpdateDuringPauseHelp" class="form-text">Allow automatic updates, even if RainbowMiner is paused.</div>
-                        </div>
-                    </div>
-
-                    <!-- Scheduled Updates -->
-                    <div class="mb-3 row">
-                        <label for="inputEnableUpdateWhenScheduled" class="col-sm-2 col-form-label">Scheduled Updates</label>
-                        <div class="col-sm-10">
-                            <select class="form-select" id="inputEnableUpdateWhenScheduled" name="EnableUpdateWhenScheduled">
-                                <option value="0">Disable</option>
-                                <option value="1">Enable</option>
-                            </select>
-                            <div id="inputEnableUpdateWhenScheduledHelp" class="form-text">Restrict automatic updates to when the scheduler allows (set EnableUpdate to "1" in scheduler.config.txt).</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="accordion-item">
-            <h2 class="accordion-header" id="headingTen">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTen" aria-expanded="false" aria-controls="collapseTen">
-                    Technical
-                </button>
-            </h2>
-            <div id="collapseTen" class="accordion-collapse collapse" aria-labelledby="headingTen" data-bs-parent="#accordionExample">
-                <div class="accordion-body">
-                    <!-- Interval -->
-                    <div class="mb-3 row">
-                        <label for="inputInterval" class="col-sm-2 col-form-label">Interval</label>
-                        <div class="col-sm-10">
-                            <div class="input-group">
-                                <input type="number" min="20" step="1" class="form-control" id="inputInterval" name="Interval" placeholder="Enter interval in seconds">
-                                <span class="input-group-text">seconds</span>
-                            </div>
-                            <div class="form-text">Enter the script's loop interval in seconds.</div>
-                        </div>
-                    </div>
-
-                    <!-- Minimum Mining Intervals -->
-                    <div class="mb-3 row">
-                        <label for="inputMinimumMiningIntervals" class="col-sm-2 col-form-label">Min. Mining Intervals</label>
-                        <div class="col-sm-10">
-                            <input type="number" min="1" step="1" class="form-control" id="inputMinimumMiningIntervals" name="MinimumMiningIntervals" placeholder="Minimum mining intervals before the regular loop starts">
-                            <div class="form-text">Minimum mining intervals before the regular loop starts.</div>
-                        </div>
-                    </div>
-
-                    <!-- Benchmark Interval -->
-                    <div class="mb-3 row">
-                        <label for="inputBenchmarkInterval" class="col-sm-2 col-form-label">Benchmark Interval</label>
-                        <div class="col-sm-10">
-                            <div class="input-group">
-                                <input type="number" min="20" max="300" step="1" class="form-control" id="inputBenchmarkInterval" name="BenchmarkInterval" placeholder="Enter benchmark interval in seconds">
-                                <span class="input-group-text">seconds</span>
-                            </div>
-                            <div class="form-text">Enter the script's loop interval in seconds, used for benchmarks.</div>
-                        </div>
-                    </div>
-
-                    <!-- Restart Timespan -->
-                    <div class="mb-3 row">
-                        <label for="inputRestartRBMTimespan" class="col-sm-2 col-form-label">Restart RainbowMiner after a timespan</label>
-                        <div class="col-sm-10">
-                            <input type="text" class="form-control" id="inputRestartRBMTimespan" name="RestartRBMTimespan" placeholder="Enter maximum runtime until restart">
-                            <div class="form-text">Enter maximum runtime until restart in seconds (e.g., 1h = one hour, default unit is seconds).</div>
-                        </div>
-                    </div>
-
-                    <!-- Restart Memory -->
-                    <div class="mb-3 row">
-                        <label for="inputRestartRBMMemory" class="col-sm-2 col-form-label">Restart RainbowMiner after Memory</label>
-                        <div class="col-sm-10">
-                            <input type="text" class="form-control" id="inputRestartRBMMemory" name="RestartRBMMemory" placeholder="Enter memory limit">
-                            <div class="form-text">Enter maximum memory usage until restart (e.g., 1.2G = 1.2 Gigabytes, default unit is bytes).</div>
-                        </div>
-                    </div>
-
-                    <!-- Fastlane for Benchmark -->
-                    <div class="mb-3 row">
-                        <label for="inputEnableFastlaneBenchmark" class="col-sm-2 col-form-label">Fastlane for Benchmark</label>
-                        <div class="col-sm-10">
-                            <select class="form-select" id="inputEnableFastlaneBenchmark" name="EnableFastlaneBenchmark">
-                                <option value="0">Disable</option>
-                                <option value="1">Enable</option>
-                            </select>
-                            <div class="form-text">If enabled, skips benchmarks and downloads live values from rbminer.net. This is very inaccurate.</div>
-                        </div>
-                    </div>
-
-                    <!-- Fastlane Benchmark Settings -->
-                    <div class="mb-3 row is--fastlane">
-                        <label for="inputFastlaneBenchmarkTypeCPU" class="col-sm-2 col-form-label">Fastlane CPU values</label>
-                        <div class="col-sm-10">
-                            <select class="form-select" id="inputFastlaneBenchmarkTypeCPU" name="FastlaneBenchmarkTypeCPU">
-                                <option value="avg">Live Average</option>
-                                <option value="min">Live Minimum</option>
-                                <option value="max">Live Maximum</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="mb-3 row">
-                        <label for="inputExcludeCurrencyRateFromCoinbase" class="col-sm-2 col-form-label">Exclude rate from Coinbase</label>
-                        <div class="col-sm-10">
-                            <input type="text" class="form-control" id="inputExcludeCurrencyRateFromCoinbase" name="ExcludeCurrencyRateFromCoinbase">
-                            <div class="form-text">Coinbase is the main currency provider, only if a symbol is not delivered from this API it will get called from api.rbminer.net. Sometimes there are false values due to ident symbols. Please leave as-is, since the RainbowMiner will update the defaults asap in case of false rates.</div>
-                        </div>
-                    </div>
-                    <!-- Switching Prevention -->
-                    <div class="mb-3 row">
-                        <label for="inputSwitchingPrevention" class="col-sm-2 col-form-label">Switching Prevention</label>
-                        <div class="col-sm-10">
-                            <input type="number" min="0" max="10" step="1" class="form-control" id="inputSwitchingPrevention" name="SwitchingPrevention" placeholder="Adjust switching prevention">
-                            <div class="form-text">Higher values result in less switching of miners (0 to disable).</div>
-                        </div>
-                    </div>
-
-                    <!-- Delay -->
-                    <div class="mb-3 row">
-                        <label for="inputDelay" class="col-sm-2 col-form-label">Delay</label>
-                        <div class="col-sm-10">
-                            <div class="input-group">
-                                <input type="number" min="0" step="1" class="form-control" id="inputDelay" name="Delay" placeholder="Enter delay in seconds">
-                                <span class="input-group-text">seconds</span>
-                            </div>
-                            <div class="form-text">Set a delay before each miner starts (use >0 to avoid BSOD).</div>
-                        </div>
-                    </div>
-
-                    <!-- Pool Switching Hysteresis -->
-                    <div class="mb-3 row">
-                        <label for="inputPoolSwitchingHysteresis" class="col-sm-2 col-form-label">Pool Switching Hysteresis</label>
-                        <div class="col-sm-10">
-                            <div class="input-group">
-                                <input type="number" min="0" max="100" step="0.1" class="form-control" id="inputPoolSwitchingHysteresis" name="PoolSwitchingHysteresis" placeholder="Adjust pool-switching hysteresis">
-                                <span class="input-group-text">%</span>
-                            </div>
-                            <div class="form-text">Higher values reduce pool-to-pool hopping (in %, 0 to disable).</div>
-                        </div>
-                    </div>
-
-                    <!-- Miner Switching Hysteresis -->
-                    <div class="mb-3 row">
-                        <label for="inputMinerSwitchingHysteresis" class="col-sm-2 col-form-label">Miner Switching Hysteresis</label>
-                        <div class="col-sm-10">
-                            <div class="input-group">
-                                <input type="number" min="0" max="100" step="0.1" class="form-control" id="inputMinerSwitchingHysteresis" name="MinerSwitchingHysteresis" placeholder="Adjust miner-switching hysteresis">
-                                <span class="input-group-text">%</span>
-                            </div>
-                            <div class="form-text">Higher values reduce miner-to-miner hopping (in %, 0 to disable).</div>
-                        </div>
-                    </div>
-
-                    <!-- Max Activity Days -->
-                    <div class="mb-3 row">
-                        <label for="inputMaxActivityDays" class="col-sm-2 col-form-label">Max. Activity Days</label>
-                        <div class="col-sm-10">
-                            <input type="number" min="1" step="1" class="form-control" id="inputMaxActivityDays" name="MaxActivityDays" placeholder="Activity history length in days">
-                            <div class="form-text">Length of activity history shown on localhost (in days).</div>
-                        </div>
-                    </div>
-
-                    <!-- Proxy -->
-                    <div class="mb-3 row">
-                        <label for="inputProxy" class="col-sm-2 col-form-label">Proxy</label>
-                        <div class="col-sm-10">
-                            <input type="text" class="form-control" id="inputProxy" name="Proxy" placeholder="Enter proxy address (if used)">
-                        </div>
-                    </div>
-
-                    <!-- Enable Watchdog -->
-                    <div class="mb-3 row">
-                        <label for="inputWatchdog" class="col-sm-2 col-form-label">Enable Watchdog</label>
-                        <div class="col-sm-10">
-                            <select class="form-select" id="inputWatchdog" name="Watchdog">
-                                <option value="0">Disable</option>
-                                <option value="1">Enable</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="accordion-item">
-            <div class="accordion-body text-center">
-                <button type="submit" class="btn btn-primary">Submit</button>
-            </div>
-        </div>
-    </div>
-</form>
+<script src="/js/rbm-setup-1.0.js"></script>
 
 <!-- End of page scripts -->
 <script type="text/javascript">
 function update_heatmyflat() {
-    var val = parseFloat($("input#inputEnableHeatMyFlat").val())
+    var val = parseFloat(document.querySelector("input#inputEnableHeatMyFlat")?.value)
     if (!val) val = "Max. Profit"
     else if (val == 5) val = "Max. Revenue"
     else if (val == 10) val = "Max. Heat"
     else val = "Level " + (Math.round(val*10)/10)
-    $("span#inputEnableHeatMyFlatValue").text(val)
+    const out = document.querySelector("span#inputEnableHeatMyFlatValue");
+    if (out) out.textContent = val;
 }
 
 function update_miningheatcontrol() {
-    var val = parseFloat($("input#inputMiningHeatControl").val())
+    var val = parseFloat(document.querySelector("input#inputMiningHeatControl")?.value)
     if (!val) val = "Min. Heat"
     else if (val == 2) val = "Max. Profit"
     else if (val == 3) val = "Max. Revenue"
     else if (val == 5) val = "Max. Heat"
     else val = "Level " + (Math.round(val * 10) / 10)
-    $("span#inputMiningHeatControlValue").text(val)
+    const out = document.querySelector("span#inputMiningHeatControlValue");
+    if (out) out.textContent = val;
 }
 
-$(function() {
+// build one inline checkbox for the pool/device/serverconfig pickers
+function setupCheckbox(id, name, value, labelHtml, checked) {
+    return '<div class="form-check form-check-inline"><input type="checkbox" class="form-check-input" id="' + esc(id) + '" name="' + name + '" value="' + esc(value) + '"' + (checked ? ' checked' : '') + '><label class="form-check-label" for="' + esc(id) + '">' + labelHtml + '</label></div>';
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+    // Phase 5: the form is rendered from the schema; ids/names are identical
+    // to the previous hand-written markup, so everything below is unchanged.
+    try {
+        const response = await fetch("/data/setupschema.json");
+        RbmSetup.render(document.getElementById("formConfig"), await response.json());
+    } catch (error) {
+        console.error("setupschema:", error);
+        document.getElementById("loadingMessage").textContent = "Failed to load /data/setupschema.json";
+        return;
+    }
+
     ConfigLoader.whenReady().then(function(cfg) {
         var loaded = 0;
-        $.ajax({
-            url: '/loadconfig', success: function (result) {
-                $("input.form-control,select.form-select,input.form-range").each(function(index) {
-                    var conf = $(this).attr('id').replace(/^input/, "")
+
+        function markLoaded() {
+            loaded++;
+            if (loaded >= 2) {
+                document.getElementById("formConfig").classList.remove("d-none");
+                document.getElementById("loadingMessage").classList.add("d-none");
+            }
+        }
+
+        // wire a select's value to the visibility of a toggle class
+        function bindToggle(selectId, className, predicate) {
+            const el = document.getElementById(selectId);
+            const apply = () => rbmToggleDisplay("." + className, predicate(el.value));
+            el.addEventListener("change", apply);
+            return apply;
+        }
+
+        (async () => {
+            try {
+                const response = await fetch('/loadconfig');
+                const result = await response.json();
+
+                for (const el of document.querySelectorAll("input.form-control,select.form-select,input.form-range")) {
+                    var conf = el.id.replace(/^input/, "")
                     var res = '';
-                    if (this.type == "password") {
+                    if (el.type == "password") {
                         if (result[conf] == "") {
-                            $("#help" + conf).hide();
+                            rbmToggleDisplay("#help" + conf, false);
                         }
                     } else {
                         res = result[conf];
                     }
                     if (typeof res == "boolean") { res = res? 1:0 }
                     else if (conf == "RunMode" || conf == "MiningMode") { res = res.toLowerCase(); }
-                    $(this).val(res)
-                })
+                    el.value = res;
+                }
 
                 update_miningheatcontrol()
 
-                var pools = new Array(), excludepools = new Array()
+                var pools = [], excludepools = []
                 var resultPoolName = result.PoolName.split(/[,;]/), resultExcludePoolName = result.ExcludePoolName.split(/[,;]/);
                 cfg.AvailPools.forEach(function(key) {
-                    var checked = resultPoolName.some(item => item.toLowerCase() === key.toLowerCase())? " checked":"";
-                    var aesym = (typeof cfg.AutoexPools[key] !== "undefined")? ' <svg class="crypto-symbol"><use href="#'+cfg.AutoexPools[key]+'-symbol"/></svg>':'';
-                    pools.push('<div class="form-check form-check-inline"><input type="checkbox" class="form-check-input" id="pool' + key + '" name="PoolName[]" value="'+key+'"' + checked + '><label class="form-check-label" for="pool' + key + '">' + key + aesym + '</label></div>')
-                    checked = resultExcludePoolName.some(item => item.toLowerCase() === key.toLowerCase())? " checked":"";
-                    excludepools.push('<div class="form-check form-check-inline"><input type="checkbox" class="form-check-input" id="excludepool' + key + '" name="ExcludePoolName[]" value="' + key + '"' + checked + '><label class="form-check-label" for="excludepool' + key + '">' + key + aesym + '</label></div>')
+                    var checked = resultPoolName.some(item => item.toLowerCase() === key.toLowerCase());
+                    var aesym = (typeof cfg.AutoexPools[key] !== "undefined")? ' <svg class="crypto-symbol"><use href="#'+esc(cfg.AutoexPools[key])+'-symbol"/></svg>':'';
+                    pools.push(setupCheckbox('pool' + key, 'PoolName[]', key, esc(key) + aesym, checked))
+                    checked = resultExcludePoolName.some(item => item.toLowerCase() === key.toLowerCase());
+                    excludepools.push(setupCheckbox('excludepool' + key, 'ExcludePoolName[]', key, esc(key) + aesym, checked))
                 })
-                $("#pools").html(pools.join(''));
-                $("#excludepools").html(excludepools.join(''));
+                document.getElementById("pools").innerHTML = pools.join('');
+                document.getElementById("excludepools").innerHTML = excludepools.join('');
 
-                var serverconfigname = new Array();
+                var serverconfigname = [];
                 var resultServerConfigName = result.ServerConfigName.split(/[,;]/);
                 ["algorithms","coins","config","miners","ocprofiles","pools","scheduler"].forEach(function (data) {
-                    var checked = resultServerConfigName.some(item => item.toLowerCase() === data.toLowerCase())? " checked":"";
-                    serverconfigname.push('<div class="form-check form-check-inline"><input type="checkbox" class="form-check-input" id="serverconfig' + data + '" name="ServerConfigName[]" value="'+data+'"' + checked + '><label class="form-check-label" for="serverconfig' + data + '">' + data + '</label></div>')
+                    var checked = resultServerConfigName.some(item => item.toLowerCase() === data.toLowerCase());
+                    serverconfigname.push(setupCheckbox('serverconfig' + data, 'ServerConfigName[]', data, esc(data), checked))
                 })
-                $("#serverconfigname").html(serverconfigname.join(''));
+                document.getElementById("serverconfigname").innerHTML = serverconfigname.join('');
 
-                $("#inputAPIauth").change(function() {
-                    if ($(this).val()=="1") {
-                        $(".is--auth").show();
-                    } else {
-                        $(".is--auth").hide();
-                    }
-                });
-                $("#inputRunMode").change(function() {
-                    if ($(this).val()=="client") {
-                        $(".is--client").show();
-                    } else {
-                        $(".is--client").hide();
-                    }
-                });
-                $("#inputEnableServerConfig").change(function() {
-                    if ($("#inputRunMode").val()=="client" && $(this).val()=="1") {
-                        $(".is--serverconfig").show();
-                    } else {
-                        $(".is--serverconfig").hide();
-                    }
-                });
-                $("#inputEnableMinerStatus").change(function() {
-                    if ($(this).val()=="1") {
-                        $(".is--reporting").show();
-                    } else {
-                        $(".is--reporting").hide();
-                    }
-                });
-                $("#inputEnableOCProfiles").change(function() {
-                    if ($(this).val()=="1") {
-                        $(".is--ocprofiles").show();
-                    } else {
-                        $(".is--ocprofiles").hide();
-                    }
-                });
-                $("#inputEnableFastlaneBenchmark").change(function() {
-                    if ($(this).val()=="1") {
-                        $(".is--fastlane").show();
-                    } else {
-                        $(".is--fastlane").hide();
-                    }
-                });
-                $("input[type=checkbox][name='DeviceName[]'][value='CPU']").change(function() {
-                    if (this.checked && !$("input[type=checkbox][name='ExcludeDeviceName[]'][value='CPU']").is(':checked')) {
-                        $('.is--cpu').show();
-                    } else {
-                        $('.is--cpu').hide();
-                    }
-                });
-                $("input[type=checkbox][name='ExcludeDeviceName[]'][value='CPU']").change(function() {
-                    if (!this.checked && $("input[type=checkbox][name='DeviceName[]'][value='CPU']").is(':checked')) {
-                        $('.is--cpu').show();
-                    } else {
-                        $('.is--cpu').hide();
-                    }
-                });
-                $("#inputAPIauth").trigger("change");
-                $("#inputRunMode").trigger("change");
-                $("#inputEnableServerConfig").trigger("change");
-                $("#inputEnableMinerStatus").trigger("change");
-                $("#inputEnableOCProfiles").trigger("change");
-                $("#inputEnableFastlaneBenchmark").trigger("change");
+                const applyToggles = [
+                    bindToggle("inputAPIauth", "is--auth", v => v == "1"),
+                    bindToggle("inputRunMode", "is--client", v => v == "client"),
+                    bindToggle("inputEnableServerConfig", "is--serverconfig",
+                        v => document.getElementById("inputRunMode").value == "client" && v == "1"),
+                    bindToggle("inputEnableMinerStatus", "is--reporting", v => v == "1"),
+                    bindToggle("inputEnableOCProfiles", "is--ocprofiles", v => v == "1"),
+                    bindToggle("inputEnableFastlaneBenchmark", "is--fastlane", v => v == "1")
+                ];
 
-                loaded++;
-                if (loaded >= 2) {
-                    document.getElementById("formConfig").classList.remove("d-none");
-                    document.getElementById("loadingMessage").classList.add("d-none");
+                function applyCpuToggle() {
+                    const dev = document.querySelector("input[type=checkbox][name='DeviceName[]'][value='CPU']");
+                    const exdev = document.querySelector("input[type=checkbox][name='ExcludeDeviceName[]'][value='CPU']");
+                    rbmToggleDisplay('.is--cpu', dev && dev.checked && !(exdev && exdev.checked));
                 }
+                document.querySelector("input[type=checkbox][name='DeviceName[]'][value='CPU']")?.addEventListener("change", applyCpuToggle);
+                document.querySelector("input[type=checkbox][name='ExcludeDeviceName[]'][value='CPU']")?.addEventListener("change", applyCpuToggle);
+
+                applyToggles.forEach(apply => apply());
+
+                markLoaded();
+            } catch (error) {
+                console.error("loadconfig:", error);
             }
-        });
-        $.ajax({
-            url: '/getdeviceconfig', success: function (result) {
-                var devices = new Array(), excludedevices = new Array(), cpuenabled = false, cpudisabled = false, maxthreads = 0
-                $.each(result, function (key, data) {
-                    devices.push('<div class="form-check form-check-inline"><input type="checkbox" class="form-check-input" id="device' + key + '" name="DeviceName[]" value="'+data.Name+'"' + (data.Selected? ' checked':'') + '><label class="form-check-label" for="device' + key + '">' + data.Name + '</label></div>')
-                    excludedevices.push('<div class="form-check form-check-inline"><input type="checkbox" class="form-check-input" id="excludedevice' + key + '" name="ExcludeDeviceName[]" value="'+data.Name+'"' + (data.Excluded? ' checked':'') + '><label class="form-check-label" for="excludedevice' + key + '">' + data.Name + '</label></div>')
+        })();
+        (async () => {
+            try {
+                const response = await fetch('/getdeviceconfig');
+                const result = await response.json();
+
+                var devices = [], excludedevices = [], cpuenabled = false, cpudisabled = false, maxthreads = 0
+                for (const [key, data] of Object.entries(result)) {
+                    devices.push(setupCheckbox('device' + key, 'DeviceName[]', data.Name, esc(data.Name), data.Selected))
+                    excludedevices.push(setupCheckbox('excludedevice' + key, 'ExcludeDeviceName[]', data.Name, esc(data.Name), data.Excluded))
                     if (data.Name == 'CPU') {
                         if (data.Selected) cpuenabled = true;
                         if (data.Excluded) cpudisabled = true;
                         maxthreads = data.Threads;
                     }
-                })
-                $("#devices").html(devices.join(''));
-                $("#excludedevices").html(excludedevices.join(''));
-                if (cpuenabled && !cpudisabled)
-                    $('.is--cpu').show();
-                else 
-                    $('.is--cpu').hide();
-                $('#inputCPUMiningThreads').attr('max',maxthreads);
-                loaded++;
-                if (loaded >= 2) {
-                    document.getElementById("formConfig").classList.remove("d-none");
-                    document.getElementById("loadingMessage").classList.add("d-none");
                 }
+                document.getElementById("devices").innerHTML = devices.join('');
+                document.getElementById("excludedevices").innerHTML = excludedevices.join('');
+                rbmToggleDisplay('.is--cpu', cpuenabled && !cpudisabled);
+                document.getElementById('inputCPUMiningThreads').setAttribute('max', maxthreads);
+                markLoaded();
+            } catch (error) {
+                console.error("getdeviceconfig:", error);
             }
-        });
-        $("#formConfig").submit(function (event) {
+        })();
+        document.getElementById("formConfig").addEventListener("submit", (event) => {
             // Stop form from submitting normally
             event.preventDefault();
-            if (cfg.IsLocked) {
-                document.querySelector('.modal-body').innerHTML = 'To be able to save, manually set parameter "APIlockConfig" to "0" in config.txt';
-                document.querySelector('.modal-title').textContent = 'Warning: config lock is enabled';
-                var myModal = new bootstrap.Modal(document.getElementById('myModal'));
-                myModal.show();
-                return false;
-            } else if ($("#inputAPIlockConfig").val() == "1") {
+            if (!cfg.IsLocked && document.getElementById("inputAPIlockConfig").value == "1") {
                 if (!confirm("Warning: you are about to lock the config.\nYou will have to manually set parameter \"APIlockConfig\" to \"0\" in config.txt to reset this.\n\nDo you really want to proceed?"))
-                return false;
+                    return;
             }
-            $.post("/saveconfig", $(this).serialize()).done(function (data) {
-                var mbody, mtitle;
-                if (data.Success) {
-                    mbody = 'RainbowMiner will pick up the new configuration after the current round has ended.';
-                    mtitle = 'Configuration saved!';
-                } else {
-                    mbody = 'Something went wrong or the configuration is locked via APILockConfig in config.txt';
-                    mtitle = 'Configuration NOT saved!';
-                }
-                document.querySelector('.modal-body').innerHTML = mbody;
-                document.querySelector('.modal-title').textContent = mtitle;
-                var myModal = new bootstrap.Modal(document.getElementById('myModal'));
-                myModal.show();
-            });
+            rbmSubmitConfig(event.target, cfg);
         })
-        $("#inputMiningHeatControl").change(update_miningheatcontrol);
+        document.getElementById("inputMiningHeatControl")?.addEventListener("change", update_miningheatcontrol);
     });
 });
 </script>

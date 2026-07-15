@@ -31,70 +31,80 @@
 </div>
 
 <!-- End of page scripts -->
-<script id="machines_template" type="text/x-handlebars-template">
-    <div class="mb-2 card {{#if isserver}}text-white bg-primary{{/if}}" style="min-width: {{#if total}}200px{{else}}200px{{/if}}; cursor:pointer;">
+<template id="machines_template">
+    <div class="mb-2 card" style="min-width: 200px; cursor:pointer;">
         <div class="card-body text-center position-relative">
             <p class="card-text currencies">
-                <span class="currencyname fw-bold">{{workername}}</span> @ {{machinename}}<br />
-                {{machineip}}:{{port}}<br />
-                {{#if isserver}}live<a href="http://{{machineip}}:{{port}}" class="stretched-link"></a>{{else}}{{lastping}}<a href="http://{{machineip}}:{{port}}" target="_blank" class="stretched-link"></a>{{/if}}
+                <span class="currencyname fw-bold"></span> <span class="machine--name"></span><br />
+                <span class="machine--addr"></span><br />
+                <span class="machine--ping"></span><a class="stretched-link"></a>
             </p>
         </div>
     </div>
-</script>
+</template>
 
 <script type="text/javascript">
-$(function () {
-    const template = Handlebars.compile($("#machines_template").html());
+document.addEventListener("DOMContentLoaded", () => {
+    const template = document.getElementById("machines_template");
+    const machinesboxes = document.getElementById("machinesboxes");
 
     ConfigLoader.whenReady().then(function(cfg) {
         if (typeof cfg.MinerStatusKey !== "undefined" && cfg.MinerStatusKey != "") {
-            $('#actionsboxes a').click(function () {
-                var title  = this.dataset.title;
-                var msg    = this.dataset.msg;
-                var action = this.id;
-                var statusKey = cfg.MinerStatusKey
+            for (const a of document.querySelectorAll('#actionsboxes a')) {
+                a.addEventListener('click', async (event) => {
+                    event.preventDefault();
+                    const title  = a.dataset.title;
+                    const msg    = a.dataset.msg;
+                    const action = a.id;
+                    const statusKey = cfg.MinerStatusKey
 
-                if (!confirm("Really " + title + " on ALL rigs?")) return false;
+                    if (!confirm("Really " + title + " on ALL rigs?")) return;
 
-                fetch('https://api.rbminer.net/action.php?action=' + action + '&user=' + statusKey)
-                  .then(response => {
-                    if (!response.ok) {
-                      throw new Error('Network response was not ok ' + response.statusText);
+                    try {
+                        const response = await fetch('https://api.rbminer.net/action.php?action=' + encodeURIComponent(action) + '&user=' + encodeURIComponent(statusKey));
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok ' + response.statusText);
+                        }
+                        const data = await response.json();
+                        document.querySelector('#myModal .modal-title').textContent = title;
+                        document.querySelector('#myModal .modal-body').textContent = data.Status == "Success"? msg : "Call failed - please try again";
+                        bootstrap.Modal.getOrCreateInstance(document.getElementById('myModal')).show();
+                    } catch (error) {
+                        console.error('There was a problem with the fetch operation:', error);
                     }
-                    return response.json(); // Parse JSON from the response
-                  })
-                  .then(data => {
-                    $('#myModal .modal-title').text(title);
-                    $('#myModal .modal-body').text(data.Status == "Success"? msg : "Call failed - please try again");
-                    var myModal = new bootstrap.Modal(document.getElementById('myModal'));
-                    myModal.show();
-                  })
-                  .catch(error => {
-                    console.error('There was a problem with the fetch operation:', error);
-                  });
-                  return false;
-            });
+                });
+            }
 
-            $("#actions").removeClass("d-none");
+            document.getElementById("actions").classList.remove("d-none");
         }
     });
 
-    (function updateMachines() {
-        $.ajax({
-            url: '/clients?include_server=true', success: function (result) {
-                //console.log(result);
-                $("#machinesboxes").empty();
-                var boxes = [];
-                $.each(result, function (index, item) {
-                    boxes.push({ machinename: item.machinename, machineip: item.machineip, port: typeof item.port !== "undefined" && item.port != null? item.port : 4000, lastping: timeSince(item.timestamp*1000), workername: item.workername, isserver: typeof item.isserver !== "undefined"? item.isserver : false });
-                });
-                $.each(boxes, function (index, item) {
-                    $("#machinesboxes").append(template(item));
-                });
-                window.setTimeout(updateMachines, 60000);
+    (async function updateMachines() {
+        try {
+            const response = await fetch('/clients?include_server=true');
+            const result = await response.json();
+
+            machinesboxes.replaceChildren();
+            for (const item of result) {
+                const port = typeof item.port !== "undefined" && item.port != null? item.port : 4000;
+                const isserver = typeof item.isserver !== "undefined"? item.isserver : false;
+
+                const box = template.content.cloneNode(true);
+                if (isserver) box.querySelector(".card").classList.add("text-white", "bg-primary");
+                box.querySelector(".currencyname").textContent = item.workername;
+                box.querySelector(".machine--name").textContent = "@ " + item.machinename;
+                box.querySelector(".machine--addr").textContent = item.machineip + ":" + port;
+                box.querySelector(".machine--ping").textContent = isserver ? "live" : timeSince(item.timestamp*1000);
+                const a = box.querySelector("a.stretched-link");
+                a.href = "http://" + item.machineip + ":" + port;
+                if (!isserver) a.target = "_blank";
+                machinesboxes.appendChild(box);
             }
-        });
+        } catch (error) {
+            console.error("clients:", error);
+        } finally {
+            window.setTimeout(updateMachines, 60000);
+        }
     })();
 });
 </script>

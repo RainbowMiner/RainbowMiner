@@ -2,7 +2,7 @@
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
   <h1 id="title" data-navbaractive="navallminers" class="h2">Miners</h1>
 </div>
-<table id="miners" class="bootstrap-table-init table"
+<table id="miners" class="rbm-table-init table"
        data-url="/miners"
        data-response-handler="formatMiners"
        data-filter-control="true"
@@ -11,11 +11,7 @@
        data-sort-name="Profit"
        data-cache="false"
        data-show-columns="true"
-       data-show-toggle="true"
        data-show-refresh="true"
-       data-icons-prefix="fa"
-       data-icons="icons"
-       data-checkbox-header="false"
        data-detail-view="true"
        data-detail-formatter="detailFormatter">
     <thead>
@@ -39,50 +35,48 @@
 
 <!-- End of page scripts -->
 <script type="text/javascript">
-$(function () {
-    var $table = $('table#miners')
-
-    $table.on('load-success.bs.table', function (e, data) {
-        $.getJSON("/disabled", function (disabled) {
-            $.each(data, function (index, item) {
-                var algos = item.BaseAlgorithm.split(/-/)
-                var disable = false
-                if (disabled.length) {
-                    for (i = 0; !disable && i < algos.length; i++) {
-                        var name = item.Name + '_' + algos[i] + '_HashRate'
-                        if (disabled.indexOf(name) > -1) { disable = true }
+document.addEventListener("DOMContentLoaded", () => {
+    RbmTables.whenReady('#miners').then((table) => {
+        table.on("dataProcessed", async () => {
+            try {
+                const response = await fetch("/disabled");
+                const disabled = await response.json();
+                for (const row of table.getRows()) {
+                    const item = row.getData();
+                    const algos = item.BaseAlgorithm.split(/-/)
+                    var disable = false
+                    if (disabled.length) {
+                        for (var i = 0; !disable && i < algos.length; i++) {
+                            var name = item.Name + '_' + algos[i] + '_HashRate'
+                            if (disabled.indexOf(name) > -1) { disable = true }
+                        }
                     }
+                    if (disable === !!item.tEnabled) row.update({ tEnabled: !disable });
                 }
-                if (disable && item.tEnabled) { $table.bootstrapTable('updateCell', { index: index, field: 'tEnabled', value: false, reinit: false }) }
-                else if (!disable && !item.tEnabled) { $table.bootstrapTable('updateCell', { index: index, field: 'tEnabled', value: true, reinit: false }) }
-            })
-        })
-        sortFilterOptions(this);
-    })
-
-    $table.on("change", "input[type='checkbox'].enable-switch", function (event) {
-        event.preventDefault();
-        var data = $table.bootstrapTable('getData')
-        var index = parseInt($(this).attr("id").split(/-/)[1])
-        $.getJSON("/action/toggleminer?name=" + encodeURIComponent(data[index].Name) + "&algorithm=" + encodeURIComponent(data[index].BaseAlgorithm) + "&devicemodel=" + encodeURIComponent(data[index].DeviceModel), function (res) {
-            if (res.Status) {
-                $table.bootstrapTable('updateCell', { index: index, field: 'tEnabled', value: !res.Disabled, reinit: false })
+            } catch (error) {
+                console.error("disabled:", error);
             }
-        })
-    })
+        });
 
-    ConfigLoader.whenReady().then(function(cfg) {
-        const refreshTables = [
-            { selector: "table#miners", interval: 600000 }
-        ];
-
-        refreshTables.forEach(function(table) {
-            setInterval(function() {
-                if (!$(table.selector + " tr.detail-view").length) $(table.selector).bootstrapTable("refresh", { silent: true });
-            }, table.interval);
+        document.getElementById('miners').addEventListener("change", async (event) => {
+            const input = event.target.closest("input[type='checkbox'].enable-switch");
+            if (!input) return;
+            const row = RbmTables.rowFromElement(table, input);
+            if (!row) return;
+            const item = row.getData();
+            try {
+                const response = await fetch("/action/toggleminer?name=" + encodeURIComponent(item.Name) + "&algorithm=" + encodeURIComponent(item.BaseAlgorithm) + "&devicemodel=" + encodeURIComponent(item.DeviceModel));
+                const res = await response.json();
+                if (res.Status) {
+                    row.update({ tEnabled: !res.Disabled });
+                }
+            } catch (error) {
+                console.error("toggleminer:", error);
+            }
         });
     });
 
+    rbmAutoRefreshTable("table#miners", 600000);
 });
 
 function formatBTCEff(data) {
@@ -93,9 +87,9 @@ function formatBTCEff(data) {
 
 function formatEnable(value, item, index) {
     return [
-                '<div class="custom-control custom-switch">',
-                '<input type="checkbox" class="custom-control-input enable-switch" id="switch-' + index + '"' + (value ? ' checked' : '') + '>',
-                '<label class="custom-control-label" for="switch-' + index + '"></label>',
+                '<div class="form-check form-switch">',
+                '<input type="checkbox" class="form-check-input enable-switch" id="switch-' + index + '"' + (value ? ' checked' : '') + '>',
+                '<label class="form-check-label" for="switch-' + index + '"></label>',
                 '</div>'
     ].join('')
 }
@@ -103,7 +97,7 @@ function formatEnable(value, item, index) {
 function formatName(value, item, index) {
     var Name = item.Name.split(/\-/)[0];
     if (item.ManualUri && item.ManualUri.toString() != '') {
-        Name = '<a href="' + item.ManualUri.toString() + '" target="_blank" title="Official miner page">' + Name + '</a>';
+        Name = '<a href="' + esc(item.ManualUri) + '" target="_blank" title="Official miner page">' + esc(Name) + '</a>';
     }
     return Name
 }
@@ -114,7 +108,7 @@ function formatMiners(data) {
 
     const cfg = ConfigLoader.getConfig();
 
-    $.each(data, function (index, item) {
+    for (const item of data) {
         // Format the device(s)
         item.tEnabled = !item.Disabled
         item.tDevices = item.DeviceModel.toString();
@@ -149,18 +143,18 @@ function formatMiners(data) {
         } else if (cfg.OCmode == "ocp") {
             var devices = item.DeviceModel.toString().split(/\-/);
             var cnt = devices.length
-            $.each(devices, function (ix, dev) {
+            for (const dev of devices) {
                 if (dev != "CPU" && item.OCprofile[dev]) {
                     if (cnt == 1) { tOC.push(item.OCprofile[dev]); }
                     else {
                         tOC.push(dev + "=" + item.OCprofile[dev]);
                     }
                 }
-            });
+            }
         }
         if (!tOC.length) { tOC.push("-"); }
         item.tOC = tOC.join('<br />');
-    });
+    }
     return data;
 }
 </script>

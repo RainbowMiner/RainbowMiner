@@ -13,48 +13,43 @@
 <!-- End of page scripts -->
 <script type="text/javascript">
 
-$(function() {
-    $.ajax({
-      url:"/currentprofit",
-      type:"GET",
-      dataType:"json",
-      success: function(retorno){
-        $("#rates").bootstrapTable('destroy');
-        $("#rates thead tr").html('');
-        var tr = $('<th data-field="symbol" data-sortable="true">Symbol</th>');
-        $("#rates thead tr").append(tr);
-        $.each(retorno.Rates, function(index, value) {
-          var tr = $('<th data-field="trate'+index+'" data-align="right">'+index+'</th>');
-          $("#rates thead tr").append(tr);
-        });
-        $("#rates").bootstrapTable({
-            toggle: "table",
+document.addEventListener("DOMContentLoaded", async () => {
+    try {
+        const response = await fetch("/currentprofit");
+        if (!response.ok) throw new Error("HTTP " + response.status);
+        const retorno = await response.json();
+
+        const columns = [
+            { title: "Symbol", field: "symbol", headerSort: true }
+        ];
+        for (const index of Object.keys(retorno.Rates)) {
+            columns.push({ title: index, field: "trate" + index, hozAlign: "right", headerSort: false });
+        }
+
+        RbmTables.createTable(document.getElementById("rates"), {
+            columns: columns,
             url: "/rates?format=table",
-            responseHandler: "formatRates",
-            cache: false,
-            sortOrder: "asc",
-            sortName: "symbol",
+            responseHandler: formatRates,
+            cacheBust: true,
+            initialSort: [{ column: "symbol", dir: "asc" }],
             showColumns: true,
-            showToggle: true,
             showRefresh: true,
-            iconsPrefix: "fa",
-            icons: "icons",
-            detailView: true,
             detailFormatter: detailFormatter
         });
-      }
-    });
+    } catch (error) {
+        console.error("rates:", error);
+    }
 });
 
 function formatRates(data) {
     // This function can alter the returned data before building the table, formatting it in a way
     // that is easier to display and manipulate in a table
-    $.each(data, function(index, item) {
-        $.each(item, function(col,val) {
+    for (const item of data) {
+        for (const [col, val] of Object.entries(item)) {
             if (col == "rateBTC") item.trateBTC = formatPricesBTC(val)
-            else if (col != "symbol") item["t"+col] = val.toFixed(4);
-        })
-    });
+            else if (col != "symbol") item["t" + col] = val.toFixed(4);
+        }
+    }
     return data;
 }
 </script>

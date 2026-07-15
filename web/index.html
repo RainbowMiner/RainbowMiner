@@ -4,29 +4,27 @@
 </div>
 
 <h3 id="h-miners" class="h-selector">Running Miners on <span class="workername"></span> <a href="#" id="pauseminers" class="btn btn-primary">Pause / Restart</a> <a href="#" id="lockminers" class="btn btn-primary">Lock / Unlock</a> <a href="#" id="reboot" class="btn btn-danger">Reboot</a></h3>
-<table id="miners" class="bootstrap-table-init table mb-4"
+<table id="miners" class="rbm-table-init table mb-4"
        data-url="/runningminers"
        data-response-handler="formatRunningMiners"
        data-sort-order="desc"
        data-sort-name="Profit"
        data-cache="false"
-       data-icons-prefix="fa"
-       data-icons="icons"
        data-detail-view="true"
        data-detail-formatter="detailFormatter">
     <thead>
         <tr>
-            <th data-field="Name" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Name</th>
-            <th data-field="Pool" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Pool</th>
-            <th data-field="tCoin" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Coin</th>
-            <th data-field="Currency" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Paid</th>
-            <th data-field="tDevices" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Devices</th>
-            <th data-field="tOC" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">OC</th>
+            <th data-field="Name" data-sortable="true">Name</th>
+            <th data-field="Pool" data-sortable="true">Pool</th>
+            <th data-field="tCoin" data-sortable="true">Coin</th>
+            <th data-field="Currency" data-sortable="true">Paid</th>
+            <th data-field="tDevices" data-sortable="true">Devices</th>
+            <th data-field="tOC" data-sortable="true">OC</th>
             <th data-field="tProfit" data-align="right" data-sortable="true" data-formatter="formatProfit">Profit</th>
             <th data-field="tPowerDraw" data-align="right" data-sortable="true" data-formatter="formatPower">Power</th>
-            <th data-field="tPrimaryAlgorithm" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Algo</th>
+            <th data-field="tPrimaryAlgorithm" data-sortable="true">Algo</th>
             <th data-field="tPrimaryHashRateLive" data-sortable="true" data-formatter="formatHashRateValue">Speed</th>
-            <th data-field="tPrimaryHashRate" data-sortable="true" data-formatter="formatHashRateValue" data-filter-stric-search="true">Benched</th>
+            <th data-field="tPrimaryHashRate" data-sortable="true" data-formatter="formatHashRateValue">Benched</th>
             <th data-field="tPrimaryShares" data-align="right">A/R/S</th>
             <th data-field="tPrimaryBLK" data-sortable="true" data-formatter="formatBLK" data-align="right">TTF</th>
             <th data-field="tActive" data-align="right" data-sortable="true" data-sorter="sortRunningMinersByActive">Active</th>
@@ -37,22 +35,20 @@
 
 <div id="remoteworkersandminers">
     <h3 class="mt-4 h-selector" id="h-remoteworkers">Remote Workers <a href="#" id="resetworkers" class="btn btn-primary">Delete Offline Workers</a></h3>
-    <table id="remoteworkers" class="bootstrap-table-init table mb-4"
+    <table id="remoteworkers" class="rbm-table-init table mb-4"
            data-url="/remoteminers"
            data-response-handler="formatRemoteWorkers"
            data-sort-order="desc"
            data-sort-name="Profit"
            data-cache="false"
-           data-icons-prefix="fa"
-           data-icons="icons"
            data-detail-view="true"
            data-detail-formatter="detailFormatterRemoteWorkers"
            data-row-style="colorStatus">
         <thead>
             <tr>
-                <th data-field="worker" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Name</th>
-                <th data-field="status" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Status</th>
-                <th data-field="tMachine" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Machine</th>
+                <th data-field="worker" data-sortable="true">Name</th>
+                <th data-field="status" data-sortable="true">Status</th>
+                <th data-field="tMachine" data-sortable="true">Machine</th>
                 <th data-field="tLastSeen" data-sortable="true" data-sorter="sortRemoteWorkersByLastSeen">Last seen</th>
                 <th data-field="tUptime" data-sortable="true" data-sorter="sortRemoteWorkersByUptime">Uptime</th>
                 <th data-field="tVersion" data-sortable="true">Version</th>
@@ -64,30 +60,28 @@
     </table>
 
     <h3 id="h-remoteminers" class="mt-4 h-selector">Remote Miners</h3>
-    <table id="remoteminers" class="bootstrap-table-init table mb-4"
+    <table id="remoteminers" class="rbm-table-init table mb-4"
            data-url="/remoteminers?mode=miners"
            data-response-handler="formatRemoteMiners"
            data-sort-order="asc"
            data-sort-name="Worker"
            data-cache="false"
-           data-icons-prefix="fa"
-           data-icons="icons"
            data-detail-view="true"
            data-detail-formatter="detailFormatter"
            data-row-style="colorStatus">
         <thead>
             <tr>
-                <th data-field="Worker" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Worker</th>
-                <th data-field="Name" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Name</th>
-                <th data-field="Pool" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Pool</th>
-                <th data-field="tCoin" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Coin</th>
-                <th data-field="Currency" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Paid</th>
-                <th data-field="tDevices" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Devices</th>
+                <th data-field="Worker" data-sortable="true">Worker</th>
+                <th data-field="Name" data-sortable="true">Name</th>
+                <th data-field="Pool" data-sortable="true">Pool</th>
+                <th data-field="tCoin" data-sortable="true">Coin</th>
+                <th data-field="Currency" data-sortable="true">Paid</th>
+                <th data-field="tDevices" data-sortable="true">Devices</th>
                 <th data-field="tProfit" data-align="right" data-sortable="true" data-formatter="formatProfit">Profit</th>
                 <th data-field="tPowerDraw" data-align="right" data-sortable="true" data-formatter="formatPower">Power</th>
-                <th data-field="tPrimaryAlgorithm" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Algo</th>
+                <th data-field="tPrimaryAlgorithm" data-sortable="true">Algo</th>
                 <th data-field="tPrimaryHashRateLive" data-sortable="true" data-formatter="formatHashRateValue">Speed</th>
-                <th data-field="tPrimaryHashRate" data-sortable="true" data-formatter="formatHashRateValue" data-filter-stric-search="true">Benched</th>
+                <th data-field="tPrimaryHashRate" data-sortable="true" data-formatter="formatHashRateValue">Benched</th>
                 <th data-field="tPrimaryShares" data-align="right">Acc/Rej</th>
                 <th data-field="tPrimaryBLK" data-sortable="true" data-formatter="formatBLK" data-align="right">TTF</th>
                 <th data-field="tActive" data-align="right" data-sortable="true" data-sorter="sortRemoteMinersByActive">Active</th>
@@ -100,12 +94,10 @@
 
 <div id="devicestatus">
     <h3 class="mt-4 h-selector" id="h-devices">Device Status</h3>
-    <table id="devices" class="bootstrap-table-init table"
+    <table id="devices" class="rbm-table-init table"
            data-url="/devices"
            data-response-handler="formatDevices"
            data-cache="false"
-           data-icons-prefix="fa"
-           data-icons="icons"
            data-detail-view="true"
            data-detail-formatter="detailFormatter">
         <thead>
@@ -141,165 +133,178 @@
 </div>
 
 <!-- End of page scripts -->
-<script id="poolbalance_template" type="text/x-handlebars-template">
-    <div class="mb-2 card {{#if total}}text-white bg-primary{{/if}}" style="min-width: {{#if total}}200px{{else}}200px{{/if}}">
+<template id="poolbalance_template">
+    <div class="mb-2 card" style="min-width: 200px">
         <div class="card-header text-center">
-            <h5>{{name}}</h5>
+            <h5></h5>
         </div>
         <div class="card-body text-center">
-            <p class="card-text currencies">
-                {{#each balances}}
-                <span class="currencyname fw-bold">{{@key}}:</span> <span>{{this}}</span><br />
-                {{/each}}
-            </p>
+            <p class="card-text currencies"></p>
         </div>
         <div class="card-footer text-center">
             <p class="card-text" style="line-height:80%">
-                <small>
-                    {{#each invalues_strings}}
-                    {{this}}<br />
-                    {{/each}}
-                </small>
-                <small><span class="currencyname fw-bold">Avg.Earned:</span> <span>{{earnings}}</span></small>
+                <small class="invalues"></small>
+                <small><span class="currencyname fw-bold">Avg.Earned:</span> <span class="earnings"></span></small>
             </p>
         </div>
     </div>
-</script>
+</template>
 
-<script id="sysinfo_template" type="text/x-handlebars-template">
+<template id="sysinfo_template">
     <div class="mb-2 card" style="min-width: 200px">
         <div class="card-body text-center">
             <p class="card-text currencies">
-                <span class="currencyname fw-bold">{{name}}</span> <span>{{value}}</span>
+                <span class="currencyname fw-bold"></span> <span></span>
             </p>
         </div>
     </div>
-</script>
+</template>
 
 <script type="text/javascript">
-$(function () {
-    const template = Handlebars.compile($("#poolbalance_template").html());
-    const sysinfo_template = Handlebars.compile($("#sysinfo_template").html());
+document.addEventListener("DOMContentLoaded", () => {
+    const template = document.getElementById("poolbalance_template");
+    const sysinfo_template = document.getElementById("sysinfo_template");
 
-    $("#pauseminers").click(function (event) {
-        event.stopPropagation()
-        $.ajax({
-            url: '/pause', success: function (result) {
-                $("#pauseminers").html(result ? "Restart" : "Pause");
-            }
-        })
-    });
+    function renderSysinfoBox(name, value) {
+        const box = sysinfo_template.content.cloneNode(true);
+        const spans = box.querySelectorAll("span");
+        spans[0].textContent = name;
+        spans[1].textContent = value;
+        return box;
+    }
 
-    $("#lockminers").click(function (event) {
-        event.stopPropagation()
-        $.ajax({
-            url: '/lockminers', success: function (result) {
-                $("#lockminers").html(result ? "Unlock" : "Lock");
-            }
-        })
-    });
-
-    $("#resetworkers").click(function (event) {
-        event.stopPropagation()
-        $.ajax({
-            url: '/resetworkers', success: function (result) {
-                document.querySelector('.modal-body').innerHTML = result;
-                document.querySelector('.modal-title').textContent = 'Reset Workers';
-                var myModal = new bootstrap.Modal(document.getElementById('myModal'));
-                myModal.show();
-            }
-        })
-    });
-
-    $("#reboot").click(function (event) {
-        event.stopPropagation()
-        if (confirm("Do you really want to reboot this machine?")) {
-            $.ajax({
-                url: '/reboot', success: function (result) {
-                    document.querySelector('.modal-body').innerHTML = result;
-                    document.querySelector('.modal-title').textContent = 'Reboot';
-                    var myModal = new bootstrap.Modal(document.getElementById('myModal'));
-                    myModal.show();
-                }
-            })
+    function renderBalanceBox(item) {
+        const box = template.content.cloneNode(true);
+        if (item.total) box.querySelector(".card").classList.add("text-white", "bg-primary");
+        box.querySelector("h5").textContent = item.name;
+        const currencies = box.querySelector(".currencies");
+        for (const [key, val] of Object.entries(item.balances)) {
+            const nameSpan = document.createElement("span");
+            nameSpan.className = "currencyname fw-bold";
+            nameSpan.textContent = key + ":";
+            const valSpan = document.createElement("span");
+            valSpan.textContent = val;
+            currencies.append(nameSpan, " ", valSpan, document.createElement("br"));
         }
-    });
-
-    $("#updatebalance").click(function (event) {
-        event.stopPropagation()
-        $.ajax({
-            url: '/updatebalance', success: function (result) {
-                document.querySelector('.modal-body').innerHTML = 'The balances will be updated as soon as possible';
-                document.querySelector('.modal-title').textContent = 'Update Balance';
-                var myModal = new bootstrap.Modal(document.getElementById('myModal'));
-                myModal.show();
-            }
-        })
-    });
-
-    $('.h-selector').each(function () {
-        var sto = window.localStorage.getItem($(this).attr("id"));
-        if (sto && sto == "hide") {
-            $("#" + ($(this).attr("id").replace(/h-/, ""))).hide();
+        const invalues = box.querySelector(".invalues");
+        for (const line of item.invalues_strings) {
+            invalues.append(line, document.createElement("br"));
         }
-    });
+        box.querySelector(".earnings").textContent = item.earnings;
+        return box;
+    }
 
-    $('.h-selector').click(function () {
-        var blkname = $(this).attr("id").replace(/h-/,"");
-        var visible = $("#" + blkname).is(":visible");
-        if (visible) { $("#" + blkname).hide(); } else { $("#" + blkname).show(); }
+    async function simpleAction(url, handler) {
+        try {
+            const response = await fetch(url);
+            handler(await response.text());
+        } catch (error) {
+            console.error(url + ":", error);
+        }
+    }
 
-        window.localStorage.setItem($(this).attr("id"), visible ? "hide" : "show");
-    });
-
-    (function updateStatus() {
-        $.ajax({
-            url: '/status', success: function (result) {
-                $("#pauseminers").html(result.Pause ? "Restart" : "Pause");
-                $("#lockminers").html(result.LockMiners.Locked ? "Unlock" : "Lock");
-                if (result.IsExclusiveRun || result.IsDonationRun) {
-                    $("#lockminers").hide()
-                } else {
-                    $("#lockminers").show()
-                }
-                window.setTimeout(updateStatus, 10000);
-            }
+    document.getElementById("pauseminers").addEventListener("click", (e) => {
+        e.preventDefault(); e.stopPropagation();
+        simpleAction('/pause', (result) => {
+            document.getElementById("pauseminers").textContent = (result && result != "false") ? "Restart" : "Pause";
         });
+    });
+
+    document.getElementById("lockminers").addEventListener("click", (e) => {
+        e.preventDefault(); e.stopPropagation();
+        simpleAction('/lockminers', (result) => {
+            document.getElementById("lockminers").textContent = (result && result != "false") ? "Unlock" : "Lock";
+        });
+    });
+
+    document.getElementById("resetworkers").addEventListener("click", (e) => {
+        e.preventDefault(); e.stopPropagation();
+        simpleAction('/resetworkers', (result) => {
+            rbmShowModal(result, 'Reset Workers', true);
+        });
+    });
+
+    document.getElementById("reboot").addEventListener("click", (e) => {
+        e.preventDefault(); e.stopPropagation();
+        if (confirm("Do you really want to reboot this machine?")) {
+            simpleAction('/reboot', (result) => {
+                rbmShowModal(result, 'Reboot', true);
+            });
+        }
+    });
+
+    document.getElementById("updatebalance").addEventListener("click", (e) => {
+        e.preventDefault(); e.stopPropagation();
+        simpleAction('/updatebalance', () => {
+            rbmShowModal('The balances will be updated as soon as possible', 'Update Balance');
+        });
+    });
+
+    for (const sel of document.querySelectorAll('.h-selector')) {
+        const sto = window.localStorage.getItem(sel.id);
+        if (sto && sto == "hide") {
+            rbmToggleDisplay("#" + sel.id.replace(/h-/, ""), false);
+        }
+        sel.addEventListener('click', () => {
+            const blk = document.getElementById(sel.id.replace(/h-/, ""));
+            const visible = blk.style.display != "none";
+            blk.style.display = visible ? "none" : "";
+            window.localStorage.setItem(sel.id, visible ? "hide" : "show");
+        });
+    }
+
+    (async function updateStatus() {
+        try {
+            const response = await fetch('/status');
+            const result = await response.json();
+            document.getElementById("pauseminers").textContent = result.Pause ? "Restart" : "Pause";
+            document.getElementById("lockminers").textContent = result.LockMiners.Locked ? "Unlock" : "Lock";
+            rbmToggleDisplay("#lockminers", !(result.IsExclusiveRun || result.IsDonationRun));
+        } catch (error) {
+            console.error("status:", error);
+        } finally {
+            window.setTimeout(updateStatus, 10000);
+        }
     })();
 
-    (function updateSysinfo() {
-        $.ajax({
-            url: '/sysinfo', success: function (result) {
-                $("#sysinfoboxes").empty();
-                if (typeof result.CpuLoad !== "undefined") {
-                    $("#sysinfoboxes").append(sysinfo_template({name: "CPU-Load:", value: result.CpuLoad}));
-                }
-                if (typeof result.Memory !== "undefined") {
-                    $("#sysinfoboxes").append(sysinfo_template({name: "RAM:", value: result.Memory.UsedGB + '/' + result.Memory.TotalGB + ' GB (' + result.Memory.UsedPercent + '%)'}));
-                }
-                if (typeof result.Disks !== "undefined") {
-                    $.each(result.Disks, function (index, item) {
-                        $("#sysinfoboxes").append(sysinfo_template({name: item.Drive, value: item.UsedGB + '/' + item.TotalGB + ' GB (' + item.UsedPercent + '%)'}));
-                    })
-                }
-                window.setTimeout(updateSysinfo, 30000);
+    (async function updateSysinfo() {
+        try {
+            const response = await fetch('/sysinfo');
+            const result = await response.json();
+            const boxes = document.getElementById("sysinfoboxes");
+            boxes.replaceChildren();
+            if (typeof result.CpuLoad !== "undefined") {
+                boxes.appendChild(renderSysinfoBox("CPU-Load:", result.CpuLoad));
             }
-        });
+            if (typeof result.Memory !== "undefined") {
+                boxes.appendChild(renderSysinfoBox("RAM:", result.Memory.UsedGB + '/' + result.Memory.TotalGB + ' GB (' + result.Memory.UsedPercent + '%)'));
+            }
+            if (typeof result.Disks !== "undefined") {
+                for (const item of result.Disks) {
+                    boxes.appendChild(renderSysinfoBox(item.Drive, item.UsedGB + '/' + item.TotalGB + ' GB (' + item.UsedPercent + '%)'));
+                }
+            }
+        } catch (error) {
+            console.error("sysinfo:", error);
+        } finally {
+            window.setTimeout(updateSysinfo, 30000);
+        }
     })();
 
     ConfigLoader.whenReady().then(function(cfg) {
 
-        function updatePoolBalances() {
-            $.ajax({
-                url: '/balances?add_total=1&add_wallets=1&add_btc=1',
-                success: function (result) {
+        async function updatePoolBalances() {
+            try {
+                const response = await fetch('/balances?add_total=1&add_wallets=1&add_btc=1');
+                const result = await response.json();
+                {
                     // Clear and rebuild balance boxes
-                    $("#balanceboxes--pools").empty();
-                    $("#balanceboxes--wallets").empty();
-                    $("#balanceboxes--total").empty();
+                    document.getElementById("balanceboxes--pools").replaceChildren();
+                    document.getElementById("balanceboxes--wallets").replaceChildren();
+                    document.getElementById("balanceboxes--total").replaceChildren();
 
                     var boxes = [], boxes_ix = {}, total_earnings = 0;
-                    $.each(result, function (index, item) {
+                    for (const item of result) {
                         var properties = Object.keys(item);
                         var currencies = properties.filter((properties) => properties.startsWith("Value in "));
                         var balance = properties.filter((properties) => properties.startsWith("Balance "));
@@ -324,7 +329,7 @@ $(function () {
                             boxes[boxes_ix[item.Name]]["earnings"] += avg_earnings;
                         }
 
-                        $.each(balance, function (cindex, currency) {
+                        for (const currency of balance) {
                             var name = currency.replace("Balance (", "").replace(")", "");
                             item[currency] = item[currency].replace(tDecimalSeparator, "").replace(nDecimalSeparator, ".")
                             var csplit = item[currency].split(".");
@@ -335,9 +340,9 @@ $(function () {
                                 if (boxes[boxes_ix[item.Name]]["balances"][name] === "-") boxes[boxes_ix[item.Name]]["balances"][name] = 0.0;
                                 boxes[boxes_ix[item.Name]]["balances"][name] += Number(item[currency]);
                             }
-                        });
+                        }
 
-                        $.each(currencies, function (cindex, currency) {
+                        for (const currency of currencies) {
                             var name = currency.replace("Value in ", "");
                             item[currency] = item[currency].replace(tDecimalSeparator, "").replace(nDecimalSeparator, ".")
                             var csplit = item[currency].split(".");
@@ -349,45 +354,37 @@ $(function () {
                                 if (boxes[boxes_ix[item.Name]]["invalues"][name] === "-") boxes[boxes_ix[item.Name]]["invalues"][name] = 0.0;
                                 boxes[boxes_ix[item.Name]]["invalues"][name] += Number(item[currency]);
                             }
-                        });
-                    });
-                    $.each(boxes, function (index, item) {
-                        $.each(item["balances"], function (bindex, bitem) { if (item["digits"][bindex] != -1) item["balances"][bindex] = bindex == "BTC" ? formatPricesBTC(bitem).replace('&nbsp;', ' ') : bitem.toFixed(item["digits"][bindex]); });
-                        $.each(item["invalues"], function (bindex, bitem) {
+                        }
+                    }
+                    for (const item of boxes) {
+                        for (const [bindex, bitem] of Object.entries(item["balances"])) { if (item["digits"][bindex] != -1) item["balances"][bindex] = bindex == "BTC" ? formatPricesBTC(bitem).replace('&nbsp;', ' ') : bitem.toFixed(item["digits"][bindex]); }
+                        for (const [bindex, bitem] of Object.entries(item["invalues"])) {
                             if (item["digits"][bindex] != -1) {
                                 item["invalues"][bindex] = "" + (bindex == "BTC" ? formatPricesBTC(bitem).replace('&nbsp;', ' ') : bitem.toFixed(item["digits"][bindex]));
                                 item.invalues_strings.push(item["invalues"][bindex] + (item["invalues"][bindex].split(" ").length == 1 ? " " : '') + bindex);
                             }
-                        });
+                        }
                         item.earnings = formatPricesBTC(item.total ? total_earnings : item.earnings).replace('&nbsp;', ' ');
                         var add_to_id = ""
-                        if (item["basename"] == "Wallet" || item["basename"] == "TotalWallets") {add_to_id = "#balanceboxes--wallets"}
-                        else if (item["basename"] == "Total") {add_to_id = "#balanceboxes--total"}
-                        else {add_to_id = "#balanceboxes--pools"}
-                        $(add_to_id).append(template(item));
-                    });
-
-                    window.setTimeout(updatePoolBalances, 60000);
+                        if (item["basename"] == "Wallet" || item["basename"] == "TotalWallets") {add_to_id = "balanceboxes--wallets"}
+                        else if (item["basename"] == "Total") {add_to_id = "balanceboxes--total"}
+                        else {add_to_id = "balanceboxes--pools"}
+                        document.getElementById(add_to_id).appendChild(renderBalanceBox(item));
+                    }
                 }
-            });
+            } catch (error) {
+                console.error("balances:", error);
+            } finally {
+                window.setTimeout(updatePoolBalances, 60000);
+            }
         }
 
         updatePoolBalances();
 
-        const refreshTables = [
-            { selector: "table#miners", interval: 10000 },
-            { selector: "table#devices", interval: 10000 },
-            { selector: "table#remoteworkers", interval: 60000 },
-            { selector: "table#remoteminers", interval: 60000 }
-        ];
-
-        refreshTables.forEach(function(table) {
-            setInterval(function() {
-                if (!$(table.selector + " tr.detail-view").length) {
-                    $(table.selector).bootstrapTable("refresh", { silent: true });
-                }
-            }, table.interval);
-        });
+        rbmAutoRefreshTable("table#miners", 10000);
+        rbmAutoRefreshTable("table#devices", 10000);
+        rbmAutoRefreshTable("table#remoteworkers", 60000);
+        rbmAutoRefreshTable("table#remoteminers", 60000);
     });
 
 });
@@ -397,14 +394,13 @@ function formatRunningMiners(data) {
 
     const cfg = ConfigLoader.getConfig();
 
-    $("#runningminers_profit_currency").html(selcur.currency);
+    const rpc = document.getElementById("runningminers_profit_currency");
+    if (rpc) rpc.textContent = selcur.currency;
 
     // This function can alter the returned data before building the table, formatting it in a way
     // that is easier to display and manipulate in a table
-    $.each(data, function (index, item) {
+    for (const item of data) {
         // Format the type(s)
-        //console.log(data);
-        //console.log(item);
         item.tDevices = item.DeviceModel.toString();
         item.Name = item.Name.split(/\-/)[0];
         if (item.IsLocked) {item.Name += " (locked!)"}
@@ -459,20 +455,20 @@ function formatRunningMiners(data) {
         } else if (cfg.OCmode == "ocp") {
             var devices = item.DeviceModel.toString().split(/\-/);
             var cnt = devices.length
-            $.each(devices, function (ix, dev) {
+            for (const dev of devices) {
                 if (dev != "CPU" && item.OCprofile[dev]) {
                     if (cnt == 1) { tOC.push(item.OCprofile[dev]); }
                     else {
                         tOC.push(dev + "=" + item.OCprofile[dev]);
                     }
                 }
-            });
+            }
         }
         if (!tOC.length) { tOC.push("-"); }
         item.tOC = tOC.join('<br />');
 
         item.tActive = (item.RunningTime.Days ? item.RunningTime.Days + '.' : '') + (item.RunningTime.Hours < 10 ? '0' : '') + item.RunningTime.Hours + ':' + (item.RunningTime.Minutes < 10 ? '0' : '') + item.RunningTime.Minutes + ':' + (item.RunningTime.Seconds < 10 ? '0' : '') + item.RunningTime.Seconds
-    });
+    }
     return data;
 }
 
@@ -487,18 +483,16 @@ function sortRunningMinersByActive(a,b,rowA,rowB) {
 function formatRemoteWorkers(data) {
     var selcur = getSelectedCurrency()
 
-    $("#remoteworkers_profit_currency").html(selcur.currency);
+    const rwpc = document.getElementById("remoteworkers_profit_currency");
+    if (rwpc) rwpc.textContent = selcur.currency;
 
     // This function can alter the returned data before building the table, formatting it in a way
     // that is easier to display and manipulate in a table
-    if (data && data.length) $("div#remoteworkersandminers").show()
-    else $("div#remoteworkersandminers").hide()
-    now = new Date();
-    $.each(data, function (index, item) {
-        // Format the type(s)
-        //console.log(data);
-        //console.log(item);
-        item.tMachine = '<div style="line-height:1">'+item.machinename + '<span class="small fw-lighter"><br />'+item.machineip+'</span></div>';
+    rbmToggleDisplay("div#remoteworkersandminers", data && data.length);
+    var now = new Date();
+    for (const item of data) {
+        // Format the type(s) - machine name/ip are remote-reported, escape them
+        item.tMachine = '<div style="line-height:1">'+esc(item.machinename) + '<span class="small fw-lighter"><br />'+esc(item.machineip)+'</span></div>';
         item.tLastSeen = timeSince(new Date(item.lastseen * 1000));
         item.tUptime = item.uptime && parseInt(item.uptime) > 0 ? formatUptime(item.uptime) : '-';
         var vb = item.version.split(" ");
@@ -508,21 +502,21 @@ function formatRemoteWorkers(data) {
         if (item.status == "Running") {
             if (!item.online || ((now - new Date(item.lastseen * 1000)) / 1000) > 10 * 60) { item.status = "Offline" }
             else {
-                $.each(item.data, function (dix, ditem) {
+                for (const ditem of item.data) {
                     if (ditem.Benchmarking) { item.status = "Benchmarking" }
-                    $.each(ditem.Devices, function (dvix,dvitem) {
+                    for (const dvitem of ditem.Devices) {
                       if (typeof dvitem.Temp !== "undefined" && Number(dvitem.Temp) > maxtemp) {
                         maxtemp = Number(dvitem.Temp)
                       }
-                    })
-                })
+                    }
+                }
             }
         }
 
         item.tProfit = typeof item.profit == "undefined"? 0 : Number(item.profit);
         item.tPowerDraw = Math.round(Number(item.powerdraw));
         item.tMaxTemp   = maxtemp>0? maxtemp + ' °C' : '-';
-    });
+    }
     return data;
 }
 
@@ -546,15 +540,13 @@ function formatRemoteMiners(data) {
 
     var selcur = getSelectedCurrency()
 
-    $("#remoteminers_profit_currency").html(selcur.currency);
+    const rmpc = document.getElementById("remoteminers_profit_currency");
+    if (rmpc) rmpc.textContent = selcur.currency;
 
     // This function can alter the returned data before building the table, formatting it in a way
     // that is easier to display and manipulate in a table
-    $.each(data, function (index, item) {
+    for (const item of data) {
         // Format the type(s)
-        //console.log(data);
-        //console.log(item);
-
         item.tDevices = item.Type.toString();
         item.Name = item.Name.split(/\-/)[0];
 
@@ -563,9 +555,9 @@ function formatRemoteMiners(data) {
             var devices = item.tDevices.split(/\-/)
             for (var i=0; i < devices.length; i++) {
                 var dcount = 0;
-                $.each(item.Devices, function(dindex, device) {
+                for (const device of item.Devices) {
                     if (device.Name == devices[i]) {dcount++;}
-                });
+                }
                 if (dcount > 1) {
                     devices[i] = dcount + 'x' + devices[i];
                 }
@@ -623,13 +615,11 @@ function formatRemoteMiners(data) {
         var active_data = item.Active.split(/\s+/)
         if (active_data.length >= 6) {
             var days = parseInt(active_data[0]);
-            var hours= parseInt(active_data[2]);
-            var mins = parseInt(active_data[4]);
             item.tActive = (days ? days + '.' : '') + active_data[2] + ':' + active_data[4]
         } else {
             item.tActive = '--:--:--'
         }
-    });
+    }
     return data;
 }
 
@@ -656,25 +646,26 @@ function detailFormatterRemoteWorkers(index, row) {
     var selcur = getSelectedCurrency()
     //console.log(row);
     var html = [];
-    html.push("<strong>Running Miners on "+row.worker+"</strong>");
+    // remote-reported values go into HTML - escape them
+    html.push("<strong>Running Miners on "+esc(row.worker)+"</strong>");
     html.push("<table class='table table-responsive table-details'>");
     html.push("<thead><tr><th><div class='th-inner'>Name</div></th><th><div class='th-inner'>Algorithm</div></th><th><div class='th-inner'>Pool</div></th><th><div class='th-inner'>Coin</div></th><th><div class='th-inner'>Currency</div></th><th><div class='th-inner'>Device</div></th><th><div class='th-inner'>Profit</div></th><th><div class='th-inner'>Speed</div></th><th><div class='th-inner'>Benched</div></th><th><div class='th-inner'>Power</div></th><th><div class='th-inner'>Active</div></th><th><div class='th-inner'>Mines</div></th></tr></thead>");
-    jQuery.each(row.data, function (key, value) {
+    for (const value of Object.values(row.data)) {
         html.push('<tr>');
-        html.push('<td>' + value.Name + '</td>');
-        html.push('<td>' + formatAlgorithm(value.Algorithm) + '</td>');
-        html.push('<td>' + value.Pool + '</td>');
-        html.push('<td>' + (typeof value.CoinSymbol !== "undefined" && value.CoinSymbol != "" && value.Pool != "MiningRigRentals" ? value.CoinSymbol : (typeof value.CoinName !== "undefined" && value.CoinName != "" ? value.CoinName : '-')) + '</td>');
-        html.push('<td>' + value.Currency + '</td>');
-        html.push('<td>' + value.Type + '</td>');
+        html.push('<td>' + esc(value.Name) + '</td>');
+        html.push('<td>' + esc(formatAlgorithm(value.Algorithm)) + '</td>');
+        html.push('<td>' + esc(value.Pool) + '</td>');
+        html.push('<td>' + esc(typeof value.CoinSymbol !== "undefined" && value.CoinSymbol != "" && value.Pool != "MiningRigRentals" ? value.CoinSymbol : (typeof value.CoinName !== "undefined" && value.CoinName != "" ? value.CoinName : '-')) + '</td>');
+        html.push('<td>' + esc(value.Currency) + '</td>');
+        html.push('<td>' + esc(value.Type) + '</td>');
         html.push('<td>' + formatPricesByCurrency(value.Profit,selcur) + '</td>');
         html.push('<td>' + formatHashRate(value.CurrentSpeed) + '</td>');
         html.push('<td>' + formatHashRate(value.EstimatedSpeed) + '</td>');
         html.push('<td>' + Math.round(Number(value.PowerDraw)) + ' W</td>');
-        html.push('<td>' + value.Active.replace(/\s+Days/i,"d").replace(/\s+Hours\s+/i,":").replace(/\s+Minutes/i,"") + '</td>');
+        html.push('<td>' + esc(value.Active.replace(/\s+Days/i,"d").replace(/\s+Hours\s+/i,":").replace(/\s+Minutes/i,"")) + '</td>');
         html.push('<td>' + (value.Donator? "for dev":"for you") + '</td>');
         html.push('</tr>');
-    });
+    }
     html.push("</table>");
     return html.join('');
 }
@@ -682,7 +673,7 @@ function detailFormatterRemoteWorkers(index, row) {
 function formatDevices(data) {
     // This function can alter the returned data before building the table, formatting it in a way
     // that is easier to display and manipulate in a table
-    $.each(data, function (index, item) {
+    for (const item of data) {
         // Format the device(s)
         if (item.OpenCL) {
             item.tMemory = typeof item.OpenCL.GlobalMemSize !== "undefined" ? item.OpenCL.GlobalMemSize * 1.0 : -1
@@ -702,7 +693,7 @@ function formatDevices(data) {
         item.tTemperature = typeof (item.Data.Temperature) !== "undefined" && item.Data.Temperature ? Number(item.Data.Temperature) : -1
         item.tTemperatureMax = typeof (item.DataMax.Temperature) !== "undefined" && item.Data.Temperature ? Number(item.DataMax.Temperature) : -1
         item.tUtilization = typeof (item.Data.Utilization) !== "undefined" ? Number(item.Data.Utilization) : -1
-    });
+    }
     return data;
 }
 

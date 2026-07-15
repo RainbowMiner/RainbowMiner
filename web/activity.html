@@ -9,7 +9,7 @@
     </div>
 </div>
 
-<table id="miners" class="bootstrap-table-init table"
+<table id="miners" class="rbm-table-init table"
   data-url="/activity"
   data-response-handler="formatActivity"
   data-filter-control="true"
@@ -18,10 +18,7 @@
   data-sort-name="ActiveLast"
   data-cache="false"
   data-show-columns="true"
-  data-show-toggle="true"
   data-show-refresh="true"
-  data-icons-prefix="fa"
-  data-icons="icons"
   data-detail-view="true"
   data-detail-formatter="detailFormatter"
   data-row-style="colorStatus"
@@ -49,11 +46,6 @@
 <!-- End of page scripts -->
 <script type="text/javascript">
 
-$(function() {
-    $("table.table").on('load-success.bs.table', function (e, data) {
-        sortFilterOptions(this);
-    });
-});
 
 function colorStatus(row, index) {
     return { classes: row.Crashed? (row.Crashed == 1? "Offline":"Paused"):"Standard" };
@@ -62,8 +54,7 @@ function colorStatus(row, index) {
 function formatActivity(data) {
     // This function can alter the returned data before building the table, formatting it in a way
     // that is easier to display and manipulate in a table
-    $.each(data, function (index, item) {
-            
+    for (const item of data) {
         if (item.Crashed) {
             item.tStatus = item.Crashed == 1 ? "crash" : "wd";
         } else {
@@ -99,14 +90,14 @@ function formatActivity(data) {
                 tOC.push("MSIA" + item.OCP);
             } else if (item.OCmode == "ocp") {
                 var cnt = item.Device.length;
-                $.each(item.Device, function (ix, dev) {
+                for (const dev of item.Device) {
                     if (dev != "CPU" && item.OCP[dev]) {
                         if (cnt == 1) { tOC.push(item.OCP[dev]); }
                         else {
                             tOC.push(dev + "=" + item.OCP[dev]);
                         }
                     }
-                });
+                }
             }
         }
         if (!tOC.length) { tOC.push("-"); }
@@ -119,7 +110,7 @@ function formatActivity(data) {
         item.tActive = Math.round(parseFloat(item.Active) * 100) / 100;
         item.tEff = item.TotalProfit && item.TotalPowerDraw && powerdraw && item.tActive > 1.0 ? Math.round(profit / powerdraw * 100) / 100 : '-.--';
         item.tDonation = item.Donation ? 'for dev':'for you';
-    });
+    }
     return data;
 }
 </script>

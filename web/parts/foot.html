@@ -5,105 +5,122 @@
 <script type="text/javascript">
 
 function setTheme(val) {
-    if (val == "dark") {
-        document.documentElement.setAttribute('data-bs-theme', val);
-    } else {
-        document.documentElement.setAttribute('data-bs-theme', 'light');
-    }
-    setCookie("rbm-theme", val, -1);
-    theme = val;
+    RbmTheme.set(val);
 }
 
 function updateProfitHead() {
-    var profit = $("#profit").attr("btc");
-    var earnings = $("#earnings").attr("btc");
+    const profitEl = document.getElementById("profit");
+    const earningsEl = document.getElementById("earnings");
+    const sel = document.getElementById("profit_currency");
+    const opt = sel.selectedOptions.length ? sel.selectedOptions[0] : null;
+    if (!opt) return;
 
-    selected_currency.currency = $("#profit_currency option:selected").val();
-    selected_currency.rate     = parseFloat($("#profit_currency option:selected").attr("rate"));
+    var profit = profitEl.dataset.btc;
+    var earnings = earningsEl.dataset.btc;
+
+    selected_currency.currency = opt.value;
+    selected_currency.rate     = parseFloat(opt.dataset.rate);
 
     if (selected_currency.currency == "BTC" || selected_currency.currency == "mBTC" || selected_currency.currency == "sat") {
-        $("#profit").html(formatBTC(profit,selected_currency.currency));
-        $("#earnings").html(formatBTC(earnings,selected_currency.currency));
+        profitEl.textContent = formatBTC(profit,selected_currency.currency);
+        earningsEl.textContent = formatBTC(earnings,selected_currency.currency);
     } else {
-        $("#profit").html((parseFloat(profit) * selected_currency.rate).toFixed(2));
-        $("#earnings").html((parseFloat(earnings) * selected_currency.rate).toFixed(2));
+        profitEl.textContent = (parseFloat(profit) * selected_currency.rate).toFixed(2);
+        earningsEl.textContent = (parseFloat(earnings) * selected_currency.rate).toFixed(2);
     }
     window.localStorage.setItem("currency", selected_currency.currency);
 }
 
-$(function () {
+document.addEventListener("DOMContentLoaded", () => {
     // Set the active sidebar item
-    $('#' + $('#title').data('navbaractive')).addClass('active');
+    const title = document.getElementById('title');
+    if (title && title.dataset.navbaractive) {
+        document.getElementById(title.dataset.navbaractive)?.classList.add('active');
+    }
 
     // set the values in the header
     var remoteversion = '0.0.0.0';
-    $('#updatemsg-inner').hide();
+    rbmToggleDisplay('#updatemsg-inner', false);
 
-    theme = getCookie("rbm-theme");
-    if (theme != "") { $('#theme').val(theme); setTheme(theme); }
+    const themeSel = document.getElementById('theme');
+    themeSel.value = RbmTheme.get();
+    themeSel.addEventListener('change', () => setTheme(themeSel.value));
 
-    $('#theme').change(function () { setTheme($('#theme').val()); });
-
-    $("#sidebar-toggle").click(function (e) {
+    document.getElementById("updatenow").addEventListener("click", async (e) => {
         e.preventDefault();
-        $("nav#sidebar").toggleClass("d-none");
+        try {
+            await fetch('/update');
+            rbmShowModal('Rainbowminer will be updated to Version '+remoteversion+'. Please be patient!', 'Update started');
+            rbmToggleDisplay('#updatemsg', false);
+        } catch (error) {
+            console.error("update:", error);
+        }
     });
 
-    $("#updatenow").click(function () {
-        $.ajax({
-            url: '/update', success: function (result) {
-                $('.modal-body').text('Rainbowminer will be updated to Version '+remoteversion+'. Please be patient!');
-                $('.modal-title').text('Update started');
-                $('#myModal').modal({ show: true });
-                $('#updatemsg').hide();
-            }
-        })
-    });
-
-    $("#profit_currency").change(updateProfitHead);
+    document.getElementById("profit_currency").addEventListener("change", updateProfitHead);
 
     start_uptime = Date.now();
     last_uptime  = 0;
     last_iso = '';
 
-    (function p() {
-        $.ajax({
-            url: '/currentprofit', success: function (result) {
-                
+    (async function p() {
+        try {
+            const response = await fetch('/currentprofit');
+            const result = await response.json();
+            {
                 if (!last_uptime || parseInt(result.Uptime.Seconds) < last_uptime) {
                     start_uptime = Date.now();
                     last_uptime = parseInt(result.Uptime.Seconds);
                 }
 
-                if (result.RemoteIP && (last_iso != result.RemoteIP.country.code)) {
+                // #country--data/--flag only exist on the dashboard page -
+                // the old jQuery code silently no-opped elsewhere, so guard here
+                const cdata = document.getElementById("country--data");
+                const cflag = document.getElementById("country--flag");
+                if (cdata && cflag && result.RemoteIP && (last_iso != result.RemoteIP.country.code)) {
                     last_iso = result.RemoteIP.country.code;
-                    $("#country--data").html(result.RemoteIP.ip + '<br />' + result.RemoteIP.country.name);
-                    $("#country--flag").html('<img src="/images/flags/' + last_iso.toLowerCase() + '.svg" style="height:32px" />');
+                    cdata.replaceChildren(
+                        document.createTextNode(result.RemoteIP.ip),
+                        document.createElement("br"),
+                        document.createTextNode(result.RemoteIP.country.name)
+                    );
+                    cflag.replaceChildren();
+                    if (/^[a-z]{2}$/i.test(last_iso)) {
+                        const img = document.createElement("img");
+                        img.src = '/images/flags/' + last_iso.toLowerCase() + '.svg';
+                        img.style.height = '32px';
+                        cflag.appendChild(img);
+                    }
                 }
 
-                var currency = ($("#profit_currency option").length)? $("#profit_currency option:selected").val() : window.localStorage.getItem("currency");
+                const csel = document.getElementById("profit_currency");
+                var currency = csel.options.length ? csel.value : window.localStorage.getItem("currency");
                 if (!currency) { currency = "BTC"; }
 
-                var xchange = new Array();
-                xchange.push("1 BTC");
-                $.each(result.Rates, function (key, itm) {
-                    if (key != "BTC") xchange.push(parseFloat(formatBTC(itm)).toFixed(2) + " " + key);
-                    if (!$("#profit_currency option[value='" + key + "']").length) {
-                        $("#profit_currency").append('<option value="' + key + '">' + key + '/day</option>');
-                        if (key == "BTC") {
-                            $("#profit_currency").append('<option value="m' + key + '">m' + key + '/day</option>').append('<option value="sat">sat/day</option>');
-                        }
+                function upsertOption(value, label, rate) {
+                    let opt = Array.from(csel.options).find(o => o.value === value);
+                    if (!opt) {
+                        opt = new Option(label, value);
+                        csel.appendChild(opt);
                     }
-                    $("#profit_currency option[value='" + key + "']").attr("rate", itm).attr("selected", currency == key ? "selected" : null);
-                    if (key == "BTC") {
-                        $("#profit_currency option[value='m" + key + "']").attr("rate", itm*1000).attr("selected", currency == ("m"+key) ? "selected" : null);
-                        $("#profit_currency option[value='sat']").attr("rate", itm*1e8).attr("selected", currency == "sat" ? "selected" : null);
-                    }                    
-                });
-                $("#exchangerates").html(xchange.join(" = "));
+                    opt.dataset.rate = rate;
+                    if (currency == value) opt.selected = true;
+                }
 
-                $("#profit").attr("btc", result.AllProfitBTC);
-                $("#earnings").attr("btc", result.AllEarnings_Avg);
+                var xchange = [];
+                xchange.push("1 BTC");
+                for (const [key, itm] of Object.entries(result.Rates)) {
+                    if (key != "BTC") xchange.push(parseFloat(formatBTC(itm)).toFixed(2) + " " + key);
+                    upsertOption(key, key + '/day', itm);
+                    if (key == "BTC") {
+                        upsertOption('mBTC', 'mBTC/day', itm*1000);
+                        upsertOption('sat', 'sat/day', itm*1e8);
+                    }
+                }
+                document.getElementById("exchangerates").textContent = xchange.join(" = ");
+
+                document.getElementById("profit").dataset.btc = result.AllProfitBTC;
+                document.getElementById("earnings").dataset.btc = result.AllEarnings_Avg;
 
                 var cpuPower = parseFloat(result?.Power?.CPU);
                 var gpuPower = parseFloat(result?.Power?.GPU);
@@ -124,78 +141,61 @@ $(function () {
                     power = power.toFixed(0);
                 }
 
-                $("#power").html(power + powerunit + (powerOffset>0? "<small>+"+powerOffset.toFixed(0)+"W</small>":''));
+                document.getElementById("power").innerHTML = power + powerunit + (powerOffset>0? "<small>+"+powerOffset.toFixed(0)+"W</small>":'');
 
                 ConfigLoader.whenReady().then(function(cfg) {
                     if (cfg.Version) {
-                        $('.powerprice span').text(result.PowerPrice + (cfg.PowerPriceCurrency ? ' ' + cfg.PowerPriceCurrency : ''));
-                        if (cfg.UsePowerPrice) {
-                            $('.powerprice').show();
-                        } else {
-                            $('.powerprice').hide();
+                        for (const span of document.querySelectorAll('.powerprice span')) {
+                            span.textContent = result.PowerPrice + (cfg.PowerPriceCurrency ? ' ' + cfg.PowerPriceCurrency : '');
                         }
+                        rbmToggleDisplay('.powerprice', cfg.UsePowerPrice);
                     }
                 });
 
                 updateProfitHead();
-
-                setTimeout(p, 10000);
             }
-        })
+        } catch (error) {
+            console.error("currentprofit:", error);
+        } finally {
+            setTimeout(p, 10000);
+        }
     })();
 
     (function q() {
         ConfigLoader.whenReady().then(function(cfg) {
-            $('.workername').text(cfg.WorkerName)
+            for (const el of document.querySelectorAll('.workername')) el.textContent = cfg.WorkerName;
             var version = formatVersion(cfg.Version)
             remoteversion = formatVersion(cfg.RemoteVersion)
-            $('#version').text('v' + version)
+            const versionEl = document.getElementById('version');
+            if (versionEl) versionEl.textContent = 'v' + version;
             if (version < remoteversion) {
-                $('#updatelink').attr({ "title": 'Show info about release v' + remoteversion, "href": cfg.ManualURI }).text('v' + remoteversion)
-                $('#updatemsg-inner').show()
+                const link = document.getElementById('updatelink');
+                link.title = 'Show info about release v' + remoteversion;
+                link.href = cfg.ManualURI;
+                link.textContent = 'v' + remoteversion;
+                rbmToggleDisplay('#updatemsg-inner', true);
             } else {
-                $('#updatemsg-inner').hide()
+                rbmToggleDisplay('#updatemsg-inner', false);
             }
-            if(cfg.IsLinux) {
-                $(".is--linux").show()
-            } else {
-                $(".is--linux").hide()
-            }
-            if (typeof cfg.IsServer !== "undefined" && cfg.IsServer) {
-                $('a#navnetwork').closest('li').show()
-            } else {
-                $('a#navnetwork').closest('li').hide()
-            }
+            rbmToggleDisplay(".is--linux", cfg.IsLinux);
+            const navnetwork = document.querySelector('a#navnetwork')?.closest('li');
+            if (navnetwork) navnetwork.style.display = (typeof cfg.IsServer !== "undefined" && cfg.IsServer) ? '' : 'none';
             setTimeout(q, 600000);
         });
     })();
 
     (function r() {
-        $('#uptime').text(formatUptime(last_uptime + Math.round((Date.now() - start_uptime) / 1000)));
+        document.getElementById('uptime').textContent = formatUptime(last_uptime + Math.round((Date.now() - start_uptime) / 1000));
         setTimeout(r, 1000);
     })();
 
-    $('[data-toggle="tooltip"]').tooltip();
+    for (const el of document.querySelectorAll('[data-toggle="tooltip"]')) {
+        bootstrap.Tooltip.getOrCreateInstance(el);
+    }
 
     ConfigLoader.whenReady().then(function(cfg) {
-        $('#loading-msg').hide();
-        $('.bootstrap-table-init').each(function() {
-            var $table = $(this);
-            $table.bootstrapTable();
-
-            $table.find('th[data-sortable="true"]').each(function () {
-                var $th = $(this);
-                $th.off('click'); // remove previous handlers (if any)
-                $th.on('click', function () {
-                    var field = $th.data('field');
-                    var currentOrder = $th.hasClass('asc') ? 'desc' : 'asc';
-                    $table.bootstrapTable('refreshOptions', {
-                        sortName: field,
-                        sortOrder: currentOrder
-                    });
-                });
-            });
-        });
+        rbmToggleDisplay('#loading-msg', false);
+        RbmTables.initAll();
     });
 });
   

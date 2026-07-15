@@ -3,6 +3,10 @@
     <h1 id="title" data-navbaractive="navjsoneditor" class="h2">JSON Editor</h1>
 </div>
 
+<link rel="stylesheet" href="/js/extensions/json-editor/json-viewer.css" />
+<script src="/js/extensions/json-editor/json-viewer.js"></script>
+<script src="/js/extensions/json-editor/json-editor.js"></script>
+
 <form id="formConfig">
     <div class="card mb-3">
         <select id="select--ConfigName" name="ConfigName" class="form-control">
@@ -33,52 +37,63 @@
 
 var editor = null;
 
-$(function() {
+document.addEventListener("DOMContentLoaded", () => {
     ConfigLoader.whenReady().then(function(cfg) {
 
-        $("#jsonEditor").hide()
-        $("#json-input").hide()
+        const jsonEditorCard = document.getElementById("jsonEditor");
+        const jsonInput = document.getElementById("json-input");
+        const jsonDisplay = document.getElementById("json-display");
+        const form = document.getElementById("formConfig");
 
-        $("#select--ConfigName").change(function (event) {
-            var name = $("#select--ConfigName").val()
+        function showModal(bodyHtml, title) {
+            document.querySelector('.modal-body').innerHTML = bodyHtml;
+            document.querySelector('.modal-title').textContent = title;
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('myModal')).show();
+        }
 
-            $("#json-input").empty()
-            $("#json-display").empty()
+        jsonEditorCard.hidden = true;
+        jsonInput.hidden = true;
+
+        document.getElementById("select--ConfigName").addEventListener("change", async () => {
+            const name = document.getElementById("select--ConfigName").value;
+
+            jsonInput.value = "";
+            jsonDisplay.replaceChildren();
 
             if (name.slice(-1)=='-') {
-                $("#jsonEditor").hide()
+                jsonEditorCard.hidden = true;
+                return;
             }
-            else {
-                $.ajax({
-                    url: '/loadconfigjson',
-                    data: {ConfigName: name},
-                    success: function (result) {
-                        if (result.Success) {
-                            try {
-                                var data = JSON.parse(result.Data);
-                                $("#json-input").val(result.Data);
-                                editor = new JsonEditor('#json-display', data, {defaultCollapsed:true,rootCollapsable:false});
-                                $("#jsonEditor").show();
-                            } catch (ex) {
-                                alert('Wrong JSON Format: ' + ex);
-                            }
-                        }
+            try {
+                const response = await fetch('/loadconfigjson?' + new URLSearchParams({ ConfigName: name }));
+                const result = await response.json();
+                if (result.Success) {
+                    try {
+                        var data = JSON.parse(result.Data);
+                        jsonInput.value = result.Data;
+                        editor = new JsonEditor('#json-display', data, {defaultCollapsed:true,rootCollapsable:false});
+                        jsonEditorCard.hidden = false;
+                    } catch (ex) {
+                        alert('Wrong JSON Format: ' + ex);
                     }
-                })
+                }
+            } catch (error) {
+                console.error("loadconfigjson:", error);
             }
         });
 
-        $("#formConfig").submit(function (event) {
+        form.addEventListener("submit", async (event) => {
             // Stop form from submitting normally
             event.preventDefault();
 
+            var text;
             try {
-                var text = editor.text()
-                var data = JSON.parse(text)
-                $("#json-input").val(text)
+                text = editor.text()
+                JSON.parse(text)
+                jsonInput.value = text;
             } catch (ex) {
-                var err = ""+ex;
-                var pos = err.match(/position\s+(\d+)/);
+                var err = esc(""+ex);
+                var pos = (""+ex).match(/position\s+(\d+)/);
                 if (pos) {
                     pos = parseInt(pos[1])
                     var min = pos - 30;
@@ -92,36 +107,31 @@ $(function() {
                     }
                     var eleft = Math.min(10, pos-min), eright = Math.min(10,max-pos-1);
                     var epos = pos-min-eleft;
-                    err += '<p><pre>' + text.substring(min,max) + "\n" + (epos>0? " ".repeat(epos):'') + (eleft>0? "-".repeat(eleft):'') + '^' + (eright>0? "-".repeat(eright):'') + '</pre></p>';
+                    err += '<pre>' + esc(text.substring(min,max)) + "\n" + (epos>0? " ".repeat(epos):'') + (eleft>0? "-".repeat(eleft):'') + '^' + (eright>0? "-".repeat(eright):'') + '</pre>';
                 }
-                document.querySelector('.modal-body').innerHTML = err;
-                document.querySelector('.modal-title').textContent = 'Error in JSON format';
-                var myModal = new bootstrap.Modal(document.getElementById('myModal'));
-                myModal.show();
-                return false;
+                showModal(err, 'Error in JSON format');
+                return;
             }
 
             if (cfg.IsLocked) {
-                document.querySelector('.modal-body').innerHTML = 'To be able to save, manually set parameter "APIlockConfig" to "0" in config.txt';
-                document.querySelector('.modal-title').textContent = 'Warning: config lock is enabled';
-                var myModal = new bootstrap.Modal(document.getElementById('myModal'));
-                myModal.show();
-                return false;
+                showModal('To be able to save, manually set parameter "APIlockConfig" to "0" in config.txt', 'Warning: config lock is enabled');
+                return;
             }
-            $.post("/saveconfigjson", $(this).serialize()).done(function (data) {
-                var mbody, mtitle;
+            try {
+                const response = await fetch("/saveconfigjson", {
+                    method: "POST",
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+                    body: new URLSearchParams(new FormData(form)).toString()
+                });
+                const data = await response.json();
                 if (data.Success) {
-                    mbody = 'RainbowMiner will pick up the new configuration after the current round has ended.';
-                    mtitle = 'Configuration saved!';
+                    showModal('RainbowMiner will pick up the new configuration after the current round has ended.', 'Configuration saved!');
                 } else {
-                    mbody = 'Something went wrong or the configuration is locked via APILockConfig in config.txt';
-                    mtitle = 'Configuration NOT saved!';
+                    showModal('Something went wrong or the configuration is locked via APILockConfig in config.txt', 'Configuration NOT saved!');
                 }
-                document.querySelector('.modal-body').innerHTML = mbody;
-                document.querySelector('.modal-title').textContent = mtitle;
-                var myModal = new bootstrap.Modal(document.getElementById('myModal'));
-                myModal.show();
-            });
+            } catch (error) {
+                console.error("saveconfigjson:", error);
+            }
         })
     });
 });

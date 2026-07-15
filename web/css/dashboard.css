@@ -10,11 +10,15 @@ pre {
     color: inherit;
 }
 
-.nav-item .svg-inline--fa {
-  width: 16px;
-  height: 16px;
+.nav-item .bi {
+  font-size: 16px;
   vertical-align: text-bottom;
   margin-right: 0.5em;
+}
+
+.bi-lg {
+  font-size: 1.333em;
+  vertical-align: -0.15em;
 }
 
 /*
@@ -22,19 +26,27 @@ pre {
  */
 
 .sidebar {
-    width: 180px;
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 100; /* Behind the navbar */
-    padding: 48px 0 0; /* Height of navbar */
-    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
     background: var(--bs-body-bg);
+    /* offcanvas panel width below md (desktop width is set in the media query) */
+    --bs-offcanvas-width: 240px;
 }
 
-.sidebar-show {
-    left:0;
+@media (min-width: 768px) {
+    .sidebar {
+        /* !important required: above the breakpoint, .offcanvas-md neutralizes
+         * the panel with width:auto/height:auto/background-color:transparent
+         * (all !important) - we must win those back for the fixed sidebar */
+        width: 180px !important;
+        height: auto !important;
+        background: var(--bs-body-bg) !important;
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 100; /* Behind the navbar */
+        padding: 48px 0 0; /* Height of navbar */
+        box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+    }
 }
 
 /*
@@ -159,10 +171,21 @@ pre {
 .sidebar-sticky {
   position: relative;
   top: 0;
-  height: calc(100vh - 48px);
-  padding-top: .5rem;
+  padding: .5rem 0 0 0;
   overflow-x: hidden;
   overflow-y: auto; /* Scrollable contents if viewport is shorter than content. */
+}
+
+@media (min-width: 768px) {
+  /* Above the breakpoint, bootstrap resets .offcanvas-md .offcanvas-body to
+   * display:flex / padding:0 / overflow-y:visible (specificity 0,2,0), which
+   * lays the sidebar content out in a row. Win it back at equal specificity. */
+  .offcanvas-body.sidebar-sticky {
+    display: block;
+    height: calc(100vh - 48px);
+    padding: .5rem 0 0 0;
+    overflow-y: auto;
+  }
 }
 
 @supports ((position: -webkit-sticky) or (position: sticky)) {
@@ -318,4 +341,90 @@ pre {
 .bitcoin-symbol {
     color: #F7931A;
     font-family: Arial, sans-serif;
+}
+
+/*
+ * Tabulator integration (Phase 4B)
+ */
+
+.rbm-table-toolbar .btn { line-height: 1; }
+.rbm-columns-menu { min-width: 220px; max-height: 60vh; overflow-y: auto; }
+
+.tabulator { font-size: .875rem; }
+
+/* Our tables are full-height page content like bootstrap-table's were: the
+ * page scrolls, tables never scroll vertically inside themselves. Tabulator
+ * computes and pins the holder height at render time and does not grow it
+ * when a detail row expands - take that sizing away (!important also beats
+ * the inline styles Tabulator sets). Horizontal scrolling stays. */
+.tabulator,
+.tabulator .tabulator-tableholder {
+    height: auto !important;
+    max-height: none !important;
+}
+.tabulator .tabulator-tableholder {
+    overflow-y: hidden;
+}
+.tabulator .rbm-expander,
+.tabulator .rbm-select { cursor: pointer; }
+
+/* detail view rows (bootstrap-table data-detail-view replacement) */
+.tabulator-row .rbm-detail {
+    display: block;
+    clear: both;
+    width: 100%;
+    padding: .5rem .75rem;
+    border-top: 1px dashed var(--bs-border-color);
+    white-space: normal;
+    cursor: auto;
+}
+
+/* dark mode: the tabulator_bootstrap5 theme is compiled light-only */
+[data-bs-theme=dark] .tabulator,
+[data-bs-theme=dark] .tabulator-row,
+[data-bs-theme=dark] .tabulator .tabulator-footer {
+    background-color: var(--bs-body-bg);
+    color: var(--bs-body-color);
+}
+[data-bs-theme=dark] .tabulator .tabulator-header,
+[data-bs-theme=dark] .tabulator .tabulator-header .tabulator-col,
+[data-bs-theme=dark] .tabulator .tabulator-footer .tabulator-page {
+    background-color: var(--bs-tertiary-bg);
+    color: var(--bs-body-color);
+}
+[data-bs-theme=dark] .tabulator-row.tabulator-row-even {
+    background-color: var(--bs-secondary-bg);
+}
+[data-bs-theme=dark] .tabulator-row.tabulator-selectable:hover {
+    background-color: var(--bs-tertiary-bg);
+}
+/* footer total rows (bottomCalc): restore the classic bootstrap-table
+ * bg-primary/text-white footer band - readable in light and dark mode.
+ * !important is needed against the theme's higher-specificity holder rules. */
+.tabulator .tabulator-footer .tabulator-calcs-holder,
+.tabulator .tabulator-footer .tabulator-calcs-holder .tabulator-row {
+    background: var(--bs-primary) !important;
+    color: #fff !important;
+}
+.tabulator .tabulator-footer .tabulator-calcs-holder {
+    border-top: 1px solid var(--bs-border-color);
+    border-bottom: none;
+}
+
+/* the light theme brightens headers/pager buttons on hover - keep text readable */
+[data-bs-theme=dark] .tabulator .tabulator-header .tabulator-col.tabulator-sortable:hover,
+[data-bs-theme=dark] .tabulator .tabulator-header .tabulator-col.tabulator-sortable.tabulator-col-sorter-element:hover {
+    background-color: var(--bs-secondary-bg);
+    color: var(--bs-body-color);
+}
+[data-bs-theme=dark] .tabulator .tabulator-footer .tabulator-page:not(.disabled):hover,
+[data-bs-theme=dark] .tabulator .tabulator-footer .tabulator-page.active {
+    background-color: var(--bs-secondary-bg);
+    color: var(--bs-body-color);
+}
+[data-bs-theme=dark] .tabulator .tabulator-header .tabulator-col .tabulator-header-filter input,
+[data-bs-theme=dark] .tabulator .tabulator-header .tabulator-col .tabulator-header-filter select {
+    background-color: var(--bs-body-bg);
+    color: var(--bs-body-color);
+    border-color: var(--bs-border-color);
 }

@@ -3,104 +3,28 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" integrity="sha384-tViUnnbYAV00FLIhhi3v/dWt3Jxw4gZQcNoSCxCIFNJVCx7/D55/wXsrNIRANwdD" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-table@1.24.1/dist/bootstrap-table.min.css" integrity="sha384-tfNXB2/2SVNPdzoqPNMSl0hXmUVBnwOL4odQANKVfu66tA4jFcF+5Ch4nu1LtZAc" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-table@1.24.1/dist/extensions/filter-control/bootstrap-table-filter-control.css" integrity="sha384-4Glx18jZ0Un+yDG6KUpYJ/af8hkssJ02jRASuFv23gfCl0mTXaVMPI9cB4cn3GvE" crossorigin="anonymous">
+    <link rel="stylesheet" href="/vendor/bootstrap-5.3.3/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/vendor/bootstrap-icons-1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="/vendor/tabulator-6.3.1/css/tabulator_bootstrap5.min.css" />
 
     <link rel="stylesheet" href="/css/dashboard.css" />
-    <link rel="stylesheet" href="/js/extensions/json-editor/jquery.json-viewer.css" />
 
-    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js" integrity="sha384-1H217gwSVyLSIfaLxHbE7dRb3v4mYCKbpQvzx0cegeju1MVsGrX5xXxAvs/HgeFs" crossorigin="anonymous"></script>
+    <script src="/vendor/bootstrap-5.3.3/js/bootstrap.bundle.min.js"></script>
+    <script src="/vendor/tabulator-6.3.1/js/tabulator.min.js"></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.24.1/dist/bootstrap-table.min.js" integrity="sha384-FosO0uRIBBE+YnU4QBFaUk9aMjP2twHyeirpW+jjfqBlKU1Kp576zfju1cWNkx3g" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.24.1/dist/extensions/auto-refresh/bootstrap-table-auto-refresh.js" integrity="sha384-Tb/JOIxveRwCDk4VeMhGsPxgUgBnbsKmkYO0r/zA5NXGCPm5fJZMrUVBzxTEKaJ/" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.24.1/dist/extensions/filter-control/bootstrap-table-filter-control.js" integrity="sha384-5JMvHn3Gwa8mYelgKGCIj6k3rcCaTqmic8jmkc3yr0KrEESDejyltaAFX92nxfH8" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.24.1/dist/extensions/export/bootstrap-table-export.js" integrity="sha384-hymxEjpICaOt6GWxGXIxvvSwEkIOmTmptOtqleFP1M/La/SSej90gKRta35BDmWL" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/handlebars@4.7.8/dist/handlebars.js" integrity="sha384-QUhmvCKocyfe+3p0uc73Hq5wMpUERuIahFAsyHXwZ01QxtaILhVpAYsJLeFnuNhY" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js" integrity="sha384-J08i8An/QeARD9ExYpvphB8BsyOj3Gh2TSh1aLINKO3L0cMSH2dN3E22zFoXEi0Q" crossorigin="anonymous"></script>
-    <script defer src="https://use.fontawesome.com/releases/v5.10.2/js/all.js" integrity="sha384-QMu+Y+eu45Nfr9fmFOlw8EqjiUreChmoQ7k7C1pFNO8hEbGv9yzsszTmz+RzwyCh" crossorigin="anonymous"></script>
-
-    <script src="/js/extensions/json-editor/jquery.json-viewer.js"></script>
-    <script src="/js/extensions/json-editor/jquery.json-editor.js"></script>
-    <script src="/js/utilities-1.9.js"></script>
-
-    <script>
-        $.fn.bootstrapTable.autoInit = false;
-        var theme = getCookie("rbm-theme");
-        $('#themecss').attr("href", '/css/theme-' + (theme!=""? theme:"light") + '.css');
-    </script>
+    <script src="/js/rbm-2.0.js"></script>
+    <script src="/js/rbm-tables-1.0.js"></script>
 
     <!-- script src="/js/bootstrap-table-contextmenu.js"></script -->
     <title>RainbowMiner Local Dashboard</title>
     <link href="/images/favicon.ico" rel="icon" type="image/x-icon" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#212529" />
+    <link rel="apple-touch-icon" href="/images/pwa-icon-180.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="RainbowMiner" />
 
-    <script>
-        var selected_currency = { currency: null, rate: 0 };
-
-        const ConfigLoader = (function () {
-            let config = null;
-            let ready = false;
-            let resolvePromise, rejectPromise;
-            const configPromise = new Promise((resolve, reject) => {
-                resolvePromise = resolve;
-                rejectPromise = reject;
-            });
-
-            const MAX_ATTEMPTS = 10;
-            const RETRY_DELAY_MS = 1000;
-            const REFRESH_INTERVAL_MS = 300000;
-
-            function loadConfig(attempt) {
-                fetch("/info")
-                .then(response => {
-                    if (!response.ok) throw new Error("Server responded with error");
-                    return response.json();
-                })
-                .then(data => {
-                    if (!data.Version) {
-                        if (attempt < MAX_ATTEMPTS) {
-                            setTimeout(() => loadConfig(attempt + 1), RETRY_DELAY_MS);
-                        } else {
-                            rejectPromise("Failed to load config: Version missing after " + MAX_ATTEMPTS + " attempts.");
-                            console.error("ConfigLoader error: Version missing in /info response.");
-                        }
-                        return;
-                    }
-
-                    config = data;
-
-                    // Optional globals
-                    window.nDecimalSeparator = config.DecSep;
-                    window.tDecimalSeparator = config.DecSep === "." ? "," : ".";
-
-                    ready = true;
-
-                    resolvePromise(config);
-                    setTimeout(() => loadConfig(1), REFRESH_INTERVAL_MS); // Periodic refresh
-                })
-                .catch(error => {
-                    if (attempt < MAX_ATTEMPTS) {
-                        console.warn("Retrying to fetch /info... attempt", attempt + 1);
-                        setTimeout(() => loadConfig(attempt + 1), RETRY_DELAY_MS);
-                    } else {
-                        rejectPromise("Failed to fetch /info after " + MAX_ATTEMPTS + " attempts.");
-                        console.error("ConfigLoader error:", error);
-                    }
-                });
-            }
-
-            loadConfig(1);
-
-            return {
-                getConfig: () => config,
-                isReady: () => ready,
-                whenReady: () => configPromise
-            };
-        })();
-    </script>
 </head>
 <body>
     <svg width="0" height="0" style="position: absolute;">
@@ -153,8 +77,9 @@
         <div class="text-white" id="rigtime"><span class="small">Uptime</span><h6><span id="uptime"></span></h6></div>
         <div class="text-white" id="updatemsg"><span id="updatemsg-inner"><span class="small">New Version <a href="" title="" target="_blank" id="updatelink"></a> available</span><a href="#" id="updatenow" class="btn btn-sm btn-primary">Update now!</a></span></div>
         <div class="text-white" id="rigrates"><span class="small">Rates</span><h6><span id="exchangerates"></span></h6></div>
-        <div class="text-white" id="menubutton">
-            <button class="navbar-toggler" type="button" id="sidebar-toggle">
+        <div class="text-white d-md-none" id="menubutton">
+            <button class="navbar-toggler" type="button" id="sidebar-toggle"
+                    data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
         </div>
@@ -162,8 +87,12 @@
 
     <div class="container-fluid">
         <div class="row">
-            <nav class="d-none d-md-block sidebar nav-collapse" id="sidebar">
-                <div class="sidebar-sticky">
+            <nav class="sidebar offcanvas-md offcanvas-start" tabindex="-1" id="sidebar" aria-label="Navigation">
+                <div class="offcanvas-header d-md-none">
+                    <h5 class="offcanvas-title rainbow mb-0">RainbowMiner</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Close"></button>
+                </div>
+                <div class="offcanvas-body sidebar-sticky">
                     <div class="flex-column px-3 text-muted mt-4">
                         Worker: <span class="workername"></span>
                     </div>
@@ -177,27 +106,27 @@
                     <ul class="nav flex-column mb-2">
                         <li class="nav-item">
                             <a id="navdashboard" class="nav-link" href="/">
-                                <i class="fas fa-home" data-feather="home"></i>Dashboard
+                                <i class="bi bi-house" data-feather="home"></i>Dashboard
                             </a>
                         </li>
                         <li class="nav-item">
                             <a id="navconsole" class="nav-link" href="console.html">
-                                <i class="fas fa-terminal"></i>Console
+                                <i class="bi bi-terminal"></i>Console
                             </a>
                         </li>
                         <li class="nav-item">
                             <a id="navrates" class="nav-link" href="rates.html">
-                                <i class="fas fa-dollar-sign"></i>Rates
+                                <i class="bi bi-currency-dollar"></i>Rates
                             </a>
                         </li>
                         <li class="nav-item">
                             <a id="navnetwork" class="nav-link" href="network.html">
-                                <i class="fas fa-network-wired"></i>Network
+                                <i class="bi bi-diagram-3"></i>Network
                             </a>
                         </li>
                         <li class="nav-item">
                             <a id="navdonate" class="nav-link" href="donate.html">
-                                <i class="fas fa-donate"></i>Support RBM
+                                <i class="bi bi-cash-coin"></i>Support RBM
                             </a>
                         </li>
                     </ul>
@@ -208,17 +137,17 @@
                     <ul class="nav flex-column mb-2">
                         <li class="nav-item">
                             <a id="navdevices" class="nav-link" href="devices.html">
-                                <i class="fas fa-microchip"></i>Selected Devices
+                                <i class="bi bi-cpu"></i>Selected Devices
                             </a>
                         </li>
                         <li class="nav-item">
                             <a id="navalldevices" class="nav-link" href="alldevices.html">
-                                <i class="fas fa-microchip"></i>All Devices
+                                <i class="bi bi-cpu"></i>All Devices
                             </a>
                         </li>
                         <li class="nav-item">
                             <a id="navocprofiles" class="nav-link" href="ocprofiles.html">
-                                <i class="fas fa-microchip"></i>OC Profiles
+                                <i class="bi bi-cpu"></i>OC Profiles
                             </a>
                         </li>
                     </ul>
@@ -226,33 +155,33 @@
                     <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted fw-normal">
                         <span>Pools</span>
                         <a class="nav-link" style="padding:0" href="setuppools.html">
-                            <i class="fas fa-cog"></i>
+                            <i class="bi bi-gear"></i>
                         </a>
                     </h6>
                     <ul class="nav flex-column mb-2">
                         <li class="nav-item">
                             <a id="navbestpools" class="nav-link" href="bestpools.html">
-                                <i class="fas fa-folder"></i>Best Pools
+                                <i class="bi bi-folder"></i>Best Pools
                             </a>
                         </li>
                         <li class="nav-item">
                             <a id="navallpools" class="nav-link" href="allpools.html">
-                                <i class="fas fa-folder-open"></i>All Pools
+                                <i class="bi bi-folder2-open"></i>All Pools
                             </a>
                         </li>
                         <li class="nav-item">
                             <a id="navbalances" class="nav-link" href="balances.html">
-                                <i class="fas fa-folder-open"></i>Pool Earnings
+                                <i class="bi bi-folder2-open"></i>Pool Earnings
                             </a>
                         </li>
                         <li class="nav-item">
                             <a id="navtotals" class="nav-link" href="totals.html">
-                                <i class="fas fa-folder-open"></i>Pool Totals
+                                <i class="bi bi-folder2-open"></i>Pool Totals
                             </a>
                         </li>
                         <li class="nav-item">
                             <a id="navpayouts" class="nav-link" href="payouts.html">
-                                <i class="fas fa-folder-open"></i>Pool Payouts
+                                <i class="bi bi-folder2-open"></i>Pool Payouts
                             </a>
                         </li>
                     </ul>
@@ -263,27 +192,27 @@
                     <ul class="nav flex-column mb-2">
                         <li class="nav-item">
                             <a id="navallminers" class="nav-link" href="miners.html">
-                                <i class="fas fa-folder"></i>Miners
+                                <i class="bi bi-folder"></i>Miners
                             </a>
                         </li>
                         <li class="nav-item">
                             <a id="navactiveminers" class="nav-link" href="activeminers.html">
-                                <i class="fas fa-folder-open"></i>Active Miners
+                                <i class="bi bi-folder2-open"></i>Active Miners
                             </a>
                         </li>
                         <li class="nav-item">
                             <a id="navminerstats" class="nav-link" href="minerstats.html">
-                                <i class="fas fa-folder-open"></i>Benchmarks
+                                <i class="bi bi-folder2-open"></i>Benchmarks
                             </a>
                         </li>
                         <li class="nav-item">
                             <a id="navactivity" class="nav-link" href="activity.html">
-                                <i class="fas fa-folder-open"></i>Activity
+                                <i class="bi bi-folder2-open"></i>Activity
                             </a>
                         </li>
                         <li class="nav-item">
                             <a id="navwatchdog" class="nav-link" href="watchdog.html">
-                                <i class="fas fa-folder-open"></i>Watchdog
+                                <i class="bi bi-folder2-open"></i>Watchdog
                             </a>
                         </li>
                     </ul>
@@ -293,42 +222,42 @@
                     <ul class="nav flex-column mb-2">
                         <li class="nav-item">
                             <a id="navsetup" class="nav-link" href="setup.html">
-                                <i class="fas fa-cog"></i>Setup
+                                <i class="bi bi-gear"></i>Setup
                             </a>
                         </li>
                         <li class="nav-item">
                             <a id="navsetupcoins" class="nav-link" href="setupcoins.html">
-                                <i class="fas fa-cog"></i>Setup Coins
+                                <i class="bi bi-gear"></i>Setup Coins
                             </a>
                         </li>
                         <li class="nav-item">
                             <a id="navsetuppools" class="nav-link" href="setuppools.html">
-                                <i class="fas fa-cog"></i>Setup Pools
+                                <i class="bi bi-gear"></i>Setup Pools
                             </a>
                         </li>
                         <li class="nav-item">
                             <a id="navjsoneditor" class="nav-link" href="jsoneditor.html">
-                                <i class="fas fa-cog"></i>JSON Editor
+                                <i class="bi bi-gear"></i>JSON Editor
                             </a>
                         </li>
                         <li class="nav-item">
                             <a id="navrunningconfig" class="nav-link" href="runningconfig.html">
-                                <i class="fas fa-file-alt"></i>Running Config
+                                <i class="bi bi-file-earmark-text"></i>Running Config
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="/setup.json" title="Download a setup.json file, put into RainbowMiner folder before first start">
-                                <i class="fas fa-file-download"></i>Get setup.json
+                                <i class="bi bi-file-earmark-arrow-down"></i>Get setup.json
                             </a>
                         </li>
                         <li class="nav-item">
                             <a id="navsaveminerstats" class="nav-link" href="saveminerstats.html" title="Download a backup zip of one or all miner stats">
-                                <i class="fas fa-file-download"></i>Get Minerstats
+                                <i class="bi bi-file-earmark-arrow-down"></i>Get Minerstats
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="/debug" title="Download debug file for upload at GitHub">
-                                <i class="fas fa-bug"></i>Debug File
+                                <i class="bi bi-bug"></i>Debug File
                             </a>
                         </li>
                     </ul>
@@ -339,12 +268,12 @@
                     <ul class="nav flex-column mb-2">
                         <li class="nav-item">
                             <a id="navmrrstats" class="nav-link" href="mrrstats.html">
-                                <i class="fas fa-folder-open"></i>MRR Stats
+                                <i class="bi bi-folder2-open"></i>MRR Stats
                             </a>
                         </li>
                         <li class="nav-item">
                             <a id="navmrrrigs" class="nav-link" href="mrrrigs.html">
-                                <i class="fas fa-folder-open"></i>MRR Rigs
+                                <i class="bi bi-folder2-open"></i>MRR Rigs
                             </a>
                         </li>
                     </ul>
@@ -355,12 +284,12 @@
                     <ul class="nav flex-column mb-2">
                         <li class="nav-item">
                             <a class="nav-link" href="https://github.com/RainbowMiner/RainbowMiner">
-                                <i class="fab fa-github"></i>Github
+                                <i class="bi bi-github"></i>Github
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="API.html">
-                                <i class="fas fa-book"></i>API Documentation
+                                <i class="bi bi-book"></i>API Documentation
                             </a>
                         </li>
                     </ul>

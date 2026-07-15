@@ -14,11 +14,17 @@
 
 <!-- End of page scripts -->
 <script type="text/javascript">
-  $(function() {
-    $.ajax({url: '/config', success: function(result) {
-        $("#config").empty();
-        $("#config").append(JSON.stringify(result, undefined, 4));
-      }});
-  });
+    document.addEventListener("DOMContentLoaded", async () => {
+        const el = document.getElementById("config");
+        try {
+            const response = await fetch("/config");
+            if (!response.ok) throw new Error("HTTP " + response.status);
+            const result = await response.json();
+            el.textContent = JSON.stringify(result, undefined, 4);
+        } catch (error) {
+            el.textContent = "Failed to load configuration: " + error.message;
+            console.error("runningconfig:", error);
+        }
+    });
 </script>
 <!--#include file="/parts/foot.html" -->

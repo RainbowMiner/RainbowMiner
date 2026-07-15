@@ -10,7 +10,7 @@
     </div>
 </div>
 
-<table id="ocprofiles" class="bootstrap-table-init table"
+<table id="ocprofiles" class="rbm-table-init table"
   data-url="/ocprofiles"
   data-response-handler="formatOCProfiles"
   data-filter-control="true"
@@ -19,10 +19,7 @@
   data-sort-name="Name"
   data-cache="false"
   data-show-columns="true"
-  data-show-toggle="true"
   data-show-refresh="true"
-  data-icons-prefix="fa"
-  data-icons="icons"
   data-detail-view="true"
   data-detail-formatter="detailFormatter"
 >
@@ -44,22 +41,22 @@
 <!-- End of page scripts -->
 <script type="text/javascript">
 
-$(function() {
-    $("table.table").on('load-success.bs.table', function (e, data) {
-        sortFilterOptions(this);
-    });
-
-    $("#applyoc").click(function () {
-        $('.modal-body').load('/applyoc', function () {
-            $('.modal-title').text('Overclocking Profiles will be applied');
-            var myModal = new bootstrap.Modal(document.getElementById('myModal'));
-            myModal.show();
-        });
+document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("applyoc").addEventListener("click", async (e) => {
+        e.preventDefault();
+        try {
+            const response = await fetch('/applyoc');
+            document.querySelector('.modal-body').innerHTML = await response.text();
+            document.querySelector('.modal-title').textContent = 'Overclocking Profiles will be applied';
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('myModal')).show();
+        } catch (error) {
+            console.error("applyoc:", error);
+        }
     });
 });
 
 function formatOCProfiles(data) {
-      $.each(data, function (index, item) {
+      for (const item of data) {
           item.tPowerLimit = typeof (item.PowerLimit) !== "undefined" && item.PowerLimit? Number(item.PowerLimit) : -1
           item.tThermalLimit = typeof (item.ThermalLimit) !== "undefined" && item.ThermalLimit ? Number(item.ThermalLimit) : -1
           item.tClockCore = typeof (item.CoreClockBoost) !== "undefined" && item.CoreClockBoost ? item.CoreClockBoost : '*'
@@ -67,7 +64,7 @@ function formatOCProfiles(data) {
           item.tLockClockCore = typeof (item.LockCoreClock) !== "undefined" && item.LockCoreClock ? item.LockCoreClock : '*'
           item.tLockClockMem = typeof (item.LockMemoryClock) !== "undefined" && item.LockMemoryClock ? item.LockMemoryClock : '*'
           item.tLockVoltagePoint = typeof (item.LockVoltagePoint) !== "undefined" && item.LockVoltagePoint ? item.LockVoltagePoint : '*'
-      });
+      }
     return data;
 }
 

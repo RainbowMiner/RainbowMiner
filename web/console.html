@@ -20,18 +20,16 @@
 </div>
 
 <!-- End of page scripts -->
-<script id="miner_template" type="text/x-handlebars-template">
+<template id="miner_template">
     <div class="mb-2 card" style="min-width: 400px">
         <div class="card-header">
-            <h5>{{name}}</h5>
+            <h5></h5>
         </div>
         <div class="card-body small">
-            <pre>
-                {{content}}
-            </pre>
+            <pre></pre>
         </div>
     </div>
-</script>
+</template>
 
 <script type="text/javascript">
 
@@ -39,70 +37,85 @@ var cmdkey = '';
 var cmdts  = 0;
 
 function setButtonColors() {
-    $.each($(".cmdkey"),function () {
-        var key = $(this).attr('key');
-        var cl = cmdkey == key? 'bg-success' : (cmdkey == ''? '' : 'bg-secondary')
-        var rm = false
-        if ($(this).hasClass('bg-success') && cl != 'bg-success') {$(this).removeClass('bg-success');rm = true}
-        if ($(this).hasClass('bg-secondary') && cl != 'bg-secondary') {$(this).removeClass('bg-secondary');rm = true}
-        if (!rm && cl != '') {$(this).addClass(cl)}
-    })
+    for (const btn of document.querySelectorAll(".cmdkey")) {
+        const key = btn.dataset.key;
+        const cl = cmdkey == key? 'bg-success' : (cmdkey == ''? '' : 'bg-secondary')
+        btn.classList.remove('bg-success', 'bg-secondary');
+        if (cl != '') btn.classList.add(cl);
+    }
 }
 
-$(function () {
-    const template = Handlebars.compile($("#miner_template").html());
+document.addEventListener("DOMContentLoaded", () => {
+    const template = document.getElementById("miner_template");
+    const cmdmenu = document.getElementById("cmdmenu");
+    const minerboxes = document.getElementById("minerboxes");
+    const miners = document.getElementById("miners");
 
-    (function updateConsole() {
-        $.ajax({
-            url: '/console?ts=' + cmdts, success: function (result) {
-                cmdkey = result.CmdKey.toUpperCase()
-                cmdts  = result.Timestamp
-                var buttons = new Array();
-                $("#cmdmenu").empty()
-                $.each(result.CmdMenu,function(ix,item) {
-                    var k = item.match(/\[([A-Za-z\-]+)\]/)
-                    if (k) {
-                        var key = (k[1]).toUpperCase()
-                        buttons.push('<button class="cmdkey" key="'+ key +'">' + item + "</button>")
-                    }
-                })
-                $("#cmdmenu").html(buttons.join(" "))
-                setButtonColors()
-                if (result.Content != '*') {
-                    $("#console").text(result.Content);
-                }
-                $(".cmdkey").click(function (event) {
-                    event.stopPropagation()
-                    if (cmdkey == '') {
-                        cmdkey = $(this).attr('key')
-                        var confirm_msg = "";
-                        if (cmdkey == "CTRL-U") { confirm_msg = "Careful!\nUpdating to the latest pre-release is NOT without risk.\nDo you really want to proceed?" }
-                        else if (cmdkey == "X") { confirm_msg = "Really stop RainbowMiner now?" }
-                        if (confirm_msg != "") {
-                            if (!confirm(confirm_msg))
-                                return false;
-                        }
-                        setButtonColors()
-                        $.get('/cmdkey?CmdKey=' + cmdkey);
-                    }
-                });
-
-                $("#minerboxes").empty()
-                if (result.Miners && result.Miners.length) {
-                    $.each(result.Miners,function(ix,item) {
-                        $("#minerboxes").append(template({name: item.Name, content: item.Content}));
-                    })
-                    if ($("#miners").is(":hidden"))
-                        $("#miners").show()
-                } else {
-                    if (!$("#miners").is(":hidden"))
-                        $("#miners").hide()
-                }
-
-                window.setTimeout(updateConsole, 5000);
+    // one delegated handler instead of re-binding buttons on every poll
+    cmdmenu.addEventListener("click", async (event) => {
+        const btn = event.target.closest(".cmdkey");
+        if (!btn) return;
+        event.stopPropagation();
+        if (cmdkey == '') {
+            cmdkey = btn.dataset.key;
+            var confirm_msg = "";
+            if (cmdkey == "CTRL-U") { confirm_msg = "Careful!\nUpdating to the latest pre-release is NOT without risk.\nDo you really want to proceed?" }
+            else if (cmdkey == "X") { confirm_msg = "Really stop RainbowMiner now?" }
+            if (confirm_msg != "" && !confirm(confirm_msg)) {
+                cmdkey = '';
+                return;
             }
-        });
+            setButtonColors()
+            try {
+                await fetch('/cmdkey?CmdKey=' + encodeURIComponent(cmdkey));
+            } catch (error) {
+                console.error("cmdkey:", error);
+            }
+        }
+    });
+
+    (async function updateConsole() {
+        try {
+            const response = await fetch('/console?ts=' + cmdts);
+            const result = await response.json();
+
+            cmdkey = result.CmdKey.toUpperCase()
+            cmdts  = result.Timestamp
+
+            cmdmenu.replaceChildren();
+            for (const item of result.CmdMenu) {
+                const k = item.match(/\[([A-Za-z\-]+)\]/)
+                if (k) {
+                    const btn = document.createElement("button");
+                    btn.className = "cmdkey";
+                    btn.dataset.key = k[1].toUpperCase();
+                    btn.textContent = item;
+                    cmdmenu.append(btn, " ");
+                }
+            }
+            setButtonColors()
+
+            if (result.Content != '*') {
+                document.getElementById("console").textContent = result.Content;
+            }
+
+            minerboxes.replaceChildren();
+            if (result.Miners && result.Miners.length) {
+                for (const item of result.Miners) {
+                    const box = template.content.cloneNode(true);
+                    box.querySelector("h5").textContent = item.Name;
+                    box.querySelector("pre").textContent = item.Content;
+                    minerboxes.appendChild(box);
+                }
+            }
+            miners.hidden = !(result.Miners && result.Miners.length);
+        } catch (error) {
+            console.error("console:", error);
+        } finally {
+            // reschedule even after errors, so the console recovers from server restarts
+            window.setTimeout(updateConsole, 5000);
+        }
     })();
-})
+});
 </script>
 <!--#include file="/parts/foot.html" -->

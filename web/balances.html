@@ -9,7 +9,7 @@
         <a href="/balances?consolidate=1&as_csv=1" id="downloadconsolidates" class="btn btn-primary">CSV</a>
     </h5>
 
-    <table class="bootstrap-table-init table"
+    <table class="rbm-table-init table"
            data-url="/balances?consolidate=1"
            data-response-handler="formatConsolidateResponse"
            data-filter-control="true"
@@ -18,12 +18,8 @@
            data-sort-name="Name"
            data-cache="false"
            data-show-columns="true"
-           data-show-toggle="true"
            data-show-refresh="true"
            data-show-footer="true"
-           data-icons-prefix="fa"
-           data-icons="icons"
-           data-footer-style="footerStyle"
            data-detail-view="true"
            data-detail-formatter="detailFormatter">
         <thead>
@@ -46,7 +42,7 @@
         Earnings by Currencies
         <a href="/balances?consolidate=1&as_csv=1" id="downloadbalances" class="btn btn-primary">CSV</a>
     </h5>
-    <table class="bootstrap-table-init table"
+    <table class="rbm-table-init table"
            data-url="/balances"
            data-response-handler="formatEarningsResponse"
            data-filter-control="true"
@@ -55,24 +51,21 @@
            data-sort-name="Name"
            data-cache="false"
            data-show-columns="true"
-           data-show-toggle="true"
            data-show-refresh="true"
-           data-icons-prefix="fa"
-           data-icons="icons"
            data-detail-view="true"
            data-detail-formatter="detailFormatter">
         <thead>
             <tr>
                 <th data-field="teName" data-sortable="true" data-filter-control="select">PoolName</th>
                 <th data-field="teCurrency" data-sortable="true" data-filter-control="select">Currency</th>
-                <th data-field="Earnings" data-align="right" data-sortable="true" data-formatter="formatPrices">Total</th>
-                <th data-field="Earnings_1h" data-align="right" data-sortable="true" data-formatter="formatPrices">1 Hour</th>
-                <th data-field="Earnings_1d" data-align="right" data-sortable="true" data-formatter="formatPrices">24 Hours</th>
-                <th data-field="Earnings_1w" data-align="right" data-sortable="true" data-formatter="formatPrices">7 Days</th>
-                <th data-field="Earnings_Avg" data-align="right" data-sortable="true" data-formatter="formatPrices">Avg.</th>
+                <th data-field="Earnings" data-align="right" data-sortable="true" data-formatter="formatBalancePrice">Total</th>
+                <th data-field="Earnings_1h" data-align="right" data-sortable="true" data-formatter="formatBalancePrice">1 Hour</th>
+                <th data-field="Earnings_1d" data-align="right" data-sortable="true" data-formatter="formatBalancePrice">24 Hours</th>
+                <th data-field="Earnings_1w" data-align="right" data-sortable="true" data-formatter="formatBalancePrice">7 Days</th>
+                <th data-field="Earnings_Avg" data-align="right" data-sortable="true" data-formatter="formatBalancePrice">Avg.</th>
                 <th data-field="Started" data-align="right" data-sortable="true" data-formatter="formatDateStr">Started</th>
-                <th data-field="Total" data-align="right" data-sortable="true" data-formatter="formatPrices">Balance</th>
-                <th data-field="Paid" data-align="right" data-sortable="true" data-formatter="formatPrices">Paid</th>
+                <th data-field="Total" data-align="right" data-sortable="true" data-formatter="formatBalancePrice">Balance</th>
+                <th data-field="Paid" data-align="right" data-sortable="true" data-formatter="formatBalancePrice">Paid</th>
             </tr>
         </thead>
     </table>
@@ -83,7 +76,7 @@
         Earning Events
         <a href="/earnings?as_csv=1" id="downloadearnings" class="btn btn-primary">CSV</a>
     </h5>
-    <table class="bootstrap-table-init table"
+    <table class="rbm-table-init table"
            data-url="/earnings"
            data-response-handler="formatEarningeventsResponse"
            data-filter-control="true"
@@ -92,12 +85,8 @@
            data-sort-name="Date"
            data-cache="false"
            data-show-columns="true"
-           data-show-toggle="true"
            data-show-refresh="true"
-           data-icons-prefix="fa"
-           data-icons="icons"
            data-detail-view="true"
-           data-show-pagination-switch="true"
            data-pagination="true"
            data-page-list="[10, 25, 50, 100, all]"
            data-side-pagination="server"
@@ -107,7 +96,7 @@
                 <th data-field="Date" data-align="right" data-sortable="true" data-formatter="formatDateStr">Date</th>
                 <th data-field="PoolName" data-sortable="true" data-filter-control="select">PoolName</th>
                 <th data-field="Currency" data-sortable="true" data-filter-control="select">Currency</th>
-                <th data-field="Value" data-align="right" data-sortable="true" data-formatter="formatPrices">Earned</th>
+                <th data-field="Value" data-align="right" data-sortable="true" data-formatter="formatBalancePrice">Earned</th>
                 <th data-field="Value_BTC" data-align="right" data-sortable="true" data-formatter="formatPricesBTC">Earned in BTC</th>
             </tr>
         </thead>
@@ -117,14 +106,9 @@
 <!-- End of page scripts -->
 <script type="text/javascript">
 
-$(function() {
-    $("table.table").on('load-success.bs.table', function (e, data) {
-        sortFilterOptions(this);
-    });
 
-});
-
-function formatPrices(data) {
+// page-local: balance amounts render as plain toFixed(8), unlike the global formatPrices
+function formatBalancePrice(data) {
     return typeof data == "undefined" || data < 1e-10? "-" : data.toFixed(8);
 }
 
@@ -133,17 +117,7 @@ function formatDateStr(data) {
 }
 
 function formatConsolidateResponse(data) {
-    // This function can alter the returned data before building the table, formatting it in a way
-    // that is easier to display and manipulate in a table
-    $.each(data, function (index, item) {
-    });
     return data;
-}
-
-function footerStyle() {
-    return {
-        classes: 'bg-primary text-white'
-    }
 }
 
 function formatTotalFooter(data) { return "TOTAL" }
@@ -158,20 +132,14 @@ function formatEarningsFooter(data) {
 }
 
 function formatEarningsResponse(data) {
-    // This function can alter the returned data before building the table, formatting it in a way
-    // that is easier to display and manipulate in a table
-    $.each(data, function (index, item) {
+    for (const item of data) {
         item.teName = item.Name;
         item.teCurrency = item.Currency;
-    });
+    }
     return data;
 }
 
 function formatEarningeventsResponse(data) {
-    // This function can alter the returned data before building the table, formatting it in a way
-    // that is easier to display and manipulate in a table
-    $.each(data, function (index, item) {
-    });
     return data;
 }
 </script>

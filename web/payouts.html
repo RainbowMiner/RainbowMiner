@@ -3,7 +3,7 @@
   <h1 id="title" data-navbaractive="navpayouts" class="h2">Pool Payouts</h1>
 </div>
 <p>Lists all pool payouts, reported by the pool-APIs (if supported)</p>
-<table id="pools" class="bootstrap-table-init table"
+<table id="pools" class="rbm-table-init table"
   data-url="/payouts"
   data-filter-control="true"
   data-filter-show-clear="true"
@@ -11,17 +11,14 @@
   data-sort-name="Date"
   data-cache="false"
   data-show-columns="true"
-  data-show-toggle="true"
   data-show-refresh="true"
-  data-icons-prefix="fa"
-  data-icons="icons"
   data-detail-view="true"
   data-detail-formatter="detailFormatter"
 >
   <thead>
       <tr>
           <th data-field="Date" data-sortable="true" data-filter-control="input">Date</th>
-          <th data-field="Amount" data-align="right" data-sortable="true" data-formatter="formatPrices">Amount</th>
+          <th data-field="Amount" data-align="right" data-sortable="true" data-formatter="formatPayoutAmount">Amount</th>
           <th data-field="Currency" data-sortable="true" data-filter-control="select">Currency</th>
           <th data-field="Name" data-sortable="true" data-filter-control="select">Name</th>
           <th data-field="Txid" data-sortable="true">Txid</th>
@@ -31,19 +28,10 @@
 
 <!-- End of page scripts -->
 <script type="text/javascript">
-$(function() {
-    $("table.table").on('load-success.bs.table', function (e, data) {
-        sortFilterOptions(this);
-    });
-});
 
-function formatPrices(data) {
+// page-local: payout amounts are plain toFixed(10), unlike the global formatPrices
+function formatPayoutAmount(data) {
     return data.toFixed(10);
-}
-  
-function formatDate(data) {
-    return timeSince(new Date(data));
-    return new Date(parseInt(data.replace(/\D/g,''))).toLocaleString();
 }
 </script>
 <!--#include file="/parts/foot.html" -->

@@ -9,7 +9,7 @@
     </div>
 </div>
 
-<table id="watchdog" class="bootstrap-table-init table"
+<table id="watchdog" class="rbm-table-init table"
        data-url="/watchdogtimers"
        data-response-handler="formatWatchdogTimers"
        data-filter-control="true"
@@ -18,11 +18,8 @@
        data-sort-name="tMinerName"
        data-cache="false"
        data-show-columns="true"
-       data-show-toggle="true"
        data-show-refresh="true"
        data-show-footer="false"
-       data-icons-prefix="fa"
-       data-icons="icons"
        data-detail-view="true"
        data-detail-formatter="detailFormatter">
     <thead>
@@ -38,27 +35,24 @@
 
 <!-- End of page scripts -->
 <script type="text/javascript">
-$(function() {
-    $("table.table").on('load-success.bs.table', function (e, data) {
-        sortFilterOptions(this);
-    });
-
-    $("#resetwatchdog").click(function () {
-        $.ajax({
-            url: '/watchdogreset', success: function (result) {
-                document.querySelector('.modal-body').innerHTML = 'Watchdog will be reset asap';
-                document.querySelector('.modal-title').textContent = 'Watchdog reset initiated';
-                var myModal = new bootstrap.Modal(document.getElementById('myModal'));
-                myModal.show();
-            }
-        })
+document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("resetwatchdog").addEventListener("click", async (e) => {
+        e.preventDefault();
+        try {
+            await fetch('/watchdogreset');
+            document.querySelector('.modal-body').textContent = 'Watchdog will be reset asap';
+            document.querySelector('.modal-title').textContent = 'Watchdog reset initiated';
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('myModal')).show();
+        } catch (error) {
+            console.error("watchdogreset:", error);
+        }
     });
 });
 
 function formatWatchdogTimers(data) {
     // This function can alter the returned data before building the table, formatting it in a way
     // that is easier to display and manipulate in a table
-    $.each(data, function (index, item) {
+    for (const item of data) {
         item.tMinerName = item.MinerName.replace(/-.+$/, '')
         var diff = (new Date).getTime() - (new Date(item.Kicked)).getTime()
         var days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -70,7 +64,7 @@ function formatWatchdogTimers(data) {
         var seconds = Math.floor(diff / (1000));
         diff -= seconds * (1000);
         item.tKicked = (days? days+"d ":'') + (hours<10? '0':'') + hours + ':' + (mins<10? '0':'') + mins + ':' + (seconds<10? '0':'') + seconds
-    });
+    }
     return data;
 }
 </script>

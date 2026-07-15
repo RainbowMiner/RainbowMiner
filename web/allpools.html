@@ -2,7 +2,7 @@
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
   <h1 id="title" data-navbaractive="navallpools" class="h2">All Pools</h1>
 </div>
-<table id="pools" class="bootstrap-table-init table"
+<table id="pools" class="rbm-table-init table"
   data-url="/allpools"
   data-response-handler="formatPools"
   data-filter-control="true"
@@ -11,11 +11,7 @@
   data-sort-name="Name"
   data-cache="false"
   data-show-columns="true"
-  data-show-toggle="true"
   data-show-refresh="true"
-  data-icons-prefix="fa"
-  data-icons="icons"
-  data-checkbox-header="false"
   data-detail-view="true"
   data-detail-formatter="detailFormatter"
 >
@@ -39,56 +35,55 @@
 
 <!-- End of page scripts -->
 <script type="text/javascript">
-$(function() {
-    var $table = $('table#pools')
-
-    $table.on('load-success.bs.table', function (e, data) {
-        $.getJSON("/disabled", function (disabled) {
-            $.each(data, function (index, item) {
-                var algo = item.CoinSymbol? item.CoinSymbol : item.Algorithm.split(/-/)[0]
-                var name = item.Name + '_' + algo + '_Profit'
-                var disable = disabled.indexOf(name) > -1
-                if (disable && item.tEnabled) { $table.bootstrapTable('updateCell', { index: index, field: 'tEnabled', value: false, reinit: false }) }
-                else if (!disable && !item.tEnabled) { $table.bootstrapTable('updateCell', { index: index, field: 'tEnabled', value: true, reinit: false }) }
-            })
-        })
-        sortFilterOptions(this);
-    })
-
-    $table.on("change", "input[type='checkbox'].enable-switch", function (event) {
-        event.preventDefault();
-        var data = $table.bootstrapTable('getData')
-        var index = parseInt($(this).attr("id").split(/-/)[1])
-        $.getJSON("/action/togglepool?name=" + encodeURIComponent(data[index].Name) + "&algorithm=" + encodeURIComponent(data[index].Algorithm.split(/-/)[0]) + "&coinsymbol=" + encodeURIComponent(data[index].CoinSymbol), function (res) {
-            if (res.Status) {
-                $.each(data, function (index2, item) {
-                    if (item.Name == data[index].Name && item.Algorithm == data[index].Algorithm && item.CoinSymbol == data[index].CoinSymbol) {
-                        $table.bootstrapTable('updateCell', { index: index2, field: 'tEnabled', value: !res.Disabled, reinit: false })
-                    }
-                })
+document.addEventListener("DOMContentLoaded", () => {
+    RbmTables.whenReady('#pools').then((table) => {
+        table.on("dataProcessed", async () => {
+            try {
+                const response = await fetch("/disabled");
+                const disabled = await response.json();
+                for (const row of table.getRows()) {
+                    const item = row.getData();
+                    const algo = item.CoinSymbol? item.CoinSymbol : item.Algorithm.split(/-/)[0]
+                    const name = item.Name + '_' + algo + '_Profit'
+                    const disable = disabled.indexOf(name) > -1
+                    if (disable === !!item.tEnabled) row.update({ tEnabled: !disable });
+                }
+            } catch (error) {
+                console.error("disabled:", error);
             }
-        })
-    })
+        });
 
-    ConfigLoader.whenReady().then(function(cfg) {
-        const refreshTables = [
-            { selector: "table#pools", interval: 60000 }
-        ];
-
-        refreshTables.forEach(function(table) {
-            setInterval(function() {
-                if (!$(table.selector + " tr.detail-view").length) $(table.selector).bootstrapTable("refresh", { silent: true });
-            }, table.interval);
+        document.getElementById('pools').addEventListener("change", async (event) => {
+            const input = event.target.closest("input[type='checkbox'].enable-switch");
+            if (!input) return;
+            const row = RbmTables.rowFromElement(table, input);
+            if (!row) return;
+            const item = row.getData();
+            try {
+                const response = await fetch("/action/togglepool?name=" + encodeURIComponent(item.Name) + "&algorithm=" + encodeURIComponent(item.Algorithm.split(/-/)[0]) + "&coinsymbol=" + encodeURIComponent(item.CoinSymbol));
+                const res = await response.json();
+                if (res.Status) {
+                    for (const row2 of table.getRows()) {
+                        const item2 = row2.getData();
+                        if (item2.Name == item.Name && item2.Algorithm == item.Algorithm && item2.CoinSymbol == item.CoinSymbol) {
+                            row2.update({ tEnabled: !res.Disabled });
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error("togglepool:", error);
+            }
         });
     });
 
+    rbmAutoRefreshTable("table#pools", 60000);
 });
 
 function formatEnable(value, item, index) {
     return [
-                '<div class="custom-control custom-switch">',
-                '<input type="checkbox" class="custom-control-input enable-switch" id="switch-' + index + '"' + (value ? ' checked' : '') + '>',
-                '<label class="custom-control-label" for="switch-' + index + '"></label>',
+                '<div class="form-check form-switch">',
+                '<input type="checkbox" class="form-check-input enable-switch" id="switch-' + index + '"' + (value ? ' checked' : '') + '>',
+                '<label class="form-check-label" for="switch-' + index + '"></label>',
                 '</div>'
     ].join('')
 }
@@ -96,14 +91,14 @@ function formatEnable(value, item, index) {
 function formatPools(data) {
     // This function can alter the returned data before building the table, formatting it in a way
     // that is easier to display and manipulate in a table
-    $.each(data, function (index, item) {
+    for (const item of data) {
         item.tEnabled = !item.Disabled
         item.tAlgorithm = formatAlgorithm(item.Algorithm);
         item.tCoin = item.Name == "MiningRigRentals" ? item.CoinName : item.CoinSymbol;
         item.tErrorRatio = typeof item.ErrorRatio != "undefined"? parseFloat(item.ErrorRatio).toFixed(3) : "-";
         item.tWTM = typeof item.WTM != "undefined" && item.WTM? "<span class='text-success fw-bold'>&check;</span>":"";
         if (typeof item.tCoin == "undefined" || item.tCoin == null) { item.tCoin = "" }
-    });
+    }
     return data;
 }
 </script>

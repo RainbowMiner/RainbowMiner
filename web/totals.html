@@ -13,7 +13,7 @@
     </div>
 </div>
 
-<table id="pools" class="bootstrap-table-init table"
+<table id="pools" class="rbm-table-init table"
        data-url="/totals"
        data-response-handler="formatTotals"
        data-filter-control="true"
@@ -22,12 +22,8 @@
        data-sort-name="Pool"
        data-cache="false"
        data-show-columns="true"
-       data-show-toggle="true"
        data-show-refresh="true"
        data-show-footer="true"
-       data-icons-prefix="fa"
-       data-icons="icons"
-       data-footer-style="footerStyle"
        data-detail-view="true"
        data-detail-formatter="detailFormatter">
     <thead>
@@ -46,17 +42,17 @@
 <!-- End of page scripts -->
 <script type="text/javascript">
 
-$(function() {
-    $("table.table").on('load-success.bs.table', function (e, data) {
-        sortFilterOptions(this);
-    });
-
-    $('#resettotals').click(function () {
-        $('.modal-body').load('scripts/resettotals.ps1', function () {
-            $('.modal-title').text('Reset All Totals');
-            var myModal = new bootstrap.Modal(document.getElementById('myModal'));
-            myModal.show();
-        });
+document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById('resettotals').addEventListener('click', async (e) => {
+        e.preventDefault();
+        try {
+            const response = await fetch('scripts/resettotals.ps1');
+            document.querySelector('.modal-body').textContent = await response.text();
+            document.querySelector('.modal-title').textContent = 'Reset All Totals';
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('myModal')).show();
+        } catch (error) {
+            console.error("resettotals:", error);
+        }
     });
 });
 
@@ -70,12 +66,6 @@ function formatPower(data) {
 
 function formatDate(data) {
     return new Date(data).toLocaleString();
-}
-
-function footerStyle() {
-    return {
-        classes: 'bg-primary text-white'
-    }
 }
 
 function formatTotalFooter(data) { return this.field == "Pool"? "TOTAL":"&nbsp;" }
@@ -112,9 +102,9 @@ function formatTotals(data) {
     // that is easier to display and manipulate in a table
 
 
-    $.each(data, function (index, item) {
+    for (const item of data) {
         item.tPower = item.Power? parseFloat(item.Power) * 24 : null
-    });
+    }
 
     return data;
 }

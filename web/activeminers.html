@@ -2,7 +2,7 @@
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
   <h1 id="title" class="h2" data-navbaractive="navactiveminers">Active Miners <span id="wtmbuttons"></span></h1>
 </div>
-<table id="miners" class="bootstrap-table-init table"
+<table id="miners" class="rbm-table-init table"
   data-url="/activeminers"
   data-response-handler="formatActiveMiners"
   data-filter-control="true"
@@ -11,10 +11,7 @@
   data-sort-name="Profit"
   data-cache="false"
   data-show-columns="true"
-  data-show-toggle="true"
   data-show-refresh="true"
-  data-icons-prefix="fa"
-  data-icons="icons"
   data-detail-view="true"
   data-detail-formatter="detailFormatter"
 >
@@ -39,24 +36,8 @@
 <!-- End of page scripts -->
 <script type="text/javascript">
 
-$(function () {
-
-    $("table.table").on('load-success.bs.table', function (e, data) {
-        sortFilterOptions(this);
-    });
-
-    ConfigLoader.whenReady().then(function(cfg) {
-        const refreshTables = [
-            { selector: "table#miners", interval: 10000 }
-        ];
-
-        refreshTables.forEach(function(table) {
-            setInterval(function() {
-                if (!$(table.selector + " tr.detail-view").length) $(table.selector).bootstrapTable("refresh", { silent: true });
-            }, table.interval);
-        });
-    });
-
+document.addEventListener("DOMContentLoaded", () => {
+    rbmAutoRefreshTable("table#miners", 10000);
 });
 
 function formatBTCEff(data) {
@@ -68,13 +49,9 @@ function formatBTCEff(data) {
 function formatName(value, item, index) {
     var Name = item.Name.split(/\-/)[0];
     if (item.ManualUri && item.ManualUri.toString() != '') {
-        Name = '<a href="' + item.ManualUri.toString() + '" target="_blank" title="Official miner page">' + Name + '</a>';
+        Name = '<a href="' + esc(item.ManualUri) + '" target="_blank" title="Official miner page">' + esc(Name) + '</a>';
     }
     return Name
-}
-
-function sleep(milliseconds) {
-    return new Promise(resolve => setTimeout(resolve, milliseconds));
 }
 
 function formatActiveMiners(data) {
@@ -85,7 +62,7 @@ function formatActiveMiners(data) {
 
     var devicemodels = new Array();
 
-    $.each(data, function (index, item) {
+    for (const item of data) {
         // Format the algorithm(s)
         item.tPrimaryAlgorithm = formatAlgorithm(item.Algorithm[0]);
         item.tSecondaryAlgorithm = formatAlgorithm(item.Algorithm[1]);
@@ -124,35 +101,40 @@ function formatActiveMiners(data) {
         } else if (cfg.OCmode == "ocp") {
             var devices = item.DeviceModel.toString().split(/\-/);
             var cnt = devices.length
-            $.each(devices, function (ix, dev) {
+            for (const dev of devices) {
                 if (dev != "CPU" && item.OCprofile[dev]) {
                     if (cnt == 1) { tOC.push(item.OCprofile[dev]); }
                     else {
                         tOC.push(dev + "=" + item.OCprofile[dev]);
                     }
                 }
-            });
+            }
         }
         if (!tOC.length) { tOC.push("-"); }
         item.tOC = tOC.join('<br />');
         if (devicemodels.indexOf(item.DeviceModel)==-1) devicemodels.push(item.DeviceModel);
-    });
+    }
 
-    $.ajax({
-        url: '/getwtmurls', success: function (result) {
-            var wtmbuttons = '';
-            devicemodels.sort(function (a, b) {
-                if (a < b) return -1;
-                if (a > b) return 1;
-                return 0;
+    (async () => {
+        try {
+            const response = await fetch('/getwtmurls');
+            const result = await response.json();
+            devicemodels.sort();
+            const container = document.getElementById('wtmbuttons');
+            container.replaceChildren();
+            for (const device of devicemodels) {
+                if (!result[device]) continue;
+                const a = document.createElement('a');
+                a.href = result[device];
+                a.target = '_blank';
+                a.className = 'btn btn-primary';
+                a.textContent = 'WTM ' + device;
+                container.append(a, ' ');
             }
-            )
-            $.each(devicemodels, function (ix,device) {
-                wtmbuttons += '<a href="' + result[device] + '" target="_blank" class="btn btn-primary">WTM ' + device + '</a> ';
-            });
-            $('#wtmbuttons').html(wtmbuttons);
+        } catch (error) {
+            console.error("getwtmurls:", error);
         }
-    });
+    })();
     return data;
 }
 </script>

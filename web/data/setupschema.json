@@ -1,0 +1,2207 @@
+{
+  "form": {
+    "id": "formConfig",
+    "hidden": [
+      {
+        "name": "savearrays[]",
+        "value": "DeviceName"
+      },
+      {
+        "name": "savearrays[]",
+        "value": "ExcludeDeviceName"
+      },
+      {
+        "name": "savearrays[]",
+        "value": "PoolName"
+      },
+      {
+        "name": "savearrays[]",
+        "value": "ExcludePoolName"
+      }
+    ],
+    "accordionId": "accordionExample"
+  },
+  "sections": [
+    {
+      "headingId": "headingOne",
+      "collapseId": "collapseOne",
+      "title": "Basic Setup",
+      "expanded": true,
+      "items": [
+        {
+          "kind": "field",
+          "key": "Wallet",
+          "id": "inputWallet",
+          "label": {
+            "html": "BTC Wallet",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "control": "text",
+          "attrs": {
+            "placeholder": "Enter your BTC wallet address"
+          }
+        },
+        {
+          "kind": "field",
+          "key": "WorkerName",
+          "id": "inputWorkerName",
+          "label": {
+            "html": "Worker Name",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "control": "text",
+          "attrs": {
+            "placeholder": "Enter your worker's name"
+          }
+        },
+        {
+          "kind": "field",
+          "key": "Region",
+          "id": "inputRegion",
+          "label": {
+            "html": "Region",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "control": "text",
+          "attrs": {
+            "placeholder": "Enter your region",
+            "autocomplete": "off"
+          }
+        },
+        {
+          "kind": "field",
+          "key": "Currency",
+          "id": "inputCurrency",
+          "label": {
+            "html": "Currencies",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "control": "text",
+          "attrs": {
+            "placeholder": "Enter all currencies to be displayed (e.g., EUR,USD,BTC)"
+          }
+        },
+        {
+          "kind": "field",
+          "key": "MiningMode",
+          "id": "inputMiningMode",
+          "label": {
+            "html": "Mining Mode",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "control": "select",
+          "attrs": {},
+          "options": [
+            {
+              "value": "legacy",
+              "label": "Legacy (all CPU and all NVIDIA/AMD are handled as one)"
+            },
+            {
+              "value": "device",
+              "label": "Device (each CPU/GPU is handled separately)"
+            },
+            {
+              "value": "combo",
+              "label": "Combo (like \"Device\", plus equal GPU types are handled as combos)"
+            }
+          ]
+        },
+        {
+          "kind": "group",
+          "classes": [
+            "is--linux"
+          ],
+          "items": [
+            {
+              "kind": "field",
+              "key": "EnableLinuxHeadless",
+              "id": "inputEnableLinuxHeadless",
+              "label": {
+                "html": "Headless Linux",
+                "class": "col-sm-2 col-form-label"
+              },
+              "rowClasses": [],
+              "colClass": "col-sm-10",
+              "control": "select",
+              "attrs": {},
+              "options": [
+                {
+                  "value": "0",
+                  "label": "Disable"
+                },
+                {
+                  "value": "1",
+                  "label": "Enable"
+                }
+              ]
+            },
+            {
+              "kind": "field",
+              "key": "LinuxMinerTerminal",
+              "id": "inputLinuxMinerTerminal",
+              "label": {
+                "html": "Prefered miner terminal",
+                "class": "col-sm-2 col-form-label"
+              },
+              "rowClasses": [],
+              "colClass": "col-sm-10",
+              "control": "select",
+              "attrs": {},
+              "options": [
+                {
+                  "value": "auto",
+                  "label": "auto"
+                },
+                {
+                  "value": "screen",
+                  "label": "screen"
+                },
+                {
+                  "value": "tmux",
+                  "label": "tmux"
+                }
+              ]
+            },
+            {
+              "kind": "field",
+              "key": "EnableMinersAsRoot",
+              "id": "inputEnableMinersAsRoot",
+              "label": {
+                "html": "Miners as Root",
+                "class": "col-sm-2 col-form-label"
+              },
+              "rowClasses": [],
+              "colClass": "col-sm-10",
+              "control": "select",
+              "attrs": {},
+              "options": [
+                {
+                  "value": "0",
+                  "label": "Disable"
+                },
+                {
+                  "value": "1",
+                  "label": "Enable"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "headingId": "headingTwo",
+      "collapseId": "collapseTwo",
+      "title": "Devices",
+      "expanded": false,
+      "items": [
+        {
+          "kind": "dynamic",
+          "target": "devices",
+          "rowClasses": [],
+          "label": null,
+          "colClass": "col-sm-10"
+        },
+        {
+          "kind": "dynamic",
+          "target": "excludedevices",
+          "rowClasses": [],
+          "label": null,
+          "colClass": "col-sm-10"
+        },
+        {
+          "kind": "field",
+          "key": "CPUMiningThreads",
+          "id": "inputCPUMiningThreads",
+          "label": {
+            "html": "CPU Mining Threads",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [
+            "is--cpu"
+          ],
+          "colClass": "col-sm-10",
+          "control": "number",
+          "attrs": {
+            "min": "1",
+            "max": "255",
+            "step": "1",
+            "placeholder": "Enter number of CPU threads for mining on CPU"
+          }
+        },
+        {
+          "kind": "field",
+          "key": "CPUMiningAffinity",
+          "id": "inputCPUMiningAffinity",
+          "label": {
+            "html": "CPU Mining Affinity",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [
+            "is--cpu"
+          ],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "Enter the CPU mining affinity as a hex string starting with 0x... or leave empty for automatic affinity",
+            "id": "inputCPUMiningAffinityHelp"
+          },
+          "control": "text",
+          "attrs": {}
+        }
+      ]
+    },
+    {
+      "headingId": "headingThree",
+      "collapseId": "collapseThree",
+      "title": "Pools, Miners and Algorithms",
+      "expanded": false,
+      "items": [
+        {
+          "kind": "dynamic",
+          "target": "pools",
+          "rowClasses": [],
+          "label": null,
+          "colClass": "col-sm-10"
+        },
+        {
+          "kind": "dynamic",
+          "target": "excludepools",
+          "rowClasses": [],
+          "label": null,
+          "colClass": "col-sm-10"
+        },
+        {
+          "kind": "field",
+          "key": "Algorithm",
+          "id": "inputAlgorithm",
+          "label": {
+            "html": "Algorithm",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "control": "text",
+          "attrs": {
+            "placeholder": "Enter the algorithm you want to mine (leave empty for all)"
+          }
+        },
+        {
+          "kind": "field",
+          "key": "ExcludeAlgorithm",
+          "id": "inputExcludeAlgorithm",
+          "label": {
+            "html": "Exclude Algorithm",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "control": "text",
+          "attrs": {
+            "placeholder": "Enter the algorithm you do not want to exclude"
+          }
+        },
+        {
+          "kind": "field",
+          "key": "EnableAlgorithmVariants",
+          "id": "inputEnableAlgorithmVariants",
+          "label": {
+            "html": "Enable automatic Algo-Variants",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "Enable automatic use of algorithm variants (e.g., if you exclude/select Ethash, all variants like Ethash2g, EthasLowMemory, ... will be excluded/selected too)",
+            "id": "inputEnableAlgorithmVariantsHelp"
+          },
+          "control": "select",
+          "attrs": {},
+          "options": [
+            {
+              "value": "0",
+              "label": "Disable"
+            },
+            {
+              "value": "1",
+              "label": "Enable"
+            }
+          ]
+        },
+        {
+          "kind": "field",
+          "key": "DisableUnprofitableAlgolist",
+          "id": "inputDisableUnprofitableAlgolist",
+          "label": {
+            "html": "Disable the built-in list of unprofitable algorithms",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "RainbowMiner uses an internally updated list of algorithms that are unprofitable or currently not working. The list can be disabled with this setting.",
+            "id": "inputDisableUnprofitableAlgolistHelp"
+          },
+          "control": "select",
+          "attrs": {},
+          "options": [
+            {
+              "value": "0",
+              "label": "Disable"
+            },
+            {
+              "value": "1",
+              "label": "Enable"
+            }
+          ]
+        },
+        {
+          "kind": "field",
+          "key": "DisableUnprofitableCpuAlgolist",
+          "id": "inputDisableUnprofitableCpuAlgolist",
+          "label": {
+            "html": "Disable the built-in list of unprofitable CPU algorithms",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "RainbowMiner uses an internally updated list of CPU algorithms that are unprofitable or currently not working. The list can be disabled with this setting.",
+            "id": "inputDisableUnprofitableCpuAlgolistHelp"
+          },
+          "control": "select",
+          "attrs": {},
+          "options": [
+            {
+              "value": "0",
+              "label": "Disable"
+            },
+            {
+              "value": "1",
+              "label": "Enable"
+            }
+          ]
+        },
+        {
+          "kind": "field",
+          "key": "EnableNeverprofitableAlgos",
+          "id": "inputEnableNeverprofitableAlgos",
+          "label": {
+            "html": "Enable never profitable algorithms",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "Enable never profitable algorithms (e.g. BMW512 for CPUs). This setting overrides DisableUnprofitableCpuAlgoslist.",
+            "id": "inputEnableNeverprofitableAlgosHelp"
+          },
+          "control": "select",
+          "attrs": {},
+          "options": [
+            {
+              "value": "0",
+              "label": "Disable"
+            },
+            {
+              "value": "1",
+              "label": "Enable"
+            }
+          ]
+        },
+        {
+          "kind": "field",
+          "key": "MinerName",
+          "id": "inputMinerName",
+          "label": {
+            "html": "Miner Name",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "control": "text",
+          "attrs": {
+            "placeholder": "Enter the miners you want to use (leave empty for all)"
+          }
+        },
+        {
+          "kind": "field",
+          "key": "ExcludeMinerName",
+          "id": "inputExcludeMinerName",
+          "label": {
+            "html": "Exclude Miner Name",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "control": "text",
+          "attrs": {
+            "placeholder": "Enter the miners you do want to exclude"
+          }
+        },
+        {
+          "kind": "field",
+          "key": "DisableDualMining",
+          "id": "inputDisableDualMining",
+          "label": {
+            "html": "Disable Dual Mining",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "control": "select",
+          "attrs": {},
+          "options": [
+            {
+              "value": "0",
+              "label": "Disable"
+            },
+            {
+              "value": "1",
+              "label": "Enable"
+            }
+          ]
+        },
+        {
+          "kind": "field",
+          "key": "EnableDualMiningDuringRentals",
+          "id": "inputEnableDualMiningDuringRentals",
+          "label": {
+            "html": "Dual Mining During Rental",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "control": "select",
+          "attrs": {},
+          "options": [
+            {
+              "value": "0",
+              "label": "Disable"
+            },
+            {
+              "value": "1",
+              "label": "Enable"
+            }
+          ]
+        },
+        {
+          "kind": "field",
+          "key": "DisableZeroWattMiners",
+          "id": "inputDisableZeroWattMiners",
+          "label": {
+            "html": "Disable 0-Watt Miners",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "control": "select",
+          "attrs": {},
+          "options": [
+            {
+              "value": "0",
+              "label": "Disable"
+            },
+            {
+              "value": "1",
+              "label": "Enable"
+            }
+          ]
+        },
+        {
+          "kind": "field",
+          "key": "ExcludeMinersWithFee",
+          "id": "inputExcludeMinersWithFee",
+          "label": {
+            "html": "Exclude Miners with Fee",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "control": "select",
+          "attrs": {},
+          "options": [
+            {
+              "value": "0",
+              "label": "Disable"
+            },
+            {
+              "value": "1",
+              "label": "Enable"
+            }
+          ]
+        },
+        {
+          "kind": "field",
+          "key": "EnableCheckMiningConflict",
+          "id": "inputEnableCheckMiningConflict",
+          "label": {
+            "html": "Check CPU/GPU Conflicts",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "control": "select",
+          "attrs": {},
+          "options": [
+            {
+              "value": "0",
+              "label": "Disable"
+            },
+            {
+              "value": "1",
+              "label": "Enable"
+            }
+          ]
+        },
+        {
+          "kind": "field",
+          "key": "EnableEthashZombieMode",
+          "id": "inputEnableEthashZombieMode",
+          "label": {
+            "html": "Enable Ethash Zombie Mode",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "control": "select",
+          "attrs": {},
+          "options": [
+            {
+              "value": "0",
+              "label": "Disable"
+            },
+            {
+              "value": "1",
+              "label": "Enable"
+            }
+          ]
+        },
+        {
+          "kind": "field",
+          "key": "EnableMinersToSaveDAG",
+          "id": "inputEnableMinersToSaveDAG",
+          "label": {
+            "html": "Allow Miners to Save DAGs to Disk",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "control": "select",
+          "attrs": {},
+          "options": [
+            {
+              "value": "0",
+              "label": "Disallow"
+            },
+            {
+              "value": "1",
+              "label": "Allow"
+            }
+          ]
+        },
+        {
+          "kind": "field",
+          "key": "EnableRandomX1GBPages",
+          "id": "inputEnableRandomX1GBPages",
+          "label": {
+            "html": "Allow miners to enable 1GB Pages for RandomX",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "control": "select",
+          "attrs": {},
+          "options": [
+            {
+              "value": "0",
+              "label": "Disallow"
+            },
+            {
+              "value": "1",
+              "label": "Allow"
+            }
+          ]
+        },
+        {
+          "kind": "group",
+          "classes": [
+            "is--linux"
+          ],
+          "items": [
+            {
+              "kind": "field",
+              "key": "EnableLinuxMinerNiceness",
+              "id": "inputEnableLinuxMinerNiceness",
+              "label": {
+                "html": "Enable nice for miners",
+                "class": "col-sm-2 col-form-label"
+              },
+              "rowClasses": [],
+              "colClass": "col-sm-10",
+              "control": "select",
+              "attrs": {},
+              "options": [
+                {
+                  "value": "0",
+                  "label": "Disable"
+                },
+                {
+                  "value": "1",
+                  "label": "Enable"
+                }
+              ]
+            },
+            {
+              "kind": "field",
+              "key": "LinuxMinerNiceness",
+              "id": "inputLinuxMinerNiceness",
+              "label": {
+                "html": "Miner niceness",
+                "class": "col-sm-2 col-form-label"
+              },
+              "rowClasses": [],
+              "colClass": "col-sm-10",
+              "control": "number",
+              "attrs": {
+                "min": "-20",
+                "max": "19",
+                "step": "1"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "headingId": "headingFour",
+      "collapseId": "collapseFour",
+      "title": "Enable Overclocking",
+      "expanded": false,
+      "items": [
+        {
+          "kind": "field",
+          "key": "EnableOCProfiles",
+          "id": "inputEnableOCProfiles",
+          "label": {
+            "html": "Enable OC-Profiles",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "Enable custom overclocking profiles in ocprofiles.config.txt",
+            "id": "inputEnableOCProfilesHelp"
+          },
+          "control": "select",
+          "attrs": {},
+          "options": [
+            {
+              "value": "0",
+              "label": "Disable"
+            },
+            {
+              "value": "1",
+              "label": "Enable"
+            }
+          ]
+        },
+        {
+          "kind": "field",
+          "key": "EnableOCVoltage",
+          "id": "inputEnableOCVoltage",
+          "label": {
+            "html": "Enable Voltage OC",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [
+            "is--ocprofiles"
+          ],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "Enable custom overclocking voltage setting in ocprofiles.config.txt",
+            "id": "inputEnableOCVoltageHelp"
+          },
+          "control": "select",
+          "attrs": {},
+          "options": [
+            {
+              "value": "0",
+              "label": "Disable"
+            },
+            {
+              "value": "1",
+              "label": "Enable"
+            }
+          ]
+        },
+        {
+          "kind": "group",
+          "classes": [
+            "is--linux"
+          ],
+          "items": [
+            {
+              "kind": "field",
+              "key": "EnableOCLinuxSetAllPStates",
+              "id": "inputEnableOCLinuxSetAllPStates",
+              "label": {
+                "html": "Set All PStates",
+                "class": "col-sm-2 col-form-label"
+              },
+              "rowClasses": [
+                "is--ocprofiles"
+              ],
+              "colClass": "col-sm-10",
+              "help": {
+                "html": "Enable setting memory/core offsets to all PStates, instead of the highest only.",
+                "id": "inputEnableOCLinuxSetAllPStatesHelp"
+              },
+              "control": "select",
+              "attrs": {},
+              "options": [
+                {
+                  "value": "0",
+                  "label": "Disable"
+                },
+                {
+                  "value": "1",
+                  "label": "Enable"
+                }
+              ]
+            },
+            {
+              "kind": "field",
+              "key": "EnableOCLinuxForcePState",
+              "id": "inputEnableOCLinuxForcePState",
+              "label": {
+                "html": "Force PState",
+                "class": "col-sm-2 col-form-label"
+              },
+              "rowClasses": [
+                "is--ocprofiles"
+              ],
+              "colClass": "col-sm-10",
+              "help": {
+                "html": "Force all GPUs into workload P-State, even when not mining.",
+                "id": "inputEnableOCLinuxForcePStateHelp"
+              },
+              "control": "select",
+              "attrs": {},
+              "options": [
+                {
+                  "value": "0",
+                  "label": "Disable"
+                },
+                {
+                  "value": "1",
+                  "label": "Enable"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "headingId": "headingFive",
+      "collapseId": "collapseFive",
+      "title": "Set Electricity Cost Handling",
+      "expanded": false,
+      "items": [
+        {
+          "kind": "inputgroup",
+          "rowClasses": [],
+          "label": {
+            "html": "Powerprice",
+            "class": "col-sm-2 col-form-label",
+            "for": "inputPowerPrice"
+          },
+          "colClass": "col-sm-10",
+          "parts": [
+            {
+              "part": "input",
+              "control": "number",
+              "key": "PowerPrice",
+              "id": "inputPowerPrice",
+              "attrs": {
+                "min": "0",
+                "step": "0.00000001",
+                "data-number-to-fixed": "8",
+                "data-number-stepfactor": "100000000",
+                "placeholder": "Price of 1kW/h (kilowatt per hour) that your electricity supplier charges",
+                "aria-describedby": "addto-inputPowerPrice",
+                "style": "width:auto;"
+              }
+            },
+            {
+              "part": "input",
+              "control": "text",
+              "key": "PowerPriceCurrency",
+              "id": "inputPowerPriceCurrency",
+              "attrs": {
+                "maxlength": "3",
+                "placeholder": "ISO currency code (three letters) of your PowerPrice",
+                "style": "width:64px;text-transform:uppercase;"
+              }
+            },
+            {
+              "part": "text",
+              "id": "addto-inputPowerPrice",
+              "html": "per kW/h"
+            }
+          ]
+        },
+        {
+          "kind": "inputgroup",
+          "rowClasses": [],
+          "label": {
+            "html": "Power Offset Watt",
+            "class": "col-sm-2 col-form-label",
+            "for": "inputPowerOffset"
+          },
+          "colClass": "col-sm-10",
+          "parts": [
+            {
+              "part": "input",
+              "control": "number",
+              "key": "PowerOffset",
+              "id": "inputPowerOffset",
+              "attrs": {
+                "min": "0",
+                "step": "1",
+                "data-number-to-fixed": "0",
+                "data-number-stepfactor": "1",
+                "placeholder": "Power offset to allow consideration for overhead power",
+                "aria-describedby": "addto-inputPowerOffset"
+              }
+            },
+            {
+              "part": "text",
+              "id": "addto-inputPowerOffset",
+              "html": "Watt"
+            }
+          ]
+        },
+        {
+          "kind": "inputgroup",
+          "rowClasses": [],
+          "label": {
+            "html": "Power Offset Percent",
+            "class": "col-sm-2 col-form-label",
+            "for": "inputPowerOffsetPercent"
+          },
+          "colClass": "col-sm-10",
+          "parts": [
+            {
+              "part": "input",
+              "control": "number",
+              "key": "PowerOffsetPercent",
+              "id": "inputPowerOffsetPercent",
+              "attrs": {
+                "min": "0",
+                "max": "100",
+                "step": "1",
+                "data-number-to-fixed": "0",
+                "data-number-stepfactor": "1",
+                "placeholder": "Power offset to allow consideration for overhead power in percent",
+                "aria-describedby": "addto-inputPowerOffsetPercent"
+              }
+            },
+            {
+              "part": "text",
+              "id": "addto-inputPowerOffsetPercent",
+              "html": "%"
+            }
+          ]
+        },
+        {
+          "kind": "inputgroup",
+          "rowClasses": [],
+          "label": {
+            "html": "CPU max. Power/TDP",
+            "class": "col-sm-2 col-form-label",
+            "for": "inputPowerCPUtdp"
+          },
+          "colClass": "col-sm-10",
+          "parts": [
+            {
+              "part": "input",
+              "control": "number",
+              "key": "PowerCPUtdp",
+              "id": "inputPowerCPUtdp",
+              "attrs": {
+                "min": "0",
+                "step": "1",
+                "data-number-to-fixed": "0",
+                "data-number-stepfactor": "1",
+                "aria-describedby": "addto-inputPowerCPUtdp"
+              }
+            },
+            {
+              "part": "text",
+              "id": "addto-inputPowerCPUtdp",
+              "html": "Watt"
+            }
+          ],
+          "help": {
+            "html": "Enter your CPU's TDP/maximum power consumption in W\n                                (set to 0 to use internal TDP tables, set to value if that fails).",
+            "id": "inputPowerCPUtdpHelp"
+          }
+        },
+        {
+          "kind": "field",
+          "key": "OctopusTariffCode",
+          "id": "inputOctopusTariffCode",
+          "label": {
+            "html": "Octopus Tariff Code",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "If you live in the UK and are an Octopus customer, you can let RainbowMiner pull the variable energy prices.\n                                Just enter your current tariff code.<br>\n                                It's in the format E-1R-{product_code}-{region_code}, where product code is something like SILVER-2017-1, AGILE-18-02-21, ... and\n                                region code is a capital letter, range A to P.",
+            "id": "inputOctopusTariffCodeHelp"
+          },
+          "control": "text",
+          "attrs": {
+            "placeholder": "E-1R-..."
+          }
+        },
+        {
+          "kind": "field",
+          "key": "PowerPriceApi",
+          "id": "inputPowerPriceApi",
+          "label": {
+            "html": "Power Price API",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "Connect RainbowMiner to a power price API like NodeRed. The API needs to return either a plain number or a JSON formatted string",
+            "id": "inputPowerPriceApiHelp"
+          },
+          "control": "text",
+          "attrs": {
+            "placeholder": "http://.."
+          }
+        },
+        {
+          "kind": "field",
+          "key": "PowerPriceApiValue",
+          "id": "inputPowerPriceApiValue",
+          "label": {
+            "html": "Power Price API Value",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "Define where to find the power price value inside the JSON formatted string that the Power Price API returns. Use dot notation e.g. prices[1].value<br>\n                                If the API returns a plain number, leave this value empty (or set it to #)",
+            "id": "inputPowerPriceApiValueHelp"
+          },
+          "control": "text",
+          "attrs": {
+            "placeholder": ""
+          }
+        },
+        {
+          "kind": "inputgroup",
+          "rowClasses": [],
+          "label": {
+            "html": "Power Price API Interval",
+            "class": "col-sm-2 col-form-label",
+            "for": "inputPowerPriceApiInterval"
+          },
+          "colClass": "col-sm-10",
+          "parts": [
+            {
+              "part": "input",
+              "control": "number",
+              "key": "PowerPriceApiInterval",
+              "id": "inputPowerPriceApiInterval",
+              "attrs": {
+                "min": "0",
+                "step": "30",
+                "placeholder": "Enter interval in seconds"
+              }
+            },
+            {
+              "part": "text",
+              "id": null,
+              "html": "seconds"
+            }
+          ],
+          "help": {
+            "html": "Enter the call-interval for the PowerPriceApi in seconds. Set to 0 to use RainbowMiner's base interval.",
+            "id": "inputPowerPriceApiIntervalHelp"
+          }
+        },
+        {
+          "kind": "inputgroup",
+          "rowClasses": [],
+          "label": {
+            "html": "Fixed Cost per Day",
+            "class": "col-sm-2 col-form-label",
+            "for": "inputFixedCostPerDay"
+          },
+          "colClass": "col-sm-10",
+          "parts": [
+            {
+              "part": "input",
+              "control": "number",
+              "key": "FixedCostPerDay",
+              "id": "inputFixedCostPerDay",
+              "attrs": {
+                "min": "0",
+                "step": "0.00000001",
+                "data-number-to-fixed": "8",
+                "data-number-stepfactor": "100000000",
+                "placeholder": "Enter cumulative fixed costs per day",
+                "aria-describedby": "addto-inputFixedCostPerDay"
+              }
+            },
+            {
+              "part": "text",
+              "id": "addto-inputFixedCostPerDay",
+              "html": "per day"
+            }
+          ]
+        },
+        {
+          "kind": "field",
+          "key": "UsePowerPrice",
+          "id": "inputUsePowerPrice",
+          "label": {
+            "html": "Use Powerprice",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "control": "select",
+          "attrs": {},
+          "options": [
+            {
+              "value": "0",
+              "label": "Disable"
+            },
+            {
+              "value": "1",
+              "label": "Enable"
+            }
+          ]
+        },
+        {
+          "kind": "field",
+          "key": "CheckProfitability",
+          "id": "inputCheckProfitability",
+          "label": {
+            "html": "Check Profitability",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "control": "select",
+          "attrs": {},
+          "options": [
+            {
+              "value": "0",
+              "label": "Disable"
+            },
+            {
+              "value": "1",
+              "label": "Enable"
+            }
+          ]
+        },
+        {
+          "kind": "inputgroup",
+          "rowClasses": [],
+          "label": {
+            "html": "Profitability Level",
+            "class": "col-sm-2 col-form-label",
+            "for": "inputProfitabilityLevel"
+          },
+          "colClass": "col-sm-10",
+          "parts": [
+            {
+              "part": "input",
+              "control": "number",
+              "key": "ProfitabilityLevel",
+              "id": "inputProfitabilityLevel",
+              "attrs": {
+                "step": "0.00000001",
+                "data-number-to-fixed": "8",
+                "data-number-stepfactor": "100000000",
+                "placeholder": "Enter profitability level in BTC",
+                "aria-describedby": "addto-inputFixedCostPerDay"
+              }
+            },
+            {
+              "part": "text",
+              "id": "addto-inputProfitabilityLevel",
+              "html": "BTC"
+            }
+          ]
+        },
+        {
+          "kind": "field",
+          "key": "EnableMiningHeatControl",
+          "id": "inputEnableMiningHeatControl",
+          "label": {
+            "html": "Enable Heat Control",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "control": "select",
+          "attrs": {},
+          "options": [
+            {
+              "value": "0",
+              "label": "Disable"
+            },
+            {
+              "value": "1",
+              "label": "Enable"
+            }
+          ]
+        },
+        {
+          "kind": "field",
+          "key": "MiningHeatControl",
+          "id": "inputMiningHeatControl",
+          "label": {
+            "html": "Heat Control",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-6",
+          "control": "range",
+          "attrs": {
+            "min": "0",
+            "max": "5",
+            "step": "0.1"
+          },
+          "valueSpan": {
+            "id": "inputMiningHeatControlValue",
+            "text": "2"
+          },
+          "spanColClass": "col d-flex",
+          "spanColStyle": "width:110px"
+        }
+      ]
+    },
+    {
+      "headingId": "headingSix",
+      "collapseId": "collapseSix",
+      "title": "Machine's localhost API setup",
+      "expanded": false,
+      "items": [
+        {
+          "kind": "field",
+          "key": "APIport",
+          "id": "inputAPIport",
+          "label": {
+            "html": "Machine's API port",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "control": "number",
+          "attrs": {
+            "min": "80",
+            "max": "65535",
+            "step": "1",
+            "placeholder": "If needed, choose a different API port"
+          }
+        },
+        {
+          "kind": "field",
+          "key": "APIauth",
+          "id": "inputAPIauth",
+          "label": {
+            "html": "Enable Auth",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "control": "select",
+          "attrs": {},
+          "options": [
+            {
+              "value": "0",
+              "label": "Disable"
+            },
+            {
+              "value": "1",
+              "label": "Enable"
+            }
+          ]
+        },
+        {
+          "kind": "field",
+          "key": "APIuser",
+          "id": "inputAPIuser",
+          "label": {
+            "html": "Machine's Username",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [
+            "is--auth"
+          ],
+          "colClass": "col-sm-10",
+          "control": "text",
+          "attrs": {
+            "placeholder": "Enter an API username"
+          }
+        },
+        {
+          "kind": "field",
+          "key": "APIpassword",
+          "id": "inputAPIpassword",
+          "label": {
+            "html": "Machine's Password",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [
+            "is--auth"
+          ],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "Leave empty for no change or check → <input type=\"checkbox\" class=\"form-check-input\" id=\"inputResetAPIpassword\" name=\"ResetAPIpassword\"> to clear password",
+            "id": "helpAPIpassword"
+          },
+          "control": "password",
+          "attrs": {}
+        },
+        {
+          "kind": "field",
+          "key": "APImaxLoginAttemps",
+          "id": "inputAPImaxLoginAttemps",
+          "label": {
+            "html": "Max. Login Attempts",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [
+            "is--auth"
+          ],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "Maximum number of failed login attempts, until IP gets blocked (0=turn off).",
+            "id": "inputAPImaxLoginAttempsHelp"
+          },
+          "control": "number",
+          "attrs": {
+            "min": "0",
+            "step": "1",
+            "placeholder": "Maximum number of failed login attempts"
+          }
+        },
+        {
+          "kind": "field",
+          "key": "APIblockLoginAttemptsTime",
+          "id": "inputAPIblockLoginAttemptsTime",
+          "label": {
+            "html": "Block IP Time",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [
+            "is--auth"
+          ],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "Enter timespan for IP blocking after failed login attempts (e.g., 1h=one hour, default unit is seconds)."
+          },
+          "control": "text",
+          "attrs": {
+            "placeholder": "Enter block time"
+          }
+        },
+        {
+          "kind": "field",
+          "key": "APIthreads",
+          "id": "inputAPIthreads",
+          "label": {
+            "html": "Parallel API Threads",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "Enter the maximum parallel API threads (or set to 0 for automatic)."
+          },
+          "control": "number",
+          "attrs": {
+            "min": "0",
+            "max": "100",
+            "step": "1",
+            "placeholder": "Maximum number of parallel API threads (0=automatic)"
+          }
+        },
+        {
+          "kind": "field",
+          "key": "APIlockConfig",
+          "id": "inputAPIlockConfig",
+          "label": {
+            "html": "Lock Config",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "Lock config files to prevent API/localhost changes. Warning: config.txt must be edited manually to reset."
+          },
+          "control": "select",
+          "attrs": {},
+          "options": [
+            {
+              "value": "0",
+              "label": "Disable"
+            },
+            {
+              "value": "1",
+              "label": "Enable"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "headingId": "headingSeven",
+      "collapseId": "collapseSeven",
+      "title": "Client / Server setup",
+      "expanded": false,
+      "items": [
+        {
+          "kind": "field",
+          "key": "RunMode",
+          "id": "inputRunMode",
+          "label": {
+            "html": "Run Mode",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "control": "select",
+          "attrs": {},
+          "options": [
+            {
+              "value": "standalone",
+              "label": "Standalone"
+            },
+            {
+              "value": "client",
+              "label": "Machine is a Client"
+            },
+            {
+              "value": "server",
+              "label": "Machine is a Server"
+            }
+          ]
+        },
+        {
+          "kind": "group",
+          "classes": [
+            "is--client"
+          ],
+          "items": [
+            {
+              "kind": "field",
+              "key": "MinerServerName",
+              "id": "inputServerName",
+              "label": {
+                "html": "Server Name or IP",
+                "class": "col-sm-2 col-form-label"
+              },
+              "rowClasses": [],
+              "colClass": "col-sm-10",
+              "control": "text",
+              "attrs": {
+                "placeholder": "Enter the server's name or IP-address"
+              }
+            },
+            {
+              "kind": "field",
+              "key": "ServerPort",
+              "id": "inputServerPort",
+              "label": {
+                "html": "Server's API Port",
+                "class": "col-sm-2 col-form-label"
+              },
+              "rowClasses": [],
+              "colClass": "col-sm-10",
+              "control": "number",
+              "attrs": {
+                "min": "80",
+                "max": "65535",
+                "step": "1",
+                "placeholder": "Enter the server's API port"
+              }
+            },
+            {
+              "kind": "field",
+              "key": "MinerServerUser",
+              "id": "inputServerUser",
+              "label": {
+                "html": "Server's Username",
+                "class": "col-sm-2 col-form-label"
+              },
+              "rowClasses": [],
+              "colClass": "col-sm-10",
+              "control": "text",
+              "attrs": {
+                "placeholder": "If auth is enabled, enter username"
+              }
+            },
+            {
+              "kind": "field",
+              "key": "ServerPassword",
+              "id": "inputServerPassword",
+              "label": {
+                "html": "Server's Password",
+                "class": "col-sm-2 col-form-label"
+              },
+              "rowClasses": [],
+              "colClass": "col-sm-10",
+              "help": {
+                "html": "Leave empty for no change or check → <input type=\"checkbox\" class=\"form-check-input\" id=\"inputResetServerPassword\" name=\"ResetServerPassword\"> to clear password",
+                "id": "helpServerPassword"
+              },
+              "control": "password",
+              "attrs": {}
+            },
+            {
+              "kind": "field",
+              "key": "EnableServerConfig",
+              "id": "inputEnableServerConfig",
+              "label": {
+                "html": "Use Server's Config",
+                "class": "col-sm-2 col-form-label"
+              },
+              "rowClasses": [],
+              "colClass": "col-sm-10",
+              "control": "select",
+              "attrs": {},
+              "options": [
+                {
+                  "value": "0",
+                  "label": "Disable"
+                },
+                {
+                  "value": "1",
+                  "label": "Enable"
+                }
+              ]
+            },
+            {
+              "kind": "field",
+              "key": "GroupName",
+              "id": "inputGroupName",
+              "label": {
+                "html": "Client-Group Name",
+                "class": "col-sm-2 col-form-label"
+              },
+              "rowClasses": [
+                "is--serverconfig"
+              ],
+              "colClass": "col-sm-10",
+              "control": "text",
+              "attrs": {
+                "placeholder": "Group name for shared config"
+              }
+            },
+            {
+              "kind": "dynamic",
+              "target": "serverconfigname",
+              "rowClasses": [
+                "is--serverconfig"
+              ],
+              "label": null,
+              "colClass": "col-sm-10"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "headingId": "headingEight",
+      "collapseId": "collapseEight",
+      "title": "Reporting / Monitoring",
+      "expanded": false,
+      "items": [
+        {
+          "kind": "field",
+          "key": "EnableMinerStatus",
+          "id": "inputEnableMinerStatus",
+          "label": {
+            "html": "Enable Reporting",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "control": "select",
+          "attrs": {},
+          "options": [
+            {
+              "value": "0",
+              "label": "Disable"
+            },
+            {
+              "value": "1",
+              "label": "Enable"
+            }
+          ]
+        },
+        {
+          "kind": "field",
+          "key": "MinerStatusKey",
+          "id": "inputMinerStatusKey",
+          "label": {
+            "html": "Miner Status Key",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [
+            "is--reporting"
+          ],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "Enter your miner monitoring status key (or 'new' to create one).",
+            "id": "inputMinerStatusKeyHelp"
+          },
+          "control": "text",
+          "attrs": {
+            "placeholder": "Enter your miner monitoring status key (or 'new' to create one)"
+          }
+        },
+        {
+          "kind": "field",
+          "key": "ShowRemoteMachines",
+          "id": "inputShowRemoteMachines",
+          "label": {
+            "html": "Show Remote Machines",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "Controls whether this machine displays the status of other machines using the same Miner Status Key.<br>\n                                <ul>\n                                    <li>Server mode: By default, only Server machines show connected Clients.</li>\n                                    <li>Standalone/Client mode: Normally show only their own status. Enabling this option lets them display all other machines with the same Miner Status Key.</li>\n                                </ul>\n                                <strong>Warning:</strong> Enabling this on many machines can cause significant extra web traffic.",
+            "id": "inputShowRemoteMachinesHelp"
+          },
+          "control": "select",
+          "attrs": {},
+          "options": [
+            {
+              "value": "",
+              "label": "Only if is Server"
+            },
+            {
+              "value": "0",
+              "label": "Disable"
+            },
+            {
+              "value": "1",
+              "label": "Enable"
+            }
+          ]
+        },
+        {
+          "kind": "field",
+          "key": "MinerStatusEmail",
+          "id": "inputMinerStatusEmail",
+          "label": {
+            "html": "Miner Status Email",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [
+            "is--reporting"
+          ],
+          "colClass": "col-sm-10",
+          "control": "email",
+          "attrs": {
+            "placeholder": "Enter an offline notification email"
+          }
+        },
+        {
+          "kind": "field",
+          "key": "PushOverUserKey",
+          "id": "inputPushOverUserKey",
+          "label": {
+            "html": "Pushover Key",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [
+            "is--reporting"
+          ],
+          "colClass": "col-sm-10",
+          "control": "text",
+          "attrs": {
+            "placeholder": "Enter your https://pushover.net user key"
+          }
+        },
+        {
+          "kind": "inputgroup",
+          "rowClasses": [
+            "is--reporting"
+          ],
+          "label": {
+            "html": "Miner Status Max-Temp",
+            "class": "col-sm-2 col-form-label",
+            "for": "inputMinerStatusMaxTemp"
+          },
+          "colClass": "col-sm-10",
+          "parts": [
+            {
+              "part": "input",
+              "control": "number",
+              "key": "MinerStatusMaxTemp",
+              "id": "inputMinerStatusMaxTemp",
+              "attrs": {
+                "min": "0",
+                "max": "100",
+                "step": "1",
+                "placeholder": "Enter maximum allowed GPU temperature"
+              }
+            },
+            {
+              "part": "text",
+              "id": null,
+              "html": "°C"
+            }
+          ]
+        },
+        {
+          "kind": "inputgroup",
+          "rowClasses": [
+            "is--reporting"
+          ],
+          "label": {
+            "html": "Max. Crashes Per Hour",
+            "class": "col-sm-2 col-form-label",
+            "for": "inputMinerStatusMaxCrashesPerHour"
+          },
+          "colClass": "col-sm-10",
+          "parts": [
+            {
+              "part": "input",
+              "control": "number",
+              "key": "MinerStatusMaxCrashesPerHour",
+              "id": "inputMinerStatusMaxCrashesPerHour",
+              "attrs": {
+                "min": "-1",
+                "step": "1",
+                "placeholder": "Enter maximum allowed crashes per hour"
+              }
+            },
+            {
+              "part": "text",
+              "id": null,
+              "html": "cph"
+            }
+          ]
+        },
+        {
+          "kind": "inputgroup",
+          "rowClasses": [
+            "is--reporting"
+          ],
+          "label": {
+            "html": "Hard Disk Min. Free Space",
+            "class": "col-sm-2 col-form-label",
+            "for": "inputDiskMinGB"
+          },
+          "colClass": "col-sm-10",
+          "parts": [
+            {
+              "part": "input",
+              "control": "number",
+              "key": "DiskMinGB",
+              "id": "inputDiskMinGB",
+              "attrs": {
+                "min": "0",
+                "step": "0.5",
+                "placeholder": "Enter minimum free space on Hard Drive"
+              }
+            },
+            {
+              "part": "text",
+              "id": null,
+              "html": "GB"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "headingId": "headingNine",
+      "collapseId": "collapseNine",
+      "title": "Automatic Updates",
+      "expanded": false,
+      "items": [
+        {
+          "kind": "field",
+          "key": "EnableAutoUpdate",
+          "id": "inputEnableAutoUpdate",
+          "label": {
+            "html": "Enable Automatic Update",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "control": "select",
+          "attrs": {},
+          "options": [
+            {
+              "value": "0",
+              "label": "Disable"
+            },
+            {
+              "value": "1",
+              "label": "Enable"
+            }
+          ]
+        },
+        {
+          "kind": "field",
+          "key": "EnableUpdateDuringPause",
+          "id": "inputEnableUpdateDuringPause",
+          "label": {
+            "html": "Updates During Pause",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "Allow automatic updates, even if RainbowMiner is paused.",
+            "id": "inputEnableUpdateDuringPauseHelp"
+          },
+          "control": "select",
+          "attrs": {},
+          "options": [
+            {
+              "value": "0",
+              "label": "Disable"
+            },
+            {
+              "value": "1",
+              "label": "Enable"
+            }
+          ]
+        },
+        {
+          "kind": "field",
+          "key": "EnableUpdateWhenScheduled",
+          "id": "inputEnableUpdateWhenScheduled",
+          "label": {
+            "html": "Scheduled Updates",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "Restrict automatic updates to when the scheduler allows (set EnableUpdate to \"1\" in scheduler.config.txt).",
+            "id": "inputEnableUpdateWhenScheduledHelp"
+          },
+          "control": "select",
+          "attrs": {},
+          "options": [
+            {
+              "value": "0",
+              "label": "Disable"
+            },
+            {
+              "value": "1",
+              "label": "Enable"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "headingId": "headingTen",
+      "collapseId": "collapseTen",
+      "title": "Technical",
+      "expanded": false,
+      "items": [
+        {
+          "kind": "inputgroup",
+          "rowClasses": [],
+          "label": {
+            "html": "Interval",
+            "class": "col-sm-2 col-form-label",
+            "for": "inputInterval"
+          },
+          "colClass": "col-sm-10",
+          "parts": [
+            {
+              "part": "input",
+              "control": "number",
+              "key": "Interval",
+              "id": "inputInterval",
+              "attrs": {
+                "min": "20",
+                "step": "1",
+                "placeholder": "Enter interval in seconds"
+              }
+            },
+            {
+              "part": "text",
+              "id": null,
+              "html": "seconds"
+            }
+          ],
+          "help": {
+            "html": "Enter the script's loop interval in seconds."
+          }
+        },
+        {
+          "kind": "field",
+          "key": "MinimumMiningIntervals",
+          "id": "inputMinimumMiningIntervals",
+          "label": {
+            "html": "Min. Mining Intervals",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "Minimum mining intervals before the regular loop starts."
+          },
+          "control": "number",
+          "attrs": {
+            "min": "1",
+            "step": "1",
+            "placeholder": "Minimum mining intervals before the regular loop starts"
+          }
+        },
+        {
+          "kind": "inputgroup",
+          "rowClasses": [],
+          "label": {
+            "html": "Benchmark Interval",
+            "class": "col-sm-2 col-form-label",
+            "for": "inputBenchmarkInterval"
+          },
+          "colClass": "col-sm-10",
+          "parts": [
+            {
+              "part": "input",
+              "control": "number",
+              "key": "BenchmarkInterval",
+              "id": "inputBenchmarkInterval",
+              "attrs": {
+                "min": "20",
+                "max": "300",
+                "step": "1",
+                "placeholder": "Enter benchmark interval in seconds"
+              }
+            },
+            {
+              "part": "text",
+              "id": null,
+              "html": "seconds"
+            }
+          ],
+          "help": {
+            "html": "Enter the script's loop interval in seconds, used for benchmarks."
+          }
+        },
+        {
+          "kind": "field",
+          "key": "RestartRBMTimespan",
+          "id": "inputRestartRBMTimespan",
+          "label": {
+            "html": "Restart RainbowMiner after a timespan",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "Enter maximum runtime until restart in seconds (e.g., 1h = one hour, default unit is seconds)."
+          },
+          "control": "text",
+          "attrs": {
+            "placeholder": "Enter maximum runtime until restart"
+          }
+        },
+        {
+          "kind": "field",
+          "key": "RestartRBMMemory",
+          "id": "inputRestartRBMMemory",
+          "label": {
+            "html": "Restart RainbowMiner after Memory",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "Enter maximum memory usage until restart (e.g., 1.2G = 1.2 Gigabytes, default unit is bytes)."
+          },
+          "control": "text",
+          "attrs": {
+            "placeholder": "Enter memory limit"
+          }
+        },
+        {
+          "kind": "field",
+          "key": "EnableFastlaneBenchmark",
+          "id": "inputEnableFastlaneBenchmark",
+          "label": {
+            "html": "Fastlane for Benchmark",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "If enabled, skips benchmarks and downloads live values from rbminer.net. This is very inaccurate."
+          },
+          "control": "select",
+          "attrs": {},
+          "options": [
+            {
+              "value": "0",
+              "label": "Disable"
+            },
+            {
+              "value": "1",
+              "label": "Enable"
+            }
+          ]
+        },
+        {
+          "kind": "field",
+          "key": "FastlaneBenchmarkTypeCPU",
+          "id": "inputFastlaneBenchmarkTypeCPU",
+          "label": {
+            "html": "Fastlane CPU values",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [
+            "is--fastlane"
+          ],
+          "colClass": "col-sm-10",
+          "control": "select",
+          "attrs": {},
+          "options": [
+            {
+              "value": "avg",
+              "label": "Live Average"
+            },
+            {
+              "value": "min",
+              "label": "Live Minimum"
+            },
+            {
+              "value": "max",
+              "label": "Live Maximum"
+            }
+          ]
+        },
+        {
+          "kind": "field",
+          "key": "ExcludeCurrencyRateFromCoinbase",
+          "id": "inputExcludeCurrencyRateFromCoinbase",
+          "label": {
+            "html": "Exclude rate from Coinbase",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "Coinbase is the main currency provider, only if a symbol is not delivered from this API it will get called from api.rbminer.net. Sometimes there are false values due to ident symbols. Please leave as-is, since the RainbowMiner will update the defaults asap in case of false rates."
+          },
+          "control": "text",
+          "attrs": {}
+        },
+        {
+          "kind": "field",
+          "key": "SwitchingPrevention",
+          "id": "inputSwitchingPrevention",
+          "label": {
+            "html": "Switching Prevention",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "Higher values result in less switching of miners (0 to disable)."
+          },
+          "control": "number",
+          "attrs": {
+            "min": "0",
+            "max": "10",
+            "step": "1",
+            "placeholder": "Adjust switching prevention"
+          }
+        },
+        {
+          "kind": "inputgroup",
+          "rowClasses": [],
+          "label": {
+            "html": "Delay",
+            "class": "col-sm-2 col-form-label",
+            "for": "inputDelay"
+          },
+          "colClass": "col-sm-10",
+          "parts": [
+            {
+              "part": "input",
+              "control": "number",
+              "key": "Delay",
+              "id": "inputDelay",
+              "attrs": {
+                "min": "0",
+                "step": "1",
+                "placeholder": "Enter delay in seconds"
+              }
+            },
+            {
+              "part": "text",
+              "id": null,
+              "html": "seconds"
+            }
+          ],
+          "help": {
+            "html": "Set a delay before each miner starts (use &gt;0 to avoid BSOD)."
+          }
+        },
+        {
+          "kind": "inputgroup",
+          "rowClasses": [],
+          "label": {
+            "html": "Pool Switching Hysteresis",
+            "class": "col-sm-2 col-form-label",
+            "for": "inputPoolSwitchingHysteresis"
+          },
+          "colClass": "col-sm-10",
+          "parts": [
+            {
+              "part": "input",
+              "control": "number",
+              "key": "PoolSwitchingHysteresis",
+              "id": "inputPoolSwitchingHysteresis",
+              "attrs": {
+                "min": "0",
+                "max": "100",
+                "step": "0.1",
+                "placeholder": "Adjust pool-switching hysteresis"
+              }
+            },
+            {
+              "part": "text",
+              "id": null,
+              "html": "%"
+            }
+          ],
+          "help": {
+            "html": "Higher values reduce pool-to-pool hopping (in %, 0 to disable)."
+          }
+        },
+        {
+          "kind": "inputgroup",
+          "rowClasses": [],
+          "label": {
+            "html": "Miner Switching Hysteresis",
+            "class": "col-sm-2 col-form-label",
+            "for": "inputMinerSwitchingHysteresis"
+          },
+          "colClass": "col-sm-10",
+          "parts": [
+            {
+              "part": "input",
+              "control": "number",
+              "key": "MinerSwitchingHysteresis",
+              "id": "inputMinerSwitchingHysteresis",
+              "attrs": {
+                "min": "0",
+                "max": "100",
+                "step": "0.1",
+                "placeholder": "Adjust miner-switching hysteresis"
+              }
+            },
+            {
+              "part": "text",
+              "id": null,
+              "html": "%"
+            }
+          ],
+          "help": {
+            "html": "Higher values reduce miner-to-miner hopping (in %, 0 to disable)."
+          }
+        },
+        {
+          "kind": "field",
+          "key": "MaxActivityDays",
+          "id": "inputMaxActivityDays",
+          "label": {
+            "html": "Max. Activity Days",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "Length of activity history shown on localhost (in days)."
+          },
+          "control": "number",
+          "attrs": {
+            "min": "1",
+            "step": "1",
+            "placeholder": "Activity history length in days"
+          }
+        },
+        {
+          "kind": "field",
+          "key": "Proxy",
+          "id": "inputProxy",
+          "label": {
+            "html": "Proxy",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "control": "text",
+          "attrs": {
+            "placeholder": "Enter proxy address (if used)"
+          }
+        },
+        {
+          "kind": "field",
+          "key": "Watchdog",
+          "id": "inputWatchdog",
+          "label": {
+            "html": "Enable Watchdog",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "control": "select",
+          "attrs": {},
+          "options": [
+            {
+              "value": "0",
+              "label": "Disable"
+            },
+            {
+              "value": "1",
+              "label": "Enable"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "submit": {
+    "kind": "raw",
+    "html": "<div class=\"accordion-item\">\n            <div class=\"accordion-body text-center\">\n                <button type=\"submit\" class=\"btn btn-primary\">Submit</button>\n            </div>\n        </div>"
+  }
+}

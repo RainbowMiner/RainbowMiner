@@ -1,4 +1,13 @@
-(function ($) {
+/**
+ * json-editor (vanilla JS port)
+ * Based on jquery.json-editor by yuhui06
+ * Ported for RainbowMiner: no jQuery required, same public API:
+ *   var editor = new JsonEditor('#json-display', data, options);
+ *   editor.load(json); editor.get(); editor.text();
+ */
+(function() {
+    'use strict';
+
     function encodeJSONStr(str) {
         var encodeMap = {
             '"': '\\"',
@@ -37,7 +46,7 @@
             options.editable = true;
         }
 
-        this.$container = $(container);
+        this.container = typeof container === 'string' ? document.querySelector(container) : container;
         this.options = options;
 
         this.load(json);
@@ -46,30 +55,33 @@
     JsonEditor.prototype = {
         constructor: JsonEditor,
         load: function (json) {
-            this.$container.jsonViewer(encodeJSON(json), {
+            jsonViewer(this.container, encodeJSON(json), {
                 collapsed: this.options.defaultCollapsed,
                 rootCollapsable: this.options.rootCollapsable,
                 withLinks: false,
                 withQuotes: true
-            })
-            .addClass('json-editor-blackbord')
-            .attr('contenteditable', !!this.options.editable);
+            });
+            this.container.classList.add('json-editor-blackbord');
+            this.container.setAttribute('contenteditable', !!this.options.editable);
         },
         get: function () {
-            try{
-                this.$container.find('.collapsed').click();
-                return JSON.parse(this.$container.text());
+            try {
+                // expand all collapsed nodes so their placeholders are removed
+                for (var toggle of this.container.querySelectorAll('.collapsed')) {
+                    toggle.click();
+                }
+                return JSON.parse(this.container.textContent);
             } catch (ex) {
                 throw new Error(ex);
             }
         },
         text: function () {
-            try{
-                var work = this.$container.clone()
-                work.find('.json-placeholder').remove();
-                var text = work.text();
-                work.remove();
-                return text;
+            try {
+                var work = this.container.cloneNode(true);
+                for (var placeholder of work.querySelectorAll('.json-placeholder')) {
+                    placeholder.remove();
+                }
+                return work.textContent;
             } catch (ex) {
                 throw new Error(ex);
             }
@@ -77,4 +89,4 @@
     }
 
     window.JsonEditor = JsonEditor;
-})(jQuery);
+})();

@@ -3,7 +3,7 @@
   <h1 id="title" data-navbaractive="navbestpools" class="h2">Best Pools</h1>
 </div>
 <p>Shows the pool for each algorithm that was selected as the most profitable</p>
-<table id="pools" class="bootstrap-table-init table"
+<table id="pools" class="rbm-table-init table"
   data-url="/pools"
   data-response-handler="formatPools"
   data-filter-control="true"
@@ -12,10 +12,7 @@
   data-sort-name="tAlgorithm"
   data-cache="false"
   data-show-columns="true"
-  data-show-toggle="true"
   data-show-refresh="true"
-  data-icons-prefix="fa"
-  data-icons="icons"
   data-detail-view="true"
   data-detail-formatter="detailFormatter"
 >
@@ -39,35 +36,20 @@
 <!-- End of page scripts -->
 <script type="text/javascript">
 
-$(function () {
-    $("table.table").on('load-success.bs.table', function (e, data) {
-        sortFilterOptions(this);
-    });
-
-    ConfigLoader.whenReady().then(function(cfg) {
-        const refreshTables = [
-            { selector: "table#pools", interval: 10000 }
-        ];
-
-        refreshTables.forEach(function(table) {
-            setInterval(function() {
-                if (!$(table.selector + " tr.detail-view").length) $(table.selector).bootstrapTable("refresh", { silent: true });
-            }, table.interval);
-        });
-    });
-
+document.addEventListener("DOMContentLoaded", () => {
+    rbmAutoRefreshTable("table#pools", 10000);
 });
 
 function formatPools(data) {
     // This function can alter the returned data before building the table, formatting it in a way
     // that is easier to display and manipulate in a table
-    $.each(data, function (index, item) {
+    for (const item of data) {
         item.tAlgorithm = formatAlgorithm(item.Algorithm);
         item.tCoin = item.Name == "MiningRigRentals" ? item.CoinName : item.CoinSymbol;
         item.tErrorRatio = typeof item.ErrorRatio != "undefined" ? parseFloat(item.ErrorRatio).toFixed(3) : "-";
         item.tWTM = typeof item.WTM != "undefined" && item.WTM? "<span class='text-success fw-bold'>&check;</span>":"";
         if (typeof item.tCoin == "undefined" || item.tCoin == null) {item.tCoin = ""}
-    });
+    }
     return data;
 }
 </script>

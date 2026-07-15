@@ -17,20 +17,63 @@
     <div class="accordion" id="accordion"></div>
 </form>
 
-<script id="poolsetup_template" type="text/x-handlebars-template">
-    <!-- Coins Section -->
-    <div class="accordion-item" id="config--Coins">
-        <h2 class="accordion-header" id="headingCoins">
-            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCoins" aria-expanded="true" aria-controls="collapseCoins">
-                Coins
-            </button>
-        </h2>
-        <div id="collapseCoins" class="accordion-collapse collapse" aria-labelledby="headingCoins" data-bs-parent="#accordion">
-            <div class="accordion-body">
-                {{#each coins}}
-                <div class="mb-3 row">
-                    {{#if isNew}}
-                    <!-- Add New Coin -->
+
+<!-- End of page scripts -->
+<script type="text/javascript">
+
+// --- Renderers replacing the Handlebars poolsetup_template ---
+
+function renderPoolField(f) {
+    const key = esc(f.key);
+    const value = esc(f.value);
+    const text = esc(f.text);
+    if (f.type == "password") {
+        return `<div class="mb-3 row">
+                    <label for="input${key}" class="col-sm-2 col-form-label">${key}</label>
+                    <div class="col-sm-10">
+                        <input type="password" class="form-control" id="input${key}" name="${key}" value="${value}">
+                        <div class="form-text">${text}</div>
+                    </div>
+                </div>`;
+    }
+    if (f.type == "bool") {
+        return `<div class="mb-3 row">
+                    <label for="input${key}" class="col-sm-2 col-form-label">${key}</label>
+                    <div class="col-sm-10">
+                        <select class="form-select" id="input${key}" name="${key}">
+                            <option value="0"${f.value == "0" ? " selected" : ""}>Disable</option>
+                            <option value="1"${f.value == "1" ? " selected" : ""}>Enable</option>
+                        </select>
+                        <div class="form-text">${text}</div>
+                    </div>
+                </div>`;
+    }
+    return `<div class="mb-3 row">
+                <label for="input${key}" class="col-sm-2 col-form-label">${key}</label>
+                <div class="col-sm-10">
+                    <div class="input-group">
+                        <input type="${esc(f.type)}" class="form-control" id="input${key}" name="${key}" value="${value}">
+                    </div>
+                    <div class="form-text">${text}</div>
+                </div>
+            </div>`;
+}
+
+function renderPoolSpecificField(f) {
+    if (f.type == "password" || f.type == "bool") return renderPoolField(f);
+    const key = esc(f.key);
+    return `<div class="mb-3 row">
+                <label for="input${key}" class="col-sm-2 col-form-label">${key}</label>
+                <div class="col-sm-10">
+                    <input type="${esc(f.type)}" class="form-control" id="input${key}" name="${key}" value="${esc(f.value)}">
+                    <div class="form-text">${esc(f.text)}</div>
+                </div>
+            </div>`;
+}
+
+function renderPoolCoin(c) {
+    if (c.isNew) {
+        return `<div class="mb-3 row">
                     <label for="inputAddNewCoin" class="col-sm-2 col-form-label">Add New Coin</label>
                     <div class="col-sm-10">
                         <input type="text" class="form-control" id="inputAddNewCoin" name="AddNewCoin" placeholder="Symbol of new coin">
@@ -43,159 +86,78 @@
                     <div class="col-sm-10">
                         <input type="text" class="form-control" id="inputAddNewCoinParams" name="AddNewCoinParams" placeholder="Additional password parameters of new coin">
                     </div>
-                    {{else}}
-                    <!-- Existing Coin -->
-                    <label for="input{{this.coin}}" class="col-sm-2 col-form-label">{{this.coin}}</label>
-                    <div class="col-sm-10">
-                        <input type="text" class="form-control" id="input{{this.coin}}" name="{{this.coin}}" placeholder="{{this.coin}} Wallet address" value="{{this.wallet}}">
-                    </div>
-                    <label for="input{{this.coin}}-Params" class="col-sm-2 col-form-label">{{this.coin}}-Params</label>
-                    <div class="col-sm-10">
-                        <input type="text" class="form-control" id="input{{this.coin}}-Params" name="{{this.coin}}-Params" placeholder="Additional password field parameters for {{this.coin}}" value="{{this.params}}">
-                    </div>
-                    {{/if}}
+                </div>`;
+    }
+    const coin = esc(c.coin);
+    return `<div class="mb-3 row">
+                <label for="input${coin}" class="col-sm-2 col-form-label">${coin}</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="input${coin}" name="${coin}" placeholder="${coin} Wallet address" value="${esc(c.wallet)}">
                 </div>
-                {{/each}}
-            </div>
-        </div>
-    </div>
+                <label for="input${coin}-Params" class="col-sm-2 col-form-label">${coin}-Params</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="input${coin}-Params" name="${coin}-Params" placeholder="Additional password field parameters for ${coin}" value="${esc(c.params)}">
+                </div>
+            </div>`;
+}
 
-    <!-- Common Section -->
-    <div class="accordion-item" id="config--Common">
-        <h2 class="accordion-header" id="headingCommon">
-            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCommon" aria-expanded="true" aria-controls="collapseCommon">
-                Common
+function renderPoolAccordionSection(id, heading, label, bodyHtml, expanded) {
+    return `<div class="accordion-item" id="config--${id}">
+        <h2 class="accordion-header" id="heading${heading}">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${heading}" aria-expanded="true" aria-controls="collapse${heading}">
+                ${label}
             </button>
         </h2>
-        <div id="collapseCommon" class="accordion-collapse collapse" aria-labelledby="headingCommon" data-bs-parent="#accordion">
-            <div class="accordion-body">
-                {{#each common}}
-                <div class="mb-3 row">
-                    {{#if (eq this.type "password")}}
-                    <!-- Password Field -->
-                    <label for="input{{this.key}}" class="col-sm-2 col-form-label">{{this.key}}</label>
-                    <div class="col-sm-10">
-                        <input type="password" class="form-control" id="input{{this.key}}" name="{{this.key}}" value="{{this.value}}">
-                        <div class="form-text">{{this.text}}</div>
-                    </div>
-                    {{else if (eq this.type "bool")}}
-                    <!-- Boolean Dropdown -->
-                    <label for="input{{this.key}}" class="col-sm-2 col-form-label">{{this.key}}</label>
-                    <div class="col-sm-10">
-                        <select class="form-select" id="input{{this.key}}" name="{{this.key}}">
-                            <option value="0" {{#if (eq this.value "0")}} selected{{/if}}>Disable</option>
-                            <option value="1" {{#if (eq this.value "1")}} selected{{/if}}>Enable</option>
-                        </select>
-                        <div class="form-text">{{this.text}}</div>
-                    </div>
-                    {{else}}
-                    <!-- Default Input -->
-                    <label for="input{{this.key}}" class="col-sm-2 col-form-label">{{this.key}}</label>
-                    <div class="col-sm-10">
-                        <div class="input-group">
-                            <input type="{{this.type}}" class="form-control" id="input{{this.key}}" name="{{this.key}}" value="{{this.value}}">
-                        </div>
-                        <div class="form-text">{{this.text}}</div>
-                    </div>
-                    {{/if}}
-                </div>
-                {{/each}}
-            </div>
+        <div id="collapse${heading}" class="accordion-collapse collapse" aria-labelledby="heading${heading}" data-bs-parent="#accordion">
+            <div class="accordion-body">${bodyHtml}</div>
         </div>
-    </div>
+    </div>`;
+}
 
-    <!-- Specific Section -->
-    <div class="accordion-item" id="config--Specific">
-        <h2 class="accordion-header" id="headingSpecific">
-            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSpecific" aria-expanded="true" aria-controls="collapseSpecific">
-                Specific
-            </button>
-        </h2>
-        <div id="collapseSpecific" class="accordion-collapse collapse" aria-labelledby="headingSpecific" data-bs-parent="#accordion">
-            <div class="accordion-body">
-                {{#each specific}}
-                <div class="mb-3 row">
-                    {{#if (eq this.type "password")}}
-                    <!-- Password Field -->
-                    <label for="input{{this.key}}" class="col-sm-2 col-form-label">{{this.key}}</label>
-                    <div class="col-sm-10">
-                        <input type="password" class="form-control" id="input{{this.key}}" name="{{this.key}}" value="{{this.value}}">
-                        <div class="form-text">{{this.text}}</div>
-                    </div>
-                    {{else}}
-                    <!-- Default Input -->
-                    <label for="input{{this.key}}" class="col-sm-2 col-form-label">{{this.key}}</label>
-                    <div class="col-sm-10">
-                        <input type="{{this.type}}" class="form-control" id="input{{this.key}}" name="{{this.key}}" value="{{this.value}}">
-                        <div class="form-text">{{this.text}}</div>
-                    </div>
-                    {{/if}}
-                </div>
-                {{/each}}
-            </div>
-        </div>
-    </div>
-
-    <div class="accordion-item">
+function renderPoolSetup(item) {
+    return renderPoolAccordionSection("Coins", "Coins", "Coins", item.coins.map(renderPoolCoin).join(''))
+         + renderPoolAccordionSection("Common", "Common", "Common", item.common.map(renderPoolField).join(''))
+         + renderPoolAccordionSection("Specific", "Specific", "Specific", item.specific.map(renderPoolSpecificField).join(''))
+         + `<div class="accordion-item">
         <div class="accordion-body text-center">
             <button type="submit" class="btn btn-primary">Submit</button>
         </div>
-    </div>
+    </div>`;
+}
 
-</script>
+document.addEventListener("DOMContentLoaded", () => {
 
-<style>
-    .custom-control-input {
-        position: static;
-    }
-</style>
+    ConfigLoader.whenReady().then(async function(cfg) {
+        const poolSelect = document.getElementById("select--PoolName");
+        const accordion = document.getElementById("accordion");
 
-<!-- End of page scripts -->
-<script type="text/javascript">
-
-$(function() {
-
-    Handlebars.registerHelper('eq', function (a, b) {
-        if (a == b) { return true; }
-        return false;
-    });
-
-    Handlebars.registerHelper('ne', function (a, b) {
-        if (a != b) { return true; }
-        return false;
-    });
-
-
-    ConfigLoader.whenReady().then(function(cfg) {
-        const template = Handlebars.compile($("#poolsetup_template").html());
-
-        $.ajax({
-            url: '/loadconfig',
-            data: {ConfigName: "Pools", PoolName: "list"},
-            success: function (result) {
-                result.sort();
-                var add1 = '', add2 = '';
-                $.each(result, function( ix, name ) {
-                    var sel = (name.slice(-1)=='*')? true:false;
-                    if (sel) name = name.slice(0,-1);
-                    var aesym = (typeof cfg.AutoexPools[name] !== "undefined")? ' <span class="crypto-symbol bitcoin-symbol">&#x20BF;</span>':'';
-                    var opt = '<option value="'+name+'">'+name+aesym+'</option>';
-                    if (sel) add1 += opt; else add2 += opt;
-                })
-                $("#select--PoolName").append(add1 + '<option>--------</option>' + add2);
+        try {
+            const response = await fetch('/loadconfig?' + new URLSearchParams({ ConfigName: "Pools", PoolName: "list" }));
+            const result = await response.json();
+            result.sort();
+            var add1 = '', add2 = '';
+            for (let name of result) {
+                const sel = (name.slice(-1)=='*')? true:false;
+                if (sel) name = name.slice(0,-1);
+                const aesym = (typeof cfg.AutoexPools[name] !== "undefined")? ' <span class="crypto-symbol bitcoin-symbol">&#x20BF;</span>':'';
+                const opt = '<option value="'+esc(name)+'">'+esc(name)+aesym+'</option>';
+                if (sel) add1 += opt; else add2 += opt;
             }
-        });
+            poolSelect.insertAdjacentHTML("beforeend", add1 + '<option>--------</option>' + add2);
+        } catch (error) {
+            console.error("pool list:", error);
+        }
 
-        $("#select--PoolName").change(function (event) {
-            var name = $("#select--PoolName").val()
+        poolSelect.addEventListener("change", async () => {
+            var name = poolSelect.value
             if (name.slice(-1)=='-') {
-                $("#accordion").empty()
+                accordion.replaceChildren();
             }
             else {
-                $.ajax({
-                    url: '/loadconfig',
-                    data: {ConfigName: "Pools", PoolName: name},
-                    success: function (result) {
+                try {
+                    const response = await fetch('/loadconfig?' + new URLSearchParams({ ConfigName: "Pools", PoolName: name }));
+                    const result = await response.json();
+                    {
                         var limits = {
                             AutoBonusExtendByHours: {min:0, max:null, step:0.001, append:"hours"},
                             AutoBonusExtendForHours: {min:0, max:null, step:0.001, append:"hours"},
@@ -255,9 +217,9 @@ $(function() {
                                 specific: []
                             }
     
-                            $.each(common,function(key,val) {
+                            for (const [key, val] of Object.entries(common)) {
                                 var isYiimp = typeof result.Setup !== "undefined" && result.Setup != null && result.Setup.Yiimp
-                                if (typeof result.Config[key] === "undefined" || (key == "DataWindow" && isYiimp) || key == "BalancesKeepAlive") return
+                                if (typeof result.Config[key] === "undefined" || (key == "DataWindow" && isYiimp) || key == "BalancesKeepAlive") continue
 
                                 var rec = {
                                     key:key,
@@ -284,10 +246,10 @@ $(function() {
                                 }
 
                                 item.common.push(rec)
-                            })
-    
-                            $.each(result.Config,function(key,val) {
-                                if (typeof common[key] !== "undefined") return
+                            }
+
+                            for (let [key, val] of Object.entries(result.Config)) {
+                                if (typeof common[key] !== "undefined") continue
  
                                 var hasSetupField = typeof result.Setup !== "undefined" && result.Setup != null && typeof result.Setup.SetupFields !== "undefined" && typeof result.Setup.Fields[key] !== "undefined"
 
@@ -328,54 +290,35 @@ $(function() {
                                 } else {
                                     console.log("Unrelated config field found in "+result.PoolName+": "+key)
                                 }
-                            })
+                            }
                             if (item.coins.length) {
                                 item.coins.push({coin:"", wallet:"", isNew:true})
                             }
 
-                            $("#accordion").html(template(item))
+                            accordion.innerHTML = renderPoolSetup(item);
 
                             var frst = "collapseCoins"
-                            if (item.coins.length) $("#config--Coins").show()
-                            else {
-                                $("#config--Coins").hide()
+                            if (!item.coins.length) {
+                                rbmToggleDisplay("#config--Coins", false)
                                 frst = "collapseCommon"
                             }
-                            if (item.specific.length) $("#config--Specific").show()
-                            else {
-                                $("#config--Specific").hide()
+                            if (!item.specific.length) {
+                                rbmToggleDisplay("#config--Specific", false)
                             }
-                            $("#"+frst).addClass("show")
+                            document.getElementById(frst).classList.add("show")
                         }
                     }
-                })
+                } catch (error) {
+                    console.error("loadconfig:", error);
+                }
             }
         });
 
-        $("#formConfig").submit(function (event) {
+        document.getElementById("formConfig").addEventListener("submit", (event) => {
             // Stop form from submitting normally
             event.preventDefault();
-            if (cfg.IsLocked) {
-                document.querySelector('.modal-body').innerHTML = 'To be able to save, manually set parameter "APIlockConfig" to "0" in config.txt';
-                document.querySelector('.modal-title').textContent = 'Warning: config lock is enabled';
-                var myModal = new bootstrap.Modal(document.getElementById('myModal'));
-                myModal.show();
-                return false;
-            }
-            $.post("/saveconfig", $(this).serialize()).done(function (data) {
-                var mbody, mtitle;
-                $("#select--PoolName").trigger("change");
-                if (data.Success) {
-                    mbody = 'RainbowMiner will pick up the new configuration after the current round has ended.';
-                    mtitle = 'Configuration saved!';
-                } else {
-                    mbody = 'Something went wrong or the configuration is locked via APILockConfig in config.txt';
-                    mtitle = 'Configuration NOT saved!';
-                }
-                document.querySelector('.modal-body').innerHTML = mbody;
-                document.querySelector('.modal-title').textContent = mtitle;
-                var myModal = new bootstrap.Modal(document.getElementById('myModal'));
-                myModal.show();
+            rbmSubmitConfig(event.target, cfg, () => {
+                poolSelect.dispatchEvent(new Event("change"));
             });
         });
     });

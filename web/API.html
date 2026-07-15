@@ -1,4 +1,4 @@
-<html>
+﻿<html>
 <head>
     <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 </head>
@@ -268,10 +268,13 @@
 
 </fieldset>
     <script>
-    $(function () {
-        var port = $(location).attr('port')
-        $("a").each(function () { $(this).attr('href', $(this).attr('href').replace(':4000', ':' + port)) })
-        $("#res").text($("#res").text().replace(':4000', ':' + port))
+    document.addEventListener("DOMContentLoaded", () => {
+        const port = location.port;
+        for (const a of document.querySelectorAll("a")) {
+            a.setAttribute('href', a.getAttribute('href').replace(':4000', ':' + port));
+        }
+        const res = document.getElementById("res");
+        if (res) res.textContent = res.textContent.replace(':4000', ':' + port);
     })
     </script>
 </body>

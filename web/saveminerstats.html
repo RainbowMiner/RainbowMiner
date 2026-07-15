@@ -15,20 +15,20 @@
 
 <script type="text/javascript">
 
-$(function() {
-    $.get("/availminerstats").done(function (data) {
-        $.each(data, function(ix, miner) {
+document.addEventListener("DOMContentLoaded", async () => {
+    try {
+        const response = await fetch("/availminerstats");
+        const data = await response.json();
+        const sel = document.getElementById("select--MinerName");
+        for (const miner of data) {
             if (miner.Statcount > 0) {
-                $("#select--MinerName").append(
-                    $("<option>", {
-                        value: miner.Name,
-                        text: miner.Name + "(" + miner.Statcount + ")"
-                    })
-                );
+                sel.appendChild(new Option(miner.Name + "(" + miner.Statcount + ")", miner.Name));
             }
-        });
-        $("option#waiting").remove();
-    });
+        }
+        document.querySelector("option#waiting")?.remove();
+    } catch (error) {
+        console.error("availminerstats:", error);
+    }
 });
 
 </script>

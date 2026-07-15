@@ -6,7 +6,7 @@
     "Suggested" and "Last Price" in BTC per day and "Unit" / "Rig Price" in BTC per day
 </p>
 
-<table id="mrrstats" class="bootstrap-table-init table"
+<table id="mrrstats" class="rbm-table-init table"
         data-url="/mrrstats"
         data-response-handler="formatMRRStats"
         data-filter-control="true"
@@ -15,10 +15,7 @@
         data-sort-name="Title"
         data-cache="false"
         data-show-columns="true"
-        data-show-toggle="true"
         data-show-refresh="true"
-        data-icons-prefix="fa"
-        data-icons="icons"
         data-detail-view="true"
         data-detail-formatter="detailFormatter">
     <thead>
@@ -38,31 +35,17 @@
 
 <!-- End of page scripts -->
 <script type="text/javascript">
-$(function() {
-    $("table.table").on('load-success.bs.table', function (e, data) {
-        sortFilterOptions(this);
-    });
-
-    ConfigLoader.whenReady().then(function(cfg) {
-        const refreshTables = [
-            { selector: "table#mrrstats", interval: 600000 }
-        ];
-
-        refreshTables.forEach(function(table) {
-            setInterval(function() {
-                if (!$(table.selector + " tr.detail-view").length) $(table.selector).bootstrapTable("refresh", { silent: true });
-            }, table.interval);
-        });
-    });
+document.addEventListener("DOMContentLoaded", () => {
+    rbmAutoRefreshTable("table#mrrstats", 600000);
 });
 
 function formatMRRStats(data) {
     // This function can alter the returned data before building the table, formatting it in a way
     // that is easier to display and manipulate in a table
-    $.each(data, function (index, item) {
+    for (const item of data) {
         item.tHashRate = (item.HashRate) ? formatHashRate(item.HashRate) : "-";
         item.tRigs = parseInt(item.RigsRented) + parseInt(item.RigsAvail)
-    });
+    }
     return data;
 }
 </script>

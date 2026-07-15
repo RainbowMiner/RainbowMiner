@@ -1,13 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 500 300">
-<rect fill="#3A75C4" width="500" height="300"/>
-<rect fill="#CE1126" width="500" height="225"/>
-<rect fill="#FFF" width="500" height="150"/>
-<rect fill="#FFC61E" width="500" height="75"/>
-<path fill="#3D8E33" d="M0,300l250-150L0,0V300z"/>
-<circle fill="#FFF" cx="85" cy="150" r="67.5"/>
-<circle fill="#3D8E33" cx="115" cy="150" r="67.5"/>
-<path id="star" fill="#FFF" d="M100.0104,89.1996l7.3594,22.5883L88.1125,97.8394h23.775l-19.2573,13.9486L100.0104,89.1996z"/>
-<use xlink:href="#star" y="32.2083"/>
-<use xlink:href="#star" y="64.4166"/>
-<use xlink:href="#star" y="96.625"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 500 300"><path fill="#3a75c4" d="M0 0h500v300H0z"/><path fill="#ce1126" d="M0 0h500v225H0z"/><path fill="#fff" d="M0 0h500v150H0z"/><path fill="#ffc61e" d="M0 0h500v75H0z"/><path fill="#3d8e33" d="m0 300 250-150L0 0z"/><circle cx="85" cy="150" r="67.5" fill="#fff"/><circle cx="115" cy="150" r="67.5" fill="#3d8e33"/><path id="a" fill="#fff" d="m100.01 89.2 7.36 22.588-19.258-13.949h23.776L92.63 111.788z"/><use xlink:href="#a" y="32.208"/><use xlink:href="#a" y="64.417"/><use xlink:href="#a" y="96.625"/></svg>
