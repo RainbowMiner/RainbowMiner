@@ -427,6 +427,9 @@ function rbmToggleDisplay(selector, visible) {
 
 // Escape a string for safe insertion into HTML
 function esc(s) {
+    // null/undefined render as empty string (Handlebars semantics - a coin
+    // without a -Params config entry must not show a literal "undefined")
+    if (s === null || s === undefined) return "";
     return String(s).replace(/[&<>"']/g, function (c) {
         return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
