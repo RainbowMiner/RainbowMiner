@@ -85,6 +85,20 @@ const RbmTables = (function () {
         return (typeof name === "string" && typeof window[name] === "function") ? window[name] : null;
     }
 
+    // bootstrap-table style value comparison: numeric when both values parse
+    // as finite numbers (the API delivers many numbers as strings, e.g.
+    // Profit), string compare otherwise. Tabulator's auto-detected sorter
+    // treats numeric strings as non-comparable, which made those columns
+    // silently un-sortable.
+    function smartCompare(a, b) {
+        const na = parseFloat(a), nb = parseFloat(b);
+        if (!isNaN(na) && !isNaN(nb) && isFinite(a) && isFinite(b)) {
+            return na - nb;
+        }
+        return String(a === null || a === undefined ? "" : a)
+            .localeCompare(String(b === null || b === undefined ? "" : b));
+    }
+
     /* ------------------------------------------------------------------ */
     /* Attribute parsing                                                    */
     /* ------------------------------------------------------------------ */
@@ -280,10 +294,9 @@ const RbmTables = (function () {
                 if (Array.isArray(out)) {
                     out.sort((a, b) => {
                         const av = a[field], bv = b[field];
-                        if (av == bv) return 0;
                         if (av === undefined || av === null) return 1;
                         if (bv === undefined || bv === null) return -1;
-                        return (av > bv ? 1 : -1) * (desc ? -1 : 1);
+                        return smartCompare(av, bv) * (desc ? -1 : 1);
                     });
                 }
                 return out;
@@ -308,6 +321,8 @@ const RbmTables = (function () {
             // (API fields like Pool/CoinSymbol can be arrays, one per algorithm).
             // Remote-sourced fields are esc()'d at build time.
             columnDefaults: {
+                // numeric-aware default sorter (see smartCompare)
+                sorter: (a, b) => smartCompare(a, b),
                 // never squeeze a column below a readable width: when the
                 // columns do not fit, the table scrolls horizontally instead
                 // of ellipsizing content (the expander/select columns set
