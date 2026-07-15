@@ -1,9 +1,8 @@
-﻿// RainbowMiner setup form renderer v1.0 (Phase 5)
+﻿// RainbowMiner setup form renderer v1.0
 // Renders the setup form from /data/setupschema.json - adding a new config
 // option means adding one JSON entry instead of hand-writing form markup.
 //
-// The schema was extracted losslessly from the previous hand-written
-// setup.html and verified field-by-field against it. Item kinds:
+// Item kinds:
 //   field      - one control (input of any type / select / range) in a row
 //   inputgroup - ordered controls + unit addons inside an .input-group
 //   dynamic    - placeholder div filled at runtime (pools/devices lists)
@@ -124,7 +123,7 @@ const RbmSetup = (function () {
     }
 
     /* ----------------------------------------------------------------------
-     * Config-field rendering for the coins/pools setup pages (Phase 5).
+     * Config-field rendering for the coins/pools setup pages.
      * A "rec" describes one dynamic config field:
      *   { key, id, name, label?, help?, value, type, min?, max?, step?,
      *     append?, inputmode?, placeholder? }

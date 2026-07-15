@@ -50,7 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
         e.preventDefault();
         try {
             await fetch('/update');
-            rbmShowModal('Rainbowminer will be updated to Version '+remoteversion+'. Please be patient!', 'Update started');
+            rbmShowModal('RainbowMiner will be updated to version '+remoteversion+'. Please be patient!', 'Update started');
             rbmToggleDisplay('#updatemsg', false);
         } catch (error) {
             console.error("update:", error);

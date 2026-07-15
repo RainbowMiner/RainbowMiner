@@ -343,9 +343,7 @@ pre {
     font-family: Arial, sans-serif;
 }
 
-/*
- * Tabulator integration (Phase 4B)
- */
+/* Tabulator integration */
 
 .rbm-table-toolbar .btn { line-height: 1; }
 .rbm-columns-menu { min-width: 220px; max-height: 60vh; overflow-y: auto; }

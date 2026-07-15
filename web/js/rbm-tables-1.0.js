@@ -1,7 +1,6 @@
-﻿// RainbowMiner table layer v1.0 (Phase 4B)
-// Replaces bootstrap-table with Tabulator 6.x while keeping the declarative
+﻿// RainbowMiner table layer v1.0
+// Drives Tabulator 6.x from the declarative
 // <table class="rbm-table-init" data-url=...><th data-field=...> page markup.
-// One translation layer instead of 16 hand-migrated tables.
 //
 // ---------------------------------------------------------------------------
 // SCROLL MODEL - please read before changing any of the four settings below.

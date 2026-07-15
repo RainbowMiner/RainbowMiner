@@ -37,8 +37,6 @@ function setupCheckbox(id, name, value, labelHtml, checked) {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
-    // Phase 5: the form is rendered from the schema; ids/names are identical
-    // to the previous hand-written markup, so everything below is unchanged.
     try {
         const response = await fetch("/data/setupschema.json");
         RbmSetup.render(document.getElementById("formConfig"), await response.json());

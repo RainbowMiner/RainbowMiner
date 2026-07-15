@@ -84,7 +84,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const poolSelect = document.getElementById("select--PoolName");
         const accordion = document.getElementById("accordion");
 
-        // field definitions, type rules and number limits (Phase 5)
+        // field definitions, type rules and number limits
         let poolschema = null;
         try {
             const schemaResponse = await fetch('/data/setupschema.json');

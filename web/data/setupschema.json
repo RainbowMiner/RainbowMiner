@@ -307,7 +307,7 @@
           "colClass": "col-sm-10",
           "control": "text",
           "attrs": {
-            "placeholder": "Enter the algorithm you do not want to exclude"
+            "placeholder": "Enter the algorithms you want to exclude"
           }
         },
         {
@@ -321,7 +321,7 @@
           "rowClasses": [],
           "colClass": "col-sm-10",
           "help": {
-            "html": "Enable automatic use of algorithm variants (e.g., if you exclude/select Ethash, all variants like Ethash2g, EthasLowMemory, ... will be excluded/selected too)",
+            "html": "Enable automatic use of algorithm variants (e.g., if you exclude/select Ethash, all variants like Ethash2g, EthashLowMemory, ... will be excluded/selected too)",
             "id": "inputEnableAlgorithmVariantsHelp"
           },
           "control": "select",
@@ -396,13 +396,13 @@
           "key": "EnableNeverprofitableAlgos",
           "id": "inputEnableNeverprofitableAlgos",
           "label": {
-            "html": "Enable never profitable algorithms",
+            "html": "Enable never-profitable algorithms",
             "class": "col-sm-2 col-form-label"
           },
           "rowClasses": [],
           "colClass": "col-sm-10",
           "help": {
-            "html": "Enable never profitable algorithms (e.g. BMW512 for CPUs). This setting overrides DisableUnprofitableCpuAlgoslist.",
+            "html": "Enable never-profitable algorithms (e.g. BMW512 for CPUs). This setting overrides DisableUnprofitableCpuAlgoslist.",
             "id": "inputEnableNeverprofitableAlgosHelp"
           },
           "control": "select",
@@ -445,7 +445,7 @@
           "colClass": "col-sm-10",
           "control": "text",
           "attrs": {
-            "placeholder": "Enter the miners you do want to exclude"
+            "placeholder": "Enter the miners you want to exclude"
           }
         },
         {
@@ -1339,7 +1339,7 @@
           "rowClasses": [],
           "colClass": "col-sm-10",
           "help": {
-            "html": "Enter the maximum parallel API threads (or set to 0 for automatic)."
+            "html": "Enter the maximum number of parallel API threads (or set to 0 for automatic)."
           },
           "control": "number",
           "attrs": {
@@ -1730,7 +1730,7 @@
               "attrs": {
                 "min": "0",
                 "step": "0.5",
-                "placeholder": "Enter minimum free space on Hard Drive"
+                "placeholder": "Enter the minimum free space on the hard drive"
               }
             },
             {
@@ -2213,11 +2213,11 @@
       "Wallet": "Enter global wallet address (optional, will substitute string \"${{coinsymbol}}\" in pools.config.txt)",
       "Penalty": "Enter penalty in percent. This value will decrease all reported values.",
       "MinHashrate": "Enter minimum hashrate at a pool (units allowed, e.g. 12GH)",
-      "MinWorkers": "Enter minimum amount of workers at a pool (units allowed, e.g. 5k)",
-      "MaxTimeToFind": "Enter maximum average time to find a block (units allowed, e.h. 1h=one hour, default unit is s=seconds)",
-      "MinProfitPercent": "Enter allowed minimum profit for post block mining (in percent of best miner's profit)",
+      "MinWorkers": "Enter the minimum number of workers at a pool (units allowed, e.g. 5k)",
+      "MaxTimeToFind": "Enter maximum average time to find a block (units allowed, e.g. 1h=one hour, default unit is s=seconds)",
+      "MinProfitPercent": "Enter the minimum allowed profit for post-block mining (in percent of best miner's profit)",
       "EnableAutoPool": "Automatically enable \"{{coinsymbol}}\" for pools activated in pools.config.txt with EnableAutoCoin=\"1\"",
-      "PostBlockMining": "Enter timespan to force mining, after a block has been found at enabled pools (units allowed, e.h. 1h=one hour, default unit is s=seconds)",
+      "PostBlockMining": "Enter the timespan to force mining after a block has been found at enabled pools (units allowed, e.g. 1h=one hour, default unit is s=seconds)",
       "Comment": "Optionally enter a comment (e.g. name of exchange)"
     },
     "remove": {
@@ -2236,28 +2236,28 @@
       "Worker": "Enter the worker name (enter $WorkerName to use config.txt default)",
       "Penalty": "Enter penalty in percent. This value will decrease all reported values.",
       "FocusWallet": "Force mining for one or more of this pool's wallets (comma separated)",
-      "SSL": "Enable use SSL stratum connection, if available",
-      "AllowZero": "Allow mining an alogorithm, even if the pool hashrate equals 0 (not recommended, except for solo or coin mining)",
+      "SSL": "Use an SSL stratum connection, if available",
+      "AllowZero": "Allow mining an algorithm, even if the pool hashrate equals 0 (not recommended, except for solo or coin mining)",
       "EnableAutoCoin": "Automatically add currencies that are activated in coins.config.txt with EnableAutoPool=\"1\"",
-      "EnablePostBlockMining": "Enable to allow forced mining a specific currency for a timespan (defined in coins.config.txt), after a block has been found.",
+      "EnablePostBlockMining": "Enable to allow forced mining of a specific currency for a timespan (defined in coins.config.txt), after a block has been found.",
       "Algorithm": "Enter algorithms you want to mine (leave empty for all)",
-      "ExcludeAlgorithm": "Enter algorithms you do want to exclude",
-      "CoinSymbol": "Enter coins by currency-symbol, you want to mine (leave empty for all). Better alternative to \"CoinName\"",
-      "ExcludeCoinSymbol": "Enter coins by currency-symbol, you do want to exclude. Better alternative to \"ExcludeCoin\"",
+      "ExcludeAlgorithm": "Enter algorithms you want to exclude",
+      "CoinSymbol": "Enter coins by currency symbol that you want to mine (leave empty for all). Better alternative to \"CoinName\"",
+      "ExcludeCoinSymbol": "Enter coins by currency symbol that you want to exclude. Better alternative to \"ExcludeCoin\"",
       "CoinSymbolPBM": "If EnablePostBlockMining is enabled, specify which currency is taken into account for post block mining (leave empty for all)",
-      "CoinName": "Enter coins by name, you want to mine (leave empty for all). The coin's name must be spelled exactly like it is used at the corresponding pool. It applies to the pools, that transmit the coin names, only.",
-      "ExcludeCoin": "Enter coins by name, you do want to exclude. The coin's name must be spelled exactly like it is used at the corresponding pool. It applies to the pools, that transmit the coin names, only.",
+      "CoinName": "Enter coins by name that you want to mine (leave empty for all). The coin's name must be spelled exactly like it is used at the corresponding pool. It applies only to pools that transmit coin names.",
+      "ExcludeCoin": "Enter coins by name that you want to exclude. The coin's name must be spelled exactly like it is used at the corresponding pool. It applies only to pools that transmit coin names.",
       "MinerName": "Enter the miners you want to use (leave empty for all)",
-      "ExcludeMinerName": "Enter the miners you do want to exclude",
-      "MaxAllowedLuck": "If luck (= time_since_last_block / time_to_find_one_block) is greater than that number, increase the penalty up to 100% (0=allow any luck, leave empty to use value in config.txt)",
+      "ExcludeMinerName": "Enter the miners you want to exclude",
+      "MaxAllowedLuck": "If luck (= time_since_last_block / time_to_find_one_block) is greater than this value, increase the penalty up to 100% (0=allow any luck, leave empty to use value in config.txt)",
       "MaxMarginOfError": "Enter the maximum allowed fluctuation of pool prices in percent",
-      "MaxTimeSinceLastBlock": "Enter allowed maximum time since last found block (units allowed, e.g. 1h=one hour, default unit is s=seconds, leave empty to use value in config.txt)",
+      "MaxTimeSinceLastBlock": "Enter the maximum allowed time since the last found block (units allowed, e.g. 1h=one hour, default unit is s=seconds, leave empty to use value in config.txt)",
       "MaxTimeToFind": "Enter maximum average time to find a block (units allowed, e.g. 1h=one hour, default unit is s=seconds, leave empty for no pool limit)",
       "Region": "Enter the stratum server's home region (leave empty to use value in config.txt)",
       "StatAverage": "Enter which moving average is to be used for the live trendline",
       "StatAverageStable": "Enter which moving average is to be used for the stable trendline",
-      "SwitchingHysteresis": "Prevention of pool-to-pool hopping: the higher, the less switching (in %, 0 to disable, leave empty to use global PoolSwitchingHysteresis)",
-      "DataWindow": "Enter which datawindow is to be used for this pool (leave empty for default)",
+      "SwitchingHysteresis": "Prevents pool-to-pool hopping: the higher the value, the less switching (in %, 0 to disable, leave empty to use global PoolSwitchingHysteresis)",
+      "DataWindow": "Enter which data window is to be used for this pool (leave empty for default)",
       "BalancesKeepAlive": ""
     },
     "rules": [
