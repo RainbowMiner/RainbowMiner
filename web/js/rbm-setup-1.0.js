@@ -123,5 +123,73 @@ const RbmSetup = (function () {
         form.innerHTML = html;
     }
 
-    return { render: render, renderItem: renderItem };
+    /* ----------------------------------------------------------------------
+     * Config-field rendering for the coins/pools setup pages (Phase 5).
+     * A "rec" describes one dynamic config field:
+     *   { key, id, name, label?, help?, value, type, min?, max?, step?,
+     *     append?, inputmode?, placeholder? }
+     * type: text | bool | boolplus | password | number
+     * All dynamic content (labels, helps, values) is escaped here.
+     * ---------------------------------------------------------------------- */
+
+    // evaluate the schema type rules for a config key
+    function ruleType(key, rules) {
+        for (const r of rules || []) {
+            if (r.equals !== undefined) {
+                if (key === r.equals) return r.type;
+            } else if (r.match && new RegExp(r.match, r.flags || "").test(key)) {
+                return r.type;
+            }
+        }
+        return null;
+    }
+
+    function renderConfigField(rec) {
+        const label = { html: esc(rec.label !== undefined ? rec.label : rec.key), class: "col-sm-2 col-form-label" };
+        const help = (rec.help !== undefined && rec.help !== null && rec.help !== "") ? { html: esc(rec.help) } : null;
+        const value = (rec.value === undefined || rec.value === null) ? "" : String(rec.value);
+        const base = { kind: "field", id: rec.id, key: rec.name, label: label, rowClasses: [], colClass: "col-sm-10", help: help };
+
+        if (rec.type === "bool" || rec.type === "boolplus") {
+            base.control = "select";
+            base.options = [
+                { value: "0", label: "Disable" },
+                { value: "1", label: "Enable" }
+            ];
+            if (rec.type === "boolplus") base.options.push({ value: "2", label: "Enforce" });
+            for (const o of base.options) {
+                if (value == o.value) o.selected = true;
+            }
+            return renderItem(base);
+        }
+
+        const attrs = { value: value };
+        if (rec.placeholder) attrs.placeholder = rec.placeholder;
+
+        if (rec.type === "number") {
+            if (rec.min !== null && rec.min !== undefined) attrs.min = rec.min;
+            if (rec.max !== null && rec.max !== undefined) attrs.max = rec.max;
+            if (rec.step !== null && rec.step !== undefined) attrs.step = rec.step;
+            if (rec.inputmode) attrs.inputmode = rec.inputmode;
+            if (rec.append) {
+                label.for = rec.id; // inputgroup items carry no top-level id for labelHtml
+                return renderItem({
+                    kind: "inputgroup", rowClasses: [], label: label, colClass: "col-sm-10", help: help,
+                    parts: [
+                        { part: "input", control: "number", key: rec.name, id: rec.id, attrs: attrs },
+                        { part: "text", html: esc(rec.append) }
+                    ]
+                });
+            }
+            base.control = "number";
+            base.attrs = attrs;
+            return renderItem(base);
+        }
+
+        base.control = (rec.type === "password") ? "password" : "text";
+        base.attrs = attrs;
+        return renderItem(base);
+    }
+
+    return { render: render, renderItem: renderItem, renderConfigField: renderConfigField, ruleType: ruleType };
 })();

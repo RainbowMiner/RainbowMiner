@@ -19,57 +19,10 @@
 
 
 <!-- End of page scripts -->
+<script src="/js/rbm-setup-1.0.js"></script>
 <script type="text/javascript">
 
-// --- Renderers replacing the Handlebars poolsetup_template ---
-
-function renderPoolField(f) {
-    const key = esc(f.key);
-    const value = esc(f.value);
-    const text = esc(f.text);
-    if (f.type == "password") {
-        return `<div class="mb-3 row">
-                    <label for="input${key}" class="col-sm-2 col-form-label">${key}</label>
-                    <div class="col-sm-10">
-                        <input type="password" class="form-control" id="input${key}" name="${key}" value="${value}">
-                        <div class="form-text">${text}</div>
-                    </div>
-                </div>`;
-    }
-    if (f.type == "bool") {
-        return `<div class="mb-3 row">
-                    <label for="input${key}" class="col-sm-2 col-form-label">${key}</label>
-                    <div class="col-sm-10">
-                        <select class="form-select" id="input${key}" name="${key}">
-                            <option value="0"${f.value == "0" ? " selected" : ""}>Disable</option>
-                            <option value="1"${f.value == "1" ? " selected" : ""}>Enable</option>
-                        </select>
-                        <div class="form-text">${text}</div>
-                    </div>
-                </div>`;
-    }
-    return `<div class="mb-3 row">
-                <label for="input${key}" class="col-sm-2 col-form-label">${key}</label>
-                <div class="col-sm-10">
-                    <div class="input-group">
-                        <input type="${esc(f.type)}" class="form-control" id="input${key}" name="${key}" value="${value}">
-                    </div>
-                    <div class="form-text">${text}</div>
-                </div>
-            </div>`;
-}
-
-function renderPoolSpecificField(f) {
-    if (f.type == "password" || f.type == "bool") return renderPoolField(f);
-    const key = esc(f.key);
-    return `<div class="mb-3 row">
-                <label for="input${key}" class="col-sm-2 col-form-label">${key}</label>
-                <div class="col-sm-10">
-                    <input type="${esc(f.type)}" class="form-control" id="input${key}" name="${key}" value="${esc(f.value)}">
-                    <div class="form-text">${esc(f.text)}</div>
-                </div>
-            </div>`;
-}
+// --- Structural renderers (field rendering is schema-driven via RbmSetup) ---
 
 function renderPoolCoin(c) {
     if (c.isNew) {
@@ -116,8 +69,8 @@ function renderPoolAccordionSection(id, heading, label, bodyHtml, expanded) {
 
 function renderPoolSetup(item) {
     return renderPoolAccordionSection("Coins", "Coins", "Coins", item.coins.map(renderPoolCoin).join(''))
-         + renderPoolAccordionSection("Common", "Common", "Common", item.common.map(renderPoolField).join(''))
-         + renderPoolAccordionSection("Specific", "Specific", "Specific", item.specific.map(renderPoolSpecificField).join(''))
+         + renderPoolAccordionSection("Common", "Common", "Common", item.common.join(''))
+         + renderPoolAccordionSection("Specific", "Specific", "Specific", item.specific.join(''))
          + `<div class="accordion-item">
         <div class="accordion-body text-center">
             <button type="submit" class="btn btn-primary">Submit</button>
@@ -130,6 +83,34 @@ document.addEventListener("DOMContentLoaded", () => {
     ConfigLoader.whenReady().then(async function(cfg) {
         const poolSelect = document.getElementById("select--PoolName");
         const accordion = document.getElementById("accordion");
+
+        // field definitions, type rules and number limits (Phase 5)
+        let poolschema = null;
+        try {
+            const schemaResponse = await fetch('/data/setupschema.json');
+            poolschema = (await schemaResponse.json()).pools;
+        } catch (error) {
+            console.error("setupschema:", error);
+            return;
+        }
+
+        // build one field record from key/help/value using the schema rules
+        function poolFieldRec(key, help, value) {
+            const rec = { key: key, id: "input" + key, name: key, help: help, value: value, type: "text" };
+            const rtype = RbmSetup.ruleType(key, poolschema.rules);
+            if (rtype) {
+                rec.type = rtype;
+            } else if (typeof poolschema.limits[key] !== "undefined") {
+                const lim = poolschema.limits[key];
+                rec.min = lim.min;
+                rec.max = lim.max;
+                rec.step = lim.step;
+                rec.append = lim.append;
+                rec.inputmode = "decimal";
+                if (lim.min !== null || lim.max !== null || lim.step !== null) rec.type = "number";
+            }
+            return rec;
+        }
 
         try {
             const response = await fetch('/loadconfig?' + new URLSearchParams({ ConfigName: "Pools", PoolName: "list" }));
@@ -158,56 +139,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     const response = await fetch('/loadconfig?' + new URLSearchParams({ ConfigName: "Pools", PoolName: name }));
                     const result = await response.json();
                     {
-                        var limits = {
-                            AutoBonusExtendByHours: {min:0, max:null, step:0.001, append:"hours"},
-                            AutoBonusExtendForHours: {min:0, max:null, step:0.001, append:"hours"},
-                            AutoCreateMaxMinHours: {min:0, max:null, step:1, append:"hours"},
-                            AutoCreateMinCPUProfitBTC: {min:null, max:null, step:null, append:"BTC"},
-                            AutoCreateMinProfitPercent: {min:0, max:100, step:0.001, append:"%"},
-                            AutoExtendMaximumPercent: {min:0, max:100, step:0.001, append:"%"},
-                            AutoExtendTargetPercent: {min:0, max:100, step:0.001, append:"%"},
-                            AutoPriceModifierPercent: {min:-30, max:30, step:0.001, append:"%"},
-                            AutoUpdateMinPriceChangePercent: {min:0, max:100, step:0.001, append:"%"},
-                            MaxAllowedLuck: {min:0, max:null, step:0.001, append:null},
-                            MaxHours: {min:3, max:null, step:1, append:"hours"},
-                            MaxMarginOfError: {min:0, max:100, step:0.001, append:"%"},
-                            MinHours: {min:3, max:null, step:1, append:"hours"},
-                            Penalty: {min:0, max:100, step:0.001, append:"%"},
-                            PowerDrawFactor: {min:0, max:null, step:0.001, append:null},
-                            PriceBTC: {min:null, max:null, step:null, append:"BTC"},
-                            PriceFactorDecayPercent: {min:0, max:100, step:0.001, append:"%"},
-                            PriceFactor: {min:0, max:null, step:0.001, append:null},
-                            PriceFactorMin: {min:0, max:null, step:0.001, append:null},
-                            SwitchingHysteresis: {min:0, max:100, step:0.001, append:"%"}
-                        }
-                        var common = {
-                            Worker: "Enter the worker name (enter $WorkerName to use config.txt default)",
-                            Penalty: "Enter penalty in percent. This value will decrease all reported values.",
-                            FocusWallet: "Force mining for one or more of this pool's wallets (comma separated)",
-                            SSL: "Enable use SSL stratum connection, if available",
-                            AllowZero: "Allow mining an alogorithm, even if the pool hashrate equals 0 (not recommended, except for solo or coin mining)",
-                            EnableAutoCoin: "Automatically add currencies that are activated in coins.config.txt with EnableAutoPool=\"1\"",
-                            EnablePostBlockMining: "Enable to allow forced mining a specific currency for a timespan (defined in coins.config.txt), after a block has been found.",
-                            Algorithm: "Enter algorithms you want to mine (leave empty for all)",
-                            ExcludeAlgorithm: "Enter algorithms you do want to exclude",
-                            CoinSymbol: "Enter coins by currency-symbol, you want to mine (leave empty for all). Better alternative to \"CoinName\"",
-                            ExcludeCoinSymbol: "Enter coins by currency-symbol, you do want to exclude. Better alternative to \"ExcludeCoin\"",
-                            CoinSymbolPBM: "If EnablePostBlockMining is enabled, specify which currency is taken into account for post block mining (leave empty for all)",
-                            CoinName: "Enter coins by name, you want to mine (leave empty for all). The coin's name must be spelled exactly like it is used at the corresponding pool. It applies to the pools, that transmit the coin names, only.",
-                            ExcludeCoin: "Enter coins by name, you do want to exclude. The coin's name must be spelled exactly like it is used at the corresponding pool. It applies to the pools, that transmit the coin names, only.",
-                            MinerName: "Enter the miners you want to use (leave empty for all)",
-                            ExcludeMinerName: "Enter the miners you do want to exclude",
-                            MaxAllowedLuck: "If luck (= time_since_last_block / time_to_find_one_block) is greater than that number, increase the penalty up to 100% (0=allow any luck, leave empty to use value in config.txt)",
-                            MaxMarginOfError: "Enter the maximum allowed fluctuation of pool prices in percent",
-                            MaxTimeSinceLastBlock: "Enter allowed maximum time since last found block (units allowed, e.g. 1h=one hour, default unit is s=seconds, leave empty to use value in config.txt)",
-                            MaxTimeToFind: "Enter maximum average time to find a block (units allowed, e.g. 1h=one hour, default unit is s=seconds, leave empty for no pool limit)",
-                            Region: "Enter the stratum server's home region (leave empty to use value in config.txt)",
-                            StatAverage: "Enter which moving average is to be used for the live trendline",
-                            StatAverageStable: "Enter which moving average is to be used for the stable trendline",
-                            SwitchingHysteresis: "Prevention of pool-to-pool hopping: the higher, the less switching (in %, 0 to disable, leave empty to use global PoolSwitchingHysteresis)",
-                            DataWindow: "Enter which datawindow is to be used for this pool (leave empty for default)",
-                            BalancesKeepAlive: ""
-                        }
                         if (result.PoolName == name) {
                             var coins = []
                             var item = {
@@ -216,40 +147,18 @@ document.addEventListener("DOMContentLoaded", () => {
                                 common: [],
                                 specific: []
                             }
-    
-                            for (const [key, val] of Object.entries(common)) {
-                                var isYiimp = typeof result.Setup !== "undefined" && result.Setup != null && result.Setup.Yiimp
-                                if (typeof result.Config[key] === "undefined" || (key == "DataWindow" && isYiimp) || key == "BalancesKeepAlive") continue
 
-                                var rec = {
-                                    key:key,
-                                    text:val,
-                                    value:result.Config[key],
-                                    type:"text",
-                                    min:null,
-                                    max:null,
-                                    step:null,
-                                    append:null,
-                                    inputmode:null
-                                }
+                            var isYiimp = typeof result.Setup !== "undefined" && result.Setup != null && result.Setup.Yiimp
+                            for (const [key, help] of Object.entries(poolschema.fields)) {
+                                if (typeof result.Config[key] === "undefined") continue
+                                if (poolschema.exclude.always.indexOf(key) > -1) continue
+                                if (isYiimp && poolschema.exclude.yiimp.indexOf(key) > -1) continue
 
-                                if (key.match(/^Allow|Enable|Disable/)) rec.type="bool"
-                                else if (key == "SSL") rec.type="boolplus"
-                                else if (key.match(/Secret|Password/i)) rec.type="password"
-                                else if (typeof limits[key] !== "undefined") {
-                                    rec.min = limits[key].min;
-                                    rec.max = limits[key].max;
-                                    rec.step= limits[key].step;
-                                    rec.append = limits[key].append;
-                                    rec.inputmode = "decimal";
-                                    if (rec.min !== null || rec.max !== null || rec.step !== null) rec.type = "number"
-                                }
-
-                                item.common.push(rec)
+                                item.common.push(RbmSetup.renderConfigField(poolFieldRec(key, help, result.Config[key])))
                             }
 
                             for (let [key, val] of Object.entries(result.Config)) {
-                                if (typeof common[key] !== "undefined") continue
+                                if (typeof poolschema.fields[key] !== "undefined") continue
  
                                 var hasSetupField = typeof result.Setup !== "undefined" && result.Setup != null && typeof result.Setup.SetupFields !== "undefined" && typeof result.Setup.Fields[key] !== "undefined"
 
@@ -262,31 +171,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                         coins.push(key)
                                     }
                                 } else if (hasSetupField) {
-                                    var rec = {
-                                        key:key,
-                                        text:result.Setup.SetupFields[key],
-                                        value:result.Config[key],
-                                        type:"text",
-                                        min:null,
-                                        max:null,
-                                        step:null,
-                                        append:null,
-                                        inputmode:null
-                                    }
-
-                                    if (key.match(/^Allow|Enable|Disable/)) rec.type="bool"
-                                    else if (key == "SSL") rec.type="boolplus"
-                                    else if (key.match(/Secret|Password/i)) rec.type="password"
-                                    else if (typeof limits[key] !== "undefined") {
-                                        rec.min = limits[key].min;
-                                        rec.max = limits[key].max;
-                                        rec.step= limits[key].step;
-                                        rec.append = limits[key].append;
-                                        rec.inputmode = "decimal";
-                                        if (rec.min !== null || rec.max !== null || rec.step !== null) rec.type = "number"
-                                    }
-
-                                    item.specific.push(rec)
+                                    item.specific.push(RbmSetup.renderConfigField(poolFieldRec(key, result.Setup.SetupFields[key], result.Config[key])))
                                 } else {
                                     console.log("Unrelated config field found in "+result.PoolName+": "+key)
                                 }

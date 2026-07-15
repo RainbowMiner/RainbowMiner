@@ -14,37 +14,22 @@
 
 
 <!-- End of page scripts -->
+<script src="/js/rbm-setup-1.0.js"></script>
 <script type="text/javascript">
 
-// Render one form field row (replaces the Handlebars coinsetup_template fields)
+// Render one coin config field (definitions come from /data/setupschema.json)
 function renderCoinField(f) {
     const id = esc(f.coinsymbol) + '--input' + esc(f.key);
     const name = esc(f.coinsymbol) + '--' + esc(f.key);
-    if (f.type == "bool") {
-        return `<div class="mb-3 row">
-                    <label for="${id}" class="col-sm-2 col-form-label">${esc(f.key)}</label>
-                    <div class="col-sm-10">
-                        <select class="form-select" id="${id}" name="${name}">
-                            <option value="0"${f.value == "0" ? " selected" : ""}>Disable</option>
-                            <option value="1"${f.value == "1" ? " selected" : ""}>Enable</option>
-                        </select>
-                        <div class="form-text">${esc(f.text)}</div>
-                    </div>
-                </div>`;
-    }
     if (f.type == "checkbox") {
         return `<div class="form-check mb-3">
                     <input class="form-check-input" type="checkbox" id="${id}" name="${name}" value="${esc(f.value)}"${f.checked ? " checked" : ""}>
                     <label class="form-check-label" for="${id}">${esc(f.text)}</label>
                 </div>`;
     }
-    return `<div class="mb-3 row">
-                <label for="${id}" class="col-sm-2 col-form-label">${esc(f.key)}</label>
-                <div class="col-sm-10">
-                    <input type="text" class="form-control" id="${id}" name="${name}" value="${esc(f.value)}">
-                    <div class="form-text">${esc(f.text)}</div>
-                </div>
-            </div>`;
+    return RbmSetup.renderConfigField({
+        key: f.key, id: id, name: name, help: f.text, value: f.value, type: f.type
+    });
 }
 
 // Render one coin accordion item (replaces the Handlebars coinsetup_template)
@@ -73,30 +58,24 @@ document.addEventListener("DOMContentLoaded", () => {
             const accordion = document.getElementById('accordion');
             accordion.replaceChildren();
             try {
-                const response = await fetch('/loadconfig?' + new URLSearchParams({ ConfigName: "Coins" }));
+                const [schemaResponse, response] = await Promise.all([
+                    fetch('/data/setupschema.json'),
+                    fetch('/loadconfig?' + new URLSearchParams({ ConfigName: "Coins" }))
+                ]);
+                const coinschema = (await schemaResponse.json()).coins;
                 const result = await response.json();
                 {
-                    var common = {
-                        Wallet: "Enter global wallet address (optional, will substitute string \"\${{coinsymbol}}\" in pools.config.txt)",
-                        Penalty: "Enter penalty in percent. This value will decrease all reported values.",
-                        MinHashrate: "Enter minimum hashrate at a pool (units allowed, e.g. 12GH)",
-                        MinWorkers: "Enter minimum amount of workers at a pool (units allowed, e.g. 5k)",
-                        MaxTimeToFind: "Enter maximum average time to find a block (units allowed, e.h. 1h=one hour, default unit is s=seconds)",
-                        MinProfitPercent: "Enter allowed minimum profit for post block mining (in percent of best miner's profit)",
-                        EnableAutoPool: "Automatically enable \"{{coinsymbol}}\" for pools activated in pools.config.txt with EnableAutoCoin=\"1\"",
-                        PostBlockMining: "Enter timespan to force mining, after a block has been found at enabled pools (units allowed, e.h. 1h=one hour, default unit is s=seconds)",
-                        Comment: "Optionally enter a comment (e.g. name of exchange)"
-                    }
+                    const fieldType = (key) => RbmSetup.ruleType(key, coinschema.rules) || "text";
 
                     const html = [];
 
                     var item = {
                         title: "Enter a new coin",
                         coinsymbol: "Newcoin",
-                        common: [{coinsymbol:"Newcoin",key:"CoinSymbol",text:"Enter a valid coin symbol (no spaces!)",value:"",type:"text"}]
+                        common: [{coinsymbol:"Newcoin",key:coinschema.newcoin.key,text:coinschema.newcoin.help,value:"",type:"text"}]
                     }
-                    for (const [key, val] of Object.entries(common)) {
-                        item.common.push({coinsymbol:item.coinsymbol,key:key,text:val.replace(/{{coinsymbol}}/,'???'),value:"",type:key.match(/Enable|Disable/)? "bool":"text"})
+                    for (const [key, val] of Object.entries(coinschema.fields)) {
+                        item.common.push({coinsymbol:item.coinsymbol,key:key,text:val.replace(/{{coinsymbol}}/,'???'),value:"",type:fieldType(key)})
                     }
                     html.push(renderCoinItem(item));
 
@@ -106,12 +85,12 @@ document.addEventListener("DOMContentLoaded", () => {
                             coinsymbol: coinsymbol,
                             common: []
                         }
-                        for (const [key, val] of Object.entries(common)) {
+                        for (const [key, val] of Object.entries(coinschema.fields)) {
                             if (typeof data[key] !== "undefined") {
-                                citem.common.push({coinsymbol:citem.coinsymbol,key:key,text:val.replace(/{{coinsymbol}}/,citem.coinsymbol),value:data[key],type:key.match(/Enable|Disable/)? "bool":"text"})
+                                citem.common.push({coinsymbol:citem.coinsymbol,key:key,text:val.replace(/{{coinsymbol}}/,citem.coinsymbol),value:data[key],type:fieldType(key)})
                             }
                         }
-                        citem.common.push({coinsymbol:citem.coinsymbol,key:"RemoveCoin",text:"remove coin",value:"1",type:"checkbox"})
+                        citem.common.push({coinsymbol:citem.coinsymbol,key:coinschema.remove.key,text:coinschema.remove.help,value:"1",type:"checkbox"})
 
                         html.push(renderCoinItem(citem));
                     }
