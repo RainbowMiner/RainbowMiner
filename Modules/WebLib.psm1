@@ -354,7 +354,7 @@ Param(
     [Parameter(Mandatory = $False)]
         [string]$password = "",
     [Parameter(Mandatory = $False)]
-        [string]$useragent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36",
+        [string]$useragent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36",
     [Parameter(Mandatory = $False)]
         [bool]$fixbigint = $false,
     [Parameter(Mandatory = $False)]
@@ -442,6 +442,10 @@ Param(
         if (-not $headers_local.ContainsKey("Cache-Control")) {$headers_local["Cache-Control"] = "no-cache"}
     }
     if ($user) {$headers_local["Authorization"] = "Basic $([System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("$($user):$($password)")))"}
+
+    if (-not $headers_local.ContainsKey("X-RBM-Client") -and $RequestUrl -match "^https?://(?:[\w-]+\.)*rbminer\.net(?::\d+)?(?:/|$)") {
+        $headers_local["X-RBM-Client"] = "v$($Session.Version)"
+    }
 
     $ErrorMessage = ''
 
