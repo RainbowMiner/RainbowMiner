@@ -17,6 +17,7 @@ param(
 # $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pools_Data = @(
+    [PSCustomObject]@{symbol = "BTXCHAIN"; port = 8660; fee = 0.9; rpc = "btx";     user = "{wallet}";                 pass="x"}
     [PSCustomObject]@{symbol = "XCB";   port = 3118; fee = 0.9; rpc = "corecoin";   user = "{wallet}{=diff}.{worker}"; pass="x"}
     [PSCustomObject]@{symbol = "EXFER"; port = 3335; fee = 0.9; rpc = "exfer";      user = "{wallet}.{worker}";        pass="LP01"}
     [PSCustomObject]@{symbol = "FAIR";  port = 4138; fee = 0.9; rpc = "fair";       user = "{wallet}.{worker}";        pass="x"}
