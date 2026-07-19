@@ -19,14 +19,14 @@ param(
 $Pool_Request = [PSCustomObject]@{}
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://pool.kryptex.com/api/v1/rates" -tag $Name -cycletime 120 -retry 5 -retrywait 250
+    $Pool_Request = Invoke-RestMethodAsync "https://api.rbminer.net/data/kryptex.json" -tag $Name -cycletime 120 -retry 5 -retrywait 250
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
 
-if (-not $Pool_Request.crypto) {
+if (-not ($Pool_Request | Measure-Object).Count) {
     Write-Log -Level Warn "Pool API ($Name) returned nothing. "
     return
 }
@@ -36,66 +36,26 @@ if (-not $Pool_Request.crypto) {
 $Pool_Regions = @("eu","ru","sg","us")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
-$Pool_NotMineable = @("BLOCX","BTC","CLORE","DGB","DOGE","KLS","NIR","PYI","SDR","UBQ")
+$Pool_Request | Where-Object {$_.modes -contains "solo" -and ($Wallets."$($_.symbol)" -or $InfoOnly)} | ForEach-Object {
 
-$Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin $Pool_NotMineable -and ($Wallets.$_ -or $InfoOnly)} | Foreach-Object {
-    Switch($_) { 
-        "XTM" {
-            [PSCustomObject]@{symbol=$_; algo="Cuckaroo29"; rpc="xtm-c29"}
-            [PSCustomObject]@{symbol=$_; algo="RandomX"; rpc="xtm-rx"}
-            [PSCustomObject]@{symbol=$_; algo="SHA3x"; rpc="xtm-sha3x"}
-        }
-        "QUAI" {
-            [PSCustomObject]@{symbol=$_; algo="KawPow"; rpc="quai-kawpow"}
-            [PSCustomObject]@{symbol=$_; algo="Scrypt"; rpc="quai-scrypt"}
-        }
-        Default {
-            [PSCustomObject]@{symbol=$_; algo=$null; rpc=$_.ToLower()}
-        }
-    }
-} | ForEach-Object {
-    
-    if ($Pool_Coin = Get-Coin $_.symbol -Algorithm $_.algo) {
-        $Pool_Currency = $Pool_Coin.Symbol
-        $Pool_Algorithm_Norm = $Pool_Coin.Algo
-    } else {
-        Write-Log -Level Warn "$($Name): $($_.symbol) not found in CoinsDB"
-        return
-    }
+    $Pool_Rpc  = $_.rpc
 
-    $Pool_Rpc    = $_.rpc
+    $Pool_Currency = $_.symbol
+    $Pool_Algorithm_Norm = Get-Algorithm $_.algo
+
     $Pool_Wallet = "solo:$($Wallets.$Pool_Currency -replace "^solo:")"
 
-    $PoolCoin_Request = [PSCustomObject]@{}
-    $Network_Request  = [PSCustomObject]@{}
-
-    try {
-        $PoolCoin_Request = Invoke-RestMethodAsync "https://pool.kryptex.com/$($Pool_Rpc)/api/v1/pool/stats" -tag $Name -cycletime 120 -retry 5 -retrywait 250 -delay 200
-    }
-    catch {
-        Write-Log -Level Warn "Pool coin API ($Name) for $($Pool_Coin.Symbol) has failed. "
-        return
-    }
-
-    if ($PoolCoin_Request.modes -notcontains "solo") { return }
-
-    $Pool_PoolFee = [Double]$PoolCoin_Request.commission.SOLO * 100
+    $Pool_PoolFee = [Double]$_.fee_solo
 
     if (-not $InfoOnly) {
-        try {
-            $Network_Request  = Invoke-RestMethodAsync "https://pool.kryptex.com/api/v1/net/stats/$($Pool_Rpc)" -tag $Name -cycletime 120 -retry 5 -retrywait 250 -delay 200
-        }
-        catch {
-            Write-Log -Level Info "Network coin API ($Name) for $($Pool_Coin.Symbol) has failed. "
-        }
-
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -Difficulty ([decimal]($Network_Request.day | Select-Object -last 1).net_difficulty) -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -Difficulty ([decimal]$(if ($_.diff_native) {$_.diff} else {0})) -Quiet
     }
 
+    $Pool_Data = $_
 
     foreach($Pool_Region in $Pool_Regions) {
         foreach($ssl in @("","ssl_")) {
-            foreach($url in $PoolCoin_Request.servers."$($ssl)urls") {
+            foreach($url in $Pool_Data.servers."$($ssl)urls") {
                 if ($url -match "^(.+?-$($Pool_Region).+?):(\d+)$") {
                     $Pool_Host = $Matches[1]
                     $Pool_Port = $Matches[2]
@@ -104,7 +64,7 @@ $Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin $Pool_No
                     [PSCustomObject]@{
                         Algorithm     = $Pool_Algorithm_Norm
                         Algorithm0    = $Pool_Algorithm_Norm
-                        CoinName      = $Pool_Coin.Name
+                        CoinName      = $Pool_Data.coin
                         CoinSymbol    = $Pool_Currency
                         Currency      = $Pool_Currency
                         Price         = 0
