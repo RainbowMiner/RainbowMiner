@@ -26,7 +26,7 @@
     "ALEO" = [PSCustomObject]@{Algo = "zkSNARK"; Name = "Aleo"; Symbol = "ALEO"}
     "ALEX" = [PSCustomObject]@{Algo = "SHA256d"; Name = "Alexandrite"; Symbol = "ALEX"}
     "ALPH" = [PSCustomObject]@{Algo = "Blake3Alephium"; Name = "Alephium"; Symbol = "ALPH"}
-    "ALPHA" = [PSCustomObject]@{Algo = "RandomALPHA"; Name = "Unicity Coin"; Symbol = "ALPHA"}
+    "ALPHA" = [PSCustomObject]@{Algo = "Blake3an"; Name = "Unicity Coin"; Symbol = "ALPHA"}
     "ALTEX" = [PSCustomObject]@{Algo = "X11"; Name = "Altex"; Symbol = "ALTEX"}
     "ANDS" = [PSCustomObject]@{Algo = "X16r"; Name = "Anodos"; Symbol = "ANDS"}
     "ANI" = [PSCustomObject]@{Algo = "Anime"; Name = "Anime"; Symbol = "ANI"}
@@ -155,6 +155,7 @@
     "CBE" = [PSCustomObject]@{Algo = "PHI5"; Name = "Combode"; Symbol = "CBE"}
     "CBS" = [PSCustomObject]@{Algo = "NeoScrypt"; Name = "Cerberus"; Symbol = "CBS"}
     "CCX" = [PSCustomObject]@{Algo = "CryptoNightGPU"; Name = "Conceal"; Symbol = "CCX"}
+    "CDN" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Ecanada"; Symbol = "CDN"}
     "CDY" = [PSCustomObject]@{Algo = "Equihash24x5"; Name = "BitcoinCandy"; Symbol = "CDY"}
     "CFX" = [PSCustomObject]@{Algo = "Octopus"; Name = "Conflux"; Symbol = "CFX"}
     "CHAPA" = [PSCustomObject]@{Algo = "SHA256ton"; Name = "ChipiCoin"; Symbol = "CHAPA"}
@@ -810,6 +811,7 @@
     "VECO" = [PSCustomObject]@{Algo = "Yespower"; Name = "Veco"; Symbol = "VECO"}
     "VEGI" = [PSCustomObject]@{Algo = "HMQ1725"; Name = "Veggie"; Symbol = "VEGI"}
     "VEIL" = [PSCustomObject]@{Algo = "ProgPowVeil"; Name = "Veil"; Symbol = "VEIL"}
+    "VELK" = [PSCustomObject]@{Algo = "Velkarhash"; Name = "Velkar"; Symbol = "VELK"}
     "VGC" = [PSCustomObject]@{Algo = "X16rv2"; Name = "5G-CASH"; Symbol = "VGC"}
     "VIA" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Viacoin"; Symbol = "VIA"}
     "VIC" = [PSCustomObject]@{Algo = "Ethash"; Name = "Victorim"; Symbol = "VIC"}
