@@ -13,15 +13,15 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.De
 $ManualUri = "https://bitcointalk.org/index.php?topic=5190081.0"
 $Port = "349{0:d2}"
 $DevFee = 0.85
-$Version = "3.4.5"
+$Version = "3.4.6"
 $Cuda = "11.7"
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.4.5-srbminermulti/SRBMiner-Multi-3-4-5-Linux.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.4.6-srbminermulti/SRBMiner-Multi-3-4-6-Linux.tar.gz"
 } else {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.4.5-srbminermulti/SRBMiner-Multi-3-4-5-win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.4.6-srbminermulti/SRBMiner-Multi-3-4-6-win64.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -73,7 +73,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "blake3_decred"    ;              Params = ""; Fee = 1.00; MinMemGb = 2; Vendor = @("AMD","INTEL","NVIDIA"); ExcludeCompute = @("Volta")} #Blake3Decred/DCR
     #[PSCustomObject]@{MainAlgorithm = "blake3_lbrt"      ;              Params = ""; Fee = 2.00; MinMemGb = 2; Vendor = @("AMD","INTEL","NVIDIA"); ExcludeCompute = @("Volta")} #Blake3Lbrt/LBRT
     #[PSCustomObject]@{MainAlgorithm = "blocx_autolykos2" ; DAG = $true; Params = ""; Fee = 1.00;               Vendor = @("AMD","INTEL","NVIDIA"); ExcludePoolName="Nicehash"; ExcludeCompute = @("Volta")} #BlocxAutolykos2/BLOCKX
-    [PSCustomObject]@{MainAlgorithm = "btx"   ;                         Params = ""; Fee = 1.00;               Vendor = @("AMD","NVIDIA"); ExcludeCompute = @("Volta")} #Argon2Exfer
+    [PSCustomObject]@{MainAlgorithm = "btx"   ;                         Params = ""; Fee = 1.00;               Vendor = @("AMD","NVIDIA"); ExcludeCompute = @("Volta"); NoAutoTune = $true} #Argon2Exfer
     #[PSCustomObject]@{MainAlgorithm = "cryptixhash"      ;              Params = ""; Fee = 1.00;               Vendor = @("AMD","INTEL","NVIDIA"); ExcludeCompute = @("Volta")} #CryptixHash/CYTX (from 01/30/2025)
     [PSCustomObject]@{MainAlgorithm = "cryptonight_gpu"  ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","INTEL","NVIDIA"); ExcludeCompute = @("Volta")} #CryptonightGPU
     [PSCustomObject]@{MainAlgorithm = "cryptonight_turtle";             Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU","NVIDIA"); ExcludeCompute = @("Volta")} #CryptonightTurtle
