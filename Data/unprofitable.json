@@ -32,47 +32,14 @@
     "CURVE"
   ],
   "Pools": {
-    "Hashcryptos": {
+    "RPlant": {
       "Algorithms": [
-        "Neoscrypt"
+        "Skydoge"
       ]
     },
     "unMineable": {
       "Algorithms": [
         "HeavyHashPyrin"
-      ]
-    },
-    "ZergPool": {
-      "Coins": [
-        "XVG"
-      ]
-    },
-    "ZergPoolCoins": {
-      "Algorithms": [],
-      "Coins": [
-        "BTG",
-        "CURVE",
-        "ESP",
-        "ETH",
-        "PPCN",
-        "XMR",
-        "XGCS",
-        "XHV",
-        "XVG"
-      ]
-    },
-    "ZergPoolCoinsSolo": {
-      "Algorithms": [],
-      "Coins": [
-        "BTG",
-        "CURVE",
-        "ESP",
-        "ETH",
-        "PPCN",
-        "XMR",
-        "XGCS",
-        "XHV",
-        "XVG"
       ]
     },
     "Zpool": {
