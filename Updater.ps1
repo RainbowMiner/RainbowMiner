@@ -106,14 +106,24 @@ try {
             $PathToMaster = ".\RainbowMiner-master"
             if (Test-Path $PathToMaster) {
                 try {
-                    $FolderToRemove = if ($IsWindows) {"IncludesLinux"} else {"Includes"}
-                    $FolderToRemove = Join-Path $PathToMaster $FolderToRemove
-                    if (Test-Path $FolderToRemove) {
-                        Remove-Item -Path $FolderToRemove -Recurse -Force
+                    $FolderToSkip = if ($IsWindows) {"IncludesLinux"} else {"Includes"}
+                    Get-ChildItem -Path $PathToMaster -Force | Where-Object {-not ($_.PSIsContainer -and $_.Name -eq $FolderToSkip)} | ForEach-Object {
+                        $CopyErrors = $null
+                        if ($_.PSIsContainer -and (Test-Path (Join-Path $ToFullPath $_.Name))) {
+                            Copy-Item -Path (Join-Path $_.FullName "*") -Destination (Join-Path $ToFullPath $_.Name) -Recurse -Force -ErrorAction SilentlyContinue -ErrorVariable CopyErrors
+                        } else {
+                            Move-Item -Path $_.FullName -Destination $ToFullPath -Force -ErrorAction SilentlyContinue -ErrorVariable CopyErrors
+                        }
+                        if ($CopyErrors) {
+                            Write-Host "WARNING: $($CopyErrors.Count) file(s) could not be updated in $($_.Name)" -ForegroundColor Yellow
+                            $CopyErrors | Foreach-Object {Write-Host "  $($_.TargetObject)" -ForegroundColor Yellow}
+                        }
                     }
-                    Move-Item -Path (Join-Path $PathToMaster "*") -Destination $ToFullPath -Force
-                    Remove-Item -Path $PathToMaster -Recurse -Force
-                } catch {}
+                } catch {
+                    Write-Host "WARNING: master update incomplete: $($_.Exception.Message)" -ForegroundColor Yellow
+                } finally {
+                    Remove-Item -Path $PathToMaster -Recurse -Force -ErrorAction Ignore
+                }
             }
         }
 
@@ -162,7 +172,7 @@ try {
             Get-ChildItem ".\*.sh" -File | Foreach-Object {try {& chmod +x "$($_.FullName)" > $null} catch {}}
             Get-ChildItem ".\IncludesLinux\bash\*" -File | Foreach-Object {try {& chmod +x "$($_.FullName)" > $null} catch {}}
             Get-ChildItem ".\IncludesLinux\bin\*" -File | Foreach-Object {try {& chmod +x "$($_.FullName)" > $null} catch {}}
-            Write-Host " (4/$($MaxPages)) Checking for libraries and dependancies .."
+            Write-Host " (4/$($MaxPages)) Checking for libraries and dependencies .."
             Start-Process ".\IncludesLinux\bash\libnv.sh" -Wait
         }
 
