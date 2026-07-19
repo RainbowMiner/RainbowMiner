@@ -49,6 +49,11 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $Pool_RpcPath       = $_.rpc
     $Pool_Divisor       = if ($_.divisor) {$_.divisor} else {1}
 
+    if (-not $Pool_Coin.Algo) {
+         Write-Log -Level Warn "$($Name): $($_.symbol) not found in CoinsDB"
+         return   
+    }
+
     $Pool_Algorithm_Norm = $Pool_Coin.Algo
 
     $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
