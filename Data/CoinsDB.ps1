@@ -134,6 +134,7 @@
     "BTN" = [PSCustomObject]@{Algo = "Ethash"; Name = "Bitnetmoney"; Symbol = "BTN"}
     "BTRM" = [PSCustomObject]@{Algo = "Take2"; Name = "Bitoreum"; Symbol = "BTRM"}
     "BTX" = [PSCustomObject]@{Algo = "MegaBTX"; Name = "Bitcore"; Symbol = "BTX"}
+    "BTXCHAIN" = [PSCustomObject]@{Algo = "Btx"; Name = "Btx"; Symbol = "BTXCHAIN"}
     "BUCK" = [PSCustomObject]@{Algo = "Equihash"; Name = "Buck"; Symbol = "BUCK"}
     "BUEN" = [PSCustomObject]@{Algo = "HMQ1725"; Name = "Buenos"; Symbol = "BUEN"}
     "BUTK-Lyra2z330" = [PSCustomObject]@{Algo = "Lyra2z330"; Name = "Butcoin"; Symbol = "BUTK"; Multi = $true}
@@ -215,6 +216,7 @@
     "DGC-X11" = [PSCustomObject]@{Algo = "X11"; Name = "Digitalcoin"; Symbol = "DGC"; Multi = $true}
     "DIAC" = [PSCustomObject]@{Algo = "X11"; Name = "Diabase"; Symbol = "DIAC"}
     "DIME" = [PSCustomObject]@{Algo = "Quark"; Name = "Dimecoin"; Symbol = "DIME"}
+    "DIMI" = [PSCustomObject]@{Algo = "Tribus"; Name = "Diminutive"; Symbol = "DIMI"}
     "DIN" = [PSCustomObject]@{Algo = "NeoScrypt"; Name = "Dinero"; Symbol = "DIN"}
     "DINGO" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Dingo"; Symbol = "DINGO"}
     "DIS" = [PSCustomObject]@{Algo = "Ethash"; Name = "Dis"; Symbol = "DIS"}
@@ -291,8 +293,9 @@
     "FCH" = [PSCustomObject]@{Algo = "SHA256d"; Name = "Freecash"; Symbol = "FCH"}
     "FIRO" = [PSCustomObject]@{Algo = "FiroPoW"; Name = "Firo"; Symbol = "FIRO"}
     "FIURY" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Fiury"; Symbol = "FIURY"}
-    "FJAR" = [PSCustomObject]@{Algo = "SHA256d"; Name = "Fjarcode"; Symbol = "FJAR"}
+    "FJAR" = [PSCustomObject]@{Algo = "Sha3256t"; Name = "Fjarcode"; Symbol = "FJAR"}
     "FJC" = [PSCustomObject]@{Algo = "ScryptN11"; Name = "Fujicoin"; Symbol = "FJC"}
+    "FLC" = [PSCustomObject]@{Algo = "Xcrypt"; Name = "FlowCoin"; Symbol = "FLC"}
     "FLM" = [PSCustomObject]@{Algo = "PHI"; Name = "Folm"; Symbol = "FLM"}
     "FLO" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Florincoin"; Symbol = "FLO"}
     "FLOP" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Flop"; Symbol = "FLOP"}
@@ -407,6 +410,7 @@
     "GUN" = [PSCustomObject]@{Algo = "NeoScrypt"; Name = "Gun"; Symbol = "GUN"}
     "GXG" = [PSCustomObject]@{Algo = "X11"; Name = "Groincoin"; Symbol = "GXG"}
     "GXX" = [PSCustomObject]@{Algo = "Lyra2z330"; Name = "Gravitycoin"; Symbol = "GXX"}
+    "HAL" = [PSCustomObject]@{Algo = "NeoScrypt"; Name = "Halcyon"; Symbol = "HAL"}
     "HANA" = [PSCustomObject]@{Algo = "Lyra2RE3"; Name = "Hanacoin"; Symbol = "HANA"}
     "HATCH" = [PSCustomObject]@{Algo = "X11"; Name = "HATCH"; Symbol = "HATCH"}
     "HBC" = [PSCustomObject]@{Algo = "Ethash"; Name = "HotelbyteCoin"; Symbol = "HBC"}
@@ -640,7 +644,7 @@
     "PPC" = [PSCustomObject]@{Algo = "SHA256d"; Name = "Peercoin"; Symbol = "PPC"}
     "PRIV" = [PSCustomObject]@{Algo = "Yespower"; Name = "Privcy"; Symbol = "PRIV"}
     "PRKL" = [PSCustomObject]@{Algo = "Ethash"; Name = "Perkle"; Symbol = "PRKL"}
-    "PRL" = [PSCustomObject]@{Algo = "Pearl"; Name = "Pearl"; Symbol = "PRL"}
+    "PRL" = [PSCustomObject]@{Algo = "PearlHash"; Name = "Pearl"; Symbol = "PRL"}
     "PTC" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Pesetacoin"; Symbol = "PTC"}
     "PUG" = [PSCustomObject]@{Algo = "HoohashV1"; Name = "PugDAG"; Symbol = "PUG"}
     "PURA" = [PSCustomObject]@{Algo = "X11"; Name = "Pura"; Symbol = "PURA"}
