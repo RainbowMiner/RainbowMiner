@@ -53,7 +53,7 @@ $Pool_Request | Where-Object {$Wallets."$($_.symbol)" -or $Email -ne "" -or $Min
 
     $Pool_WTM = -not ($_.profit -gt 0)
 
-    $Pool_StatName = "$($Pool_Currency)$(if ($Pool_Rpc -ne $Pool_Currency.ToLower()) {"-$($Pool_Algorithm_Norm)"})"
+    $Pool_StatName = "$($Pool_Currency)$(if ($Pool_Rpc -ne $Pool_Currency.ToLower()) {"_$($Pool_Algorithm_Norm)"})"
 
     if (-not $InfoOnly) {
         $Stat = Set-Stat -Name "$($Name)_$($Pool_StatName)_Profit" -Value $(if ($Pool_WTM) {0} else {[Double]$_.profit}) -Duration $StatSpan -HashRate $_.hashrate -BlockRate $Pool_BLK -ChangeDetection $false -Quiet

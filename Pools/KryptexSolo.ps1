@@ -47,7 +47,7 @@ $Pool_Request | Where-Object {$_.modes -contains "solo" -and ($Wallets."$($_.sym
 
     $Pool_PoolFee = [Double]$_.fee_solo
 
-    $Pool_StatName = "$($Pool_Currency)$(if ($Pool_Rpc -ne $Pool_Currency.ToLower()) {"-$($Pool_Algorithm_Norm)"})"
+    $Pool_StatName = "$($Pool_Currency)$(if ($Pool_Rpc -ne $Pool_Currency.ToLower()) {"_$($Pool_Algorithm_Norm)"})"
 
     if (-not $InfoOnly) {
         $Stat = Set-Stat -Name "$($Name)_$($Pool_StatName)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -Difficulty ([decimal]$(if ($_.diff_native) {$_.diff} else {0})) -Quiet
