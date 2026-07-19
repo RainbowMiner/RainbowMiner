@@ -94,7 +94,7 @@ $Pools_Data | ForEach-Object {
         if (-not $InfoOnly) {
             $Pool_ProfitRequest = [PSCustomObject]@{}
             try {
-                $Pool_ProfitRequest = Invoke-RestMethodAsync "https://api.unminable.com/v3/calculate/reward" -tag $Name -cycletime 240 -body @{algo=$Pool_RewardAlgo;coin=$Pool_Currency;mh=$_.mh}
+                $Pool_ProfitRequest = Invoke-RestMethodAsync "https://api.unminable.com/v3/calculate/reward" -tag $Name -cycletime 240 -body @{algo=$Pool_RewardAlgo;coin=$Pool_Currency;mh=[decimal]$_.mh}
             } catch {
                 Write-Log -Level Warn "Pool profit API ($Name) has failed for coin $($Pool_Currency). "
             }
@@ -167,7 +167,7 @@ $Pools_Data | ForEach-Object {
             $Pool_Hashrate_HS   = $_.mh*$_.divisor
             $Pool_ProfitRequest = [PSCustomObject]@{}
             try {
-                $bodystr = ConvertTo-Json @{mode="advanced";coin="BTC";algorithm=$Pool_RewardAlgo;hashrate_hs="$($Pool_Hashrate_HS)";scenario_set="default";referral_discount=$true} -ErrorAction Ignore
+                $bodystr = ConvertTo-Json @{mode="advanced";coin="BTC";algorithm=$Pool_RewardAlgo;hashrate_hs="$([decimal]$Pool_Hashrate_HS)";scenario_set="default";referral_discount=$true} -ErrorAction Ignore
                 #$Pool_ProfitRequest = Invoke-RestMethodAsync "https://api.unmineable.com/v5/calculator/simulate" -tag $Name -cycletime 240 -body $bodystr
                 $Pool_ProfitRequest = Invoke-RestMethodAsync "https://api.unmineable.dev/v1/simulator" -tag $Name -cycletime 240 -body $bodystr
             } catch {
