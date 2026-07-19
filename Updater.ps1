@@ -20,7 +20,8 @@ if (-not (Test-Path ".\Data\version.json")) {
 }
 
 if (Test-Path "Start.bat.saved") {
-    if ($calledfrom -ne "core") {exit}
+    $SavedAge = (Get-Date) - (Get-Item "Start.bat.saved").LastWriteTime
+    if (($calledfrom -ne "core") -and ($SavedAge.TotalMinutes -le 15)) {exit}
     Remove-Item "Start.bat.saved" -Force
     if (Test-Path "start.sh.saved") {Remove-Item "start.sh.saved" -Force}
 }
