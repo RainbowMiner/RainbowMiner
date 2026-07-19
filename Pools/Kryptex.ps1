@@ -21,14 +21,14 @@ param(
 $Pool_Request = [PSCustomObject]@{}
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://pool.kryptex.com/api/v1/rates" -tag $Name -cycletime 120 -retry 5 -retrywait 250
+    $Pool_Request = Invoke-RestMethodAsync "https://api.rbminer.net/data/kryptex.json" -tag $Name -cycletime 120 -retry 5 -retrywait 250
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
 
-if (-not $Pool_Request.crypto) {
+if (-not ($Pool_Request | Measure-Object).Count) {
     Write-Log -Level Warn "Pool API ($Name) returned nothing. "
     return
 }
@@ -38,61 +38,23 @@ if (-not $Pool_Request.crypto) {
 $Pool_Regions = @("eu","ru","sg","us")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
-$Pool_NotMineable = @("BLOCX","BTC","CLORE","DGB","DOGE","KLS","NIR","PYI","SDR","UBQ")
+$Pool_Request | Where-Object {$Wallets."$($_.symbol)" -or $Email -ne "" -or $MiningUsername -ne "" -or $InfoOnly} | ForEach-Object {
 
-$Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin $Pool_NotMineable -and ($Wallets.$_ -or $Email -ne "" -or $MiningUsername -ne "" -or $InfoOnly)} | Foreach-Object {
-    Switch($_) { 
-        "XTM" {
-            [PSCustomObject]@{symbol=$_; algo="Cuckaroo29"; rpc="xtm-c29"}
-            [PSCustomObject]@{symbol=$_; algo="RandomX"; rpc="xtm-rx"}
-            [PSCustomObject]@{symbol=$_; algo="SHA3x"; rpc="xtm-sha3x"}
-        }
-        "QUAI" {
-            [PSCustomObject]@{symbol=$_; algo="KawPow"; rpc="quai-kawpow"}
-            [PSCustomObject]@{symbol=$_; algo="Scrypt"; rpc="quai-scrypt"}
-        }
-        Default {
-            [PSCustomObject]@{symbol=$_; algo=$null; rpc=$_.ToLower()}
-        }
-    }
-} | ForEach-Object {
-    
-    $Pool_Rpc  = $_.rpc 
+    $Pool_Rpc  = $_.rpc
 
-    if ($Pool_Coin = Get-Coin $_.symbol -Algorithm $_.algo) {
-        $Pool_Currency = $Pool_Coin.Symbol
-        $Pool_Algorithm_Norm = $Pool_Coin.Algo
-    } else {
-        Write-Log -Level Warn "$($Name): $($_.symbol) not found in CoinsDB"
-        return
-    }
+    $Pool_Currency = $_.symbol
+    $Pool_Algorithm_Norm = Get-Algorithm $_.algo
 
-    $PoolCoin_Request = [PSCustomObject]@{}
+    $Pool_PoolFee = [Double]$_.fee_pps
+    $Pool_DirectMining = $_.directMining
 
-    try {
-        $PoolCoin_Request = Invoke-RestMethodAsync "https://pool.kryptex.com/$($Pool_Rpc)/api/v1/pool/stats" -tag $Name -cycletime 120 -retry 5 -retrywait 250 -delay 200
-    }
-    catch {
-        Write-Log -Level Warn "Pool coin API ($Name) for $($Pool_Coin.Symbol)/$($Pool_Rpc) has failed. "
-        return
-    }
+    $Pool_BLK = if ($_.blk -gt 0 -or $_.hashrate -eq 0) {[int]$_.blk} else {$null}
+    $Pool_TSL = if ($_.tsl -ge 0) {$_.tsl} else {$null}
 
-    $Pool_PoolFee = [Double]$PoolCoin_Request.fee * 100
-    $Pool_DirectMining = $PoolCoin_Request.directMining
-
-    $Pool_BLK = $Pool_TSL = $null
+    $Pool_WTM = -not ($_.profit -gt 0)
 
     if (-not $InfoOnly) {
-        $timestamp  = Get-UnixTimestamp
-        $timestamp24h = $timestamp-86400
-
-        $blocks_measure = $PoolCoin_Request.last_blocks_found | Where-Object {$_.date -ge $timestamp24h} | Select-Object -ExpandProperty date | Measure-Object -Minimum -Maximum
-        if ($blocks_measure.Count -or $PoolCoin_Request.hashrate -eq 0) {
-            $Pool_BLK = [int]$($(if ($blocks_measure.Count -gt 1 -and ($blocks_measure.Maximum - $blocks_measure.Minimum)) {86400/($blocks_measure.Maximum - $blocks_measure.Minimum)} else {1})*$blocks_measure.Count)
-            $Pool_TSL = $timestamp - ($PoolCoin_Request.last_blocks_found | Select-Object -First 1).date
-        }
-
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -HashRate $PoolCoin_Request.hashrate -BlockRate $Pool_BLK -ChangeDetection $false -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value $(if ($Pool_WTM) {0} else {[Double]$_.profit}) -Duration $StatSpan -HashRate $_.hashrate -BlockRate $Pool_BLK -ChangeDetection $false -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
 
         if ($Wallets.$Pool_Currency) {
@@ -131,10 +93,11 @@ $Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin $Pool_No
         $Pool_ExCurrency = if ($Pool_Currency -in $Pool_MineToAccount) {"BTC"} else {$Pool_Currency}
     }
 
+    $Pool_Data = $_
 
     foreach($Pool_Region in $Pool_Regions) {
         foreach($ssl in @("","ssl_")) {
-            foreach($url in $PoolCoin_Request.servers."$($ssl)urls") {
+            foreach($url in $Pool_Data.servers."$($ssl)urls") {
                 if ($url -match "^(.+?-$($Pool_Region).+?):(\d+)$") {
                     $Pool_Host = $Matches[1]
                     $Pool_Port = $Matches[2]
@@ -143,12 +106,12 @@ $Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin $Pool_No
                     [PSCustomObject]@{
                         Algorithm     = $Pool_Algorithm_Norm
                         Algorithm0    = $Pool_Algorithm_Norm
-                        CoinName      = $Pool_Coin.Name
+                        CoinName      = $Pool_Data.coin
                         CoinSymbol    = $Pool_Currency
                         Currency      = $Pool_ExCurrency
-                        Price         = 0
-                        StablePrice   = 0
-                        MarginOfError = 0
+                        Price         = if ($Pool_WTM) {0} else {$Stat.$StatAverage}
+                        StablePrice   = if ($Pool_WTM) {0} else {$Stat.$StatAverageStable}
+                        MarginOfError = if ($Pool_WTM) {0} else {$Stat.Week_Fluctuation}
                         Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
                         Host          = $Pool_Host
                         Port          = $Pool_Port
@@ -158,12 +121,12 @@ $Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin $Pool_No
                         SSL           = $Pool_SSL
                         Updated       = $Stat.Updated
                         PoolFee       = $Pool_PoolFee
-                        Workers       = $PoolCoin_Request.miners
+                        Workers       = $Pool_Data.miners
                         Hashrate      = $Stat.HashRate_Live
                         TSL           = $Pool_TSL
                         BLK           = if ($Pool_BLK -ne $null) {$Stat.BlockRate_Average} else {$null}
-                        PaysLive      = $PoolCoin_Request.fee_type -eq "PPS+"
-                        WTM           = $true
+                        PaysLive      = $Pool_Data.fee_type -eq "PPS+"
+                        WTM           = $Pool_WTM
                         Name          = $Name
                         Penalty       = 0
                         PenaltyFactor = 1
