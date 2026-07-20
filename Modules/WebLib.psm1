@@ -334,6 +334,21 @@ Param(
     }
 }
 
+function Get-RBMDataAuth {
+    if (-not $Script:RBMDataSecret) {
+        $Script:RBMDataSecret = Get-Unzip "H4sIAAAAAAAEAAXBQQ6AMAgEwBeRbKEF+pzF4s2L8f9x5q1HDj/KPQ7W0PJItiXFmGbg4Wib2C0V2tkgZselvsSJ7Vq1gE1k/q8nexVMAAAA"
+    }
+    $window = [int64][math]::Floor((Get-UnixTimestamp) / 60)
+    $hmac = $null
+    try {
+        $hmac = [System.Security.Cryptography.HMACSHA256]::new([System.Text.Encoding]::UTF8.GetBytes($Script:RBMDataSecret))
+        $hash = $hmac.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($window.ToString([System.Globalization.CultureInfo]::InvariantCulture)))
+    } finally {
+        if ($hmac) {$hmac.Dispose()}
+    }
+    -join ($hash | Foreach-Object {$_.ToString("x2")})
+}
+
 function Invoke-GetUrl {
 [cmdletbinding()]
 Param(   
@@ -443,8 +458,9 @@ Param(
     }
     if ($user) {$headers_local["Authorization"] = "Basic $([System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("$($user):$($password)")))"}
 
-    if (-not $headers_local.ContainsKey("X-RBM-Client") -and $RequestUrl -match "^https?://(?:[\w-]+\.)*rbminer\.net(?::\d+)?(?:/|$)") {
-        $headers_local["X-RBM-Client"] = "v$($Session.Version)"
+    if ($RequestUrl -match "^https?://(?:[\w-]+\.)*rbminer\.net(?::\d+)?(?:/|$)") {
+        if (-not $headers_local.ContainsKey("X-RBM-Client")) {$headers_local["X-RBM-Client"] = "v$($Session.Version)"}
+        if (-not $headers_local.ContainsKey("X-RBM-Auth")) {$headers_local["X-RBM-Auth"] = Get-RBMDataAuth}
     }
 
     $ErrorMessage = ''

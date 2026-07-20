@@ -2149,7 +2149,11 @@ class Nanominer : Miner {
         if ($HashRate_Ix0 -match "^(Ethash|KawPOW)(\d+|low|NH)") {$HashRate_Ix0 = $Matches[1]}
         elseif ($HashRate_Ix0 -eq "SCCPow") {$Hashrate_Ix0 = "FiroPow"}
 
-        $Algos          = $Data.Algorithms[0].PSObject.Properties.Name
+        if ($Data -and $Data.Algorithms -and $Data.Algorithms[0]) {
+            $Algos = $Data.Algorithms[0].PSObject.Properties.Name
+        } else {
+            $Algos = @()
+        }
 
         if ($this.Algorithm.Count -gt 1) {
             $HashRate_Name1 = [String]$this.Algorithm[1]
