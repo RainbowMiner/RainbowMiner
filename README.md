@@ -424,6 +424,8 @@ The thresholds can be changed without editing the scripts, using environment var
 
 Note for Windows: the watchdog scripts copy themselves to `StartWD.run.cmd` (etc.) on start and run the copy, so that the automatic update can never touch a running script. These `*.run.cmd` files are recreated on every start and can be ignored.
 
+Note for Windows 11: by default, Windows 11 hosts all console windows in Windows Terminal, which has known issues with classic console applications - the RainbowMiner window may not react to move, close or minimize, and the `-windowstyle` of the start scripts is not applied reliably. The watchdog start scripts detect Windows 11 and relaunch themselves under the classic console host (conhost) automatically - a short flash of an extra window on start is expected and harmless. For the regular start scripts, see the FAQ ("The RainbowMiner window cannot be moved, closed or minimized").
+
 For autostart, the watchdog scripts can be used in place of the regular start scripts in the Windows task scheduler and in the Linux crontab (see FAQ).
 
 
@@ -1882,6 +1884,19 @@ Example:
 .. would start Blagominer_avx.exe with arguments "--argument1 whatsoever1", setting the working directory to "C:\Qbundle\BlagoMiner"
 
 ## FAQ
+
+### The RainbowMiner window cannot be moved, closed or minimized (Windows 11)
+
+On Windows 11, console windows are hosted by Windows Terminal by default. Windows Terminal has known issues with classic console applications: the RainbowMiner window may ignore all attempts to move, close, minimize or maximize it (sometimes the click is only executed after the window loses focus), and the `-windowstyle` used by the start scripts (maximized/hidden/normal) is not applied reliably.
+
+The watchdog start scripts (`StartWD.bat`, `StartWDHidden.bat`, `StartWDInWin.bat`) handle this automatically: on Windows 11 they relaunch themselves under the classic console host, no action is needed.
+
+For the regular start scripts (`Start.bat`, `StartHidden.bat`, `StartInWin.bat`) and for the window opened by RainbowMiner's built-in restart, switch the default terminal back to the classic console host once:
+
+1. Open `Settings` -> `System` -> `For developers`
+2. Set `Terminal` to `Windows Console Host`
+
+Alternatively, open the settings of Windows Terminal itself: `Startup` -> `Default terminal application` -> `Windows Console Host`. Restart RainbowMiner afterwards.
 
 ### How do I add RainbowMiner's Start.bat to the windows task scheduler for autostart?
 
