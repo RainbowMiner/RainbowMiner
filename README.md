@@ -22,6 +22,7 @@ Features: easy setup wizard with ad-hoc working default (no editing of files nee
 ## FEATURE SUMMARY
 
 - **Multi-Platform (AMD, INTEL, NVIDIA, CPU) on Windows and Linux**
+- **Optional watchdog start scripts, that restart RainbowMiner automatically after a crash (StartWD.bat / startwd.sh)**
 - **Profit auto-switch between mining programs and [algorithm](https://rbminer.net/algorithms/) for GPUs & CPUs (optimized one for each vendor vs. one for each possible device combination)**
 - **Profit auto-switch between pools (2Miners, Abelpool, Acepool, Aionpool, Alphpool, BaikalMiner, Binance, BlockCruncher, C3pool, DeepMinerZ, EpicMine, Ethermine, Ethwmine, [ezil.me](https://ezil.me/?p=dcf9), F2pool, FlockPool, Hashcryptos, Hashpool, HashVault, [HeroMiners](https://herominers.com), Hiveon, Icemining, [K1Pool](https://k1pool.com/invite/016079e6c5), [Kryptex](https://pool.kryptex.com/?ref=15aa84c0), LeafPool, LuckPool, LuckyPool, MinerRocks, Mining4people, MiningDutch, [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069), Mintpond, Molepool, MoneroOcean, Nanopool, Neuropool, [Nicehash](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1), Pearlhash, PhalanxMining, Poolin, RaptoreumZone, Ravenminer, SeroPool, SoloPool, Sunpool, SuprNova, [unMineable](https://unmineable.com/?ref=U-TEMDPF), UUpool, WoolyPooly, YadaMiners and Zpool)**
 - **Integrate own and custom pools**
@@ -311,6 +312,8 @@ The better alternative: start as Linux `tmux`:
 - press `Ctrl+B`, then `d` to detach from the tmux session (imagine you want to disconnect your ssh session)
 - use `./show-tmux.sh` or enter `tmux attach-session -t RainbowMiner` to reconnect to screen
 
+Optional: if you want RainbowMiner to be restarted automatically after a crash, use the watchdog start scripts `StartWD.bat` (Windows) or `./startwd.sh`, `./startwd-screen.sh`, `./startwd-tmux.sh`, `./startwd-nohup.sh` (Linux) instead. See section [WATCHDOG START SCRIPTS](#watchdog-start-scripts-optional) for details.
+
 
 #### 4. Enter basic information
 
@@ -369,7 +372,7 @@ You can press the following keys, while RainbowMiner is waiting for the next run
 - Submit bugs and feature requests here: https://github.com/RainbowMiner/RainbowMiner/issues 
 - Find a lot of additional information and documentation here: https://github.com/RainbowMiner/RainbowMiner/issues?q=is%3Aissue+label%3Adocumentation
 - if mining on GeForce GTX 1070/GTX 1070Ti/GTX 1080/GTX 1080Ti, it is recommended to set "Force P2-State" to "Off", so that the card will always operate in P0 state. [How to set P0 state for my GTX1070 and GTX1080](https://github.com/RainbowMiner/RainbowMiner/issues/36)
-- Important: **NEVER EDIT THE "Start.bat" !** It will break the autoupdate. If you want to add commands to the start, edit .\Config\autoexec.txt
+- Important: **NEVER EDIT THE "Start.bat" or "StartWD.bat" !** It will break the autoupdate. If you want to add commands to the start, edit .\Config\autoexec.txt
 - the root directory of RainbowMiner contains the following, additional batch files:
 
 | Windows                    | Linux                      | Description                                                                                                                                                             |
@@ -380,6 +383,12 @@ You can press the following keys, while RainbowMiner is waiting for the next run
 | -                          | `./start-tmux.sh`          | start as Linux `tmux`, connect to tmux session using `./show-tmux,sh` or `tmux attach-session -t RainbowMiner`, `Ctrl+B` then `d` to detach                                            |
 | -                          | `./show-tmux.sh`           | reconnect to current RainbowMiner tmux session, `Ctrl+B` then `d` to detach                                                                                          |
 | -                          | `./start-nohup.sh`         | start as background job, run `./stopp.sh` to stop rainbowminer, run `./rbmlog.sh` to follow the Rainbowminer logfile, run `./minerlog.sh` to follow the miner log files |
+| `StartWD.bat`              | `./startwd.sh`             | start RainbowMiner with crash watchdog: restarts automatically, if the PowerShell process dies unexpectedly (see section WATCHDOG START SCRIPTS)                         |
+| `StartWDHidden.bat`        | -                          | start RainbowMiner with crash watchdog in a hidden window                                                                                                               |
+| `StartWDInWin.bat`         | -                          | start RainbowMiner with crash watchdog in a normal window                                                                                                               |
+| -                          | `./startwd-screen.sh`      | start with crash watchdog as Linux `screen`, connect using `./show-screen.sh`                                                                                           |
+| -                          | `./startwd-tmux.sh`        | start with crash watchdog as Linux `tmux`, connect using `./show-tmux.sh`                                                                                               |
+| -                          | `./startwd-nohup.sh`       | start with crash watchdog as background job                                                                                                                             |
 | `Setup.bat`                | `./setup.sh`               | start RainbowMiner configuration                                                                                                                                        |
 | `Install.bat`              | `./install.sh`             | install pre-requisites + on linux: update powershell to the newest release with `./install.sh -pu`                                                                      |
 | `InitServer.bat`           | `sudo ./initserver.sh`     | make this rig a server                                                                                                                                                  |
@@ -400,6 +409,25 @@ You can press the following keys, while RainbowMiner is waiting for the next run
 | `TouchBenchmark.bat`       | -                          | avoid benchmark of new miners, will set the timestamp of all miner stat files to now                                                                                    |
 | `Stopp.bat`                | `./stopp.sh`               | halt RainbowMiner at once                                                                                                                                               |
   	
+
+## WATCHDOG START SCRIPTS (OPTIONAL)
+
+In rare cases the PowerShell process itself may crash (e.g. a native CLR error or an out-of-memory kill on Linux). The regular start scripts will end in this case and the rig stops mining. The watchdog start scripts `StartWD.bat`, `StartWDHidden.bat`, `StartWDInWin.bat` (Windows) and `./startwd.sh`, `./startwd-screen.sh`, `./startwd-tmux.sh`, `./startwd-nohup.sh` (Linux) will restart RainbowMiner automatically after 10 seconds instead. They are a drop-in replacement for the regular start scripts, updates and restarts from within RainbowMiner keep working as usual.
+
+How the watchdog decides:
+
+- a regular exit (quit from the miner screen, web interface stop, `Stopp.bat`/`./stopp.sh`, `Ctrl+C` or a `SIGTERM` on Linux) ends the script, as before
+- any other, unexpected end of the PowerShell process is treated as a crash: the event is logged to `Logs\watchdog.txt` and RainbowMiner is restarted after 10 seconds
+- if RainbowMiner crashes 5 times in a row, each within less than 120 seconds after start, the watchdog gives up (this prevents an endless restart loop on a broken installation). A run of more than 120 seconds resets the counter, so a rig that crashes now and then will be restarted forever.
+
+Important: killing the PowerShell process by hand (task manager, `kill -9`) counts as a crash and will trigger a restart. Use `Stopp.bat`/`./stopp.sh` or quit from within RainbowMiner to stop a watchdog-controlled rig.
+
+The thresholds can be changed without editing the scripts, using environment variables: `WD_FAILMAX` and `WD_MINRUN` on Windows, `RBM_WD_FAILMAX` and `RBM_WD_MINRUN` on Linux.
+
+Note for Windows: the watchdog scripts copy themselves to `StartWD.run.cmd` (etc.) on start and run the copy, so that the automatic update can never touch a running script. These `*.run.cmd` files are recreated on every start and can be ignored.
+
+For autostart, the watchdog scripts can be used in place of the regular start scripts in the Windows task scheduler and in the Linux crontab (see FAQ).
+
 
 ## WEB-INTERFACE
 
@@ -1877,6 +1905,8 @@ Tab "Actions":
 - Add Arguments=`/c "C:\Users\RainbowMiner\Desktop\current-version\Start.bat"`
 - Start In=`C:\Users\RainbowMiner\Desktop\current-version\`
 
+Use `StartWD.bat` (or `StartWDHidden.bat`) instead of `Start.bat`, if you want RainbowMiner to be restarted automatically after a crash (see section WATCHDOG START SCRIPTS).
+
 ### How do I add RainbowMiner's start script to crontab on Linux for autostart?
 
 As the user that will be running RainbowMiner, edit the crontab file using `crontab -e`. 
@@ -1885,6 +1915,8 @@ Add one of the following lines to the end of the file and save:
 - `@reboot /PATH_TO_RAINBOWMINER/start-screen.sh` If you want RainbowMiner to start in a separate screen
 - `@reboot /PATH_TO_RAINBOWMINER/start-tmux.sh` If you want RainbowMiner to start in a separate tmux session
 - `@reboot /PATH_TO_RAINBOWMINER/start-nohup.sh` If you want RainbowMiner to run as a background process
+
+Use `startwd-screen.sh`, `startwd-tmux.sh` or `startwd-nohup.sh` instead, if you want RainbowMiner to be restarted automatically after a crash (see section WATCHDOG START SCRIPTS).
 
 Where `PATH_TO_RAINBOWMINER` is the RainbowMiner installation directory.
 

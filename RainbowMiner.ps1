@@ -588,7 +588,11 @@ if (-not $psISE -and $Session.LogLevel -ne "Silent") {
 }
 
 if ($IsWindows) {
-    if ($Session.AutoUpdate -and -not $psISE) {Exit 999}
+    if (-not $psISE) {
+        if ($Session.AutoUpdate) {Exit 999}
+        if ($Session.Restart -and $env:RBM_STARTLOOP) {Exit 998}
+        Exit 0
+    }
 } else {
     Exit $(if ($Session.AutoUpdate -or $Session.Restart) {99} else {0})
 }

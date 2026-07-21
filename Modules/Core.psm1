@@ -5011,7 +5011,11 @@ function Invoke-Core {
     if ($Session.Restart -or $Session.AutoUpdate) {
         $Session.Stopp = $false
         try {
-            if ($IsWindows) {
+            if ($IsWindows -and $env:RBM_STARTLOOP) {
+                #running inside the start script loop: update in-session like on linux, then let the loop relaunch (exit 999/998)
+                if ($Session.AutoUpdate) {$Update_Parameters = @{calledfrom="core";UpdateToMaster=$UpdateToMaster};& .\Updater.ps1 @Update_Parameters}
+                $Session.Stopp = $true
+            } elseif ($IsWindows) {
                 $CurrentProcess = Get-CimInstance Win32_Process -filter "ProcessID=$PID" | Select-Object CommandLine,ExecutablePath
                 if ($CurrentProcess.CommandLine -and $CurrentProcess.ExecutablePath) {
                     if ($Session.AutoUpdate) {$Update_Parameters = @{calledfrom="core";UpdateToMaster=$UpdateToMaster};& .\Updater.ps1 @Update_Parameters}

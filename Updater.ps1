@@ -24,6 +24,8 @@ if (Test-Path "Start.bat.saved") {
     if (($calledfrom -ne "core") -and ($SavedAge.TotalMinutes -le 15)) {exit}
     Remove-Item "Start.bat.saved" -Force
     if (Test-Path "start.sh.saved") {Remove-Item "start.sh.saved" -Force}
+    if (Test-Path "StartWD.bat.saved") {Remove-Item "StartWD.bat.saved" -Force}
+    if (Test-Path "startwd.sh.saved") {Remove-Item "startwd.sh.saved" -Force}
 }
 
 if (-not (Get-Module -Name Include)) { Import-Module .\Modules\Include.psm1 }
@@ -76,7 +78,7 @@ try {
 
         Write-Host " (2/$($MaxPages)) Deleting and backup old files .."
 
-        @("Start.bat","start.sh") | Foreach-Object {if (Test-Path $_) {Copy-Item $_ "$($_).saved" -Force -ErrorAction Ignore}}
+        @("Start.bat","start.sh","StartWD.bat","startwd.sh") | Foreach-Object {if (Test-Path $_) {Copy-Item $_ "$($_).saved" -Force -ErrorAction Ignore}}
         if ((Test-Path "MinersOldVersions") -and (Test-Path "Miners")) {$PreserveMiners = Compare-Object @(Get-ChildItem "Miners" | Select-Object -ExpandProperty Name) @(Get-ChildItem "MinersOldVersions" | Select-Object -ExpandProperty Name) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject}
         @("Miners","APIs","Balances","Pools") | Foreach-Object {if (Test-Path ".\$($_)") {Remove-Item ".\$($_)" -Recurse -Force -ErrorAction Ignore}}
         Get-ChildItem ".\Data" -Filter "*.json" -File | Where-Object {$_.Name -notin @("lastdrun.json","localapiport.json","minerdata.json","mrrinfo.json","poolsdata.json","unprofitable.json","version.json")} | Foreach-Object {Remove-Item $_.FullName -Force -ErrorAction Ignore}
