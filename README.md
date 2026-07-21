@@ -12,7 +12,7 @@
 
 ## INTRODUCTION
 
-GPU/CPU Mining script with intelligent auto-switching between different miningpools, algorithm, miner programs using all possible combinations of devices (NVIDIA, AMD, INTEL and CPU), optionally including cost of electricity into profit calculations and  stop mining, if no longer profitable.
+GPU/CPU Mining script with intelligent auto-switching between different mining pools, algorithms and miner programs using all possible combinations of devices (NVIDIA, AMD, INTEL and CPU), optionally including the cost of electricity in profit calculations and stopping mining once it is no longer profitable.
 Features: easy setup wizard with ad-hoc working default (no editing of files needed), GUI-webinterface, selection of devices to be used, very low CPU usage.
 
 
@@ -24,7 +24,7 @@ Features: easy setup wizard with ad-hoc working default (no editing of files nee
 - **Multi-Platform (AMD, INTEL, NVIDIA, CPU) on Windows and Linux**
 - **Optional watchdog start scripts, that restart RainbowMiner automatically after a crash (StartWD.bat / startwd.sh)**
 - **Profit auto-switch between mining programs and [algorithm](https://rbminer.net/algorithms/) for GPUs & CPUs (optimized one for each vendor vs. one for each possible device combination)**
-- **Profit auto-switch between pools (2Miners, Abelpool, Acepool, Aionpool, Alphpool, BaikalMiner, Binance, BlockCruncher, C3pool, DeepMinerZ, EpicMine, Ethermine, Ethwmine, [ezil.me](https://ezil.me/?p=dcf9), F2pool, FlockPool, Hashcryptos, Hashpool, HashVault, [HeroMiners](https://herominers.com), Hiveon, Icemining, [K1Pool](https://k1pool.com/invite/016079e6c5), [Kryptex](https://pool.kryptex.com/?ref=15aa84c0), LeafPool, LuckPool, LuckyPool, MinerRocks, Mining4people, MiningDutch, [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069), Mintpond, Molepool, MoneroOcean, Nanopool, Neuropool, [Nicehash](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1), Pearlhash, PhalanxMining, Poolin, RaptoreumZone, Ravenminer, SeroPool, SoloPool, Sunpool, SuprNova, [unMineable](https://unmineable.com/?ref=U-TEMDPF), UUpool, WoolyPooly, YadaMiners and Zpool)**
+- **Profit auto-switch between pools (2Miners, Abelpool, Acepool, Aionpool, Alphpool, BaikalMine, Binance, BlockCruncher, C3pool, DeepMinerZ, EpicMine, Ethermine, Ethwmine, [ezil.me](https://ezil.me/?p=dcf9), F2pool, FlockPool, Hashcryptos, Hashpool, HashVault, [HeroMiners](https://herominers.com), Hiveon, Icemining, [K1Pool](https://k1pool.com/invite/016079e6c5), [Kryptex](https://pool.kryptex.com/?ref=15aa84c0), LeafPool, LuckPool, LuckyPool, MinerRocks, Mining4people, MiningDutch, [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069), Mintpond, Molepool, MoneroOcean, Nanopool, Neuropool, [Nicehash](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1), Pearlhash, PhalanxMining, Poolin, RaptoreumZone, Ravenminer, SeroPool, SoloPool, Sunpool, SuprNova, [unMineable](https://unmineable.com/?ref=U-TEMDPF), UUpool, WoolyPooly, YadaMiners and Zpool)**
 - **Integrate own and custom pools**
 - **Profit calculation, including real cost of electricity per miner**
 - **Uses the top actual available miner programs (Bminer, Ccminer, Claymore, CryptoDredge, Dstm, EnemyZ, Ewbf, Gminer, NBminer, Sgminer, SrbMiner, T-Rex, Xmrig and many more)**
@@ -65,12 +65,10 @@ Features: easy setup wizard with ad-hoc working default (no editing of files nee
 4. If your rig contains AMD graphic cards, RainbowMiner's overclocking features rely on MSI Afterburner, you should install and run it: [Download](http://download.msi.com/uti_exe//vga/MSIAfterburnerSetup.zip)
 5. If you want to have accurate power and clock values for your CPU, please install the [PawnIO driver](https://github.com/namazso/PawnIO.Setup/releases/latest/download/PawnIO_setup.exe) available from here: https://pawnio.eu/
 
-Finally: check, if Powershell 7 is in your PATH, because RainbowMiner will not run correctly, if the path to powershell is missing. Sometimes `C:\Program Files\PowerShell\7` has to be added manually to the PATH environment variable after installing Powershell 6. Here is a nice tutorial, on how to add to PATH environment variable https://www.howtogeek.com/118594/how-to-edit-your-system-path-for-easy-command-line-access/amp/
-
-A note on Windows Nvidia drivers. Recommended lite-packed versions are available for direct download:
+Finally: check, if Powershell 7 is in your PATH, because RainbowMiner will not run correctly, if the path to powershell is missing. Sometimes `C:\Program Files\PowerShell\7` has to be added manually to the PATH environment variable after installing PowerShell 7. Here is a nice tutorial, on how to add to PATH environment variable https://www.howtogeek.com/118594/how-to-edit-your-system-path-for-easy-command-line-access/amp/
 
 ### Ubuntu 22.04 AMD Pre-requisites
-AMD drivers on recent versions of Ubuntu have been flakley, and challenging to install. As of December 22, there is a nearly out of the box solution that works. Using older, or non-LTS versions of Ubuntu is always going to present a challenge down the road in terms of staying current from a security perspective, and who wants their rig getting owned? So 22.04.01 (LTS) is going to be a popular distro choice for rigs.
+AMD drivers on recent versions of Ubuntu have been flaky and challenging to install. As of December 22, there is a nearly out of the box solution that works. Using older, or non-LTS versions of Ubuntu is always going to present a challenge down the road in terms of staying current from a security perspective, and who wants their rig getting owned? So 22.04.01 (LTS) is going to be a popular distro choice for rigs.
 
 This has only been confirmed as working with RX 6700XT, RX 5700XT and RX5700.
 
@@ -175,11 +173,11 @@ Other distros will have settings in different places (hugepages) and the softwar
 
 ###### Huge Pages
 
-By default, linux sets memory-chunk size fairly small. This is to save RAM usage for low-requirement software (ie: most programs running in system-space, rather than user-space.) Scrypt^N (Verium) and the CryptoNight family (Monero, etc.) algorithms *need* a large memory-chunk allocation, and many benefit from it even if they don't need it. In linux, this is call 'hugepages'. For Ubuntu-based distributions, you can set this manually on each boot with `sudo sysctl -w vm.nr_hugepages=XXX` where XXX is how many megabytes to assign per page-chunk.  This can be made persistent across reboots by editing the value in `/proc/sys/vm/nr_hugepages` and you need to be root do it (ie: `sudo emacs -wm /proc/sys/vm/nr_hugepages` (substitute 'emacs -wm' with your editor of choice - nano, vi, joe, etc.)
+By default, linux sets memory-chunk size fairly small. This is to save RAM usage for low-requirement software (ie: most programs running in system-space, rather than user-space.) Scrypt^N (Verium) and the CryptoNight family (Monero, etc.) algorithms *need* a large memory-chunk allocation, and many benefit from it even if they don't need it. In linux, this is called 'hugepages'. For Ubuntu-based distributions, you can set this manually on each boot with `sudo sysctl -w vm.nr_hugepages=XXX` where XXX is how many megabytes to assign per page-chunk.  This can be made persistent across reboots by editing the value in `/proc/sys/vm/nr_hugepages` and you need to be root to do it (ie: `sudo emacs -wm /proc/sys/vm/nr_hugepages` (substitute 'emacs -wm' with your editor of choice - nano, vi, joe, etc.))
 
-On newer Ubuntu distros (Ubuntu 18.04 - Bionic Beaver and up), the value can be added to `/etc/sysctl.conf` and you need to be root do it (ie: `sudo emacs -wm /etc/sysctl.conf` (substitute 'emacs -wm' with your editor of choice - nano, vi, joe, etc.) The system will need to be rebooted to load the new kernel parameters or you can run `sudo sysctl -p` to load any new or changed parameters at runtime. 
+On newer Ubuntu distros (Ubuntu 18.04 - Bionic Beaver and up), the value can be added to `/etc/sysctl.conf` and you need to be root to do it (ie: `sudo emacs -wm /etc/sysctl.conf` (substitute 'emacs -wm' with your editor of choice - nano, vi, joe, etc.)) The system will need to be rebooted to load the new kernel parameters or you can run `sudo sysctl -p` to load any new or changed parameters at runtime. 
 
-On my system (@ParalegicRacehorse), xmr-stak will not run with hugepages<1024. Setting it to 2048 did gain me anything more than 1024, but experience in the verium/vericoin community have shown hugepages as large as 4096 can be beneficial. YMMV. Tuning is left to the rig operator, but I recommend keeping it as low as you can get away with so your other programs can run lean.
+On my system (@ParalegicRacehorse), xmr-stak will not run with hugepages<1024. Setting it to 2048 did not gain me anything more than 1024, but experience in the verium/vericoin community have shown hugepages as large as 4096 can be beneficial. YMMV. Tuning is left to the rig operator, but I recommend keeping it as low as you can get away with so your other programs can run lean.
 
 #### Video Cards
 
@@ -208,7 +206,7 @@ Nvidia has kindly supplied a ppa for their official drivers.
 
        sudo apt -y install nvidia-opencl-dev
 
-**Important: check which version of the Nvidia driver you need (i.e. which is compatible with your graphics card)** You can check on the Nvidia website which products are supported by each driver (the latest one is usually the best if you have a recent graphics card). Not doing so can cause black screen on reboot. Only the main version is needed (don't bother about the number after the point, so if latest driver is 510.60, just write 510).
+**Important: check which version of the Nvidia driver you need (i.e. which is compatible with your graphics card)** You can check on the Nvidia website which products are supported by each driver (the latest one is usually the best if you have a recent graphics card). Not doing so can cause a black screen on reboot. Only the main version is needed (don't bother about the number after the point, so if latest driver is 510.60, just write 510).
 
 ###### Optional Overclocking for Nvidia:
 
@@ -233,7 +231,7 @@ Reboot and you should be good to go!
 
 ## INSTALLATION
 
-#### 1. Download RainbowMiner and extract to a folder of you choice: [![current release](https://img.shields.io/github/release/RainbowMiner/RainbowMiner.svg)](https://github.com/RainbowMiner/RainbowMiner/releases)
+#### 1. Download RainbowMiner and extract to a folder of your choice: [![current release](https://img.shields.io/github/release/RainbowMiner/RainbowMiner.svg)](https://github.com/RainbowMiner/RainbowMiner/releases)
 
 **Important:** Add the RainbowMiner directory to the exceptions of your antivirus program. Otherwise, some miners will cause false virus alerts.
 
@@ -327,7 +325,7 @@ Optional: if you want RainbowMiner to be restarted automatically after a crash, 
 - for client-mode:
   - enter the server's name (or IP)
   - enter the server's API port
-  - optionally enter username and password, if you have protected the access to the servers's webinterface
+  - optionally enter username and password, if you have protected the access to the server's webinterface
 
 
 #### 5. Enter your credentials:
@@ -336,9 +334,9 @@ Optional: if you want RainbowMiner to be restarted automatically after a crash, 
 - your [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069) credentials, if you plan to use this pool   
 - your region. Valid names are: US, Europe, Asia
 - your currencies. Valid currencies are: BTC, USD, EUR, GBP, ETC, ..
-- the pools, you want to mine as comma separated list. 
-- the algorithm, you want to mine as comma separated list.
-- the devices, you want to use for mining. Valid descriptors are: gpu, cpu, nvidia, amd (RainbowMiner will show you, which devices are available on your machine)
+- the pools you want to mine, as a comma separated list. 
+- the algorithms you want to mine, as a comma separated list.
+- the devices you want to use for mining. Valid descriptors are: gpu, cpu, nvidia, amd (RainbowMiner will show you, which devices are available on your machine)
     or use your device names (without spaces, without leading geforce): gtx1070, gtx1080ti ..
 
 
@@ -378,9 +376,9 @@ You can press the following keys, while RainbowMiner is waiting for the next run
 | Windows                    | Linux                      | Description                                                                                                                                                             |
 | -------------------------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Start.bat`                | `./start.sh`               | start RainbowMiner                                                                                                                                                      |
-| -                          | `./start-screen.sh`        | start as Linux `screen`, connect to screen using `./show-screen,sh` or `screen -R RainbowMiner`, `Ctrl+A` then `d` to detach                                            |
+| -                          | `./start-screen.sh`        | start as Linux `screen`, connect to screen using `./show-screen.sh` or `screen -R RainbowMiner`, `Ctrl+A` then `d` to detach                                            |
 | -                          | `./show-screen.sh`         | reconnect to current RainbowMiner screen, `Ctrl+A` then `d` to detach                                                                                          |
-| -                          | `./start-tmux.sh`          | start as Linux `tmux`, connect to tmux session using `./show-tmux,sh` or `tmux attach-session -t RainbowMiner`, `Ctrl+B` then `d` to detach                                            |
+| -                          | `./start-tmux.sh`          | start as Linux `tmux`, connect to tmux session using `./show-tmux.sh` or `tmux attach-session -t RainbowMiner`, `Ctrl+B` then `d` to detach                                            |
 | -                          | `./show-tmux.sh`           | reconnect to current RainbowMiner tmux session, `Ctrl+B` then `d` to detach                                                                                          |
 | -                          | `./start-nohup.sh`         | start as background job, run `./stopp.sh` to stop rainbowminer, run `./rbmlog.sh` to follow the Rainbowminer logfile, run `./minerlog.sh` to follow the miner log files |
 | `StartWD.bat`              | `./startwd.sh`             | start RainbowMiner with crash watchdog: restarts automatically, if the PowerShell process dies unexpectedly (see section WATCHDOG START SCRIPTS)                         |
@@ -463,8 +461,8 @@ If you change the RunMode of a rig, RainbowMiner needs to be restarted.
 ### Setup as Server
 
 - one PC takes the role as Server
-- it will act as gateway to the pool APIs for all Clients 
-- enable auth: choose an username and a password.
+- it will act as a gateway to the pool APIs for all Clients 
+- enable auth: choose a username and a password.
 - the server will be running on the API port
 
 These are the server-fields to fill in the config.txt (or use the initscripts or the built-in config)
@@ -479,7 +477,7 @@ These are the server-fields to fill in the config.txt (or use the initscripts or
 ### Setup as Client
 
 - all other Rigs shall be clients
-- if you have enable auth at the server: set the username and password.
+- if you have enabled auth at the server: set the username and password.
 - the RainbowMiner running on the server will tell you the machinename, ip address and port
 - use either the machinename or the ip address of the server as servername
 
@@ -496,8 +494,8 @@ These are the client-fields to fill in the config.txt (or use the initscripts or
     "EnableServerExcludeList": "0",
     "ExcludeServerConfigVars": "WorkerName,DeviceName,ExcludeDeviceName,Proxy,APIPort,APIUser,APIPassword,APIAuth,MSIApath,NVSMIpath,CPUMiningThreads,CPUMiningAffinity,GPUMiningAffinity,ServerName,ServerPort,ServerUser,ServerPassword,EnableServerConfig,ServerConfigName,ExcludeServerConfigVars,RunMode,StartPaused",
 
-If "EnableServerConfig" is set to "1", the client will try to download the config files specified with "ServerConfigName" from the server. If you want to provide the individual rig with specific config files, put them into a subdirectory `.\Config\<workername>` (linux: `./Config/<workername>`) . Use lowercase letters for the subdirectoy `<workername>`.
-Setting the field "EnableServerExcludeList" to "1" lets your client use the servers "ExcludeServerConfigVars" field, instead of the local one in config.txt.
+If "EnableServerConfig" is set to "1", the client will try to download the config files specified with "ServerConfigName" from the server. If you want to provide the individual rig with specific config files, put them into a subdirectory `.\Config\<workername>` (linux: `./Config/<workername>`) . Use lowercase letters for the subdirectory `<workername>`.
+Setting the field "EnableServerExcludeList" to "1" lets your client use the server's "ExcludeServerConfigVars" field, instead of the local one in config.txt.
 All variables defined in "ExcludeServerConfig" will not be overwritten by the server's values.
 
 If "EnableServerPools" is set to "1", the client will download the server's pool and balance statistics and mine to exactly those pools (except for MiningRigRentals, which will always be handled locally).
@@ -505,7 +503,7 @@ If "EnableServerPools" is set to "1", the client will download the server's pool
 ## POOLS
 
 <details><summary>2Miners</summary> https://www.2miners.com/ no auto-exchange, a separate wallet address is needed for each coin (ETC, XZC and more) you want to mine. Set in pools configuration or edit pools.config.txt</details>
-<details><summary>2MinersAE</summary> https://www.2miners.com/ auto-exchange pool, mines Ethash and Etchas, payout in BTC or NANO (not for ETC). BTC is preset with $Wallet by default. So if you want to autoexchange to NANO, set the wallets and parameter AECurrency accordingly in pools.config.txt. Use parameter "CoinSymbol" to define, which coin to mine (e.g. set to "ETC", if you want to autoexchange-mine ETC, only).</details>
+<details><summary>2MinersAE</summary> https://www.2miners.com/ auto-exchange pool, mines Ethash and Etchash, payout in BTC or NANO (not for ETC). BTC is preset with $Wallet by default. So if you want to autoexchange to NANO, set the wallets and parameter AECurrency accordingly in pools.config.txt. Use parameter "CoinSymbol" to define, which coin to mine (e.g. set to "ETC", if you want to autoexchange-mine ETC, only).</details>
 <details><summary>2MinersSolo</summary> https://www.2miners.com/ no auto-exchange, a separate wallet address is needed for each coin (ETC, XZC and more) you want to mine solo. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>Abelpool</summary> https://abelpool.io/ ABEL/Abelean-pool, pays in ABEL, create an account, then look for "deploy command" and copy the wallet address plus password (looks like adb0000000000000000000000000000000000000000000000000000xxxyyyzzz:thepassword), then either set the full string as ABEL wallet or do separate the string at the ":" and put the left string into ABEL and the right string into ABEL-Params in pools configuration or edit pools.config.txt</details>
 <details><summary>Acepool</summary> https://acepool.top/ Equihash-pool in eu region for BEAM and XGM(Defis), set your acepool public key (can be created on their website) as wallet in pools configuration or edit pools.config.txt</details>
@@ -541,7 +539,7 @@ If "EnableServerPools" is set to "1", the client will download the server's pool
 <details><summary>MinerRocks</summary> https://miner.rocks/ no auto-exchange, dedicated to cryptonight mining, a separate wallet address is needed for each coin you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>Mining4people</summary> https://www.mining4people.com/ no auto-exchange, multiple coins for pool mining available, a separate wallet address is needed for each coin you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>Mining4peopleSolo</summary> https://www.mining4people.com/ no auto-exchange, multiple coins for solo mining available, a separate wallet address is needed for each coin you want to mine. Set in pools configuration or edit pools.config.txt</details>
-<details><summary>MiningDutch</summary> https://mining-dutch.nl/ auto-exchange and paymout in various currencies, username required. Mining by algorithm profitability</details>
+<details><summary>MiningDutch</summary> https://mining-dutch.nl/ auto-exchange and payout in various currencies, username required. Mining by algorithm profitability</details>
 <details><summary>MiningRigRentals</summary> [https://www.miningrigrentals.com/](https://www.miningrigrentals.com/?ref=2598069) rent your complete rig to interested users in exchange for BTC, ETC, LTC or DASH. See extra section for more details</details>
 <details><summary>Mintpond</summary> https://mintpond.com/ if you are totally in Zcoin, then this pool might be the best choice. A separate wallet address is needed for XZC. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>Molepool</summary> https://molepool.com/ no auto-exchange, a separate wallet address is needed for ETHW. Set in pools configuration or edit pools.config.txt</details>
@@ -550,7 +548,7 @@ If "EnableServerPools" is set to "1", the client will download the server's pool
 <details><summary>Neuropool</summary> https://neuropool.net/ DNX, DynexSolve pool, pays in DNX, enter your DNX wallet address in pools configuration or edit pools.config.txt</details>
 <details><summary>Nicehash</summary> [https://www.nicehash.com/](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1) auto-exchange and payout in BTC, use of a special Nicehash mining wallet is mandatory, see note below</details>
 <details><summary>Pearlhash</summary> https://pearlhash.xyz/ Pearl-pool for eu, us and asia region, pays in PRL, set your PRL-address in pools configuration or edit pools.config.txt</details>
-<details><summary>PhalanxMining</summary> https://pool.phalanxmining.com/ no auto-exchange, multiple coins, no autoexchange. Set in pools configuration or edit pools.config.txt</details>
+<details><summary>PhalanxMining</summary> https://pool.phalanxmining.com/ no auto-exchange, multiple coins. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>Poolin</summary> https://www.poolin.me/ no auto-exchange registration is mandatory, mines ETC, ETHW and RVN. Set Poolin subaccount-worker plus minerid (e.g. "miner.001") as wallet address in pools configuration or edit pools.config.txt</details>
 <details><summary>RaptoreumZone</summary> https://raptoreum.zone/ Take2/Ghostrider mining pool, pays in RTM, set your RTM-address in pools configuration or edit pools.config.txt</details>
 <details><summary>Ravenminer</summary> https://www.ravenminer.com/ ravencoin-pool for us region, pays in RVN, set your RVN-address in pools configuration or edit pools.config.txt</details>
@@ -566,8 +564,8 @@ If "EnableServerPools" is set to "1", the client will download the server's pool
 <details><summary>WoolyPooly</summary> https://www.woolypooly.com/ no auto-exchange, a separate wallet address is needed for each coin (ETHW, ETC, RVN, ERG, CFX, VEIL and more) you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>WoolyPoolySolo</summary> https://www.woolypooly.com/ no auto-exchange, a separate wallet address is needed for each coin (ETHW, ETC, RVN, ERG, CFX, VEIL and more) you want to mine solo. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>YadaMiners</summary> http://yadaminers.pl/ YDA/RandomYada-pool, pays in YDA, enter your Yada wallet address in pools configuration or edit pools.config.txt</details>
-<details><summary>Zpool</summary> https://www.zpool.ca/ auto-exchange and payout in BTC, DASH, XVG, DGB and KMD or any other cointhat is listed at the pool. Pool will automatically select the most profitable coin. Switching will be by algorithm.</details>
-<details><summary>ZpoolCoins</summary> https://www.zpool.ca/ auto-exchange and payout in BTC, DASH, XVG, DGB and KMD or any other cointhat is listed at the pool. Mine most profitable coin, either with auto-exchange to a currency of wish, or mine directly to individual coin wallets. If you setup RainbowMiner with many algorithm, expect a lot of switching. Switching will be by coin.</details>
+<details><summary>Zpool</summary> https://www.zpool.ca/ auto-exchange and payout in BTC, DASH, XVG, DGB and KMD or any other coin that is listed at the pool. Pool will automatically select the most profitable coin. Switching will be by algorithm.</details>
+<details><summary>ZpoolCoins</summary> https://www.zpool.ca/ auto-exchange and payout in BTC, DASH, XVG, DGB and KMD or any other coin that is listed at the pool. Mine most profitable coin, either with auto-exchange to a currency of wish, or mine directly to individual coin wallets. If you setup RainbowMiner with many algorithms, expect a lot of switching. Switching will be by coin.</details>
 <br />	
   
 <details><summary>Notes for [NiceHash](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1)</summary>
@@ -576,7 +574,7 @@ If you plan to mine through Nicehash, you need to register an account with them 
 Payout via Bitcoin-Lightning channel is possible. If you want to see balance details, first create a new API key (My Settings->API-Key) with "Wallet permission->View.." and "Mining permission->View.." enabled. Second add API key, API secret and Organizazion ID to pools.config.txt</details>
 <details><summary>Notes for the pools BlockCruncher, Hashcryptos, HashPool, MinerRocks, Mining4people, PocketWhale, Ravenminer, YiiMP and Zpool</summary>
   
-The miner can be setup to mine any coin or currency, that is listed at the respective pool. The pool will then payout to the given non-BTC wallet address. Take into account, that non-BTC payouts depend heavily on that coin being mined. If the pool has not or is not mining that currency, the payouts will be delayed until the pool has mined the blocks. Read the pools websites, about the mineability and reliability of a currency. It's recommended to use BTC as any other coin could be removed at anytime and payouts will not occur. The pools MinerRocks, PocketWhale, Ravenminer and Yiimp do not have auto-exchange to BTC. Please be careful, what you choose to mine.
+The miner can be setup to mine any coin or currency, that is listed at the respective pool. The pool will then payout to the given non-BTC wallet address. Take into account, that non-BTC payouts depend heavily on that coin being mined. If the pool has not mined or is not mining that currency, the payouts will be delayed until the pool has mined the blocks. Read the pools websites, about the mineability and reliability of a currency. It's recommended to use BTC as any other coin could be removed at anytime and payouts will not occur. The pools MinerRocks, PocketWhale, Ravenminer and Yiimp do not have auto-exchange to BTC. Please be careful, what you choose to mine.
 </details>
 
 ## MINERS
@@ -669,7 +667,7 @@ The differences:
 
 > I set the ocprofile to a clock and then set it different within AF under the same profile number
 
-- MSI Afterburner profiles are fixed to a maximum of five and is being selected by their number 1 to 5 in parameter "MSIprofile" in miners.config.txt"
+- MSI Afterburner profiles are fixed to a maximum of five and are selected by their number 1 to 5 in parameter "MSIAprofile" in miners.config.txt
 - ocprofiles are unlimited in amount, you decide what their names are. RainbowMiner comes with an example ocprofiles.config.txt, where the profiles are named "Profile1", "Profile", .. "Profile9". The profile is being selected by the full name in parameter "OCprofile" in miners.config.txt (for example "Profile2")
 
 > My overclocking settings do not work on Linux
@@ -697,7 +695,7 @@ MSI Afterburner allows to configure up to five profiles. Each of which defines t
 By default, the profile switching is disabled. To enable MSI Afterburner profile switching:
 
 - check or set the path to MSIA (config.txt, field "MSIApath")
-- set the profile number, you want to be used as default (config.txt, field "MSIAprofile") 
+- set the profile number you want to be used as default (config.txt, field "MSIAprofile") 
 
 ### Explanation of operation
 
@@ -727,14 +725,14 @@ Recommended for mining rigs with **more than 6 GPU** or **different GPU**
 
 Each miner/device/algorithm combination can have it's own overclocking values set by RainbowMiner. To enable: set "**EnableOCProfiles**" to "**1**" in your config.txt or use the [C]onfiguration->[C]ommon.
 
-**!! It is important, that you coose a default profile for each GPU device in your devices.config.txt !!**
+**!! It is important, that you choose a default profile for each GPU device in your devices.config.txt !!**
 
 You can edit the file directly: put the name of your custom default profile into field "**DefaultOCprofile**"
 Alternatively, the devices can be changed using [C]onfiguration->[D]evices
 
 ### 1. setup overclocking profiles
 
-Use [C]onfiguration->[O]C-Profiles to edit, create and delete overclocking profiles. Values for PowerLimit (%), ThermalLimit (Â°C), MemoryClockBoost (MHz), CoreClockBoost (MHz), LockMemoryClock (MHz), LockCoreClock (MHz) and LockVoltagePoint (ÂµV) (see hint below) can be defined. You may name the profiles like you want. Hint: Use the complete profile's names, when editing the config files directly. Of course you may also edit the ocprofiles.config.txt file directly.
+Use [C]onfiguration->[O]C-Profiles to edit, create and delete overclocking profiles. Values for PowerLimit (%), ThermalLimit (°C), MemoryClockBoost (MHz), CoreClockBoost (MHz), LockMemoryClock (MHz), LockCoreClock (MHz) and LockVoltagePoint (µV) (see hint below) can be defined. You may name the profiles like you want. Hint: Use the complete profile's names, when editing the config files directly. Of course you may also edit the ocprofiles.config.txt file directly.
 
 Hint: LockVoltagePoint can only be set, if EnableOCvoltage is set to 1 in your config.txt (or use [C]onfiguration->[C]ommon to change)
 
@@ -815,7 +813,7 @@ An example:
 
 - **Wallet** = your general BTC wallet address
 - **WorkerName** = your desired worker name
-- **Currency** = currencies, you want to be shown [default=BTC,USD,EUR]
+- **Currency** = currencies you want to be shown [default=BTC,USD,EUR]
 - **Region** = your region, [default=US]
 - **UIstyle** = set to "full" for complete listing, set to "lite" for reduced listing [default=full]
 - **UIsorting** = set to "profit" in order to force UI sorting by profit, set to "biased" for internal biased profits [default=biased]
@@ -824,11 +822,11 @@ An example:
 - **APIPort** = enter a free web-interface port localhost:<port> [default=4000]
 - **APIThreads** = Enter number of possible, parallel API threads (0=automatic, see notes) [default=0]
 - **APIauth** = set to "1" for username/password auth on localhost [default=0]
-- **APIuser** = enter an username for localhost accessibility
+- **APIuser** = enter a username for localhost accessibility
 - **APIpassword** = enter a password for localhost accessibility
 - **APIlockConfig** = set to "1" to lock config and disable save via API/localhost [default=0]
 - **APImaxLoginAttemps** = Maximum number of failed login attempts, until IP gets blocked (0=turn off) [default=3]
-- **APIblockLoginAttemptsTime** = Enter timespan, that an IP gets blocked, after the defined failed login attempts (units allowed, e.h. 1h=one hour, default unit is s=seconds) [default=30m]
+- **APIblockLoginAttemptsTime** = Enter timespan, that an IP gets blocked, after the defined failed login attempts (units allowed, e.g. 1h=one hour, default unit is s=seconds) [default=30m]
 - **APIallowIPs** = Restrict access to the API to specific IP addresses. Comma separated list of IPv4 or IPv6, wildcards (10.0.0.*) and CIDR (192.168.1.0/28, fe80::/10) allowed [default=]
 - **EnableAutoUpdate** = set to 1 if you want RainbowMiner to be updated automatically [default=1]
 - **EnableUpdateDuringPause** = set to 1 if you want RainbowMiner to be updated automatically, even if it is paused [default=1]
@@ -886,15 +884,15 @@ To convert those binary 0/1 values into a hex number, you may use this [Bin/Hex 
 
 #### Select algorithms
 
-- **Algorithm** = list of algorithms, you want to mine [default=bitcore,blake2s,c11,cryptonightheavy,cryptonightv7,ethash,equihash,hmq1725,hsr,keccak,keccakc,lyra2re2,lyra2z,neoscrypt,pascal,phi,skein,skunk,timetravel,tribus,x16r,x16s,x17,vit,xevan,yescrypt,yescryptr16]
-- **ExcludeAlgorithm** = list of algorithms, you want to exclude from mining
-- **ExcludeCoin** = list of coins, you want to exclude from mining
-- **ExcludeFromWatchdog** = list of algorithms or miner, you want to exclude from the watchdog
+- **Algorithm** = list of algorithms you want to mine [default=bitcore,blake2s,c11,cryptonightheavy,cryptonightv7,ethash,equihash,hmq1725,hsr,keccak,keccakc,lyra2re2,lyra2z,neoscrypt,pascal,phi,skein,skunk,timetravel,tribus,x16r,x16s,x17,vit,xevan,yescrypt,yescryptr16]
+- **ExcludeAlgorithm** = list of algorithms you want to exclude from mining
+- **ExcludeCoin** = list of coins you want to exclude from mining
+- **ExcludeFromWatchdog** = list of algorithms or miner you want to exclude from the watchdog
 - **DisableUnprofitableAlgolist** = set to "1" if you do not want to use the list of unprofitable algorithms, provided live by RainbowMiner. [default=0]
 - **DisableUnprofitableCpuAlgolist** = set to "1" if you do not want to use the list of unprofitable CPU algorithms, provided live by RainbowMiner (if you want to mine some GPU algorithms on your CPU). [default=0]
 - **EnableNeverProfitableAlgos** = set to "1" if you want to mine all possible algorithms, even those that are considered never profitable. This setting overrides DisableUnprofitableCpuAlgolist [default=0]
 
-Note: RainbowMiner uses two list of unprofitable algorithms. The lists are both maintained actively online and updated every hour. Both lists are active, by default. This avoids running benchmarks for algorithms, that normally don't turn into good profit.
+Note: RainbowMiner uses two lists of unprofitable algorithms. The lists are both maintained actively online and updated every hour. Both lists are active, by default. This avoids running benchmarks for algorithms, that normally don't turn into good profit.
 
 - **unprofitable.json** = contains mostly ASIC algorithms with very low GPU mining profitability. This list is also in use as emergency switch-off for coins/algorithms, for which the pools fail to provide valid numbers. This avoids mining to rogue coins/algorithms.
 - **unprofitable-cpu.json** = contains mostly GPU algorithms, with very low CPU mining profitability. If you like and want to mine one of these algorithms on your CPU, set `"DisableUnprofitableCpuAlgolist": "1",` in config.txt. There is no drawback, just low profits :)
@@ -902,26 +900,26 @@ Note: RainbowMiner uses two list of unprofitable algorithms. The lists are both 
 
 #### Select miners
 
-- **MinerName** = list of miner, you want to use for mining (see directory Miners, without .ps1, e.g. CcminerAlexis78.ps1 -> CcminerAlexis78)
-- **ExcludeMinerName** = list of miner names, you want to exclude from mining
+- **MinerName** = list of miner you want to use for mining (see directory Miners, without .ps1, e.g. CcminerAlexis78.ps1 -> CcminerAlexis78)
+- **ExcludeMinerName** = list of miner names you want to exclude from mining
 - **ExcludeMinersWithFee** = exclude all miners, that have a developer fee built-in [default=0]
-- **PreferMinerName** = list of miner names, that you prefer (see PreferMinerMargin)
+- **PreferMinerName** = list of miner names that you prefer (see PreferMinerMargin)
 - **PreferMinerMargin** = Choose one of your preferred miners, if it's hashrate is not lower than xx% of the top miner's (in percent) [default=5]
 - **EnableCheckMiningConflict** = Enable conflict check if running CPU hungry GPU miners (for weak CPUs) [default=0]
 - **EnableEthashZombieMode** = Enable Ethash mining with slower hashrate, even if the current DAG size doesn't fit into the GPU memory [default=0]
 - **EnableMinersToSaveDAG** = Allow miners to save DAGs to disk (currently TTminer only), costs a lot of space but speeds up the startup [default=0]
 - **DisableDualMining** = set to 1, if you want to disable all dual mining [default=0]
 - **EnableDualMiningDuringRentals** = set to 1, if dual mining during rentals should be allowed [default=0]
-- **DisableZeroWattMiners* = set to 1 to disable all miners that report 0-Watt [default=0]
+- **DisableZeroWattMiners** = set to 1 to disable all miners that report 0-Watt [default=0]
 - **IgnoreFees** = set to 1, if you do not want RainbowMiner to account the pool- and miner fees [default=0]
 - **ShowMinerWindow** = show (1) or do not show (0) miner windows. Note: excavator will always run in an extra window [default=0]
 - **FastestMinerOnly** = set to 1 to reduce list by only showing the fastest miner [default=1]
-- **DisableExtendInterval** = during benchmark, some miners will run longer to find an accurate hashrate. Set to 1 to disable the extended times (this is not recommended, as it may result in inaccurate hashrates or failed some miners) [default=0]
+- **DisableExtendInterval** = during benchmark, some miners will run longer to find an accurate hashrate. Set to 1 to disable the extended times (this is not recommended, as it may result in inaccurate hashrates or cause some miners to fail) [default=0]
 
 #### Select pools
 
-- **PoolName** = list of pool names, you want to use for mining [default=nicehash,zpool]
-- **ExcludePoolName** = list of pool names, you want to exclude from mining
+- **PoolName** = list of pool names you want to use for mining [default=nicehash,zpool]
+- **ExcludePoolName** = list of pool names you want to exclude from mining
 - **ShowPoolBalances** = set to 1 to let RainbowMiner show your current pool balances [default=1]
 - **ShowPoolBalancesDetails** = set to 0 if coin balances at a pool should be added up to BTC [default=1]
 - **ShowPoolBalancesExcludedPools** = set to 1 to let RainbowMiner try to fetch balances from not used pools in addition to the currently activated pools [default=0]
@@ -972,9 +970,9 @@ For Server (Runmode=server) setup:
 
 #### Set electricity cost handling
 
-- **PowerPrice** = price of 1kW/h (kilowatt per hour) that your electricity supplier charges [default=0]
+- **PowerPrice** = price of 1 kWh (kilowatt-hour) that your electricity supplier charges [default=0]
 - **PowerOffset** = power offset to allow consideration for overhead power [default=0]
-- **OctopusTariffCode** = if you live in the UK and are an Octopus customer, you can let RainbowMiner pull the variable energy prices. Just enter your current trariff code. It's in the format E-1R-{product_code}-{region_code}, where product code is something like SILVER-2017-1, AGILE-18-02-21, ... and region code is a capital letter, range A to P
+- **OctopusTariffCode** = if you live in the UK and are an Octopus customer, you can let RainbowMiner pull the variable energy prices. Just enter your current tariff code. It's in the format E-1R-{product_code}-{region_code}, where product code is something like SILVER-2017-1, AGILE-18-02-21, ... and region code is a capital letter, range A to P
 - **PowerPriceApi** = Connect RainbowMiner to a power price API like NodeRed. The API needs to return either a plain number or a JSON formatted string
 - **PowerPriceApiValue** = Define where to find the power price value inside the JSON formatted string that the Power Price API returns. Use dot notation e.g. prices[1].value - if the API returns a plain number, leave this value empty (or set it to #)
 - **PowerPriceApiInterval** = set to call-interval for PowerPriceApi or set it to 0 to use RainbowMiner's base interval
@@ -1013,7 +1011,7 @@ For Server (Runmode=server) setup:
 - **SSL** = configure ssl usage: 0=prefer non-SSL over SSL pools, 1=prefer SSL over non-SSL pools, 2=use SSL pools only [default=0]
 - **Proxy** = set your proxy address here, if you are using one
 - **EnableCurl** = set to 1 to use cURL instead of the build-in web requests (enable this, if you get frequent "Asyncloader is crashed" warnings) [default=0]
-- **Delay** = extra delay in secondes, between switching to avoid blue screen [default=0]
+- **Delay** = extra delay in seconds, between switching to avoid blue screen [default=0]
 - **Watchdog** = use (1) or do not use (0) watchdog [default=1]
 - **UseTimeSync** = set to 1, if RainbowMiner should adjust the windows clock by rtp [default=1]
 - **WebsitesForOnlineCheck** = list of websites, that RainbowMiner pings for testing the internet connection [default=www.google.com,www.amazon.com,www.baidu.com,www.coinbase.com,rbminer.net]
@@ -1044,7 +1042,7 @@ For Server (Runmode=server) setup:
 - **MSIAprofile** = default MSI Afterburner profile (1-5), set to 0 to disable [default=2]
 - **NVSMIpath** = absolute windows path to Nvidia smi tools [default=c:\Program Files\NVIDIA Corporation\NVSMI]
 - **EnableLinuxMinerNiceness** = set to 1 to enable nice command for miners
-- **LinuxMinerNiceness** = enter the level for miner niceness from -20 = least nice to 19 = super nice [defaul=19]
+- **LinuxMinerNiceness** = enter the level for miner niceness from -20 = least nice to 19 = super nice [default=19]
 - **EnableLinuxHeadless** = if set to 1, miner-startscripts and overclocking-scripts will include DISPLAY+XAUTHORITY settings
 - **LinuxDisplay** = default Linux DISPLAY for headless operation [default=:0]
 - **LinuxXAuthority** = default Linux XAUTHORITY for headless operation (needed for overclocking). [default=RainbowMiner will guess]
@@ -1124,11 +1122,11 @@ For non-autoexchange pools, you may define multiple wallets. The wallets define,
 
     "Icemining": {
         "RVN": "$RVN",
-        "SUQA": "<YOUR_SUQA_ADDRESS>"
+        "SUQA": "<YOUR_SUQA_ADDRESS>",
         "Worker": "$WorkerName",
         "Penalty": "0"
     }
-`
+
 Alternatively you may instruct RainbowMiner to automatically use every currency defined in coins.config.txt (which is enabled by adding a wallet address and setting parameter "EnableAutoPool" to "1") for a certain pool. To do so, set parameter "EnableAutoCoin" to "1".
 Example:
 
@@ -1192,13 +1190,13 @@ Possible values are:
 - minimum2: the minimum value of estimate_current and actual_last24h will be used
 - maximum2: the maximum value of estimate_current and actual_last24h will be used
 - average2: the calculated average of estimate_current and actual_last24h will be used
-- mininum2e: the minimum value of estimate_current and estimate_last24h will be used
+- minimum2e: the minimum value of estimate_current and estimate_last24h will be used
 - maximum2e: the maximum value of estimate_current and estimate_last24h will be used
 - average2e: the calculated average of estimate_current and estimate_last24h will be used
 - minimum2h: the minimum value of estimate_last24h and actual_last24h will be used
 - maximum2h: the maximum value of estimate_last24h and actual_last24h will be used
 - average2h: the calculated average of estimate_last24h and actual_last24h will be used
-- mininum3: the minimum value of the above three values will be used
+- minimum3: the minimum value of the above three values will be used
 - maximum3: the maximum value of the above three values will be used
 - average3: the calculated average of the above three values will be used
     
@@ -1246,12 +1244,12 @@ Example:
     
 Per default all algorithms of a pool will be used. To define your own set of algorithm, there are two additional fields:
 
-- Algorithm: a comma separated list of all pool's algorithm, you want RainbowMiner to use (leave empty for all)
-- ExcludeAlgorithm: a comma separated list of all pool's algorithm, you explicitly do not want RainbowMiner to use (leave empty for no exception)
-- CoinName: a comma separated list of coin names, you want RainbowMiner to use (leave empty for all). The coin's name must be spelled exactly like it is used at the corresponding pool. It applies to the pools, that transmit the coin names, only.
-- ExcludeCoin: a comma separated list of coin names, you explicitly do not want RainbowMiner to use (leave empty for all coins). The coin's name must be spelled exactly like it is used at the corresponding pool. It applies to the pools, that transmit the coin names, only.
-- CoinSymbol: a comma separated list of coin symbols, you want RainbowMiner to use (leave empty for all). Better alternative to "CoinName"
-- ExcludeCoinSymbol: a comma separated list of coin's, you want RainbowMiner to use (leave empty for all). Better alternative to "ExcludeCoin"
+- Algorithm: a comma separated list of all pool's algorithm you want RainbowMiner to use (leave empty for all)
+- ExcludeAlgorithm: a comma separated list of all pool's algorithm you explicitly do not want RainbowMiner to use (leave empty for no exception)
+- CoinName: a comma separated list of coin names you want RainbowMiner to use (leave empty for all). The coin's name must be spelled exactly like it is used at the corresponding pool. It applies to the pools, that transmit the coin names, only.
+- ExcludeCoin: a comma separated list of coin names you explicitly do not want RainbowMiner to use (leave empty for all coins). The coin's name must be spelled exactly like it is used at the corresponding pool. It applies to the pools, that transmit the coin names, only.
+- CoinSymbol: a comma separated list of coin symbols you want RainbowMiner to use (leave empty for all). Better alternative to "CoinName"
+- ExcludeCoinSymbol: a comma separated list of coin symbols you explicitly do not want RainbowMiner to use (leave empty for no exception). Better alternative to "ExcludeCoin"
 - EnablePostBlockMining: set to "1" to allow forced mining a specific currency for a timespan (defined in coins.config.txt), after a block has been found.
 - CoinSymbolPBM: if EnablePostBlockMining is set to "1", specify which currency is taken into account for post block mining. Leave empty for all.
 
@@ -1273,7 +1271,7 @@ Example:
 
 #### Force mining to a pool's wallet
 
-To force mining to pool's wallets, you may add the wallet's currencies to field "FocusWallet". RainbowMiner will mine into the the focused pool/wallets, only.
+To force mining to pool's wallets, you may add the wallet's currencies to field "FocusWallet". RainbowMiner will mine into the focused pool/wallets, only.
 
 Example:
 
@@ -1310,7 +1308,7 @@ Example:
 
 To avoid rapid pool-to-pool hopping, the global config.txt parameter "PoolSwitchingHysteresis" can already be set.
 If needed, the global value can be overwritten with the pools.config.txt parameter "SwitchingHysteresis".
-Set if to a value of `"0"`-`"100"` or leave it empty `""` to use the global "PoolSWitchingHysteresis"
+Set it to a value of `"0"`-`"100"` or leave it empty `""` to use the global "PoolSwitchingHysteresis"
 
 Example:
 
@@ -1438,7 +1436,7 @@ Remark: if CoinSymbol is set and Currency is empty, Currency will be set to Coin
 - **APIUrl2** = set to a valid API url
 - **APIUrl3** = set to a valid API url
 
-Instead of setting a static value (number) for the API parameters, you can address the request results of one of the API urls. To declare which of the API urls contains a value, start the path with "api1", "api2" or "api3". If you ommit this, "api1" will be used automatically.
+Instead of setting a static value (number) for the API parameters, you can address the request results of one of the API urls. To declare which of the API urls contains a value, start the path with "api1", "api2" or "api3". If you omit this, "api1" will be used automatically.
 The APIs need to return valid JSON (with one exception, see below). To describe the path to the values, the following syntax need to be used:
 - apiN.name1.name2. ... until you reach the value
 - if there are arrays inside the JSON, you can select the next path step with brackets:
@@ -1450,7 +1448,7 @@ For **Profit** there is an exception: in case one of the API urls directly retur
 - "#2" for the direct value of API url 2
 - "#3" for the direct value of API url 3
 
-For **ProfitFactor** there is a special case: if the ProfitFactor path contains "mbtc_mh_factor", the ProfitFactor will be multiplicated by 1e6 (=1000000)
+For **ProfitFactor** there is a special case: if the ProfitFactor path contains "mbtc_mh_factor", the ProfitFactor will be multiplied by 1e6 (=1000000)
 
 Remark: the following variables will be automatically replaced in parameters **User**, **Pass** and all **--> API!**
 
@@ -1596,11 +1594,11 @@ Example:
 
 This configuration would:
 - bind all RTX3060 in the system to Ethash and X16R mining, only, excluding the ClaymoreEthash miner
-- setting the flag "DisableDualMining" to "1", all dual-algorithm miners will be removed from this device's list.
+- by setting the flag "DisableDualMining" to "1", all dual-algorithm miners are removed from this device's list.
 - for custom overclocking Profile1 is used as default for this GPU type
 - set a power adjust factor of 87.5% to the Radeon R290X (if RainbowMiner reported 250W with factor 100%, it will now show 250W x 87.5 / 100 = 175W)
 - the pool worker name for the RTX3060 will be set to "my3060". If used in combos, the individual worker names will be combined with _ (underscore)
-- the miners Trex and Teamblack will be forced to use LHR magic for the RTX3060s, because "EnableLHR" is set to "1". Leave it empty for automatically use, set to "0" for don't use.
+- the miners Trex and Teamblack will be forced to use LHR magic for the RTX3060s, because "EnableLHR" is set to "1". Leave it empty for automatic use, set to "0" to not use it.
 
 
 ### Config\gpugroups.config.txt
@@ -1690,7 +1688,7 @@ This configuration would:
 
 ### Config\mrr.config.txt
 
-If pool MiningRigRentals is in use, this file contains per worker name specific configuration parameters. Setting any parameter to a value other then empty string will override the same-name main parameter in pools.config.txt
+If pool MiningRigRentals is in use, this file contains per worker name specific configuration parameters. Setting any parameter to a value other than empty string will override the same-name main parameter in pools.config.txt
 
 ### Config\mrralgorithms.config.txt
 
@@ -1795,16 +1793,16 @@ Example (this is the setup for one of my GTX1070 rigs, basically substituting th
     }
 
 - PowerLimit: in percent, set to 0, if you do not want this to be changed
-- ThermalLimit: in Â°C, set to 0, if you do not want this to be changed
+- ThermalLimit: in °C, set to 0, if you do not want this to be changed
 - MemoryClockBoost: in MHz, set to "*", if you do not want this to be changed
 - CoreClockBoost: in MHz, set to "*", if you do not want this to be changed
-- LockVoltagePoint: in ÂµV, set to "*", if you do not want this to be changed or "0", if voltagePoint should be unlocked
+- LockVoltagePoint: in µV, set to "*", if you do not want this to be changed or "0", if voltagePoint should be unlocked
 - LockMemoryClock: in MHz, set to "*", if you do not want this to be changed or "0", if MemoryClock should be unlocked
 - LockCoreClock: in MHz, set to "*", if you do not want this to be changed or "0", if CoreClock should be unlocked
 - PreCmd/PreCmdArguments: define a command to be executed before the miner starts. PreCmd is the path to the binary, PreCmdArguments are optional arguments for that command.
 - PostCmd/PostCmdArguments: define a command to be executed after the miner has finished. PostCmd is the path to the binary, PostCmdArguments are optional arguments for that command.
 
-Note the last entry: "Profile-GPU#02"
+Note the last entry: "Profile2-GPU#02"
 Imagine a rig with multiple GTX1070 from the same manufacturer, except GPU#02, which is from a different manufacturer. This one GPU might need slightly different overclocking for Profile2. 
 Adding the GPU's name or PCI bus id has priority over the model name selection.
 
@@ -1866,11 +1864,11 @@ Example
 
 ### Config\autoexec.config.txt
 
-If you want RainbowMiner to start other commands before the mining begins, you may add them to file Config\autoexec.config.txt by following the following rules:
+If you want RainbowMiner to start other commands before the mining begins, you may add them to file Config\autoexec.config.txt by following these rules:
 - one line, one command
 - command and path must be enclosed with doublequotes (")
-- arguments (if any) must follow after the closing doublequote if the command
-- a hashtag (#) marks the beginning of a comment, everything behind this within the line, will be ignored
+- arguments (if any) must follow after the closing doublequote of the command
+- a hashtag (#) marks the beginning of a comment, everything after it on the line will be ignored
 
 Example:
 
@@ -1881,13 +1879,13 @@ Example:
 
     "C:\Qbundle\BlagoMiner\Blagominer_avx.exe" --argument1 whatsoever1
 
-.. would start Blagominer_avx.exe with commands ""--argument1 whatsoever1", setting the working directory to "C:\Qbundle\BlagoMiner"
+.. would start Blagominer_avx.exe with arguments "--argument1 whatsoever1", setting the working directory to "C:\Qbundle\BlagoMiner"
 
 ## FAQ
 
-### How do I add RainbowMiner's Start.bat to the windows task sheduler for autostart?
+### How do I add RainbowMiner's Start.bat to the windows task scheduler for autostart?
 
-Press windows key and type `shedule`, click on `Task Sheduler`
+Press windows key and type `schedule`, click on `Task Scheduler`
 
 `Create a basic task`
 
@@ -1925,7 +1923,7 @@ Where `PATH_TO_RAINBOWMINER` is the RainbowMiner installation directory.
 #### 1. Signup and create a rig for rent
 
 - signup at [https://www.miningrigrentals.com](https://www.miningrigrentals.com/register?ref=2598069)
-- create API keys with permission "Balance/Withdraw" = "Read-Only" and "Manage Rigs" = "Yes" (Hint: if you have multiple RainbowMiner rigs, create new keys for each of it!)
+- create API keys with permission "Balance/Withdraw" = "Read-Only" and "Manage Rigs" = "Yes" (Hint: if you have multiple RainbowMiner rigs, create new keys for each of them!)
 - create a rig for at least one algorithm that you want to rent to an interested renter at the "MyRigs" section of the website
 - optional: add pools on the "Pool Configuration" tab of the rig
 - set your rig's rentable status to "available"
@@ -1955,8 +1953,8 @@ The following are the pool parameters:
 - **API_Key**: Enter your MiningRigRentals API key [default=]
 - **API_Secret**: Enter your MiningRigRentals API secret key [default=]
 - **UseWorkerName**: Enter list of workernames that should be explicitly used for MRR (leave empty for all) [default=]
-- **ExcludeWorkerName**: Enter list of workernames that should explicitly excluded from the use with MRR (leave empty for none) [default=]
-- **EnableMining**: Enable switching to MiningRigRentals, even it is not rentend (not recommended) [default=0]
+- **ExcludeWorkerName**: Enter list of workernames that should be explicitly excluded from the use with MRR (leave empty for none) [default=]
+- **EnableMining**: Enable switching to MiningRigRentals, even if it is not rented (not recommended) [default=0]
 - **EnableMaintenanceMode**: Set to "1" if you are planning to shut down your rig for any reason (e.g. maintenance). RainbowMiner will then disable all unrented rigs, until you reset the parameter back to "0" [default=0]
 - **EnableAutoCreate**: Automatically create MRR-rigs [default=0]
 - **EnableAutoUpdate**: Automatically update MRR-rigs [default=0]
@@ -1969,8 +1967,7 @@ The following are the pool parameters:
 - **AutoBonusExtendForHours**: Enter amount of hours, that you want to reward with an automatic bonus extension (e.g. 24) [default=0]
 - **AutoBonusExtendByHours**: Enter bonus extension in hours per each fully rented AutoBonusExtendForHours (e.g. 1) [default=0]
 - **AutoBonusExtendTimes**: Limit the maximum extensions by AutoBonusExtendByHours to a specific number of times (e.g. 1), 0=unlimited [default=0]
-- **AutoCreateMinProfitPercent**: Enter minimum profitability in percent compared to current best profit, for full rigs to be autocreated on MRR [defau
-lt=50]
+- **AutoCreateMinProfitPercent**: Enter minimum profitability in percent compared to current best profit, for full rigs to be autocreated on MRR [default=50]
 - **AutoCreateMinCPUProfitBTC**: Enter minimum one-day revenue in BTC, for a CPU-only rig to be autocreated on MRR [default=0.00001]
 - **AutoCreateMaxMinHours**: Enter the maximum hours for minimum rental time, for a rig to be autocreated on MRR [default=24]
 - **AutoCreateAlgorithm**: Algorithms that should always be autocreated on MRR, even if below the other limits [default=]
@@ -1989,7 +1986,7 @@ lt=50]
 - **PriceFactorDecayPercent**: Enter percentage for decay of the profit multiplicator over time (0 = disable) [default=0]
 - **PriceFactorDecayTime**: Enter the profit multiplicator decay interval (in seconds, verbose allowed, e.g. 1.5h = 1.5 hours, 30m = 30 minutes) [default=4h]
 - **PriceRiseExtensionPercent**: Enter price rise for extensions of a rental (in percent, e.g. 10 means 10% price rise) [default=0]
-- **PowerDrawFactor**: Enter powerdraw multiplicator (only if UsePowerPrice is enabled): minimum price = minimum price + (miner's power draw - rig's average power draw) 24 / 1000 x powerdrawprice x this multiplicator [default=1.0]
+- **PowerDrawFactor**: Enter powerdraw multiplicator (only if UsePowerPrice is enabled): minimum price = minimum price + (miner's power draw - rig's average power draw) x 24 / 1000 x powerdrawprice x this multiplicator [default=1.0]
 - **EnablePowerDrawAddOnly**: Add the powerdraw cost difference only, if it is greater than 0 [default=0]
 - **MinHours**: Minimum rental time in hours (min. 3) [default=3]
 - **MaxHours**: Maximum rental time in hours (min. 3) [default=168]
@@ -1997,20 +1994,20 @@ lt=50]
 - **AllowExtensions**: Allow renters to buy extensions for their rentals [default=1]
 - **AllowRentalDuringPause**: Allow rentals, even if the mining rig is in pause mode [default=0]
 - **PriceCurrencies**: List of accepted currencies (must contain BTC) [default=BTC]
-- **Title**: Title for autocreate, make sure it contains %algorithm% or %algorithmex% or %display%, and %rigid% (values will be substituted like that: %algorithm% with algorithm, %algorithmex% with algorithm plus coin info if needed, %coininfo% with eventual coin info, %display% with MRR specific display title, %rigid% with an unique rigid, %workername% with the workername, %type% with either CPU or GPU, %typecpu% with CPU or empty, %typegpu% with GPU or empty)";Description="Description for autocreate, %workername% will be substituted with rig's workername. Make sure you add [%workername%] (including the square brackets!) [default=%algorithmex% mining with RainbowMiner rig %rigid%]
+- **Title**: Title for autocreate, make sure it contains %algorithm% or %algorithmex% or %display%, and %rigid% (values will be substituted like that: %algorithm% with algorithm, %algorithmex% with algorithm plus coin info if needed, %coininfo% with eventual coin info, %display% with MRR specific display title, %rigid% with a unique rigid, %workername% with the workername, %type% with either CPU or GPU, %typecpu% with CPU or empty, %typegpu% with GPU or empty) [default=%algorithmex% mining with RainbowMiner rig %rigid%]
 - **Description**: Description for autocreate, %workername% will be substituted with rig's workername. Make sure you add [%workername%] (including the square brackets!) [default=Autostart mining with RainbowMiner (https://rbminer.net) on Windows. This rig is idle and will activate itself, as soon, as you rent it. [%workername%]]
 - **StartMessage**: Message, that will be sent to the renter at the start of the rental. See below for possible substitution variables.
 - **ExtensionMessageTime**: Send the ExtensionMessage to the renter, when the remaining rental time drops below this value (in seconds, verbose allowed, e.g. 1.5h = 1.5 hours, 30m = 30 minutes, set to 0 or empty to disable) [default=2h]
 - **ExtensionMessage**: Message, that will be sent to the renter, when remaining rental time drops below ExtensionMessageTime
 - **DiffMessageTime**: Send the DiffMessage to the renter, when the current difficulty stays out of the optimum difficulty for this time (in seconds, verbose allowed, e.g. 1.5h = 1.5 hours, 30m = 30 minutes, set to 0 or empty to disable) [default=15m]
-- **DiffMessageTolerancyPercent**: Allowed tolerancy above the maximum and below the minimum of the optimum difficulty (in percent, e.g. 15 means 15%) [default=15]
+- **DiffMessageTolerancyPercent**: Allowed tolerance above the maximum and below the minimum of the optimum difficulty (in percent, e.g. 15 means 15%) [default=15]
 - **DiffMessage**: Message, that will be sent to the renter, if the current difficulty stays out of the optimum difficulty for DiffMessageTime. See below for possible substitution variables.
 - **PoolOfflineTime**: time a renter's pools has to be offline, until it is temporary disabled and the pool offline message is sent (in seconds, verbose allowed, e.g. 1.5h = 1.5 hours, 30m = 30 minutes) [default=3m]
 - **PoolOfflineRetryTime**: time after which we will retry to connect to a disabled renter's pool (in seconds, verbose allowed, e.g. 1.5h = 1.5 hours, 30m = 30 minutes) [default=15m]
 - **PoolOfflineMessage**: Message, that will be sent to the renter, after a renter's pool has been offline for PoolOfflineTime
 - **ProfitAverageTime**: Enter the device profit moving average time period (Minute,Minute_5,Minute_10,Hour,Day,ThreeDay,Week), [default=Day]
 - **PauseBetweenRentals**: Disable rigs on MRR after a rental for some time (in seconds, verbose allowed, e.g. 1.5h = 1.5 hours, 30m = 30 minutes) [default=10m]
-- **EnableRecoveryMode**: if you have orphaned rigs due to empty description or if you have unintentionally removed the [%workername%] tag, set this to "1" and RainbowMiner will try to match all orphaned rigs to the unique rig titles and eventually recover the description. Since the recovery mode adds another pretty lengthy API call, make sure to disable (set "EnableRecoverMode" to "0"), after all rigs have been recovered. [default=0]
+- **EnableRecoveryMode**: if you have orphaned rigs due to empty description or if you have unintentionally removed the [%workername%] tag, set this to "1" and RainbowMiner will try to match all orphaned rigs to the unique rig titles and eventually recover the description. Since the recovery mode adds another pretty lengthy API call, make sure to disable (set "EnableRecoveryMode" to "0"), after all rigs have been recovered. [default=0]
 
 ##### Substitution variables for StartMessage and DiffMessage:
 - %Algorithm%      = normalized algorithm name
