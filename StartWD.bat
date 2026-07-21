@@ -1,5 +1,17 @@
 @cd /d %~dp0
 
+@rem on Windows 11 (build 22000+) relaunch under the classic console host: the Windows Terminal
+@rem default host breaks window handling (move/close/minimize) and -windowstyle for console apps
+@if defined RBM_CONHOST goto conhostok
+@set "RBM_CONHOST=1"
+@set "WD_BUILD=0"
+@for /f "tokens=3" %%i in ('reg query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion" /v CurrentBuildNumber 2^>nul ^| find "CurrentBuildNumber"') do @set "WD_BUILD=%%i"
+@if %WD_BUILD% GEQ 22000 (
+    start "" conhost.exe cmd /c ""%~f0""
+    exit /b
+)
+:conhostok
+
 @if not defined RBM_RUNCOPY (
     set "RBM_RUNCOPY=1"
     copy /y "%~f0" "%~dp0StartWD.run.cmd" >nul 2>nul
