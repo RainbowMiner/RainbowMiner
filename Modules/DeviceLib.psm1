@@ -1254,7 +1254,7 @@ function Update-DeviceInformation {
                     }
 
                     if (-not $Success) {
-                        Write-Log -Level Warn "Could not read power data from AMD"
+                        Write-Log -Level Info "Could not read power data from AMD"
                     }
                 }
                 elseif ($IsLinux) {
@@ -1333,7 +1333,7 @@ function Update-DeviceInformation {
                 }
             }
         } catch {
-            Write-Log -Level Warn "Could not read power data from AMD"
+            Write-Log -Level Info "Could not read power data from AMD"
         }
 
         try { #INTEL
@@ -1420,7 +1420,7 @@ function Update-DeviceInformation {
                     }
 
                     if (-not $Success) {
-                        Write-Log -Level Warn "Could not read power data from INTEL"
+                        Write-Log -Level Info "Could not read power data from INTEL"
                     }
                 }
                 elseif ($IsLinux) {
@@ -1463,7 +1463,7 @@ function Update-DeviceInformation {
                 }
             }
         } catch {
-            Write-Log -Level Warn "Could not read power data from INTEL"
+            Write-Log -Level Info "Could not read power data from INTEL"
         }
 
         try { #NVIDIA        
@@ -1495,7 +1495,7 @@ function Update-DeviceInformation {
                 }
             }
         } catch {
-            Write-Log -Level Warn "Could not read power data from NVIDIA"
+            Write-Log -Level Info "Could not read power data from NVIDIA"
         }
 
         try {
@@ -1561,7 +1561,7 @@ function Update-DeviceInformation {
             }
         }
     } catch {
-        Write-Log -Level Warn "Could not read power data from CPU"
+        Write-Log -Level Info "Could not read power data from CPU"
     }
 }
 
