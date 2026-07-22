@@ -856,6 +856,24 @@ function Get-ConfigContent {
     }
 }
 
+function Repair-ConfigNullFields {
+    # restore the "$Var" placeholder for null-valued config fields: nulls (from
+    # old files or server-pushed configs) bypass the type conversion on load
+    # and leak into $Session.Config
+    if ($PathToFile = Get-ConfigPath -ConfigName "Config") {
+        if ($Preset = Get-ConfigContent "Config") {
+            $Changed = $false
+            $Session.DefaultValues.Keys | Where-Object {$_ -ne "SetupOnly" -and ($Preset.PSObject.Properties.Name -contains $_) -and $Preset.$_ -eq $null} | Foreach-Object {
+                $Preset | Add-Member $_ "`$$_" -Force
+                $Changed = $true
+            }
+            if ($Changed) {
+                Set-ContentJson -PathToFile $PathToFile -Data $Preset > $null
+            }
+        }
+    }
+}
+
 function Get-SessionServerConfig {
     [CmdletBinding()]
     param(

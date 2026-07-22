@@ -708,6 +708,7 @@ function Invoke-Core {
 
             do {
                 if ($Session.Config -eq $null) {Write-Host "Read configuration .."}
+                Repair-ConfigNullFields
                 $ConfigSetup = Get-ChildItemContent ".\Data\ConfigDefault.ps1"
                 $Session.ConfigFiles["Config"].LastWriteTime = (Get-ChildItem $Session.ConfigFiles["Config"].Path).LastWriteTimeUtc
                 $Parameters = @{}
@@ -789,6 +790,13 @@ function Invoke-Core {
         }
         if ("$($Session.Config.SSL)" -ne '' -and "$($Session.Config.SSL)" -notmatch "^[012]$") {$Session.Config.SSL = [int](Get-Yes $Session.Config.SSL)}
         #end backwards compatibility
+
+        #fill null values with their defaults - nulls have TypeNameOfValue "System.Object" and would bypass the type conversion below
+        $Session.DefaultValues.Keys | Where-Object {$_ -ne "SetupOnly" -and $Session.Config.$_ -eq $null} | Foreach-Object {
+            $val = $Session.DefaultValues[$_]
+            if ($val -is [array]) {$val = @($val)}
+            $Session.Config | Add-Member $_ $val -Force
+        }
 
         $Session.Config.PSObject.Properties | Where-Object {$_.TypeNameOfValue -ne "System.Object" -and $_.MemberType -eq "NoteProperty"} | Select-Object Name,Value | Foreach-Object {
             $name = $_.Name;
@@ -1077,7 +1085,7 @@ function Invoke-Core {
     $MSIAenabled = $IsWindows -and -not $Session.Config.EnableOCProfiles -and $Session.Config.MSIAprofile -gt 0 -and (Test-Path $Session.Config.MSIApath)
     $Session.OCmode = if ($MSIAenabled) {"msia"} elseif ($Session.Config.EnableOCProfiles) {"ocp"} else {"off"}
 
-    $PowerPriceCurrency = if ($Session.Config.OctopusTariffCode -ne '') {"GBP"} else {$Session.Config.PowerPriceCurrency}
+    $PowerPriceCurrency = if ("$($Session.Config.OctopusTariffCode)" -ne '') {"GBP"} else {$Session.Config.PowerPriceCurrency}
 
     #automatic fork detection
     if (Test-Path ".\Data\forksdb.json") {
@@ -6607,7 +6615,7 @@ function Get-PowerPrice {
         } catch {
             Write-Log -Level Warn "Call to PowerPriceApi $($Session.Config.PowerPriceApi) failed: $($_.Exception.Message)"
         }
-    } elseif ($Session.Config.OctopusTariffCode -ne '') {
+    } elseif ("$($Session.Config.OctopusTariffCode)" -ne '') {
         if ($Session.Config.OctopusTariffCode -match "^E-[12]R-([A-Z0-9-]+)-[A-Z]$") {
             $ProductCode = $Matches[1]
             try {
