@@ -245,13 +245,13 @@ function Start-Core {
 
         if ($CurlPath -and (Test-Path $CurlPath)) {
             $TestOk = $false
-            $CurlTest = Invoke-Exe $CurlPath -ArgumentList "--version" -WaitForExit 10
+            $CurlTest = Invoke-Exe $CurlPath -ArgumentList "--version" -WaitForExit 10 -KillOnTimeout
             if ($CurlTest -match "curl\s+\d+") {$TestOk = $true}
             else {
-                $CurlTest = Invoke-Exe $CurlPath -ArgumentList "-G `"https://httpbin.org/status/200`" -H `"accept: text/plain`" --max-time 5 --connect-timeout 3 --ssl-allow-beast --ssl-no-revoke --max-redirs 5 -s -L -q -w `"%{response_code}`"" -WaitForExit 10
+                $CurlTest = Invoke-Exe $CurlPath -ArgumentList "-G `"https://httpbin.org/status/200`" -H `"accept: text/plain`" --max-time 5 --connect-timeout 3 --ssl-allow-beast --ssl-no-revoke --max-redirs 5 -s -L -q -w `"%{response_code}`"" -WaitForExit 10 -KillOnTimeout
                 if ($CurlTest -eq "200") {$TestOk = $true}
                 else {
-                    $CurlTest = Invoke-Exe $CurlPath -ArgumentList "-G `"https://api.rbminer.net/data/hello.txt`" --max-time 5 --connect-timeout 3 --ssl-allow-beast --ssl-no-revoke --max-redirs 5 -s -L -q" -WaitForExit 10
+                    $CurlTest = Invoke-Exe $CurlPath -ArgumentList "-G `"https://api.rbminer.net/data/hello.txt`" --max-time 5 --connect-timeout 3 --ssl-allow-beast --ssl-no-revoke --max-redirs 5 -s -L -q" -WaitForExit 10 -KillOnTimeout
                     if ("$($CurlTest)".Trim() -eq "world") {$TestOk = $true}
                 }
             }
@@ -6523,7 +6523,7 @@ function Test-Internet {
                     }
                 }
                 Foreach ($url in $CheckDomains) {
-                    $Data = (Invoke-Exe $Session.Curl -ArgumentList "--head `"http://$($url)`" $($curlproxy)-m 1 --connect-timeout 1 -A `"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36`" -q -w `"#~#%{response_code}`"" -WaitForExit 5) -split "#~#"
+                    $Data = (Invoke-Exe $Session.Curl -ArgumentList "--head `"http://$($url)`" $($curlproxy)-m 1 --connect-timeout 1 -A `"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36`" -q -w `"#~#%{response_code}`"" -WaitForExit 5 -KillOnTimeout) -split "#~#"
                     if ($Data -and $Data.Count -gt 1 -and $Global:LASTEXEEXITCODE -eq 0 -and $Data[-1] -match "^[23]\d\d") {$ok = $true;break}
                 }
             }

@@ -537,7 +537,9 @@ Param(
 
             $CurlCommand = "$(if ($requestmethod -ne 'GET') {"-X $requestmethod"} else {"-G"}) `"$RequestUrl`" $CurlBody$CurlHeaders $useragent$curlproxy-m $($timeout+5)$(if (-not $NoExtraHeaderData) {" --compressed"}) --connect-timeout $timeout --ssl-allow-beast --ssl-no-revoke --max-redirs 5 -k -s -L -q -w `"#~#%{response_code}`""
 
-            $Data = [RBMToolBox]::Split((Invoke-Exe $Session.Curl -ArgumentList $CurlCommand -WaitForExit $Timeout),"#~#")
+            # curl bounds itself via "-m $($timeout+5)" - the hard WaitForExit kill
+            # must fire after that, or slow-but-valid responses get cut off
+            $Data = [RBMToolBox]::Split((Invoke-Exe $Session.Curl -ArgumentList $CurlCommand -WaitForExit ($Timeout+6) -KillOnTimeout),"#~#")
 
             if ($Session.LogLevel -eq "Debug") {
                 Write-Log "CURL[$($Global:LASTEXEEXITCODE)][$($Data[-1])] $($CurlCommand)"

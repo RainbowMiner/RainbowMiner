@@ -880,7 +880,9 @@ function Invoke-Exe {
         [Parameter(Mandatory = $false)]
         [Switch]$AutoWorkingDirectory = $false,
         [Parameter(Mandatory = $false)]
-        [Switch]$Runas = $false
+        [Switch]$Runas = $false,
+        [Parameter(Mandatory = $false)]
+        [Switch]$KillOnTimeout = $false
         )
 
     $psi = $null
@@ -906,10 +908,28 @@ function Invoke-Exe {
             $process.StartInfo = $psi
             [void]$process.Start()
 
-            $out = $process.StandardOutput.ReadToEnd()
-            $process.WaitForExit($WaitForExit*1000)>$null
+            # drain both pipes async: a child that fills the never-read stderr pipe
+            # blocks and never closes stdout, deadlocking a sync ReadToEnd() no
+            # matter the timeout. Without -KillOnTimeout the child may run as long
+            # as it needs (legacy semantics); with it, WaitForExit is a hard bound
+            # and the partial output is kept
+            $outTask = $process.StandardOutput.ReadToEndAsync()
+            $errTask = $process.StandardError.ReadToEndAsync()
+            if ($process.WaitForExit([Math]::Max($WaitForExit,1)*1000)) {
+                $out = $outTask.Result
+            } elseif ($KillOnTimeout) {
+                try {$process.Kill()} catch {}
+                $process.WaitForExit(1000)>$null
+                # a grandchild inheriting the stdout handle keeps the pipe open
+                # beyond the child's exit - bound the drain, too
+                $out = if ($outTask.Wait(2000)) {$outTask.Result} else {""}
+            } else {
+                $out = $outTask.Result
+                $process.WaitForExit([Math]::Max($WaitForExit,1)*1000)>$null
+            }
+            $errTask.Wait(500)>$null
             if ($ExpandLines) {foreach ($line in @($out -split '\n')){if (-not $ExcludeEmptyLines -or $line.Trim() -ne ''){$line -replace '\r'}}} else {$out}
-            $Global:LASTEXEEXITCODE = $process.ExitCode
+            $Global:LASTEXEEXITCODE = if ($process.HasExited) {$process.ExitCode} else {-1}
         } else {
             if ($FilePath -match "IncludesLinux") {$FilePath = Get-Item $FilePath | Select-Object -ExpandProperty FullName}
             if (Test-OCDaemon) {

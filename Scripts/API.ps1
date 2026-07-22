@@ -681,23 +681,29 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             # identity values (host/user names) are short and word-like: they may only
             # match as whole tokens, or they corrupt other words (SrbMinerMulti!)
             $PurgeStringsBounded = [System.Collections.Generic.List[string]]::new()
+            # route each secret by shape: short pure-word values are identity-like
+            # (account/worker names, simple passwords) and go into the bounded list
+            $AddPurgeString = {
+                param($Value)
+                if ($Value -match "^\w{1,15}$") {[void]$PurgeStringsBounded.Add($Value)} else {[void]$PurgeStrings.Add($Value)}
+            }
             $UserConfig    = if ($Session.UserConfig) {$Session.UserConfig | ConvertTo-Json -Depth 10 -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore} else {$null}
             $RunningConfig = $Session.Config | ConvertTo-Json -Depth 10 -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
             @($RunningConfig,$UserConfig) | Where-Object {$_} | Foreach-Object {
                 $CurrentConfig = $_
-                @("Wallet","API_Key","MinerStatusKey","MinerStatusEmail","PushOverUserKey") | Where-Object {$CurrentConfig.$_} | Foreach-Object {[void]$PurgeStrings.Add($CurrentConfig.$_)}
+                @("Wallet","API_Key","MinerStatusKey","MinerStatusEmail","PushOverUserKey") | Where-Object {$CurrentConfig.$_} | Foreach-Object {& $AddPurgeString ([string]$CurrentConfig.$_)}
                 @("ServerName","ServerUser","APIuser") | Where-Object {$CurrentConfig.$_ -and "$($CurrentConfig.$_)" -notmatch "^\`$"} | Foreach-Object {[void]$PurgeStringsBounded.Add($CurrentConfig.$_);$CurrentConfig.$_ = "XXX"}
                 @("Username","APIPassword","ServerPassword") | Where-Object {$CurrentConfig.$_} | Foreach-Object {$CurrentConfig.$_ = "XXX"}
                 $CurrentConfig.Pools.PSObject.Properties.Value | Foreach-Object {
                     $CurrentPool = $_
-                    $CurrentPool.Wallets.PSObject.Properties.Value | Where-Object {$_} | Foreach-Object {[void]$PurgeStrings.Add([string]$_)}
-                    @("Wallet","API_Key","API_Secret","OrganizationID","Password","PartyPassword","Email") | Where-Object {$CurrentPool.$_ -and $CurrentPool.$_.Length -gt 5} | Foreach-Object {[void]$PurgeStrings.Add([string]$CurrentPool.$_)}
+                    $CurrentPool.Wallets.PSObject.Properties.Value | Where-Object {$_ -and "$_" -notmatch "^\`$"} | Foreach-Object {& $AddPurgeString ([string]$_)}
+                    @("Wallet","API_Key","API_Secret","OrganizationID","Password","PartyPassword","Email") | Where-Object {$CurrentPool.$_ -and $CurrentPool.$_.Length -gt 5} | Foreach-Object {& $AddPurgeString ([string]$CurrentPool.$_)}
                     @("User","Username") | Where-Object {$CurrentPool.$_ -and $CurrentPool.$_.Length -gt 5 -and "$($CurrentPool.$_)" -notmatch "^\`$"} | Foreach-Object {[void]$PurgeStringsBounded.Add([string]$CurrentPool.$_)}
                     @("Username") | Where-Object {$CurrentPool.$_} | Foreach-Object {$CurrentPool.$_ = "XXX"}
                 }
-                $CurrentConfig.Coins.PSObject.Properties.Value | Where-Object {$_.Wallet -and $_.Wallet.Length -gt 5} | Foreach-Object {[void]$PurgeStrings.Add([string]$_.Wallet)}
+                $CurrentConfig.Coins.PSObject.Properties.Value | Where-Object {$_.Wallet -and $_.Wallet.Length -gt 5} | Foreach-Object {& $AddPurgeString ([string]$_.Wallet)}
                 $CurrentConfig.Userpools | Where-Object {$_} | Foreach-Object {
-                    if ($_.Wallet -and $_.Wallet.Length -gt 5) {[void]$PurgeStrings.Add([string]$_.Wallet)}
+                    if ($_.Wallet -and $_.Wallet.Length -gt 5) {& $AddPurgeString ([string]$_.Wallet)}
                     if ($_.User -and $_.User.Length -gt 5 -and "$($_.User)" -notmatch "^\`$") {[void]$PurgeStringsBounded.Add([string]$_.User)}
                 }
             }
@@ -720,10 +726,18 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             $ip_regex   = '\b(?<!\.)(?<!\w[ \t]{2,40})(?!127\.)(?!0\.0\.0\.0(?![\w.]))(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}\b(?!\.)'
             $ip_mark    = [string][char]1
 
+            # the project's own public tokens must survive the purge: a config value
+            # equal to one of them (account name, pool password) would otherwise
+            # corrupt every mention of RainbowMiner.ps1, api.rbminer.net or the
+            # SRBMiner binaries - the sentinel breaks the purge match and is
+            # stripped together with the ip_protect marks at the end
+            $pub_protect = '((?:rainbow|srb|rb)m)(?=iner)'
+
             # the "Server host:port" rule must not hit "--server <pool>:<port>" miner
             # arguments - pools are public and needed for diagnosis
             $MaskDebugText = {
                 param($Text)
+                $Text = $Text -replace $pub_protect,"`$1$ip_mark"
                 if ($PurgeRegex) {$Text = $Text -replace "($PurgeRegex)","XXX"}
                 $Text = $Text -replace "onnected to [^\s]+:\d+","onnected to XXX:NNN" -replace "(?<![\w-])Server [^\s]+:\d+","Server XXX:NNN" -replace "(?<![\w-])Port=\d+","Port=NNN" -replace "(?!127\.0\.0\.1\b)(\d+\.){3}\d+:\d+","X.X.X.X:NNN"
                 $Text = $Text -replace $ip_protect,"`$1$ip_mark" -replace $ip_regex,"X.X.X.X"
@@ -784,7 +798,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                             '--query-gpu=gpu_name,utilization.gpu,utilization.memory,temperature.gpu,power.draw,power.limit,fan.speed,pstate,clocks.current.graphics,clocks.current.memory,power.max_limit,power.default_limit'
                             '--format=csv,noheader'
                         )
-                        Invoke-Exe "nvidia-smi" -ArgumentList ($Arguments -join ' ') -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines | Out-File $TestFileName -Encoding utf8 -Append
+                        Invoke-Exe "nvidia-smi" -ArgumentList ($Arguments -join ' ') -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines -WaitForExit 15 -KillOnTimeout | Out-File $TestFileName -Encoding utf8 -Append
                     } catch {
                     }
 
@@ -809,7 +823,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         "[OdVII 8]" | Out-File $TestFileName -Append -Encoding utf8
                         "-"*80 | Out-File $TestFileName -Append -Encoding utf8
                         " " | Out-File $TestFileName -Append -Encoding utf8
-                        Invoke-Exe ".\Includes\odvii_$(if ([System.Environment]::Is64BitOperatingSystem) {"x64"} else {"x86"}).exe" -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines  | Out-File $TestFileName -Encoding utf8 -Append
+                        Invoke-Exe ".\Includes\odvii_$(if ([System.Environment]::Is64BitOperatingSystem) {"x64"} else {"x86"}).exe" -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines -WaitForExit 15 -KillOnTimeout | Out-File $TestFileName -Encoding utf8 -Append
                     } catch {
                     }
 
@@ -826,7 +840,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                             '--query-gpu=gpu_name,utilization.gpu,utilization.memory,temperature.gpu,power.draw,power.limit,fan.speed,pstate,clocks.current.graphics,clocks.current.memory,power.max_limit,power.default_limit'
                             '--format=csv,noheader'
                         )
-                        Invoke-Exe ".\Includes\nvidia-smi.exe" -ArgumentList ($Arguments -join ' ') -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines | Out-File $TestFileName -Encoding utf8 -Append
+                        Invoke-Exe ".\Includes\nvidia-smi.exe" -ArgumentList ($Arguments -join ' ') -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines -WaitForExit 15 -KillOnTimeout | Out-File $TestFileName -Encoding utf8 -Append
                     } catch {
                     }
 
@@ -850,9 +864,9 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         "-"*80 | Out-File $TestFileName -Append -Encoding utf8
                         " " | Out-File $TestFileName -Append -Encoding utf8
                         if ($_.ListPlatforms) {
-                            Invoke-Exe $_.Path -ArgumentList $_.ListPlatforms -WorkingDirectory $Pwd -ExpandLines | Out-File $TestFileName -Encoding utf8 -Append
+                            Invoke-Exe $_.Path -ArgumentList $_.ListPlatforms -WorkingDirectory $Pwd -ExpandLines -KillOnTimeout | Out-File $TestFileName -Encoding utf8 -Append
                         }
-                        Invoke-Exe $_.Path -ArgumentList $_.ListDevices -WorkingDirectory $Pwd -ExpandLines | Out-File $TestFileName -Encoding utf8 -Append
+                        Invoke-Exe $_.Path -ArgumentList $_.ListDevices -WorkingDirectory $Pwd -ExpandLines -KillOnTimeout | Out-File $TestFileName -Encoding utf8 -Append
                     } catch {
                     }
                 }
@@ -886,8 +900,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
 
             Remove-Item "$($DebugPath).zip" -Force -ErrorAction Ignore
 
-            $API_Miners = $Arguments = $CurrentConfig = $CurrentPool = $DebugDate = $DebugPath = $ip_mark = $ip_protect = $ip_regex = $LastWriteTime = $MaskDebugText = $NewFile = $Params = $PurgeRegex = $PurgeString = $PurgeStrings = $PurgeStringsBounded = $RunningConfig = $TestFileName = $UserConfig = $null
-            Remove-Variable -Name API_Miners, Arguments, CurrentConfig, CurrentPool, DebugDate, DebugPath, ip_mark, ip_protect, ip_regex, LastWriteTime, MaskDebugText, NewFile, Params, PurgeRegex, PurgeString, PurgeStrings, PurgeStringsBounded, RunningConfig, TestFileName, UserConfig -ErrorAction Ignore
+            $AddPurgeString = $API_Miners = $Arguments = $CurrentConfig = $CurrentPool = $DebugDate = $DebugPath = $ip_mark = $ip_protect = $ip_regex = $LastWriteTime = $MaskDebugText = $NewFile = $Params = $pub_protect = $PurgeRegex = $PurgeString = $PurgeStrings = $PurgeStringsBounded = $RunningConfig = $TestFileName = $UserConfig = $null
+            Remove-Variable -Name AddPurgeString, API_Miners, Arguments, CurrentConfig, CurrentPool, DebugDate, DebugPath, ip_mark, ip_protect, ip_regex, LastWriteTime, MaskDebugText, NewFile, Params, pub_protect, PurgeRegex, PurgeString, PurgeStrings, PurgeStringsBounded, RunningConfig, TestFileName, UserConfig -ErrorAction Ignore
             Break
         }
         "/setup.json" {
