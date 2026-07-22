@@ -696,26 +696,23 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             # a single alternation, longest strings first: the regex engine prefers the
             # first-listed alternative per position, so substrings need no dedup pass
             $PurgeRegex = @($PurgeStrings | Where-Object {$_ -and $_.Length -gt 2} | Select-Object -Unique | Sort-Object -Property {$_.Length} -Descending | Foreach-Object {[regex]::Escape($_)}) -join "|"
-            $PurgeRegex = if ($PurgeRegex) {[regex]::new("($PurgeRegex)","Compiled, IgnoreCase")}
 
-            # two steps, so the engine keeps its fast prefix scan: a cheap IPv4
-            # candidate pattern (valid octets), then a context check only at real
-            # hits - version numbers stay readable (v-prefix, Version*-label plain
-            # or JSON, Unix/Windows prefix, table column = word + 2+ blanks)
-            $ip_regex   = [regex]::new('\b(?<!\.)(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}\b(?!\.)',"Compiled")
-            $ip_context = [regex]::new('(?:v|version\w{0,30}"?[:=]\s{0,4}"?|unix\s{1,4}|windows\s{1,4}|\w[ \t]{2,})$',"Compiled, IgnoreCase")
-            $MaskIPEval = [System.Text.RegularExpressions.MatchEvaluator]{
-                param($m)
-                $from = if ($m.Index -gt 40) {$m.Index - 40} else {0}
-                if ($ip_context.IsMatch($Script:MaskInput.Substring($from,$m.Index - $from))) {$m.Value} else {"X.X.X.X"}
-            }
+            # keep version numbers readable: first tag v-prefix/Version*-label (plain
+            # or JSON)/Unix/Windows version numbers with a sentinel char, then mask
+            # the remaining IPv4s (valid octets, not in a table column = word + 2+
+            # blanks), then strip the sentinel. -replace only: the operator is much
+            # faster here than [regex]::Replace, and the protect alternation must
+            # start with rare characters (v/u/w) to keep the engine's prefix scan
+            $ip_protect = '((?:v|version\w{0,30}"?[:=]\s{0,4}"?|unix\s{1,4}|windows\s{1,4})\d)(?=\d{0,2}(?:\.\d{1,3}){3}(?![\w.]))'
+            $ip_regex   = '\b(?<!\.)(?<!\w[ \t]{2,40})(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}\b(?!\.)'
+            $ip_mark    = [string][char]1
 
             $MaskDebugText = {
                 param($Text)
-                if ($PurgeRegex) {$Text = $PurgeRegex.Replace($Text,"XXX")}
+                if ($PurgeRegex) {$Text = $Text -replace "($PurgeRegex)","XXX"}
                 $Text = $Text -replace "onnected to [^\s]+:\d+","onnected to XXX:NNN" -replace "Server [^\s]+:\d+","Server XXX:NNN" -replace "Port=\d+","Port=NNN" -replace "(\d+\.){3}\d+:\d+","X.X.X.X:NNN"
-                $Script:MaskInput = $Text
-                $ip_regex.Replace($Text,$MaskIPEval) -replace "([0-9a-f]+:){7}[0-9a-f]+","X:X:X:X:X:X:X:X"
+                $Text = $Text -replace $ip_protect,"`$1$ip_mark" -replace $ip_regex,"X.X.X.X"
+                $Text.Replace($ip_mark,"") -replace "([0-9a-f]+:){7}[0-9a-f]+","X:X:X:X:X:X:X:X"
             }
 
             if (-not (Test-Path $DebugPath)) {New-Item $DebugPath -ItemType "directory" > $null}
@@ -863,8 +860,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
 
             Remove-Item "$($DebugPath).zip" -Force -ErrorAction Ignore
 
-            $API_Miners = $Arguments = $CurrentConfig = $CurrentPool = $DebugDate = $DebugPath = $ip_context = $ip_regex = $LastWriteTime = $MaskDebugText = $MaskInput = $MaskIPEval = $NewFile = $Params = $PurgeRegex = $PurgeString = $PurgeStrings = $RunningConfig = $TestFileName = $UserConfig = $null
-            Remove-Variable -Name API_Miners, Arguments, CurrentConfig, CurrentPool, DebugDate, DebugPath, ip_context, ip_regex, LastWriteTime, MaskDebugText, MaskInput, MaskIPEval, NewFile, Params, PurgeRegex, PurgeString, PurgeStrings, RunningConfig, TestFileName, UserConfig -ErrorAction Ignore
+            $API_Miners = $Arguments = $CurrentConfig = $CurrentPool = $DebugDate = $DebugPath = $ip_mark = $ip_protect = $ip_regex = $LastWriteTime = $MaskDebugText = $NewFile = $Params = $PurgeRegex = $PurgeString = $PurgeStrings = $RunningConfig = $TestFileName = $UserConfig = $null
+            Remove-Variable -Name API_Miners, Arguments, CurrentConfig, CurrentPool, DebugDate, DebugPath, ip_mark, ip_protect, ip_regex, LastWriteTime, MaskDebugText, NewFile, Params, PurgeRegex, PurgeString, PurgeStrings, RunningConfig, TestFileName, UserConfig -ErrorAction Ignore
             Break
         }
         "/setup.json" {
