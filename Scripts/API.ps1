@@ -734,17 +734,6 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 Out-File -InputObject (& $MaskDebugText ($UserConfig | ConvertTo-Json -Depth 10)) -FilePath $NewFile
             }
 
-            # generated miner start scripts (Linux screen/tmux only) - the essential
-            # artifact to diagnose miner start failures; they carry the full argument
-            # list incl. wallets, so they run through the same masking
-            @(Get-ChildItem ".\Data\pid\*.sh" -ErrorAction Ignore | Select-Object) + @(Get-ChildItem ".\Bin\*\*.sh" -ErrorAction Ignore | Select-Object) | Where-Object {$_.LastWriteTime -gt (Get-Date).AddDays(-2)} | Foreach-Object {
-                $LastWriteTime = $_.LastWriteTime
-                $NewFile = "$DebugPath\startsh_$($_.Directory.Name)_$($_.Name)"
-                $PurgeString = & $MaskDebugText (Get-ContentByStreamReader $_)
-                Out-File -InputObject $PurgeString -FilePath $NewFile
-                Get-ChildItem $NewFile | Foreach-Object {$_.LastWriteTime = $_.CreationTime = $_.LastAccessTime = $LastWriteTime}
-            }
-
             $TestFileName = ".\Data\gpu-test.txt"
 
             "GPU-TEST $((Get-Date).ToUniversalTime())" | Out-File $TestFileName -Encoding utf8
