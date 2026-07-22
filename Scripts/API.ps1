@@ -678,44 +678,56 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             $DebugPath     = Join-Path (Resolve-Path ".\Logs") "debug-$DebugDate"
 
             $PurgeStrings  = [System.Collections.Generic.List[string]]::new()
+            # identity values (host/user names) are short and word-like: they may only
+            # match as whole tokens, or they corrupt other words (SrbMinerMulti!)
+            $PurgeStringsBounded = [System.Collections.Generic.List[string]]::new()
             $UserConfig    = if ($Session.UserConfig) {$Session.UserConfig | ConvertTo-Json -Depth 10 -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore} else {$null}
             $RunningConfig = $Session.Config | ConvertTo-Json -Depth 10 -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
             @($RunningConfig,$UserConfig) | Where-Object {$_} | Foreach-Object {
                 $CurrentConfig = $_
                 @("Wallet","API_Key","MinerStatusKey","MinerStatusEmail","PushOverUserKey") | Where-Object {$CurrentConfig.$_} | Foreach-Object {[void]$PurgeStrings.Add($CurrentConfig.$_)}
-                @("ServerName","ServerUser","APIuser") | Where-Object {$CurrentConfig.$_} | Foreach-Object {[void]$PurgeStrings.Add($CurrentConfig.$_);$CurrentConfig.$_ = "XXX"}
+                @("ServerName","ServerUser","APIuser") | Where-Object {$CurrentConfig.$_ -and "$($CurrentConfig.$_)" -notmatch "^\`$"} | Foreach-Object {[void]$PurgeStringsBounded.Add($CurrentConfig.$_);$CurrentConfig.$_ = "XXX"}
                 @("Username","APIPassword","ServerPassword") | Where-Object {$CurrentConfig.$_} | Foreach-Object {$CurrentConfig.$_ = "XXX"}
                 $CurrentConfig.Pools.PSObject.Properties.Value | Foreach-Object {
                     $CurrentPool = $_
                     $CurrentPool.Wallets.PSObject.Properties.Value | Where-Object {$_} | Foreach-Object {[void]$PurgeStrings.Add([string]$_)}
                     @("Wallet","API_Key","API_Secret","OrganizationID","Password","PartyPassword","Email") | Where-Object {$CurrentPool.$_ -and $CurrentPool.$_.Length -gt 5} | Foreach-Object {[void]$PurgeStrings.Add([string]$CurrentPool.$_)}
+                    @("User","Username") | Where-Object {$CurrentPool.$_ -and $CurrentPool.$_.Length -gt 5 -and "$($CurrentPool.$_)" -notmatch "^\`$"} | Foreach-Object {[void]$PurgeStringsBounded.Add([string]$CurrentPool.$_)}
                     @("Username") | Where-Object {$CurrentPool.$_} | Foreach-Object {$CurrentPool.$_ = "XXX"}
+                }
+                $CurrentConfig.Coins.PSObject.Properties.Value | Where-Object {$_.Wallet -and $_.Wallet.Length -gt 5} | Foreach-Object {[void]$PurgeStrings.Add([string]$_.Wallet)}
+                $CurrentConfig.Userpools | Where-Object {$_} | Foreach-Object {
+                    if ($_.Wallet -and $_.Wallet.Length -gt 5) {[void]$PurgeStrings.Add([string]$_.Wallet)}
+                    if ($_.User -and $_.User.Length -gt 5 -and "$($_.User)" -notmatch "^\`$") {[void]$PurgeStringsBounded.Add([string]$_.User)}
                 }
             }
 
             # a single alternation, longest strings first: the regex engine prefers the
             # first-listed alternative per position, so substrings need no dedup pass
-            $PurgeRegex = @($PurgeStrings | Where-Object {$_ -and $_.Length -gt 2} | Select-Object -Unique | Sort-Object -Property {$_.Length} -Descending | Foreach-Object {[regex]::Escape($_)}) -join "|"
-            $PurgeRegex = if ($PurgeRegex) {[regex]::new("($PurgeRegex)","Compiled, IgnoreCase")}
+            $PurgeRegex = @(
+                @($PurgeStrings | Where-Object {$_ -and $_.Length -gt 2} | Select-Object -Unique | Sort-Object -Property {$_.Length} -Descending | Foreach-Object {[regex]::Escape($_)}) +
+                @($PurgeStringsBounded | Where-Object {$_ -and $_.Length -gt 2} | Select-Object -Unique | Sort-Object -Property {$_.Length} -Descending | Foreach-Object {"(?<!\w)$([regex]::Escape($_))(?!\w)"})
+            ) -join "|"
 
-            # two steps, so the engine keeps its fast prefix scan: a cheap IPv4
-            # candidate pattern (valid octets), then a context check only at real
-            # hits - version numbers stay readable (v-prefix, Version*-label plain
-            # or JSON, Unix/Windows prefix, table column = word + 2+ blanks)
-            $ip_regex   = [regex]::new('\b(?<!\.)(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}\b(?!\.)',"Compiled")
-            $ip_context = [regex]::new('(?:v|version\w{0,30}"?[:=]\s{0,4}"?|unix\s{1,4}|windows\s{1,4}|\w[ \t]{2,})$',"Compiled, IgnoreCase")
-            $MaskIPEval = [System.Text.RegularExpressions.MatchEvaluator]{
-                param($m)
-                $from = if ($m.Index -gt 40) {$m.Index - 40} else {0}
-                if ($ip_context.IsMatch($Script:MaskInput.Substring($from,$m.Index - $from))) {$m.Value} else {"X.X.X.X"}
-            }
+            # keep version numbers readable: first tag v-prefix/Version*-label (plain
+            # or JSON)/Unix/Windows version numbers with a sentinel char, then mask
+            # the remaining IPv4s (valid octets, no loopback, not in a table column =
+            # word + 2+ blanks), then strip the sentinel. -replace operator only: it
+            # is much faster here than [regex]::Replace or MatchEvaluator callbacks,
+            # and the protect alternation must start with rare characters (v/u/w) to
+            # keep the engine's prefix scan
+            $ip_protect = '((?:v|version\w{0,30}"?[:=]\s{0,4}"?|unix\s{1,4}|windows\s{1,4})\d)(?=\d{0,2}(?:\.\d{1,3}){3}(?![\w.]))'
+            $ip_regex   = '\b(?<!\.)(?<!\w[ \t]{2,40})(?!127\.)(?!0\.0\.0\.0(?![\w.]))(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}\b(?!\.)'
+            $ip_mark    = [string][char]1
 
+            # the "Server host:port" rule must not hit "--server <pool>:<port>" miner
+            # arguments - pools are public and needed for diagnosis
             $MaskDebugText = {
                 param($Text)
-                if ($PurgeRegex) {$Text = $PurgeRegex.Replace($Text,"XXX")}
-                $Text = $Text -replace "onnected to [^\s]+:\d+","onnected to XXX:NNN" -replace "Server [^\s]+:\d+","Server XXX:NNN" -replace "Port=\d+","Port=NNN" -replace "(\d+\.){3}\d+:\d+","X.X.X.X:NNN"
-                $Script:MaskInput = $Text
-                $ip_regex.Replace($Text,$MaskIPEval) -replace "([0-9a-f]+:){7}[0-9a-f]+","X:X:X:X:X:X:X:X"
+                if ($PurgeRegex) {$Text = $Text -replace "($PurgeRegex)","XXX"}
+                $Text = $Text -replace "onnected to [^\s]+:\d+","onnected to XXX:NNN" -replace "(?<![\w-])Server [^\s]+:\d+","Server XXX:NNN" -replace "(?<![\w-])Port=\d+","Port=NNN" -replace "(?!127\.0\.0\.1\b)(\d+\.){3}\d+:\d+","X.X.X.X:NNN"
+                $Text = $Text -replace $ip_protect,"`$1$ip_mark" -replace $ip_regex,"X.X.X.X"
+                $Text.Replace($ip_mark,"") -replace "([0-9a-f]+:){7}[0-9a-f]+","X:X:X:X:X:X:X:X"
             }
 
             if (-not (Test-Path $DebugPath)) {New-Item $DebugPath -ItemType "directory" > $null}
@@ -735,6 +747,17 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             if ($Session.UserConfig) {
                 $NewFile = "$DebugPath\userconfig.json"
                 Out-File -InputObject (& $MaskDebugText ($UserConfig | ConvertTo-Json -Depth 10)) -FilePath $NewFile
+            }
+
+            # generated miner start scripts (Linux screen/tmux only) - the essential
+            # artifact to diagnose miner start failures; they carry the full argument
+            # list incl. wallets, so they run through the same masking
+            @(Get-ChildItem ".\Data\pid\*.sh" -ErrorAction Ignore | Select-Object) + @(Get-ChildItem ".\Bin\*\*.sh" -ErrorAction Ignore | Select-Object) | Where-Object {$_.LastWriteTime -gt (Get-Date).AddDays(-2)} | Foreach-Object {
+                $LastWriteTime = $_.LastWriteTime
+                $NewFile = "$DebugPath\startsh_$($_.Directory.Name)_$($_.Name)"
+                $PurgeString = & $MaskDebugText (Get-ContentByStreamReader $_)
+                Out-File -InputObject $PurgeString -FilePath $NewFile
+                Get-ChildItem $NewFile | Foreach-Object {$_.LastWriteTime = $_.CreationTime = $_.LastAccessTime = $LastWriteTime}
             }
 
             $TestFileName = ".\Data\gpu-test.txt"
@@ -863,8 +886,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
 
             Remove-Item "$($DebugPath).zip" -Force -ErrorAction Ignore
 
-            $API_Miners = $Arguments = $CurrentConfig = $CurrentPool = $DebugDate = $DebugPath = $ip_context = $ip_regex = $LastWriteTime = $MaskDebugText = $MaskInput = $MaskIPEval = $NewFile = $Params = $PurgeRegex = $PurgeString = $PurgeStrings = $RunningConfig = $TestFileName = $UserConfig = $null
-            Remove-Variable -Name API_Miners, Arguments, CurrentConfig, CurrentPool, DebugDate, DebugPath, ip_context, ip_regex, LastWriteTime, MaskDebugText, MaskInput, MaskIPEval, NewFile, Params, PurgeRegex, PurgeString, PurgeStrings, RunningConfig, TestFileName, UserConfig -ErrorAction Ignore
+            $API_Miners = $Arguments = $CurrentConfig = $CurrentPool = $DebugDate = $DebugPath = $ip_mark = $ip_protect = $ip_regex = $LastWriteTime = $MaskDebugText = $NewFile = $Params = $PurgeRegex = $PurgeString = $PurgeStrings = $PurgeStringsBounded = $RunningConfig = $TestFileName = $UserConfig = $null
+            Remove-Variable -Name API_Miners, Arguments, CurrentConfig, CurrentPool, DebugDate, DebugPath, ip_mark, ip_protect, ip_regex, LastWriteTime, MaskDebugText, NewFile, Params, PurgeRegex, PurgeString, PurgeStrings, PurgeStringsBounded, RunningConfig, TestFileName, UserConfig -ErrorAction Ignore
             Break
         }
         "/setup.json" {
