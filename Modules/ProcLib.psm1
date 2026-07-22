@@ -141,7 +141,7 @@ function Start-SubProcessInConsole {
     if ($IsLinux) {
         $LDExp = if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")}
         $LinuxDisplay = "$(if ($Session.Config.EnableLinuxHeadless) {$Session.Config.LinuxDisplay})"
-        if ($Session.Config.EnableLinuxMinerNiceness) {
+        if ($Session.Config.EnableLinuxMinerNiceness -and "$($Session.Config.LinuxMinerNiceness)" -match "^-?\d+$") {
             $LinuxNiceness = "$($Session.Config.LinuxMinerNiceness)"
         }
         $Executables | Foreach-Object {
@@ -318,12 +318,14 @@ function Start-SubProcessInScreen {
     [System.Collections.Generic.List[string]]$Test  = @()
     $Stuff | Foreach-Object {[void]$Test.Add($_)}
 
-    $nice = "$(if ($Session.Config.EnableLinuxMinerNiceness) {"nice -n $($Session.Config.LinuxMinerNiceness) "})"
+    # emit niceness only for a valid integer - an empty expansion makes nice/start-stop-daemon swallow the next token as its value
+    $Niceness = if ($Session.Config.EnableLinuxMinerNiceness -and "$($Session.Config.LinuxMinerNiceness)" -match "^-?\d+$") {[int]$Session.Config.LinuxMinerNiceness}
+    $nice = if ($Niceness -ne $null) {"nice -n $Niceness "} else {""}
     [void]$Test.Add("$nice$FilePath $TestArgumentList")
 
     if ($StartStopDaemon) {
-        $nice = "$(if ($Session.Config.EnableLinuxMinerNiceness) {"--nicelevel $($Session.Config.LinuxMinerNiceness) "})"
-        [void]$Stuff.Add("start-stop-daemon --start --make-pidfile --chdir '$WorkingDirectory' --pidfile '$PIDPath' $($nice)--exec '$FilePath' -- $ArgumentList")
+        # --exec directly after --start, so no preceding option can swallow it
+        [void]$Stuff.Add("start-stop-daemon --start --exec '$FilePath' --make-pidfile --chdir '$WorkingDirectory' --pidfile '$PIDPath' $(if ($Niceness -ne $null) {"--nicelevel $Niceness "})-- $ArgumentList")
     } else {
         [void]$Stuff.Add("$nice$FilePath $ArgumentList")
     }
@@ -536,12 +538,14 @@ function Start-SubProcessInTmux {
     [System.Collections.Generic.List[string]]$Test  = @()
     $Stuff | Foreach-Object {[void]$Test.Add($_)}
 
-    $nice = "$(if ($Session.Config.EnableLinuxMinerNiceness) {"nice -n $($Session.Config.LinuxMinerNiceness) "})"
+    # emit niceness only for a valid integer - an empty expansion makes nice/start-stop-daemon swallow the next token as its value
+    $Niceness = if ($Session.Config.EnableLinuxMinerNiceness -and "$($Session.Config.LinuxMinerNiceness)" -match "^-?\d+$") {[int]$Session.Config.LinuxMinerNiceness}
+    $nice = if ($Niceness -ne $null) {"nice -n $Niceness "} else {""}
     [void]$Test.Add("$nice$FilePath $TestArgumentList")
 
     if ($StartStopDaemon) {
-        $nice = "$(if ($Session.Config.EnableLinuxMinerNiceness) {"--nicelevel $($Session.Config.LinuxMinerNiceness) "})"
-        [void]$Stuff.Add("start-stop-daemon --start --make-pidfile --chdir '$WorkingDirectory' --pidfile '$PIDPath' $($nice)--exec '$FilePath' -- $ArgumentList")
+        # --exec directly after --start, so no preceding option can swallow it
+        [void]$Stuff.Add("start-stop-daemon --start --exec '$FilePath' --make-pidfile --chdir '$WorkingDirectory' --pidfile '$PIDPath' $(if ($Niceness -ne $null) {"--nicelevel $Niceness "})-- $ArgumentList")
     } else {
         [void]$Stuff.Add("$nice$FilePath $ArgumentList")
     }
