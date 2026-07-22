@@ -80,16 +80,6 @@ function Start-SubProcessInBackground {
     $Running = [System.Collections.Generic.List[int]]::new()
     Get-SubProcessRunningIds $FilePath | Where-Object {$_} | Foreach-Object {[void]$Running.Add([int]$_)}
 
-    if ($ArgumentList) {
-        $ArgumentListToBlock = $ArgumentList
-        ([regex]"\s-+[\w\-_]+[\s=]+([^'`"][^\s]*,[^\s]+)").Matches(" $ArgumentListToBlock") | Foreach-Object {$ArgumentListToBlock=$ArgumentListToBlock -replace [regex]::Escape($_.Groups[1].Value),"'$($_.Groups[1].Value -replace "'","``'")'"}
-        ([regex]"\s-+[\w\-_]+[\s=]+([\[][^\s]+)").Matches(" $ArgumentListToBlock") | Foreach-Object {$ArgumentListToBlock=$ArgumentListToBlock -replace [regex]::Escape($_.Groups[1].Value),"'$($_.Groups[1].Value -replace "'","``'")'"}
-        if ($ArgumentList -ne $ArgumentListToBlock) {
-            Write-Log "Start-SubProcessInBackground argumentlist: $($ArgumentListToBlock)"
-            $ArgumentList = $ArgumentListToBlock
-        }
-    }
-
     $Job = Start-ThreadJob -FilePath .\Scripts\StartInBackground.ps1 -ArgumentList $PID, $WorkingDirectory, $FilePath, $ArgumentList, $LogPath, $EnvVars, $Priority, $PWD
 
     $ProcessIds = [System.Collections.Generic.List[int]]::new()
