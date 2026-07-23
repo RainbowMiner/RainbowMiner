@@ -53,8 +53,14 @@ while getopts "fq" opt; do
     esac
 done
 
-# Prepare paths
-target_folder="$(dirname "$0")/../lib"
+# Prepare paths (absolute, so the caller's working directory does not matter)
+script_path="$0"
+case "$script_path" in
+    *\\*) script_path="$(printf '%s\n' "$script_path" | tr '\\' '/')" ;;
+esac
+script_dir="$(CDPATH= cd -- "$(dirname -- "$script_path")" 2>/dev/null && pwd -P)"
+[ -n "$script_dir" ] || script_dir="$(pwd)"
+target_folder="$script_dir/../lib"
 mkdir -p "$target_folder"
 
 
@@ -62,7 +68,7 @@ download_and_install() {
     local url="$1"
     local index="$2"
     local uri_file="$target_folder/_uri${index}.txt"
-    [ "$index" -eq 1 ] && uri_file="$target_folder/_uri.txt"  # Ausnahme für erste URL
+    [ "$index" -eq 1 ] && uri_file="$target_folder/_uri.txt"  # Ausnahme fÃ¼r erste URL
 
     local needs_install=0
     if [ "$install_nv" -eq 1 ]; then

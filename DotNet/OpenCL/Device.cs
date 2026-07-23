@@ -469,6 +469,11 @@ namespace OpenCl
             uint count;
 
             error = NativeMethods.clGetDeviceIDs(platform.handle, type, 0, null, out count);
+            if (error == ErrorCode.DeviceNotFound || (error == ErrorCode.Success && count == 0)) {
+                // CL_DEVICE_NOT_FOUND means the platform has no devices of the requested type
+                // (e.g. rusticl with all drivers disabled) - not an error
+                return new Device[0];
+            }
             if (error != ErrorCode.Success) {
                 throw new OpenClException(error);
             }
