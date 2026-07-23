@@ -823,7 +823,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         "[OdVII 8]" | Out-File $TestFileName -Append -Encoding utf8
                         "-"*80 | Out-File $TestFileName -Append -Encoding utf8
                         " " | Out-File $TestFileName -Append -Encoding utf8
-                        Invoke-Exe ".\Includes\odvii_$(if ([System.Environment]::Is64BitOperatingSystem) {"x64"} else {"x86"}).exe" -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines -WaitForExit 15 -KillOnTimeout | Out-File $TestFileName -Encoding utf8 -Append
+                        Invoke-Exe ".\Includes\odvii_$(if ([System.Environment]::Is64BitOperatingSystem) {"x64"} else {"x86"}).exe" -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines -WaitForExit 15 -KillOnTimeout -NoCrashDialog | Out-File $TestFileName -Encoding utf8 -Append
                     } catch {
                     }
 
@@ -840,7 +840,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                             '--query-gpu=gpu_name,utilization.gpu,utilization.memory,temperature.gpu,power.draw,power.limit,fan.speed,pstate,clocks.current.graphics,clocks.current.memory,power.max_limit,power.default_limit'
                             '--format=csv,noheader'
                         )
-                        Invoke-Exe ".\Includes\nvidia-smi.exe" -ArgumentList ($Arguments -join ' ') -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines -WaitForExit 15 -KillOnTimeout | Out-File $TestFileName -Encoding utf8 -Append
+                        Invoke-Exe ".\Includes\nvidia-smi.exe" -ArgumentList ($Arguments -join ' ') -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines -WaitForExit 15 -KillOnTimeout -NoCrashDialog | Out-File $TestFileName -Encoding utf8 -Append
                     } catch {
                     }
 
@@ -864,9 +864,21 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         "-"*80 | Out-File $TestFileName -Append -Encoding utf8
                         " " | Out-File $TestFileName -Append -Encoding utf8
                         if ($_.ListPlatforms) {
-                            Invoke-Exe $_.Path -ArgumentList $_.ListPlatforms -WorkingDirectory $Pwd -ExpandLines -KillOnTimeout | Out-File $TestFileName -Encoding utf8 -Append
+                            $Global:LASTEXEEXITCODE = 0
+                            Invoke-Exe $_.Path -ArgumentList $_.ListPlatforms -WorkingDirectory $Pwd -ExpandLines -WaitForExit 15 -KillOnTimeout -NoCrashDialog | Out-File $TestFileName -Encoding utf8 -Append
+                            if ($Global:LASTEXEEXITCODE) {
+                                $ExeExit = if ($Global:LASTEXEEXITCODE -eq -1) {"timeout/killed"} else {"0x{0:X8}" -f $Global:LASTEXEEXITCODE}
+                                "** $($_.BaseName) $($_.ListPlatforms) exited with code $ExeExit" | Out-File $TestFileName -Encoding utf8 -Append
+                                Write-Log -Level Warn "Debug device listing: $($_.BaseName) $($_.ListPlatforms) exited with code $ExeExit"
+                            }
                         }
-                        Invoke-Exe $_.Path -ArgumentList $_.ListDevices -WorkingDirectory $Pwd -ExpandLines -KillOnTimeout | Out-File $TestFileName -Encoding utf8 -Append
+                        $Global:LASTEXEEXITCODE = 0
+                        Invoke-Exe $_.Path -ArgumentList $_.ListDevices -WorkingDirectory $Pwd -ExpandLines -WaitForExit 15 -KillOnTimeout -NoCrashDialog | Out-File $TestFileName -Encoding utf8 -Append
+                        if ($Global:LASTEXEEXITCODE) {
+                            $ExeExit = if ($Global:LASTEXEEXITCODE -eq -1) {"timeout/killed"} else {"0x{0:X8}" -f $Global:LASTEXEEXITCODE}
+                            "** $($_.BaseName) $($_.ListDevices) exited with code $ExeExit" | Out-File $TestFileName -Encoding utf8 -Append
+                            Write-Log -Level Warn "Debug device listing: $($_.BaseName) $($_.ListDevices) exited with code $ExeExit"
+                        }
                     } catch {
                     }
                 }
@@ -900,8 +912,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
 
             Remove-Item "$($DebugPath).zip" -Force -ErrorAction Ignore
 
-            $AddPurgeString = $API_Miners = $Arguments = $CurrentConfig = $CurrentPool = $DebugDate = $DebugPath = $ip_mark = $ip_protect = $ip_regex = $LastWriteTime = $MaskDebugText = $NewFile = $Params = $pub_protect = $PurgeRegex = $PurgeString = $PurgeStrings = $PurgeStringsBounded = $RunningConfig = $TestFileName = $UserConfig = $null
-            Remove-Variable -Name AddPurgeString, API_Miners, Arguments, CurrentConfig, CurrentPool, DebugDate, DebugPath, ip_mark, ip_protect, ip_regex, LastWriteTime, MaskDebugText, NewFile, Params, pub_protect, PurgeRegex, PurgeString, PurgeStrings, PurgeStringsBounded, RunningConfig, TestFileName, UserConfig -ErrorAction Ignore
+            $AddPurgeString = $API_Miners = $Arguments = $CurrentConfig = $CurrentPool = $DebugDate = $DebugPath = $ExeExit = $ip_mark = $ip_protect = $ip_regex = $LastWriteTime = $MaskDebugText = $NewFile = $Params = $pub_protect = $PurgeRegex = $PurgeString = $PurgeStrings = $PurgeStringsBounded = $RunningConfig = $TestFileName = $UserConfig = $null
+            Remove-Variable -Name AddPurgeString, API_Miners, Arguments, CurrentConfig, CurrentPool, DebugDate, DebugPath, ExeExit, ip_mark, ip_protect, ip_regex, LastWriteTime, MaskDebugText, NewFile, Params, pub_protect, PurgeRegex, PurgeString, PurgeStrings, PurgeStringsBounded, RunningConfig, TestFileName, UserConfig -ErrorAction Ignore
             Break
         }
         "/setup.json" {

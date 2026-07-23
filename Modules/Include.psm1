@@ -882,7 +882,9 @@ function Invoke-Exe {
         [Parameter(Mandatory = $false)]
         [Switch]$Runas = $false,
         [Parameter(Mandatory = $false)]
-        [Switch]$KillOnTimeout = $false
+        [Switch]$KillOnTimeout = $false,
+        [Parameter(Mandatory = $false)]
+        [Switch]$NoCrashDialog = $false
         )
 
     $psi = $null
@@ -906,7 +908,24 @@ function Invoke-Exe {
 
             $process = [System.Diagnostics.Process]::New()
             $process.StartInfo = $psi
-            [void]$process.Start()
+
+            if ($NoCrashDialog -and $IsWindows) {
+                # a child dying on an access violation (e.g. a miner exe probing
+                # GPU devices) raises a blocking WER dialog; the error mode is
+                # inherited at CreateProcess time, so it only needs to span Start()
+                if (-not ("RBMNative.ErrorMode" -as [Type])) {
+                    Add-Type -Namespace RBMNative -Name ErrorMode -MemberDefinition '[DllImport("kernel32.dll")] public static extern uint SetErrorMode(uint uMode);' -ErrorAction Ignore
+                }
+                $oldErrorMode = $null
+                try {$oldErrorMode = [RBMNative.ErrorMode]::SetErrorMode(0x8003)} catch {}
+                try {
+                    [void]$process.Start()
+                } finally {
+                    if ($oldErrorMode -ne $null) {try {[RBMNative.ErrorMode]::SetErrorMode($oldErrorMode)>$null} catch {}}
+                }
+            } else {
+                [void]$process.Start()
+            }
 
             # drain both pipes async: a child that fills the never-read stderr pipe
             # blocks and never closes stdout, deadlocking a sync ReadToEnd() no
