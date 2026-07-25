@@ -24,7 +24,7 @@ Features: easy setup wizard with ad-hoc working default (no editing of files nee
 - **Multi-Platform (AMD, INTEL, NVIDIA, CPU) on Windows and Linux**
 - **Optional watchdog start scripts, that restart RainbowMiner automatically after a crash (StartWD.bat / startwd.sh)**
 - **Profit auto-switch between mining programs and [algorithm](https://rbminer.net/algorithms/) for GPUs & CPUs (optimized one for each vendor vs. one for each possible device combination)**
-- **Profit auto-switch between pools (2Miners, Abelpool, Acepool, Aionpool, Alphpool, BaikalMine, Binance, BlockCruncher, C3pool, DeepMinerZ, EpicMine, Ethermine, Ethwmine, [ezil.me](https://ezil.me/?p=dcf9), F2pool, FlockPool, Hashcryptos, Hashpool, HashVault, [HeroMiners](https://herominers.com), Icemining, [K1Pool](https://k1pool.com/invite/016079e6c5), [Kryptex](https://pool.kryptex.com/?ref=15aa84c0), LeafPool, LuckPool, LuckyPool, MinerRocks, Mining4people, MiningDutch, [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069), Mintpond, Molepool, MoneroOcean, Nanopool, Neuropool, [Nicehash](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1), Pearlhash, PhalanxMining, Poolin, RaptoreumZone, Ravenminer, SeroPool, SoloPool, Sunpool, SuprNova, [unMineable](https://unmineable.com/?ref=U-TEMDPF), UUpool, WoolyPooly, YadaMiners and Zpool)**
+- **Profit auto-switch between pools (2Miners, Abelpool, Acepool, Aionpool, BaikalMine, Binance, C3pool, DeepMinerZ, EpicMine, Ethwmine, F2pool, FlockPool, Hashcryptos, Hashpool, HashVault, [HeroMiners](https://herominers.com), Icemining, [K1Pool](https://k1pool.com/invite/016079e6c5), [Kryptex](https://pool.kryptex.com/?ref=15aa84c0), LeafPool, LuckPool, LuckyPool, MinerRocks, Mining4people, MiningDutch, [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069), Mintpond, Molepool, MoneroOcean, Nanopool, Neuropool, [Nicehash](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1), Pearlhash, Poolin, RaptoreumZone, Ravenminer, SeroPool, SoloPool, Sunpool, SuprNova, [unMineable](https://unmineable.com/?ref=U-TEMDPF), UUpool, WoolyPooly, YadaMiners and Zpool)**
 - **Integrate own and custom pools**
 - **Profit calculation, including real cost of electricity per miner**
 - **Uses the top actual available miner programs (Bminer, Ccminer, Claymore, CryptoDredge, Dstm, EnemyZ, Ewbf, Gminer, NBminer, Sgminer, SrbMiner, T-Rex, Xmrig and many more)**
@@ -347,7 +347,7 @@ Optional: if you want RainbowMiner to be restarted automatically after a crash, 
 
 ### Done!
 
-<details><summary>Valid poolnames</summary>2Miners, 2MinersAE, 2MinersSolo, Abelpool, Acepool, Aionpool, BaikalMine, BaikalMineSolo, Binance, C3pool, CpuPool, Crazypool, Ekpool, Ethermine, Ethwmine, Ezil, F2pool, FlockPool, Hashcryptos, Hashpool, HashVault, HeroMiners, Icemining, K1Pool, K1PoolSolo, Kryptex, KryptexSolo, LeafPool, LuckPool, LuckyPool, Luxor, MinerRocks, Mining4people, MiningDutch, MiningRigRentals, Mintpond, Molepool, MoneroOcean, Nanopool, Neuropool, [Nicehash](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1), PhalanxMining, PhalanxMiningSolo, Poolin, RaptoreumZone, Ravenminer, RPlant, SeroPool, SoloPool, Sunpool, SuprNova, [unMineable](https://unmineable.com/?ref=U-TEMDPF), UUpool, ViaBTC, WhatToMine, WoolyPooly, WoolyPoolySolo, YadaMiners, Zpool, ZpoolCoins</details>
+<details><summary>Valid poolnames</summary>2Miners, 2MinersAE, 2MinersSolo, Abelpool, Acepool, Aionpool, BaikalMine, BaikalMineSolo, Binance, C3pool, CpuPool, Crazypool, Ethwmine, F2pool, FlockPool, Hashcryptos, Hashpool, HashVault, HeroMiners, Icemining, K1Pool, K1PoolSolo, Kryptex, KryptexSolo, LeafPool, LuckPool, LuckyPool, Luxor, MinerRocks, Mining4people, MiningDutch, MiningRigRentals, Mintpond, Molepool, MoneroOcean, Nanopool, Neuropool, [Nicehash](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1), Poolin, RaptoreumZone, Ravenminer, RPlant, SeroPool, SoloPool, Sunpool, SuprNova, [unMineable](https://unmineable.com/?ref=U-TEMDPF), UUpool, ViaBTC, WhatToMine, WoolyPooly, WoolyPoolySolo, YadaMiners, Zpool, ZpoolCoins</details>
 <details><summary>Valid algorithms</summary> Balloon, Bitcore, Blakecoin, Blake2s, BlakeVanilla, C11, Cortex, CryptoNightV8, Cuckaroo29, Cuckaroo29s, Ethash, X11, Decred, Equihash, Equihash144, Equihash192, Equihash-BTG, Groestl, Hex, HMQ1725, HSR, JHA, Keccak, Lbry, Lyra2RE2, Lyra2z, MyriadGroestl, NeoScrypt, Pascal, Phi, Phi2, Polytimos, Quark, Qubit, Scrypt, SHA256, Sib, Skunk, Skein, Tensority, Timetravel, Tribus, Veltor, X11, X12, X11evo, X16R, X16S, X17, X18, X21s, X22i, Yescrypt and many more: https://rbminer.net/algorithms/</details>
 
 ## HOTKEYS
@@ -519,9 +519,7 @@ If "EnableServerPools" is set to "1", the client will download the server's pool
 <details><summary>DeepMinerZ</summary> https://pool.deepminerz.com/ DNX, DynexSolve pool, pays in DNX, enter your DNX wallet address in pools configuration or edit pools.config.txt</details>
 <details><summary>DeepMinerZSolo</summary> https://pool.deepminerz.com/ DNX, DynexSolve for solo mining, pays in DNX, enter your DNX wallet address in pools configuration or edit pools.config.txt</details>
 <details><summary>EpicMine</summary> https://epicmine.io/ EPIC-pool pays in EPIC, set your EpicMine MiningAlias and optional your API key and API secret for balance display in pools.config.txt</details>
-<details><summary>Ethermine</summary> https://ethermine.org/ no auto-exchange, a separate wallet address is needed for each coin (ETC, ERG, RVN) you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>Ethwmine</summary> https://ethwmine.com/ no auto-exchange, a separate wallet address is needed for ETHW. Set in pools configuration or edit pools.config.txt</details>
-<details><summary>Ezil.me</summary> [https://ezil.me](https://ezil.me/?p=dcf9) no auto-exchange, a ZIL wallet plus either an ETC wallet is needed. For more info on dual mining ZIL, see the FAQ below. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>F2Pool</summary> https://www.f2pool.com/ no auto-exchange, either enter your f2pool username as wallet address, or a real wallet address for each coin you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>FlockPool</summary> https://flockpool.com/ Raptoreum-pool, pays in RTM, set your RTM-address in pools configuration or edit pools.config.txt</details>
 <details><summary>Hashcryptos</summary>https://www.hashcryptos.com/  auto-exchange and payout in BTC and other currencies. To mine, you need to "activate" your wallet address on their website, first.</details>
@@ -549,7 +547,6 @@ If "EnableServerPools" is set to "1", the client will download the server's pool
 <details><summary>Neuropool</summary> https://neuropool.net/ DNX, DynexSolve pool, pays in DNX, enter your DNX wallet address in pools configuration or edit pools.config.txt</details>
 <details><summary>Nicehash</summary> [https://www.nicehash.com/](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1) auto-exchange and payout in BTC, use of a special Nicehash mining wallet is mandatory, see note below</details>
 <details><summary>Pearlhash</summary> https://pearlhash.xyz/ Pearl-pool for eu, us and asia region, pays in PRL, set your PRL-address in pools configuration or edit pools.config.txt</details>
-<details><summary>PhalanxMining</summary> https://pool.phalanxmining.com/ no auto-exchange, multiple coins. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>Poolin</summary> https://www.poolin.me/ no auto-exchange registration is mandatory, mines ETC, ETHW and RVN. Set Poolin subaccount-worker plus minerid (e.g. "miner.001") as wallet address in pools configuration or edit pools.config.txt</details>
 <details><summary>RaptoreumZone</summary> https://raptoreum.zone/ Take2/Ghostrider mining pool, pays in RTM, set your RTM-address in pools configuration or edit pools.config.txt</details>
 <details><summary>Ravenminer</summary> https://www.ravenminer.com/ ravencoin-pool for us region, pays in RVN, set your RVN-address in pools configuration or edit pools.config.txt</details>
@@ -573,9 +570,9 @@ If "EnableServerPools" is set to "1", the client will download the server's pool
 
 If you plan to mine through Nicehash, you need to register an account with them ([https://www.nicehash.com/register](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1)). NiceHash will provide you with an extra NiceHash wallet/bitcoin address (RainbowMiner will ask for this address during the setup or configuration process).
 Payout via Bitcoin-Lightning channel is possible. If you want to see balance details, first create a new API key (My Settings->API-Key) with "Wallet permission->View.." and "Mining permission->View.." enabled. Second add API key, API secret and Organizazion ID to pools.config.txt</details>
-<details><summary>Notes for the pools BlockCruncher, Hashcryptos, HashPool, MinerRocks, Mining4people, PocketWhale, Ravenminer, YiiMP and Zpool</summary>
+<details><summary>Notes for the pools Hashcryptos, HashPool, MinerRocks, Mining4people, Ravenminer and Zpool</summary>
   
-The miner can be setup to mine any coin or currency, that is listed at the respective pool. The pool will then payout to the given non-BTC wallet address. Take into account, that non-BTC payouts depend heavily on that coin being mined. If the pool has not mined or is not mining that currency, the payouts will be delayed until the pool has mined the blocks. Read the pools websites, about the mineability and reliability of a currency. It's recommended to use BTC as any other coin could be removed at anytime and payouts will not occur. The pools MinerRocks, PocketWhale, Ravenminer and Yiimp do not have auto-exchange to BTC. Please be careful, what you choose to mine.
+The miner can be setup to mine any coin or currency, that is listed at the respective pool. The pool will then payout to the given non-BTC wallet address. Take into account, that non-BTC payouts depend heavily on that coin being mined. If the pool has not mined or is not mining that currency, the payouts will be delayed until the pool has mined the blocks. Read the pools websites, about the mineability and reliability of a currency. It's recommended to use BTC as any other coin could be removed at anytime and payouts will not occur. The pools MinerRocks and Ravenminer do not have auto-exchange to BTC. Please be careful, what you choose to mine.
 </details>
 
 ## MINERS
@@ -1276,7 +1273,7 @@ To force mining to pool's wallets, you may add the wallet's currencies to field 
 
 Example:
 
-    "Ethermine": {
+    "Nanopool": {
         "ETC": "0x012031012301230123012301230",
         "ERG": "$ERG",
         "User": "$UserName",
@@ -1290,7 +1287,7 @@ Example:
         "FocusWallet": "ETC,ERG"
     }
 
-This example will focus mining operations to pool Ethermine, comparing this pool's profitability of ETC and ERG, only. No other pool will be mined.
+This example will focus mining operations to pool Nanopool, comparing this pool's profitability of ETC and ERG, only. No other pool will be mined.
 
 #### Allow mining algorithm when pool hashrate equals to 0
 
@@ -2064,28 +2061,6 @@ The following are the pool parameters:
 
 RainbowMiner comes with easy setup configuration. Download a setup.json at http://localhost:4000/setup.json from your current rig, copy it into the new rig's RainbowMiner folder *before first start* (you may easily reset RainbowMiner by simply deleting the complete `".\Config"` folder). Now answer two inputs and off you go.
 More info can be [found here](https://github.com/RainbowMiner/RainbowMiner#copy-current-configuration-to-new-rigs).
-
-### How can I dual mine ETC with ZIL?
-
-Most info can be found on the FAQ page at [https://ezil.me](https://ezil.me/?p=dcf9). But there is more.
-
-- first of all, get a ZIL wallet address. 
-- set your wallet address(es) in pools.config.txt section "Ezil"
-- add "Ezil" to the "PoolName" list in config.txt
-- if you want to mine ETC/ETH + ZIL on [https://ezil.me](https://ezil.me/?p=dcf9) only, you are done. You will mine ETH/ETC most of the time and the pool will switch to ZIL mining every 1,5h for a short period of time. ZIL uses the same Ethash algorithm.
-- here is the extra: it is possible to mine ZIL only on ezil.me pool and with other algorithms on other pools with miner Nanominer (currently Autolycos2, Etchash, Ethash, KawPow and Octopus):
-  - set the ZIL wallet in pools.config.txt, only. No ETH nor ETC.
-  - set `"EnableNanominerDual": "1",` in pools.config.txt
-  - done. Now Nanominer will switch to Ezil.me just in time to catch the next ZIL mining rounds and switch back, afterwards.
-  - it will use the dummy ETH address 0xffffffffffffffffffffffffffffffffffffffff to auth on Ezil.me
-
-### How can I dual/triple mine ZIL with Bzminer?
-
-- first of all, get a ZIL wallet address. 
-- set your wallet address(es) in pools.config.txt section "Flexpool"
-- set `"EnableBzminerDual": "1",` in pools.config.txt section "Flexpool"
-- add "Flexpool" to the "PoolName" list in config.txt
-- Done! Bzminer will now switch to ZIL mining every 1,5h for a short period of time.
 
 ### How does the profit switcher work and how can I change it's behavior?
 
