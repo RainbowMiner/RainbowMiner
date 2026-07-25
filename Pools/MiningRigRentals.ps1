@@ -302,7 +302,7 @@ if ($AllRigs_Request) {
 
         $RigInfo_Request = Get-MiningRigInfo -id $Rigs_Ids -key $API_Key -secret $API_Secret -cachetime $RigInfo_CacheTime
         if (-not $RigInfo_Request) {
-            Write-Log -Level Warn "Pool API ($Name) rig $Worker1 info request has failed. "
+            Write-Log -Level Warn "Pool API ($Name) rig $Worker1 info request has failed. This is mostly a temporary problem with the $Name API and RainbowMiner will retry automatically. If the warning persists, clear the cache to force fresh data: press [E] in the console, click Clear cach[e] on the web console or call API endpoint /clearcache. "
             return
         }
 
