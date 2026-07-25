@@ -61,7 +61,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "lyra2rev3";                     MinMemGb = 1.5; Params = ""; DevFee = 2.5;  ExcludeCompute = @("GCN1","GCN2","RDNA1","RDNA2","RDNA3")}
     [PSCustomObject]@{MainAlgorithm = "lyra2z";                        MinMemGb = 1.5; Params = ""; DevFee = 3.0;  ExcludeCompute = @("GCN1","GCN2","RDNA1","RDNA2","RDNA3")}
     [PSCustomObject]@{MainAlgorithm = "mtp";                           MinMemGb = 5;   Params = ""; DevFee = 2.5;  ExcludeCompute = @("GCN1","GCN2","RDNA3")}
-    [PSCustomObject]@{MainAlgorithm = "nimiq";                         MinMemGb = 1.5; Params = ""; DevFee = 2.5;  ExcludeCompute = @("GCN1","GCN2","RDNA3")}
+    #[PSCustomObject]@{MainAlgorithm = "nimiq";                         MinMemGb = 1.5; Params = ""; DevFee = 2.5;  ExcludeCompute = @("GCN1","GCN2","RDNA3")} #Nimiq is PoS since 11/2024
     [PSCustomObject]@{MainAlgorithm = "phi2";                          MinMemGb = 1.5; Params = ""; DevFee = 3.0;  ExcludeCompute = @("GCN1","GCN2","RDNA1","RDNA2","RDNA3")}
     [PSCustomObject]@{MainAlgorithm = "pyrin";                         MinMemGb = 1.5; Params = ""; DevFee = 1.0;  MainAlgorithmXlat = "HeavyHashPyrin"; ExcludeCompute = @("GCN1","GCN2")}
     [PSCustomObject]@{MainAlgorithm = "ton";                           MinMemGb = 1.5; Params = ""; DevFee = 3.0;  MainAlgorithmXlat = "SHA256ton"; ExtendInterval = 2; ExcludeCompute = @("GCN1","GCN2"); PoolName = "hashrate|toncoinpool|ton-pool|whalestonpool"}
