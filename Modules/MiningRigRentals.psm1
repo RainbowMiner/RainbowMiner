@@ -408,7 +408,7 @@ param(
     
     if (-not $Job) {
         $JobHost = try{([System.Uri]$base).Host}catch{"www.miningrigrentals.com"}
-        $JobData = [PSCustomObject]@{endpoint=$endpoint;key=$key;secret=$secret;params=$params;method=$method;base=$base;regex=$regex;regexfld=$regexfld;regexmatch=$regexmatch;forcelocal=[bool]$ForceLocal;raw=[bool]$Raw;Host=$JobHost;Error=$null;Running=$true;Paused=$false;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();LastCacheWrite=$null;LastFailRetry=$null;LastFailCount=0;CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Tag=$tag;Timeout=$timeout;Index=0}
+        $JobData = [PSCustomObject]@{Url="$($base)$($endpoint)";endpoint=$endpoint;key=$key;secret=$secret;params=$params;method=$method;base=$base;regex=$regex;regexfld=$regexfld;regexmatch=$regexmatch;forcelocal=[bool]$ForceLocal;raw=[bool]$Raw;Host=$JobHost;Error=$null;Running=$true;Paused=$false;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();LastCacheWrite=$null;LastFailRetry=$null;LastFailCount=0;CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Tag=$tag;Timeout=$timeout;Index=0}
     }
 
     if (-not $useAsyncLoader) {
@@ -417,7 +417,7 @@ param(
         return
     }
     
-    if ($StaticJobKey -and $endpoint -and $Job -and ($Job.endpoint -ne $endpoint -or $Job.key -ne $key -or $Job.regex -ne $regex -or $Job.regexfld -ne $regexfld -or $Job.regexmatch -ne $regexmatch -or (Get-HashtableAsJson $Job.params) -ne (Get-HashtableAsJson $params))) {$force = $true;$Job.endpoint = $endpoint;$Job.key = $key;$Job.secret = $secret;$Job.params = $params}
+    if ($StaticJobKey -and $endpoint -and $Job -and ($Job.endpoint -ne $endpoint -or $Job.key -ne $key -or $Job.regex -ne $regex -or $Job.regexfld -ne $regexfld -or $Job.regexmatch -ne $regexmatch -or (Get-HashtableAsJson $Job.params) -ne (Get-HashtableAsJson $params))) {$force = $true;$Job.Url = "$($Job.base)$($endpoint)";$Job.endpoint = $endpoint;$Job.key = $key;$Job.secret = $secret;$Job.params = $params}
 
     if ($JobHost) {
         $HostDelay = $null
