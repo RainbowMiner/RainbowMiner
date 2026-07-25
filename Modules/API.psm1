@@ -14,6 +14,7 @@
     $API.UpdateBalance = $false
     $API.UpdateMRR   = $false
     $API.WatchdogReset = $false
+    $API.ClearCache  = $false
     $API.ApplyOC     = $false
     $API.LockMiners  = $false
     $API.IsVirtual   = $false

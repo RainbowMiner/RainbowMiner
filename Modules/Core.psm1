@@ -4717,7 +4717,7 @@ function Invoke-Core {
 
     $cursorPosition = $host.UI.RawUI.CursorPosition
     $cmdMenu = [System.Collections.Generic.List[string]]::new()
-    [void]$cmdMenu.AddRange([string[]]@("E[x]it","[R]estart","[B]alance update","[S]kip SP","[W]D reset"))
+    [void]$cmdMenu.AddRange([string[]]@("E[x]it","[R]estart","[B]alance update","[S]kip SP","[W]D reset","Clear cach[e]"))
     if ($newRelease) {[void]$cmdMenu.Insert(0,"[U]pdate RainbowMiner")}
     if (-not $Session.IsDonationRun -and -not $Session.IsServerDonationRun){
         if (-not $newRelease) {[void]$cmdMenu.Add("[Ctrl-U]pdate to prerelease")}
@@ -4812,6 +4812,7 @@ function Invoke-Core {
                             elseif ($API.Update) {"U"}
                             elseif ($API.UpdateBalance) {"B"}
                             elseif ($API.WatchdogReset) {"W"}
+                            elseif ($API.ClearCache) {"E"}
                             elseif ($API.CmdKey -ne '') {$API.CmdKey}
                             elseif ($Session.Config.RestartRBMTimespan -gt 0 -and $Session.StartTimeCore.AddSeconds($Session.Config.RestartRBMTimespan) -le (Get-Date).ToUniversalTime()) {"RT"}
                             elseif ($Session.Config.RestartRBMMemory -gt 0 -and $Global:last_memory_usage_byte -and $Session.Config.RestartRBMMemory -lt $Global:last_memory_usage_byte) {"RM"}
@@ -4963,6 +4964,17 @@ function Invoke-Core {
                     Start-AsyncLoader -Interval $Session.Config.Interval -Quickstart $Session.Config.Quickstart
                     Write-Host -NoNewline "[Y] pressed - Asyncloader yanked."
                     Write-Log "Asyncloader yanked."
+                    Break
+                }
+                "E" {
+                    $API.ClearCache = $false
+                    Stop-AsyncLoader
+                    Start-Sleep 2
+                    if (Test-Path ".\Cache") {Get-ChildItem ".\Cache" -Filter "*.asy" -File | Remove-Item -Force -ErrorAction Ignore}
+                    Start-AsyncLoader -Interval $Session.Config.Interval -Quickstart $Session.Config.Quickstart
+                    Write-Host -NoNewline "[E] pressed - cache cleared, Asyncloader restarted."
+                    Write-Log "User requests to clear the cache: Asyncloader restarted."
+                    $keyPressed = $true
                     Break
                 }
                 "Q" {

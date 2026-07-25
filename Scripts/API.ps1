@@ -1506,6 +1506,11 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             $Data = $API.WatchdogReset | ConvertTo-Json
             Break
         }
+        "/clearcache" {
+            $API.ClearCache = $true
+            $Data = $API.ClearCache | ConvertTo-Json
+            Break
+        }
         "/status" {
             $Data = [PSCustomObject]@{Pause=$API.PauseMiners.Pause;PauseIAOnly=$API.PauseMiners.PauseIAOnly;LockMiners=$Session.LockMiners;IsExclusiveRun=$Session.IsExclusiveRun;IsDonationRun=$Session.IsDonationRun} | ConvertTo-Json -Depth 10
             Break
