@@ -5012,7 +5012,7 @@ function Invoke-Core {
         Write-Host -NoNewline "Finished waiting - starting next run "
     }
 
-    Write-Host (" " * 135)
+    if ($CursorPosition -ne $null) {Write-Host (" " * 135)} else {Write-Host " "}
 
     #Save current hash rates
     Write-Log "Saving hash rates. "
