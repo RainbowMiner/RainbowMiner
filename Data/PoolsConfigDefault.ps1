@@ -115,9 +115,6 @@
         "HeroMiners" = [PSCustomObject]@{
             Currencies=@("DNX","ETC","QUAI","RVN","ERG")
         }
-        "Hiveon" = [PSCustomObject]@{
-            Currencies=@("ETC")
-        }
         "Icemining" = [PSCustomObject]@{
             Currencies=@("NIM","GRAM")
         }
