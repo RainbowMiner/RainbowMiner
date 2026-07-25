@@ -4715,7 +4715,7 @@ function Invoke-Core {
 
     $newRelease = $ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version
 
-    $cursorPosition = $host.UI.RawUI.CursorPosition
+    $cursorPosition = try {$host.UI.RawUI.CursorPosition} catch {$null}
     $cmdMenu = [System.Collections.Generic.List[string]]::new()
     [void]$cmdMenu.AddRange([string[]]@("E[x]it","[R]estart","[B]alance update","[S]kip SP","[W]D reset","Clear cach[e]"))
     if ($newRelease) {[void]$cmdMenu.Insert(0,"[U]pdate RainbowMiner")}
@@ -4757,7 +4757,7 @@ function Invoke-Core {
                 $LoopWarn = "$($MinersUpdateStatus.MinersFailed) miner$(if ($MinersUpdateStatus.MinersFailed -gt 1) {"s"}) crashed. Restarting loop asap. $(" " * 71)"
             }
             if ($LoopWarn -ne "") {
-                $host.UI.RawUI.CursorPosition = $CursorPosition
+                if ($CursorPosition -ne $null) {try {$host.UI.RawUI.CursorPosition = $CursorPosition} catch {}}
                 Write-Log -Level Warn $LoopWarn                
             }
 
@@ -4838,14 +4838,14 @@ function Invoke-Core {
             switch ($keyPressedValue) {
                 "S" { 
                     $Session.SkipSwitchingPrevention = $true
-                    $host.UI.RawUI.CursorPosition = $CursorPosition
+                    if ($CursorPosition -ne $null) {try {$host.UI.RawUI.CursorPosition = $CursorPosition} catch {}}
                     Write-Log "User requests to skip switching prevention. "
                     Write-Host -NoNewline "[S] pressed - skip switching prevention in next run. "
                     $keyPressed = $true
                     Break
                 }
-                "N" {                     
-                    $host.UI.RawUI.CursorPosition = $CursorPosition
+                "N" {
+                    if ($CursorPosition -ne $null) {try {$host.UI.RawUI.CursorPosition = $CursorPosition} catch {}}
                     Write-Log "User requests to start next round immediatly. "
                     Write-Host -NoNewline "[N] pressed - next run will start immediatly. "
                     $keyPressed = $true
@@ -4853,7 +4853,7 @@ function Invoke-Core {
                 }
                 "X" {
                     $Session.Stopp = $true
-                    $host.UI.RawUI.CursorPosition = $CursorPosition
+                    if ($CursorPosition -ne $null) {try {$host.UI.RawUI.CursorPosition = $CursorPosition} catch {}}
                     Write-Log "User requests to stop script. "
                     Write-Host -NoNewline "[X] pressed - stopping script."
                     $keyPressed = $true
@@ -4861,7 +4861,7 @@ function Invoke-Core {
                 }
                 "D" {
                     $Session.StartDownloader = $true
-                    $host.UI.RawUI.CursorPosition = $CursorPosition
+                    if ($CursorPosition -ne $null) {try {$host.UI.RawUI.CursorPosition = $CursorPosition} catch {}}
                     Write-Log "User requests to start downloader. "
                     Write-Host -NoNewline "[D] pressed - starting downloader in next run. "
                     $keyPressed = $true
@@ -4979,7 +4979,7 @@ function Invoke-Core {
                 }
                 "Q" {
                     $Session.RestartComputer = $true
-                    $host.UI.RawUI.CursorPosition = $CursorPosition
+                    if ($CursorPosition -ne $null) {try {$host.UI.RawUI.CursorPosition = $CursorPosition} catch {}}
                     Write-Log "User requests to reboot the computer. "
                     Write-Host -NoNewline "[Q] pressed - reboot computer."
                     $keyPressed = $true
@@ -5007,7 +5007,7 @@ function Invoke-Core {
     if ($Global:DownloaderPrq.HasMoreData) {$Global:DownloaderPrq | Receive-Job | Out-Host}
 
     if (-not $keyPressed) {
-        $host.UI.RawUI.CursorPosition = $CursorPosition
+        if ($CursorPosition -ne $null) {try {$host.UI.RawUI.CursorPosition = $CursorPosition} catch {}}
         Write-Log "Finish waiting before next run. "
         Write-Host -NoNewline "Finished waiting - starting next run "
     }
