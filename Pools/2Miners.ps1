@@ -51,7 +51,7 @@ $Pools_Data = @(
     [PSCustomObject]@{rpc = "erg";   symbol = "ERG";      port = 8888; fee = 1.0; divisor = 1e9}
     [PSCustomObject]@{rpc = "etc";   symbol = "ETC";      port = 1010; fee = 1.0; divisor = 1e18}
     [PSCustomObject]@{rpc = "ethw";  symbol = "ETHW";     port = 2020; fee = 1.0; divisor = 1e18}
-    [PSCustomObject]@{rpc = "flux";  symbol = "FLUX";     port = 9090; fee = 1.0; divisor = 1e8; altsymbol = "ZEL"}
+    #[PSCustomObject]@{rpc = "flux";  symbol = "FLUX";     port = 9090; fee = 1.0; divisor = 1e8; altsymbol = "ZEL"} #FLUX mining ended 2025-10-25
     [PSCustomObject]@{rpc = "grin";  symbol = "GRIN-PRI"; port = 3030; fee = 1.0; divisor = 1e9; cycles = 42}
     [PSCustomObject]@{rpc = "kas";   symbol = "KAS";      port = 2020; fee = 1.0; divisor = 1e8}
     [PSCustomObject]@{rpc = "kls";   symbol = "KLS";      port = 2020; fee = 1.0; divisor = 1e8}
