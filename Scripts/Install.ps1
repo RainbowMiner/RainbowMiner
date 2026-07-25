@@ -1,4 +1,4 @@
-param(
+﻿param(
     [Parameter(Mandatory = $false)]
     [String]$mode = "root" # either "root" (using sudo) or "user"
 )
