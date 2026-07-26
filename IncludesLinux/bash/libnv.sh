@@ -62,6 +62,12 @@ script_dir="$(CDPATH= cd -- "$(dirname -- "$script_path")" 2>/dev/null && pwd -P
 [ -n "$script_dir" ] || script_dir="$(pwd)"
 target_folder="$script_dir/../lib"
 mkdir -p "$target_folder"
+# canonicalize: wget2 (Fedora/Nobara) refuses -O paths that contain a .. segment
+target_folder="$(CDPATH= cd -- "$target_folder" 2>/dev/null && pwd -P)"
+if [ -z "$target_folder" ]; then
+    printf "Error: cannot resolve the lib folder\n" >&2
+    exit 1
+fi
 
 
 download_and_install() {
@@ -82,9 +88,10 @@ download_and_install() {
     if [ "$needs_install" -eq 1 ]; then
         [ "$quiet" -eq 0 ] && printf "\nDownloading %s\n" "$url"
         local archive="$target_folder/cudalibs$index.tar.gz"
-        local wget_opts="-O $archive"
-        [ "$quiet" -eq 1 ] && wget_opts="-q $wget_opts"
-        if wget $wget_opts "$url"; then
+        local wget_quiet=""
+        [ "$quiet" -eq 1 ] && wget_quiet="-q"
+        # keep -O and the path quoted - an unquoted expansion breaks on paths with spaces
+        if wget $wget_quiet -O "$archive" "$url"; then
             [ "$quiet" -eq 0 ] && printf "Unpacking archive #%d ..\n" "$index"
             if tar -xzf "$archive" -C "$target_folder"; then
                 echo "$url" > "$uri_file"
