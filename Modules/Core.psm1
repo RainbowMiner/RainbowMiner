@@ -2226,6 +2226,10 @@ function Invoke-Core {
     Write-Log "Loading saved statistics. "
 
     Get-Stat -Miners -Quiet
+
+    #Remove expired auto-disable markers, so their miners return to the lists below
+    Clear-ExpiredAutoDisabled
+
     [hashtable]$Disabled = Get-Stat -Disabled
 
     #Validate Minerspeeds
@@ -5703,11 +5707,12 @@ function Invoke-ReportMinerStatus {
     if (Test-Path ".\Data\reportapi.json") {try {$ReportAPI = Get-ContentByStreamReader ".\Data\reportapi.json" | ConvertFrom-Json -ErrorAction Stop} catch {$ReportAPI=$null}}
     if (-not $ReportAPI) {$ReportAPI = @([PSCustomObject]@{match    = "rbminer.net";apiurl   = "https://api.rbminer.net/report.php"})}
 
-    # Create crash alerts
+    # Create crash alerts - the crash counter may retain more than one hour when CrashTrackingWindowMinutes is larger, so keep the reported data at one hour
+    $CrashTimeLimit = (Get-Date).AddHours(-1)
     $CrashData = $null
     if ($Session.IsCore -or $Session.EnableCurl) {
         try {
-            ConvertTo-Json @($Global:CrashCounter | Foreach-Object {[PSCustomObject]@{
+            ConvertTo-Json @($Global:CrashCounter | Where-Object {$_.Timestamp -gt $CrashTimeLimit} | Foreach-Object {[PSCustomObject]@{
                 Timestamp      = "{0:yyyy-MM-dd HH:mm:ss}" -f $_.TimeStamp
                 Start          = "{0:yyyy-MM-dd HH:mm:ss}" -f $_.Start
                 End            = "{0:yyyy-MM-dd HH:mm:ss}" -f $_.End
@@ -5744,7 +5749,8 @@ function Invoke-ReportMinerStatus {
     }
 
 
-    $CrashAlert = if ($Session.Config.MinerStatusMaxCrashesPerHour -ge 0 -and $Global:CrashCounter.Count -gt $Session.Config.MinerStatusMaxCrashesPerHour) {$Global:CrashCounter.Count} else {0}
+    $CrashesLastHour = @($Global:CrashCounter | Where-Object {$_.Timestamp -gt $CrashTimeLimit}).Count
+    $CrashAlert = if ($Session.Config.MinerStatusMaxCrashesPerHour -ge 0 -and $CrashesLastHour -gt $Session.Config.MinerStatusMaxCrashesPerHour) {$CrashesLastHour} else {0}
 
     # All device data
     $DeviceData = $null
@@ -6344,13 +6350,36 @@ Function Write-ActivityLog {
                 End            = $Miner.GetActiveLast()
                 Runtime        = $Runtime.TotalSeconds
                 Name           = $Miner.BaseName
+                MinerName      = $Miner.Name
+                Vendor         = "$($Global:DeviceCache.DevicesToVendors[$Miner.DeviceModel])"
                 Device         = @($Miner.DeviceModel)
                 Algorithm      = @($Miner.BaseAlgorithm)
                 Pool           = @($Miner.Pool)
             }
             [void]$Global:CrashCounter.Add($NewCrash)
+
+            if ($Session.Config.EnableAutoDisableMiners -and $Session.Config.MaxCrashesBeforeDisable -gt 0) {
+                $CrashWindowStart = $Now.AddMinutes(-[Math]::Max([int]$Session.Config.CrashTrackingWindowMinutes,1))
+                $CrashAlgoKey     = $NewCrash.Algorithm -join '-'
+                $CrashCount       = @($Global:CrashCounter | Where-Object {$_.MinerName -eq $NewCrash.MinerName -and ($_.Algorithm -join '-') -eq $CrashAlgoKey -and $_.Timestamp -gt $CrashWindowStart}).Count
+                if ($CrashCount -ge $Session.Config.MaxCrashesBeforeDisable) {
+                    $DisabledNew = $false
+                    foreach ($CrashAlgo in $NewCrash.Algorithm) {
+                        $DisabledPath = ".\Stats\Disabled\$($NewCrash.Vendor)-$($NewCrash.MinerName)_$($CrashAlgo)_HashRate.txt"
+                        # never overwrite an existing marker - manual disables from the web UI must stay untouched
+                        if (-not (Test-Path $DisabledPath)) {
+                            if (-not (Test-Path ".\Stats\Disabled")) {New-Item "Stats\Disabled" -ItemType "directory" -ErrorAction Ignore > $null}
+                            Set-ContentJson -PathToFile $DisabledPath -Data ([PSCustomObject]@{DisabledWhen = (Get-Date).ToUniversalTime();AutoDisabled = $true;Reason = "crashed $($CrashCount) times within $($Session.Config.CrashTrackingWindowMinutes) minutes"}) -Compress > $null
+                            $DisabledNew = $true
+                        }
+                    }
+                    if ($DisabledNew) {
+                        Write-Log -Level Warn "Miner $($NewCrash.MinerName) with $($CrashAlgoKey) auto-disabled: crashed $($CrashCount) times within $($Session.Config.CrashTrackingWindowMinutes) minutes$(if ($Session.Config.AutoDisableResetHours -gt 0) {", will be re-enabled after $($Session.Config.AutoDisableResetHours) hours"}). "
+                    }
+                }
+            }
         }
-        $CrashTimeLimit = $Now.AddHours(-1)
+        $CrashTimeLimit = $Now.AddMinutes(-[Math]::Max([int]$Session.Config.CrashTrackingWindowMinutes,60))
         $Global:CrashCounter.RemoveAll({ param($c) $c.Timestamp -le $CrashTimeLimit }) > $null
 
         $mutex = New-Object System.Threading.Mutex($false, "RBMWriteActivityLog")
@@ -6383,6 +6412,28 @@ Function Write-ActivityLog {
         }
     }
     End {}
+}
+
+function Clear-ExpiredAutoDisabled {
+    # expire auto-disable markers written by Write-ActivityLog - manual disables from the web UI carry no AutoDisabled field and stay until the user re-enables them
+    if (-not ($Session.Config.AutoDisableResetHours -gt 0) -or -not (Test-Path "Stats\Disabled")) {return}
+    $ResetTime = (Get-Date).ToUniversalTime().AddHours(-$Session.Config.AutoDisableResetHours)
+    foreach ($DisabledFile in @(Get-ChildItem "Stats\Disabled" -File -Filter "*.txt" -ErrorAction Ignore)) {
+        try {
+            $DisabledData = Get-ContentByStreamReader $DisabledFile.FullName | ConvertFrom-Json -ErrorAction Stop
+            if ($DisabledData.AutoDisabled -and $DisabledData.DisabledWhen) {
+                $DisabledWhen = [DateTime]$DisabledData.DisabledWhen
+                if ($DisabledWhen.Kind -eq [System.DateTimeKind]::Local) {$DisabledWhen = $DisabledWhen.ToUniversalTime()}
+                elseif ($DisabledWhen.Kind -eq [System.DateTimeKind]::Unspecified) {$DisabledWhen = [DateTime]::SpecifyKind($DisabledWhen,[System.DateTimeKind]::Utc)}
+                if ($DisabledWhen -lt $ResetTime) {
+                    Remove-Item $DisabledFile.FullName -Force -ErrorAction Ignore
+                    Write-Log -Level Info "Re-enabled $($DisabledFile.BaseName -replace '_HashRate$') after $($Session.Config.AutoDisableResetHours) hours of auto-disable. "
+                }
+            }
+        } catch {
+            Write-Log -Level Info "Could not check auto-disabled file $($DisabledFile.Name): $($_.Exception.Message)"
+        }
+    }
 }
 
 function Update-WatchdogLevels {

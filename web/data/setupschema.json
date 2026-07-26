@@ -2196,6 +2196,92 @@
               "label": "Enable"
             }
           ]
+        },
+        {
+          "kind": "field",
+          "key": "EnableAutoDisableMiners",
+          "id": "inputEnableAutoDisableMiners",
+          "label": {
+            "html": "Auto-disable crashing miners",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "Automatically disable a miner/algorithm after repeated crashes. Re-enable it manually on the Miners page or wait for the reset time below."
+          },
+          "control": "select",
+          "attrs": {},
+          "options": [
+            {
+              "value": "0",
+              "label": "Disable"
+            },
+            {
+              "value": "1",
+              "label": "Enable"
+            }
+          ]
+        },
+        {
+          "kind": "field",
+          "key": "MaxCrashesBeforeDisable",
+          "id": "inputMaxCrashesBeforeDisable",
+          "label": {
+            "html": "Max. crashes before disable",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "Number of crashes within the tracking window, until a miner/algorithm gets disabled."
+          },
+          "control": "number",
+          "attrs": {
+            "min": "1",
+            "step": "1",
+            "placeholder": "Enter the number of crashes until disable"
+          }
+        },
+        {
+          "kind": "field",
+          "key": "CrashTrackingWindowMinutes",
+          "id": "inputCrashTrackingWindowMinutes",
+          "label": {
+            "html": "Crash tracking window",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "Sliding window in minutes for counting miner crashes."
+          },
+          "control": "number",
+          "attrs": {
+            "min": "1",
+            "step": "1",
+            "placeholder": "Enter the crash tracking window in minutes"
+          }
+        },
+        {
+          "kind": "field",
+          "key": "AutoDisableResetHours",
+          "id": "inputAutoDisableResetHours",
+          "label": {
+            "html": "Re-enable auto-disabled after hours",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "Re-enable an auto-disabled miner/algorithm after this many hours (0=never re-enable)."
+          },
+          "control": "number",
+          "attrs": {
+            "min": "0",
+            "step": "1",
+            "placeholder": "Enter hours until re-enable"
+          }
         }
       ]
     }

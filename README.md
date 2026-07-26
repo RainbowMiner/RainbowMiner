@@ -1015,6 +1015,10 @@ For Server (Runmode=server) setup:
 - **FastlaneBenchmarkTypeGPU** = if EnableFastlaneBenchmark="1": choose the value-set for GPU miners (avg, min or max) [default=avg]
 - **EnableFastlaneBenchmarkMissing** = if EnableFastlaneBenchmark="1": set to 1 if you want to benchmark all device/miners/algos not found on rbminer.net [default=1]
 - **MaxCrashesDuringBenchmark** = maximum number of crashes allowed, until a benchmark fails [default=2]
+- **EnableAutoDisableMiners** = set to 1 to automatically disable a miner/algorithm after crashing MaxCrashesBeforeDisable times within CrashTrackingWindowMinutes (re-enable it manually on the web Miners page or wait AutoDisableResetHours) [default=0]
+- **MaxCrashesBeforeDisable** = if EnableAutoDisableMiners="1": number of crashes within the tracking window, until a miner/algorithm gets disabled [default=5]
+- **CrashTrackingWindowMinutes** = if EnableAutoDisableMiners="1": sliding window in minutes for counting miner crashes [default=60]
+- **AutoDisableResetHours** = if EnableAutoDisableMiners="1": re-enable an auto-disabled miner/algorithm after this many hours, set to 0 to never re-enable automatically [default=24]
 - **MinimumMiningIntervals** = minimum number of intervals a miner will run, before switching will be allowed [default=1]
 - **SSL** = configure ssl usage: 0=prefer non-SSL over SSL pools, 1=prefer SSL over non-SSL pools, 2=use SSL pools only [default=0]
 - **Proxy** = set your proxy address here, if you are using one
