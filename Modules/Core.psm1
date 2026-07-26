@@ -6617,15 +6617,30 @@ function Get-PowerPrice {
         $cycletime = if ($Session.Config.PowerPriceApiInterval) {$Session.Config.PowerPriceApiInterval} else {$Session.Config.Interval}
 
         try {
-            $PPApiRequest = Invoke-RestMethodAsync "$($Session.Config.PowerPriceApi)" -timeout 10 -cycletime $cycletime -tag "ppapi"
+            $PPApiRequest = Invoke-RestMethodAsync "$($Session.Config.PowerPriceApi)" -timeout 10 -cycletime $cycletime -tag "ppapi" -Jobkey "powerpriceapi"
+
+            # the asyncloader keeps serving the cached payload when the endpoint goes down, so the catch below never fires on its own - check the job's last successful fetch instead
+            $PPApiJob = Get-UrlAsyncJob -Jobkey "powerpriceapi"
+            if ($PPApiJob -and $PPApiJob.LastCacheWrite -and $PPApiJob.LastCacheWrite -lt (Get-Date).ToUniversalTime().AddSeconds(-[Math]::Max(3*$cycletime,900))) {
+                throw "no successful fetch since $($PPApiJob.LastCacheWrite) UTC"
+            }
+
             if ($Session.Config.PowerPriceApiValue -eq "" -or $Session.Config.PowerPriceApiValue -eq "#") {
                 $PPApiPrice = [decimal]$PPApiRequest
             } else {
                 $PPApiPrice = Get-ValueFromRequest -Request $PPApiRequest -Value $Session.Config.PowerPriceApiValue
             }
-            $PowerPrice = $PPApiPrice
+            if ($PPApiPrice -ne $null -and "$PPApiPrice" -ne "" -and [double]$PPApiPrice -ge 0) {
+                $PowerPrice = $PPApiPrice
+                $Script:PowerPriceApiWarned = $null
+            } else {
+                throw "value at $($Session.Config.PowerPriceApiValue) is missing or invalid"
+            }
         } catch {
-            Write-Log -Level Warn "Call to PowerPriceApi $($Session.Config.PowerPriceApi) failed: $($_.Exception.Message)"
+            if (-not $Script:PowerPriceApiWarned -or $Script:PowerPriceApiWarned -lt (Get-Date).ToUniversalTime().AddHours(-1)) {
+                Write-Log -Level Warn "Call to PowerPriceApi $($Session.Config.PowerPriceApi) failed, using PowerPrice $($PowerPrice) instead: $($_.Exception.Message)"
+                $Script:PowerPriceApiWarned = (Get-Date).ToUniversalTime()
+            }
         }
     } elseif ("$($Session.Config.OctopusTariffCode)" -ne '') {
         if ($Session.Config.OctopusTariffCode -match "^E-[12]R-([A-Z0-9-]+)-[A-Z]$") {

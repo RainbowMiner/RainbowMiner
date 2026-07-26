@@ -112,6 +112,29 @@ Param(
     }
 }
 
+function Get-UrlAsyncJob {
+[cmdletbinding()]
+Param(
+    [Parameter(Mandatory = $False)]
+        [string]$url = "",
+    [Parameter(Mandatory = $False)]
+        [string]$Jobkey = $null,
+    [Parameter(Mandatory = $False)]
+        $body,
+    [Parameter(Mandatory = $False)]
+        [hashtable]$headers
+)
+    if (-not (Test-Path Variable:Global:Asyncloader)) {return}
+
+    if (-not $url -and -not $Jobkey) {return}
+
+    if (-not $Jobkey) {$Jobkey = Get-MD5Hash "$($url)$(Get-HashtableAsJson $body)$(Get-HashtableAsJson $headers)"}
+
+    $Job = $null
+    [void]$AsyncLoader.Jobs.TryGetValue($Jobkey, [ref]$Job)
+    $Job
+}
+
 function Invoke-GetUrlAsync {
 [cmdletbinding()]
 Param(   
