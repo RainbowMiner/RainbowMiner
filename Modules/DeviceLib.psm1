@@ -133,10 +133,23 @@ function Get-Device {
                     $ErrorMessage = "Timeout"
                 } else {
                     try {
-                        $GetOpenCL_Result = Receive-Job -Job $GetOpenCL_Job
-                        $Platform_Devices = $GetOpenCL_Result.Platform_Devices
-                        $ErrorMessage     = $GetOpenCL_Result.ErrorMessage
-                    } catch {}
+                        # native libraries (e.g. Mesa probing DRM devices) may write to the job process' raw
+                        # stderr, which the job transport reports as an error - keep that off the console and
+                        # make sure a broken job still sets ErrorMessage, so the nvidia-smi fallback runs.
+                        # GetOpenCL.ps1 always emits its result object - a null result means the job broke
+                        $GetOpenCL_JobErrors = $null
+                        $GetOpenCL_Result = Receive-Job -Job $GetOpenCL_Job -ErrorAction SilentlyContinue -ErrorVariable GetOpenCL_JobErrors
+                        if ($GetOpenCL_Result) {
+                            $Platform_Devices = $GetOpenCL_Result.Platform_Devices
+                            $ErrorMessage     = $GetOpenCL_Result.ErrorMessage
+                        } else {
+                            $ErrorMessage = if ($GetOpenCL_JobErrors) {"$($GetOpenCL_JobErrors | Select-Object -First 1)"}
+                                            elseif ($GetOpenCL_Job.State -ne 'Completed' -and $GetOpenCL_Job.ChildJobs[0].JobStateInfo.Reason) {"$($GetOpenCL_Job.ChildJobs[0].JobStateInfo.Reason.Message)"}
+                                            else {"OpenCL detection job returned no data"}
+                        }
+                    } catch {
+                        $ErrorMessage = "$($_.Exception.Message)"
+                    }
                 }
                 try {Remove-Job $GetOpenCL_Job -Force} catch {}
             }
