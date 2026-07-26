@@ -240,7 +240,7 @@ function Start-Setup {
                 $Config.APIuser = ($Session.MachineName -replace "[^a-z0-9]+").ToLower()
                 $lCharSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".ToCharArray()
                 $nCharSet = "0123456789".ToCharArray()
-                $sCharSet = "/*-+,!?=()@;:._".ToCharArray()
+                $sCharSet = "*-!()._".ToCharArray() # URL-safe specials only - chars like + ? = ; : / @ , break url-encoded transports (issue #3095)
                 $Config.APIpassword = ((1..10 | %{$lCharset | Get-Random}) + (1..3 | %{$nCharset | Get-Random}) + (1..2 | %{$sCharset | Get-Random}) | Sort-Object {Get-Random}) -join ""
             }
 

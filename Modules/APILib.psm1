@@ -58,31 +58,15 @@ param (
             }
 
 	        if ($PostCommand) {
-                # URL Decode common percent-encoded characters efficiently
-                $decodeMap = @{
-                    '+'  = " "; "%20" = " "; "%21" = "!" ; '%22' = '"'; "%23" = "#"; "%24" = "$"; "%25" = "%"; #"%26" = "&"; later!
-                    "%27" = "'"; "%28" = "("; "%29" = ")"; "%2A" = "*"; "%2B" = "+"; "%2C" = ","; "%2D" = "-"; "%2E" = ".";
-                    "%2F" = "/"; "%3A" = ":"; "%3B" = ";"; "%3C" = "<"; "%3E" = ">"; "%3F" = "?"; "%40" = "@"; #"%3D" = "="; later!
-                    "%5B" = "["; "%5C" = "\"; "%5D" = "]"; "%5E" = "^"; "%5F" = "_"; "%7B" = "{"; "%7C" = "|"; "%7D" = "}";
-                    "%7E" = "~"; "%7F" = "_"; "%7F%25" = "%"
-                }
+                # Split the still-encoded POST data into key-value pairs first, then URL-decode each
+                # token separately. Decoding before the split would corrupt values containing encoded
+                # & or =, and the former unordered replacement map turned encoded plus signs into
+                # spaces on some machines (issue #3095)
+		        foreach ($Post in ($PostCommand -split "&")) {
+			        $PostContent = $Post -split "=", 2
 
-                # Perform URL decoding in a single pass
-                foreach ($key in $decodeMap.Keys) {
-                    $PostCommand = $PostCommand -replace [regex]::Escape($key), $decodeMap[$key]
-                }
-
-                $decodeMap = $null
-
-                # Split POST Data into key-value pairs
-                $PostCommand = $PostCommand -split "&"
-
-		        foreach ($Post in $PostCommand) {
-			        $PostValue = $Post -replace "%26","&"
-			        $PostContent = $PostValue -split "=", 2
-
-			        $PostName = $PostContent[0] -replace "%3D","="
-			        $PostValue = $PostContent[1] -replace "%3D","="
+			        $PostName  = [System.Web.HttpUtility]::UrlDecode($PostContent[0])
+			        $PostValue = [System.Web.HttpUtility]::UrlDecode($PostContent[1])
 
                     if ($PostName -ne "_") {
 			            if ([RBMToolBox]::EndsWith($PostName,"[]")) {
