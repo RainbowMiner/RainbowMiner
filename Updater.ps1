@@ -80,11 +80,15 @@ try {
 
         @("Start.bat","start.sh","StartWD.bat","startwd.sh") | Foreach-Object {if (Test-Path $_) {Copy-Item $_ "$($_).saved" -Force -ErrorAction Ignore}}
         if ((Test-Path "MinersOldVersions") -and (Test-Path "Miners")) {$PreserveMiners = Compare-Object @(Get-ChildItem "Miners" | Select-Object -ExpandProperty Name) @(Get-ChildItem "MinersOldVersions" | Select-Object -ExpandProperty Name) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject}
-        @("Miners","APIs","Balances","Pools") | Foreach-Object {if (Test-Path ".\$($_)") {Remove-Item ".\$($_)" -Recurse -Force -ErrorAction Ignore}}
-        Get-ChildItem ".\Data" -Filter "*.json" -File | Where-Object {$_.Name -notin @("lastdrun.json","localapiport.json","minerdata.json","mrrinfo.json","poolsdata.json","unprofitable.json","version.json")} | Foreach-Object {Remove-Item $_.FullName -Force -ErrorAction Ignore}
+        if (-not $UpdateToMaster) {
+            # release archives extract in-place, so retired files must be removed up front - master
+            # archives extract into .\RainbowMiner-master first, their delete runs after verification
+            @("Miners","APIs","Balances","Pools") | Foreach-Object {if (Test-Path ".\$($_)") {Remove-Item ".\$($_)" -Recurse -Force -ErrorAction Ignore}}
+            Get-ChildItem ".\Data" -Filter "*.json" -File | Where-Object {$_.Name -notin @("lastdrun.json","localapiport.json","minerdata.json","mrrinfo.json","poolsdata.json","unprofitable.json","version.json")} | Foreach-Object {Remove-Item $_.FullName -Force -ErrorAction Ignore}
+        }
 
         Write-Host " (3/$($MaxPages)) Extracting new files .."
-        
+
         $FromFullPath = [IO.Path]::GetFullPath($FileName)
         $ToFullPath   = [IO.Path]::GetFullPath(".")
 
@@ -103,11 +107,33 @@ try {
         }
 
         $Params.PassThru = $true
-        (Start-Process @Params).WaitForExit() > $null
 
-        if ($UpdateToMaster) {
-            $PathToMaster = ".\RainbowMiner-master"
-            if (Test-Path $PathToMaster) {
+        # essential files that must exist after the update - if any of them is missing, the
+        # installation would crash-loop on the next start
+        $RequiredFiles = @("RainbowMiner.ps1","Modules\Include.psm1","Data\algorithms.json","Data\regions.json")
+
+        $UpdateOK = $false
+
+        for ($Attempt = 1; $Attempt -le 2; $Attempt++) {
+
+            $UpdateProcess = Start-Process @Params
+            $UpdateProcess.WaitForExit() > $null
+            # 7z exit code 1 = warnings only, everything above is a fatal extraction error
+            if ($UpdateProcess.ExitCode -gt 1) {
+                Write-Host "WARNING: extraction failed with exit code $($UpdateProcess.ExitCode)$(if ($Attempt -lt 2) {", retrying"})" -ForegroundColor Yellow
+                continue
+            }
+
+            if ($UpdateToMaster) {
+                $PathToMaster = ".\RainbowMiner-master"
+                if (-not (Test-Path (Join-Path $PathToMaster "RainbowMiner.ps1"))) {
+                    Write-Host "WARNING: the extracted archive is incomplete$(if ($Attempt -lt 2) {", retrying"})" -ForegroundColor Yellow
+                    Remove-Item -Path $PathToMaster -Recurse -Force -ErrorAction Ignore
+                    continue
+                }
+                # extraction is verified - only now it is safe to remove the old files
+                @("Miners","APIs","Balances","Pools") | Foreach-Object {if (Test-Path ".\$($_)") {Remove-Item ".\$($_)" -Recurse -Force -ErrorAction Ignore}}
+                Get-ChildItem ".\Data" -Filter "*.json" -File | Where-Object {$_.Name -notin @("lastdrun.json","localapiport.json","minerdata.json","mrrinfo.json","poolsdata.json","unprofitable.json","version.json")} | Foreach-Object {Remove-Item $_.FullName -Force -ErrorAction Ignore}
                 try {
                     $FolderToSkip = if ($IsWindows) {"IncludesLinux"} else {"Includes"}
                     Get-ChildItem -Path $PathToMaster -Force | Where-Object {-not ($_.PSIsContainer -and $_.Name -eq $FolderToSkip)} | ForEach-Object {
@@ -128,6 +154,17 @@ try {
                     Remove-Item -Path $PathToMaster -Recurse -Force -ErrorAction Ignore
                 }
             }
+
+            $MissingFiles = @($RequiredFiles | Where-Object {-not (Test-Path ".\$($_)")})
+            if ($MissingFiles.Count -eq 0) {
+                $UpdateOK = $true
+                break
+            }
+            Write-Host "WARNING: files are missing after the update: $($MissingFiles -join ', ')$(if ($Attempt -lt 2) {", retrying"})" -ForegroundColor Yellow
+        }
+
+        if (-not $UpdateOK) {
+            throw "the update did not complete - the downloaded archive is kept at $($FromFullPath): extract it over this folder (overwrite all) to repair the installation"
         }
 
         if ($PreserveMiners) {$PreserveMiners | Foreach-Object {if (Test-Path "MinersOldVersions\$_") {Copy-Item "MinersOldVersions\$_" "Miners\$_" -Force}}}
@@ -189,7 +226,8 @@ try {
     }
 }
 catch {
-    Write-Host "$Name failed to update. Please download manually at $($RBMVersion.ManuaURI)" -ForegroundColor Yellow
+    Write-Host "$Name failed to update: $($_.Exception.Message)" -ForegroundColor Yellow
+    Write-Host "Please download manually at $($RBMVersion.ManuaURI)" -ForegroundColor Yellow
     if ($calledfrom -ne "core") {
         $message = "Press any key to return to $name"
         if ($psISE)
