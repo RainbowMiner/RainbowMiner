@@ -195,7 +195,7 @@ $Pools_Data | ForEach-Object {
                     [PSCustomObject]@{     
                         Algorithm          = $Pool_Algorithm_Norm
                         Algorithm0         = $Pool_Algorithm_Norm
-                        CoinName           = $Pool_CurrencyData.name
+                        CoinName           = ""
                         CoinSymbol         = ""
                         Currency           = "BTC"
                         Price              = $Stat.$StatAverage #instead of .Live
