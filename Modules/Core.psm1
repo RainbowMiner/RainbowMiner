@@ -133,7 +133,8 @@ function Start-Core {
             MRRAlgorithms = @{Path='';LastWriteTime=0;Healthy=$true}
         }
 
-        $Session.GetTicker = [System.Collections.Generic.List[string]]::new()
+        # synchronized: the API server threads add symbols concurrently via /getjob "morerates" (issue #3052)
+        $Session.GetTicker = [System.Collections.ArrayList]::Synchronized((New-Object System.Collections.ArrayList))
 
         $Session.StartTime         = if ($LastStartTime = (Get-LastStartTime)) {$LastStartTime} else {(Get-Date).ToUniversalTime()}
         $Session.StartTimeCore     = (Get-Date).ToUniversalTime()
@@ -5988,14 +5989,14 @@ function Update-Rates {
 
     Compare-Object @($GetSymbols) @($NewRates.Keys) -IncludeEqual | Where-Object {$_.SideIndicator -ne "=>" -and $_.InputObject} | Foreach-Object {
         if ($_.SideIndicator -eq "==") {$Global:Rates[$_.InputObject] = [Double]$NewRates[$_.InputObject]}
-        elseif ($Session.GetTicker -inotcontains $_.InputObject) {[void]$Session.GetTicker.Add($_.InputObject.ToUpper())}
+        elseif ($Session.GetTicker.ToArray() -inotcontains $_.InputObject) {[void]$Session.GetTicker.Add($_.InputObject.ToUpper())}
     }
 
     Compare-Object @($WCSymbols) @($Global:Rates.Keys) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject | Foreach-Object {$Global:Rates[$_] = [Math]::Round($Global:Rates[$_],3)}
 
     if ($Session.GetTicker.Count -gt 0) {
         try {
-            $SymbolStr = "$(($Session.GetTicker | Sort-Object) -join ',')".ToUpper()
+            $SymbolStr = "$(($Session.GetTicker.ToArray() | Sort-Object) -join ',')".ToUpper()
             $RatesAPI = Invoke-RestMethodAsync "https://api.rbminer.net/cmc.php?symbols=$($SymbolStr)" -Jobkey "morerates" -cycletime 600
             if (-not $RatesAPI.status) {
                 Write-Log "api.rbminer.net/cmc failed for $($SymbolStr)"

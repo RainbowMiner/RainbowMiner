@@ -1518,9 +1518,9 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
         "/clients" {
             $Config = if ($Session.UserConfig) {$Session.UserConfig} else {$Session.Config}
             if ($Parameters.include_server -eq "true" -and $Config.RunMode -eq "Server") {
-                $Data = @($APIClients) + @([PSCustomObject]@{workername = $Config.Workername; machinename = $Session.MachineName; machineip = $Session.MyIP; port = $Config.APIPort; timestamp = Get-UnixTimestamp; isserver=$true}) | ConvertTo-Json
+                $Data = @($APIClients.ToArray()) + @([PSCustomObject]@{workername = $Config.Workername; machinename = $Session.MachineName; machineip = $Session.MyIP; port = $Config.APIPort; timestamp = Get-UnixTimestamp; isserver=$true}) | ConvertTo-Json
             } else {
-                $Data = ConvertTo-Json $APIClients
+                $Data = ConvertTo-Json @($APIClients.ToArray())
             }
             $Config = $null
             Remove-Variable -Name Config -ErrorAction Ignore
@@ -1574,7 +1574,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             $Status = $false
             if ($API.IsServer) {
                 if ($Parameters.workername -and $Parameters.machinename) {
-                    $Client = $APIClients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
+                    $Client = $APIClients.ToArray() | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
                     if ($Client) {
                         $Client.machineip = $Parameters.myip
                         $Client.port      = $Parameters.port 
@@ -1612,7 +1612,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             if ($API.IsServer) {
                 $Status = $false
                 if ($Parameters.workername -and $Parameters.machinename) {
-                    $Client = $APIClients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
+                    $Client = $APIClients.ToArray() | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
                     if ($Client) {
                         $Client.machineip = $Parameters.myip
                         $Client.port      = $Parameters.port; 
@@ -1622,6 +1622,9 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 }
                 $Result = $null
                 try {
+                    # reject invalid target urls up front - an empty or relative url would create a
+                    # poisoned job in this server's asyncloader that fails on every cycle (issue #3052)
+                    if ("$($Parameters.url)" -notmatch "^https?://") {throw "invalid url `"$($Parameters.url)`" received"}
                     $pbody = $null
                     if ($Parameters.body -match "^{.+}$") {
                         $pbody_in = $Parameters.body | ConvertFrom-Json -ErrorAction Ignore
@@ -1642,8 +1645,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         try {
                             $RatesUri = [System.Uri]$Parameters.url
                             $RatesQry = [System.Web.HttpUtility]::ParseQueryString($RatesUri.Query)
-                            Compare-Object $Session.GetTicker @([System.Web.HttpUtility]::UrlDecode($RatesQry["symbols"]) -split ',' | Select-Object) | Where-Object {$_.SideIndicator -eq "=>" -and $_.InputObject} | Foreach-Object {[void]$Session.GetTicker.Add($_.InputObject.ToUpper())}
-                            $SymbolStr = "$(($Session.GetTicker | Sort-Object) -join ',')".ToUpper()
+                            Compare-Object $Session.GetTicker.ToArray() @([System.Web.HttpUtility]::UrlDecode($RatesQry["symbols"]) -split ',' | Select-Object) | Where-Object {$_.SideIndicator -eq "=>" -and $_.InputObject} | Foreach-Object {[void]$Session.GetTicker.Add($_.InputObject.ToUpper())}
+                            $SymbolStr = "$(($Session.GetTicker.ToArray() | Sort-Object) -join ',')".ToUpper()
                             $Parameters.url = "https://api.rbminer.net/cmc.php?symbols=$($SymbolStr)"
 
                             $RatesUri = $RatesQry = $SymbolStr = $null
@@ -1668,7 +1671,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             if ($API.IsServer) {
                 $Status = $false
                 if ($Parameters.workername -and $Parameters.machinename) {
-                    $Client = $APIClients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
+                    $Client = $APIClients.ToArray() | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
                     if ($Client) {
                         $Client.machineip = $Parameters.myip
                         $Client.port      = $Parameters.port; 
@@ -1722,7 +1725,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             if ($API.IsServer) {
                 $Status = $false
                 if ($Parameters.workername -and $Parameters.machinename) {
-                    $Client = $APIClients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
+                    $Client = $APIClients.ToArray() | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
                     if ($Client) {
                         $Client.machineip = $Parameters.myip
                         $Client.port      = $Parameters.port
@@ -1754,7 +1757,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             if ($API.IsServer) {
                 $Status = $false
                 if ($Parameters.workername -and $Parameters.machinename) {
-                    $Client = $APIClients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
+                    $Client = $APIClients.ToArray() | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
                     if ($Client) {
                         $Client.machineip = $Parameters.myip
                         $Client.port      = $Parameters.port
@@ -1787,7 +1790,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             if ($API.IsServer) {
                 $Status = $false
                 if ($Parameters.workername -and $Parameters.machinename) {
-                    $Client = $APIClients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
+                    $Client = $APIClients.ToArray() | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
                     if ($Client) {
                         $Client.machineip = $Parameters.myip
                         $Client.port      = $Parameters.port
