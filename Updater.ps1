@@ -116,6 +116,9 @@ try {
 
         for ($Attempt = 1; $Attempt -le 2; $Attempt++) {
 
+            # a stale folder from an earlier failed run would resurrect retired files during the merge
+            if ($UpdateToMaster -and (Test-Path ".\RainbowMiner-master")) {Remove-Item ".\RainbowMiner-master" -Recurse -Force -ErrorAction Ignore}
+
             $UpdateProcess = Start-Process @Params
             $UpdateProcess.WaitForExit() > $null
             # 7z exit code 1 = warnings only, everything above is a fatal extraction error
