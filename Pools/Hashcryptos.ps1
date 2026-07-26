@@ -70,7 +70,7 @@ $Pools_Data = @(
 
 $Pool_Currencies = @("BCH","BSV","BTC","DASH","DGB","DOGE","FTC","GRS","LTC","MONA","PEPEW","RVN","VTC","XEC","XMR","XMY","XVG","ZEC") | Select-Object -Unique | Where-Object {$Wallets.$_ -or $InfoOnly}
 
-$Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {([Double]$Pool_Request.$_.estimate_current  -gt 0) -or $InfoOnly} | ForEach-Object {
+$Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {([Double]$Pool_Request.$_.estimate_current -gt 0) -or $AllowZero -or $InfoOnly} | ForEach-Object {
     $Pool_Algorithm = $Pool_Request.$_.name
     if (-not ($Pool_Data = $Pools_Data | Where-Object {$_.algo -eq $Pool_Algorithm})) {
         Write-Log -Level Info "$($Name): no data avail for algorithm $Pool_Algorithm. "
@@ -99,7 +99,7 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
         $OldStat = $true
         $Pool_DataWindow = if (-not (Test-Path "Stats\Pools\$($Name)_$($Pool_Algorithm_Norm)_Profit.txt")) {$OldStat=$false;"actual_last24h"} else {$DataWindow}
         $Pool_Price = if ([double]$Pool_Request.$_.actual_last24h -gt 0 -and [double]$Pool_Request.$_.estimate_last24h -gt 0) {Get-YiiMPValue $Pool_Request.$_ -DataWindow $Pool_DataWindow -Factor $Pool_Factor -ActualDivisor 1} else {0}        
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value $Pool_Price -Duration $(if ($NewStat) {New-TimeSpan -Days 1} else {$StatSpan}) -ChangeDetection $OldStat -Actual24h $Pool_Request.$_.actual_last24h -Estimate24h $Pool_Request.$_.estimate_last24h -HashRate $Pool_Request.$_.hashrate -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value $Pool_Price -Duration $(if (-not $OldStat) {New-TimeSpan -Days 1} else {$StatSpan}) -ChangeDetection $OldStat -Actual24h $Pool_Request.$_.actual_last24h -Estimate24h $Pool_Request.$_.estimate_last24h -HashRate $Pool_Request.$_.hashrate -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
