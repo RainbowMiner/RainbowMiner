@@ -5,6 +5,40 @@ using module .\PauseMiners.psm1
 ## Core functions
 ##
 
+function Read-ConsoleKeyGuarded {
+    # returns a single [ConsoleKeyInfo] for a genuine keypress, or $null.
+    # a human press is a single pending key per poll, while stray tmux
+    # send-keys text arrives as a burst of many buffered characters - any
+    # mixed batch is discarded as injected input. repeated hits of the same
+    # key (panic presses like [x][x][x], keyboard auto-repeat) count as one
+    # press, up to 10 repeats. Ctrl+C stays single-press only, because the
+    # miner cleanup loops emit the exact pattern C-c C-c and a stray
+    # delivery of it must never stop the core
+    if (-not [System.Console]::KeyAvailable) {return}
+    $keyBatch = [System.Collections.Generic.List[System.ConsoleKeyInfo]]::new()
+    while ([System.Console]::KeyAvailable -and $keyBatch.Count -lt 4096) {
+        [void]$keyBatch.Add([System.Console]::ReadKey($true))
+    }
+    $keyOk = $keyBatch.Count -eq 1
+    if (-not $keyOk -and $keyBatch.Count -le 10) {
+        $keyFirst = $keyBatch[0]
+        if (-not ($keyFirst.Modifiers -eq "Control" -and $keyFirst.Key -eq "C")) {
+            $keyOk = $true
+            foreach ($keyThis in $keyBatch) {
+                if ($keyThis.Key -ne $keyFirst.Key -or $keyThis.KeyChar -ne $keyFirst.KeyChar -or $keyThis.Modifiers -ne $keyFirst.Modifiers) {$keyOk = $false;break}
+            }
+        }
+    }
+    if ($keyOk) {
+        $keyBatch[0]
+    } else {
+        $strayText = -join ($keyBatch | Select-Object -First 64 | Foreach-Object {
+            if ([int]$_.KeyChar -ge 32 -and [int]$_.KeyChar -lt 127) {$_.KeyChar} else {"<$([int]$_.KeyChar)>"}
+        })
+        Write-Log -Level Warn "Discarded $($keyBatch.Count) stray console input characters (send-keys injection guard): $strayText"
+    }
+}
+
 function Start-Core {
     [cmdletbinding()]
     param(
@@ -954,8 +988,9 @@ function Invoke-Core {
                 do {
                     $keyPressedValue = if (-not $WarnedConsole) {
                         try {
-                            if ([console]::KeyAvailable) {
-                                $([System.Console]::ReadKey($true)).key
+                            if ($key = Read-ConsoleKeyGuarded) {
+                                if (-not $key.Modifiers) {"$($key.key)"}
+                                elseif ($key.Modifiers -eq "Control" -and $key.key -eq "C") {"X"}
                             }
                         } catch {
                             $WarnedConsole = $true
@@ -4823,8 +4858,7 @@ function Invoke-Core {
                             elseif ($Session.Config.RestartRBMMemory -gt 0 -and $Global:last_memory_usage_byte -and $Session.Config.RestartRBMMemory -lt $Global:last_memory_usage_byte) {"RM"}
                             elseif (-not $WarnedConsole) {
                                 try {
-                                    if ([System.Console]::KeyAvailable) {
-                                        $key = [System.Console]::ReadKey($true)
+                                    if ($key = Read-ConsoleKeyGuarded) {
                                         if (-not $key.Modifiers) {$key.key}
                                         elseif ($key.Modifiers -eq "Control") {
                                             if ($key.key -eq "C") {"X"}
