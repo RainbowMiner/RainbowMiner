@@ -13,15 +13,15 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.De
 $ManualUri = "https://bitcointalk.org/index.php?topic=5190081.0"
 $Port = "349{0:d2}"
 $DevFee = 0.85
-$Version = "3.4.7"
+$Version = "3.4.8"
 $Cuda = "11.7"
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.4.7-srbminermulti/SRBMiner-Multi-3-4-7-Linux.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.4.8-srbminermulti/SRBMiner-Multi-3-4-8-Linux.tar.gz"
 } else {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.4.7-srbminermulti/SRBMiner-Multi-3-4-7-win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.4.8-srbminermulti/SRBMiner-Multi-3-4-8-win64.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -53,7 +53,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "xelishashv2"      ;              Params = ""; Fee = 1.50;               Vendor = @("CPU")} #XelisHashV2, removed with v3.0.7
     [PSCustomObject]@{MainAlgorithm = "yespower2b"       ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yespower2b
     [PSCustomObject]@{MainAlgorithm = "yespoweradvc"     ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yespoweradvc
-    [PSCustomObject]@{MainAlgorithm = "yespowerbitok"    ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yespowerBITOK
+    #[PSCustomObject]@{MainAlgorithm = "yespowerbitok"    ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yespowerBITOK
     [PSCustomObject]@{MainAlgorithm = "yespowereqpay"    ;              Params = ""; Fee = 2.00;               Vendor = @("CPU")} #yespowerEQPAY
     #[PSCustomObject]@{MainAlgorithm = "yespoweric"       ;              Params = ""; Fee = 0.00;               Vendor = @("CPU")} #yespoweric
     [PSCustomObject]@{MainAlgorithm = "yespowerinterchained" ;          Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yespowerinterchained
