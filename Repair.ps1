@@ -11,6 +11,15 @@ if ($Global:IsWindows -eq $null) {
 
 $Global:7zip = if ($Global:IsWindows) {".\7z.exe"} else {"7z"}
 
+# fresh or broken install: materialize 7-Zip from the staging folder so extraction can work
+if ($Global:IsWindows -and -not (Test-Path ".\7z.exe") -and (Test-Path ".\Includes\dist\7z.exe")) {
+    try {
+        Copy-Item ".\Includes\dist\7z.exe" ".\7z.exe" -Force
+        if (Test-Path ".\Includes\dist\7z.dll") {Copy-Item ".\Includes\dist\7z.dll" ".\7z.dll" -Force}
+    } catch {
+    }
+}
+
 if ($Global:IsLinux) {
     $Global:OSArch = try {
         Switch -Regex ("$(uname -m)".Trim()) {
@@ -125,40 +134,42 @@ try {
     if ($PreserveMiners) {$PreserveMiners | Foreach-Object {if (Test-Path "MinersOldVersions\$_") {Copy-Item "MinersOldVersions\$_" "Miners\$_" -Force}}}
 
     if ($IsWindows) {
-        #Handle write locks
+        # Handle write locks: the helper binaries are staged in .\Includes\dist by the
+        # archive and synced to their live positions here - the extracting 7z.exe has
+        # exited at this point, so even 7z.exe/7z.dll can be overwritten
         try {
-            if (-not (Test-Path "_update")) {New-Item "_update" -ItemType "directory" > $null}
-            $Params = @{
-                FilePath     = $Global:7zip
-                ArgumentList = "x `"$FromFullPath`" -o`"$(Join-Path $ToFullPath "_update")`" 7z.exe 7z.dll `"Includes\curl\x32\curl.exe`" `"Includes\curl\x64\curl.exe`" `"Includes\curl\x32\libcurl.dll`" `"Includes\curl\x64\libcurl-x64.dll`" `"Includes\getcpu\GetCPU.exe`" `"Includes\getcpu\OpenHardwareMonitorLib.dll`" -y -spe"
-                PassThru     = $true
-            }
-            (Start-Process @Params).WaitForExit() > $null
-            Get-ChildItem "_update" -Recurse -File | Foreach-Object {
-                $FileNameTo   = $_.FullName -replace "^.+\\_update\\"
-                if (-not (Test-Path $FileNameTo) -or ((Get-FileHash $FileNameTo -Algorithm MD5).Hash -ne (Get-FileHash $_.FullName -Algorithm MD5).Hash)) {
-                    Write-Host "Update $FileNameTo"
-                    try {
+            $DistPath = Join-Path $ToFullPath "Includes\dist"
+            if (Test-Path $DistPath) {
+                $DistFullPath = (Get-Item $DistPath).FullName.TrimEnd("\")
+                Get-ChildItem $DistFullPath -Recurse -File | Foreach-Object {
+                    $FileNameTo = Join-Path $ToFullPath $_.FullName.Substring($DistFullPath.Length + 1)
+                    $CopyNeeded = $true
+                    if (Test-Path $FileNameTo) {
+                        try {
+                            if ((Get-FileHash $FileNameTo -Algorithm MD5).Hash -eq (Get-FileHash $_.FullName -Algorithm MD5).Hash) {$CopyNeeded = $false}
+                        } catch {
+                        }
+                    }
+                    if ($CopyNeeded) {
+                        Write-Host "Update $FileNameTo"
+                        $FileDirTo = Split-Path $FileNameTo
+                        if ($FileDirTo -and -not (Test-Path $FileDirTo)) {New-Item $FileDirTo -ItemType "directory" -Force > $null}
                         $RetryLock = 20
                         $IsLocked  = $true
                         do {
-                            Try {
-                                Copy-Item -Path $_.FullName -Destination $FileNameTo -Force
-                                $IsLocked = $False
-                            } Catch {
+                            try {
+                                Copy-Item -Path $_.FullName -Destination $FileNameTo -Force -ErrorAction Stop
+                                $IsLocked = $false
+                            } catch {
                                 $RetryLock--
-                                if ($RetryLock -gt 0) {Sleep -Milliseconds 250}
+                                if ($RetryLock -gt 0) {Start-Sleep -Milliseconds 250}
                             }
                         } while ($IsLocked -and ($RetryLock -gt 0))
-                    } catch {
-                    }
-                    if ($IsLocked) {
-                        Write-Host "Failed to update $FileNameTo. Please download manually from Github." -ForegroundColor Yellow
+                        if ($IsLocked) {
+                            Write-Host "Failed to update $FileNameTo. Please download manually from Github." -ForegroundColor Yellow
+                        }
                     }
                 }
-            }
-            if (Test-Path "_update") {
-                Remove-Item "_update" -Force -Recurse
             }
         } catch {
             Write-Host "Failed to update exe files. Please download manually from Github." -ForegroundColor Yellow

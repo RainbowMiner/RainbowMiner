@@ -124,6 +124,64 @@ function Set-OsFlags {
     $Global:OsFlagsSet = $true
 }
 
+function Update-HelperBinaries {
+    # Syncs the helper binaries staged in .\Includes\dist to their live positions (the
+    # staged paths mirror the install-relative layout). The release archives keep these
+    # files out of positions that are write-locked while RainbowMiner or 7z.exe runs, so
+    # in-place update extractions succeed with exit code 0. Windows only. Must work before
+    # Set-OsFlags/Initialize-Session have run, so it detects the OS itself and only uses
+    # Write-Host for output.
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [String]$RootPath = ""
+    )
+
+    if ([System.Environment]::OSVersion.Platform -ne "Win32NT") {return}
+
+    if (-not $RootPath) {$RootPath = $PWD.Path}
+
+    $DistPath = Join-Path $RootPath "Includes\dist"
+
+    if (-not (Test-Path $DistPath)) {return}
+
+    try {
+        $DistFullPath = (Get-Item $DistPath).FullName.TrimEnd("\")
+
+        Get-ChildItem $DistFullPath -Recurse -File -ErrorAction Stop | Foreach-Object {
+            $FileNameTo = Join-Path $RootPath $_.FullName.Substring($DistFullPath.Length + 1)
+            $CopyNeeded = $true
+            if (Test-Path $FileNameTo) {
+                try {
+                    if ((Get-FileHash $FileNameTo -Algorithm MD5).Hash -eq (Get-FileHash $_.FullName -Algorithm MD5).Hash) {$CopyNeeded = $false}
+                } catch {
+                }
+            }
+            if ($CopyNeeded) {
+                Write-Host "Update $FileNameTo"
+                $FileDirTo = Split-Path $FileNameTo
+                if ($FileDirTo -and -not (Test-Path $FileDirTo)) {New-Item $FileDirTo -ItemType "directory" -Force > $null}
+                $RetryLock = 20
+                $IsLocked  = $true
+                do {
+                    try {
+                        Copy-Item -Path $_.FullName -Destination $FileNameTo -Force -ErrorAction Stop
+                        $IsLocked = $false
+                    } catch {
+                        $RetryLock--
+                        if ($RetryLock -gt 0) {Start-Sleep -Milliseconds 250}
+                    }
+                } while ($IsLocked -and ($RetryLock -gt 0))
+                if ($IsLocked) {
+                    Write-Host "WARNING: could not update $FileNameTo - the file is in use and will be synced on the next start" -ForegroundColor Yellow
+                }
+            }
+        }
+    } catch {
+        Write-Host "WARNING: helper binary sync failed: $($_.Exception.Message)" -ForegroundColor Yellow
+    }
+}
+
 function Get-LinuxDistroInfo {
     $distroName     = $null
     $distroVersion  = $null

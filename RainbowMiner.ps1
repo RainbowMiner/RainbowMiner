@@ -413,6 +413,10 @@ if ($MyInvocation.MyCommand.Path) {Set-Location (Split-Path $MyInvocation.MyComm
 
 Import-Module .\Modules\Include.psm1
 
+# sync helper binaries (7-Zip, curl, GetCPU, MSI Afterburner wrapper) from .\Includes\dist
+# to their live positions - must run before anything executes one of them
+try {Update-HelperBinaries} catch {}
+
 Initialize-Session
 
 $Session.Version         = "5.0.2.1"

@@ -33,6 +33,10 @@ if (-not (Get-Module -Name WebLib)) { Import-Module .\Modules\WebLib.psm1 }
 
 Set-OsFlags
 
+# materialize/refresh the helper binaries from .\Includes\dist first, so that .\7z.exe
+# exists for the extraction below (fresh installs and master updates stage them only)
+if ($IsWindows) {try {Update-HelperBinaries} catch {}}
+
 $RBMVersion = Confirm-Version (Get-Content ".\Data\version.json" -Raw | ConvertFrom-Json -ErrorAction Ignore).Version -Force -Silent
 
 if (Test-Path ".\Downloads\config.json") {
@@ -121,10 +125,27 @@ try {
 
             $UpdateProcess = Start-Process @Params
             $UpdateProcess.WaitForExit() > $null
-            # 7z exit code 1 = warnings only, everything above is a fatal extraction error
-            if ($UpdateProcess.ExitCode -gt 1) {
+            # 7z exit code 1 = warnings only, exit code 2 can be caused by files that are
+            # write-locked by a running instance (legacy archives) - the extraction result
+            # is verified below, everything above 2 is a fatal extraction error
+            if ($UpdateProcess.ExitCode -gt 2) {
                 Write-Host "WARNING: extraction failed with exit code $($UpdateProcess.ExitCode)$(if ($Attempt -lt 2) {", retrying"})" -ForegroundColor Yellow
                 continue
+            }
+            if ($UpdateProcess.ExitCode -eq 2) {
+                Write-Host "WARNING: 7-Zip reported locked or failed files - verifying the extracted installation" -ForegroundColor Yellow
+                if (-not $UpdateToMaster) {
+                    # a successfully completed extraction has refreshed RainbowMiner.ps1 to the remote version
+                    $ExtractedVersion = $null
+                    try {
+                        if ((Get-Content ".\RainbowMiner.ps1" -Raw) -match '\$Session\.Version\s*=\s*"([0-9\.]+)"') {$ExtractedVersion = $Matches[1]}
+                    } catch {
+                    }
+                    if (-not $ExtractedVersion -or (Compare-Version $ExtractedVersion "$($RBMVersion.RemoteVersion)") -lt 0) {
+                        Write-Host "WARNING: the extracted files do not match v$($RBMVersion.RemoteVersion)$(if ($Attempt -lt 2) {", retrying"})" -ForegroundColor Yellow
+                        continue
+                    }
+                }
             }
 
             if ($UpdateToMaster) {
@@ -173,41 +194,11 @@ try {
         if ($PreserveMiners) {$PreserveMiners | Foreach-Object {if (Test-Path "MinersOldVersions\$_") {Copy-Item "MinersOldVersions\$_" "Miners\$_" -Force}}}
 
         if ($IsWindows) {
-            #Handle write locks
+            # Handle write locks: the helper binaries are staged in .\Includes\dist by the
+            # archive and synced to their live positions here - the extracting 7z.exe has
+            # exited at this point, so even 7z.exe/7z.dll can be overwritten
             try {
-                if (-not (Test-Path "_update")) {New-Item "_update" -ItemType "directory" > $null}
-                $Params = @{
-                    FilePath     = $Global:7zip
-                    ArgumentList = "x `"$FromFullPath`" -o`"$(Join-Path $ToFullPath "_update")`" 7z.exe 7z.dll `"Includes\curl\x32\curl.exe`" `"Includes\curl\x64\curl.exe`" `"Includes\curl\x32\libcurl.dll`" `"Includes\curl\x64\libcurl-x64.dll`" `"Includes\getcpu\GetCPU.exe`" `"Includes\getcpu\LibreHardwareMonitorLib.dll`" -y -spe"
-                    PassThru     = $true
-                }
-                (Start-Process @Params).WaitForExit() > $null
-                Get-ChildItem "_update" -Recurse -File | Foreach-Object {
-                    $FileNameTo   = $_.FullName -replace "^.+\\_update\\"
-                    if (-not (Test-Path $FileNameTo) -or ((Get-FileHash $FileNameTo -Algorithm MD5).Hash -ne (Get-FileHash $_.FullName -Algorithm MD5).Hash)) {
-                        Write-Host "Update $FileNameTo"
-                        try {
-                            $RetryLock = 20
-                            $IsLocked  = $true
-                            do {
-                                Try {
-                                    Copy-Item -Path $_.FullName -Destination $FileNameTo -Force
-                                    $IsLocked = $False
-                                } Catch {
-                                    $RetryLock--
-                                    if ($RetryLock -gt 0) {Sleep -Milliseconds 250}
-                                }
-                            } while ($IsLocked -and ($RetryLock -gt 0))
-                        } catch {
-                        }
-                        if ($IsLocked) {
-                            Write-Host "Failed to update $FileNameTo. Please download manually from Github." -ForegroundColor Yellow
-                        }
-                    }
-                }
-                if (Test-Path "_update") {
-                    Remove-Item "_update" -Force -Recurse
-                }
+                Update-HelperBinaries
             } catch {
                 Write-Host "Failed to update exe files. Please download manually from Github." -ForegroundColor Yellow
             }
@@ -230,7 +221,7 @@ try {
 }
 catch {
     Write-Host "$Name failed to update: $($_.Exception.Message)" -ForegroundColor Yellow
-    Write-Host "Please download manually at $($RBMVersion.ManuaURI)" -ForegroundColor Yellow
+    Write-Host "Please download manually at $($RBMVersion.ManualURI)" -ForegroundColor Yellow
     if ($calledfrom -ne "core") {
         $message = "Press any key to return to $name"
         if ($psISE)
