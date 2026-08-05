@@ -67,6 +67,16 @@ Features: easy setup wizard with ad-hoc working default (no editing of files nee
 
 Finally: check, if Powershell 7 is in your PATH, because RainbowMiner will not run correctly, if the path to powershell is missing. Sometimes `C:\Program Files\PowerShell\7` has to be added manually to the PATH environment variable after installing PowerShell 7. Here is a nice tutorial, on how to add to PATH environment variable https://www.howtogeek.com/118594/how-to-edit-your-system-path-for-easy-command-line-access/amp/
 
+### Windows 11: switch the default terminal application
+
+**Important for Windows 11: if you start RainbowMiner with `Start.bat`, `StartHidden.bat` or `StartInWin.bat`, run `FixConsole.bat` once, before you start RainbowMiner for the first time.**
+
+Windows 11 hosts every console window in Windows Terminal by default and Windows Terminal has known problems with classic console applications. RainbowMiner is hit by them directly: the RainbowMiner window may ignore all attempts to move, close, minimize or maximize it, and the `-windowstyle` of the start scripts (maximized/hidden/normal) is not applied reliably.
+
+`FixConsole.bat` switches the default terminal application of your Windows user back to the classic Windows Console Host. It asks for confirmation first, changes nothing but this one setting and needs no administrator rights. Add the parameter `/f` to switch without being asked, or run `FixConsole.bat /r` to undo the change at any time. Details and the manual way through the Windows settings can be found in the FAQ: [The RainbowMiner window cannot be moved, closed or minimized](#the-rainbowminer-window-cannot-be-moved-closed-or-minimized-windows-11)
+
+Not needed for the watchdog start scripts `StartWD.bat`, `StartWDHidden.bat` and `StartWDInWin.bat`: those detect Windows 11 and relaunch themselves under the classic console host on their own (see section [WATCHDOG START SCRIPTS](#watchdog-start-scripts-optional)). Running `FixConsole.bat` does not hurt them either.
+
 ### Ubuntu 22.04 AMD Pre-requisites
 AMD drivers on recent versions of Ubuntu have been flaky and challenging to install. As of December 22, there is a nearly out of the box solution that works. Using older, or non-LTS versions of Ubuntu is always going to present a challenge down the road in terms of staying current from a security perspective, and who wants their rig getting owned? So 22.04.01 (LTS) is going to be a popular distro choice for rigs.
 
@@ -290,6 +300,7 @@ On Linux: either use the GUI installer to install the package or do it manually,
 ##### On Windows:
 
 - open RainbowMiner folder with Explorer
+- on Windows 11: run "FixConsole.bat" once, it is needed for "Start.bat" but not for the watchdog start scripts (see [Windows 11: switch the default terminal application](#windows-11-switch-the-default-terminal-application))
 - right-click "Start.bat" and choose "Run as administrator"
 
 ##### On Linux:
@@ -389,6 +400,7 @@ You can press the following keys, while RainbowMiner is waiting for the next run
 | -                          | `./startwd-nohup.sh`       | start with crash watchdog as background job                                                                                                                             |
 | `Setup.bat`                | `./setup.sh`               | start RainbowMiner configuration                                                                                                                                        |
 | `Install.bat`              | `./install.sh`             | install pre-requisites + on linux: update powershell to the newest release with `./install.sh -pu`                                                                      |
+| `FixConsole.bat`           | -                          | Windows 11: switch the default terminal to the classic Windows Console Host, needed for `Start.bat`, not for `StartWD.bat` (`/f` = do not ask, `/r` = undo)             |
 | `InitServer.bat`           | `sudo ./initserver.sh`     | make this rig a server                                                                                                                                                  |
 | `InitClient.bat`           | `sudo ./initclient.sh`     | make this rig a client                                                                                                                                                  |
 | `InitStandalone.bat`       | `sudo ./initstandalone.sh` | make this rig a standalone machine                                                                                                                                      |
@@ -424,7 +436,7 @@ The thresholds can be changed without editing the scripts, using environment var
 
 Note for Windows: the watchdog scripts copy themselves to `StartWD.run.cmd` (etc.) on start and run the copy, so that the automatic update can never touch a running script. These `*.run.cmd` files are recreated on every start and can be ignored.
 
-Note for Windows 11: by default, Windows 11 hosts all console windows in Windows Terminal, which has known issues with classic console applications - the RainbowMiner window may not react to move, close or minimize, and the `-windowstyle` of the start scripts is not applied reliably. The watchdog start scripts detect Windows 11 and relaunch themselves under the classic console host (conhost) automatically - a short flash of an extra window on start is expected and harmless. For the regular start scripts, see the FAQ ("The RainbowMiner window cannot be moved, closed or minimized").
+Note for Windows 11: by default, Windows 11 hosts all console windows in Windows Terminal, which has known issues with classic console applications - the RainbowMiner window may not react to move, close or minimize, and the `-windowstyle` of the start scripts is not applied reliably. The watchdog start scripts detect Windows 11 and relaunch themselves under the classic console host (conhost) automatically - a short flash of an extra window on start is expected and harmless. For the regular start scripts, run `FixConsole.bat` once, see the FAQ ("The RainbowMiner window cannot be moved, closed or minimized").
 
 For autostart, the watchdog scripts can be used in place of the regular start scripts in the Windows task scheduler and in the Linux crontab (see FAQ).
 
@@ -1901,7 +1913,16 @@ On Windows 11, console windows are hosted by Windows Terminal by default. Window
 
 The watchdog start scripts (`StartWD.bat`, `StartWDHidden.bat`, `StartWDInWin.bat`) handle this automatically: on Windows 11 they relaunch themselves under the classic console host, no action is needed.
 
-For the regular start scripts (`Start.bat`, `StartHidden.bat`, `StartInWin.bat`) and for the window opened by RainbowMiner's built-in restart, switch the default terminal back to the classic console host once:
+For the regular start scripts (`Start.bat`, `StartHidden.bat`, `StartInWin.bat`) and for the window opened by RainbowMiner's built-in restart, switch the default terminal back to the classic console host once, by running `FixConsole.bat`:
+
+    FixConsole.bat
+
+It shows the current setting, asks for confirmation and then sets the default terminal application of your Windows user to `Windows Console Host`. Only this one setting is changed, no administrator rights are needed. The new setting is used by console windows that are opened afterwards, so RainbowMiner has to be restarted. Two parameters are available:
+
+- `FixConsole.bat /f` switches without asking for confirmation (useful for scripts)
+- `FixConsole.bat /r` undoes the change and sets the default terminal application back to `Let Windows decide`
+
+The very same can be done by hand:
 
 1. Open `Settings` -> `System` -> `For developers`
 2. Set `Terminal` to `Windows Console Host`
