@@ -419,7 +419,7 @@ try {Update-HelperBinaries} catch {}
 
 Initialize-Session
 
-$Session.Version         = "5.0.2.2"
+$Session.Version         = "5.0.2.3"
 $Session.MainWindowTitle = "RainbowMiner v$($Session.Version)"
 $Session.SetupOnly       = $SetupOnly
 $Session.LogLevel        = $LogLevel
