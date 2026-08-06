@@ -91,6 +91,11 @@ $psi.UseShellExecute        = $false
 $psi.CreateNoWindow         = $true
 $psi.RedirectStandardOutput = $true
 $psi.RedirectStandardError  = $true
+# stdin must be a private pipe: without this the miner inherits the console
+# input handle and a hotkey-polling miner (e.g. SRBMiner) silently consumes
+# the keystrokes meant for RainbowMiner - and the .NET KeyAvailable peek/read
+# race can then block the core loop forever inside ReadConsoleInput
+$psi.RedirectStandardInput  = $true
 if ($WorkingDirectory) {$psi.WorkingDirectory = $WorkingDirectory}
 
 # per-miner environment variables (NAME=value)
