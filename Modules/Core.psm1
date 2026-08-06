@@ -5072,7 +5072,16 @@ function Invoke-Core {
         try {
             if ($IsWindows -and $env:RBM_STARTLOOP) {
                 #running inside the start script loop: update in-session like on linux, then let the loop relaunch (exit 999/998)
-                if ($Session.AutoUpdate) {$Update_Parameters = @{calledfrom="core";UpdateToMaster=$UpdateToMaster};& .\Updater.ps1 @Update_Parameters}
+                if ($Session.AutoUpdate) {
+                    $Update_Parameters = @{calledfrom="core";UpdateToMaster=$UpdateToMaster}
+                    & .\Updater.ps1 @Update_Parameters
+                    if ($LASTEXITCODE -eq 1) {
+                        #the updater signals a completed run with exit code 1: restart only (998),
+                        #the start script loop must not run the updater a second time
+                        $Session.AutoUpdate = $false
+                        $Session.Restart    = $true
+                    }
+                }
                 $Session.Stopp = $true
             } elseif ($IsWindows) {
                 $CurrentProcess = Get-CimInstance Win32_Process -filter "ProcessID=$PID" | Select-Object CommandLine,ExecutablePath

@@ -82,7 +82,9 @@ try {
 
         Write-Host " (2/$($MaxPages)) Deleting and backup old files .."
 
-        @("Start.bat","start.sh","StartWD.bat","startwd.sh") | Foreach-Object {if (Test-Path $_) {Copy-Item $_ "$($_).saved" -Force -ErrorAction Ignore}}
+        # Copy-Item preserves the source LastWriteTime (which stems from the release archive), so
+        # stamp the copies fresh - the sentinel age check at the top compares against LastWriteTime
+        @("Start.bat","start.sh","StartWD.bat","startwd.sh") | Foreach-Object {if (Test-Path $_) {Copy-Item $_ "$($_).saved" -Force -ErrorAction Ignore;try {(Get-Item "$($_).saved" -ErrorAction Stop).LastWriteTime = Get-Date} catch {}}}
         if ((Test-Path "MinersOldVersions") -and (Test-Path "Miners")) {$PreserveMiners = Compare-Object @(Get-ChildItem "Miners" | Select-Object -ExpandProperty Name) @(Get-ChildItem "MinersOldVersions" | Select-Object -ExpandProperty Name) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject}
         if (-not $UpdateToMaster) {
             # release archives extract in-place, so retired files must be removed up front - master
