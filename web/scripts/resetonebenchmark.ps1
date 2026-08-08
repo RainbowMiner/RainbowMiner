@@ -12,7 +12,7 @@ if ($Parameters.name -and $Parameters.algorithm -and $Parameters.DeviceModel) {
 	Get-ChildItem ".\Stats\Miners\*-$($Parameters.name -replace '-.+')-$($Parameters.name -replace '^.+?-' -replace '-','*')*_$($Algorithm)_HashRate.txt" -ErrorAction Ignore | Foreach-Object {
 		$count++
 		Remove-Item $_ -ErrorAction Ignore
-		$text += "$($_.BaseName -replace '-(C|G)PU.+$')/$($DeviceModel)/$($_.BaseName -split '_' | Select-Object -Index 1)`n"
+		$text += "$($_.BaseName -replace '-(C|G)PU.+$')/$($Parameters.devicemodel)/$($_.BaseName -split '_' | Select-Object -Index 1)`n"
 	}
 }
 

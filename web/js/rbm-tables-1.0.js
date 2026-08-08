@@ -110,8 +110,15 @@ const RbmTables = (function () {
         if (d.checkbox === "true") {
             return {
                 formatter: "rowSelection",
-                titleFormatter: undefined, // header select-all not used (checkbox-header="false")
+                // header select-all, opt out with data-checkbox-header="false"
+                // (bootstrap-table's checkboxHeader defaulted to true)
+                titleFormatter: d.checkboxHeader === "false" ? undefined : "rowSelection",
+                // "active" = the rows left after the header filters, i.e. select
+                // all visible entries. Without a rowRange Tabulator selects every
+                // loaded row, including the ones the filters just hid.
+                titleFormatterParams: { rowRange: "active" },
                 hozAlign: "center",
+                headerHozAlign: "center",
                 headerSort: false,
                 width: 44,
                 minWidth: 44, // must beat the global minWidth in columnDefaults

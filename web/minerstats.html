@@ -57,7 +57,7 @@
               <thead>
                   <tr>
                       <th data-field="state" data-checkbox="true"></th>
-                      <th data-field="Name" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Name</th>
+                      <th data-field="tName" data-sortable="true" data-formatter="formatMinerName" data-filter-control="select" data-filter-strict-search="true">Name</th>
                       <th data-field="tAlgorithm" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Algorithm</th>
                       <th data-field="Devices" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Device</th>
                       <th data-field="tOC" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">OC</th>
@@ -151,7 +151,9 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('benchmarkselected').addEventListener('click', async (e) => {
         e.preventDefault();
         const table = RbmTables.getTable('#minerstats');
-        const sel = table ? table.getSelectedData() : [];
+        // selected AND still listed: Tabulator keeps rows selected after a header
+        // filter hides them, and rebenchmarking invisible rows would surprise
+        const sel = table ? table.getRows("active").filter(row => row.isSelected()).map(row => row.getData()) : [];
         if (sel.length && confirm("Do you really want to rebench all selected miners?")) {
             // wire format matches jQuery.param's array serialization: name[]=..&name[]=..
             const params = new URLSearchParams();
@@ -210,6 +212,13 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
+function formatMinerName(value, item) {
+    if (item.ManualUri && item.ManualUri.toString() != '') {
+        return '<a href="'+esc(item.ManualUri)+'" target="_blank" title="Official miner page">'+esc(value)+'</a>';
+    }
+    return esc(value);
+}
+
 function formatMinerstats(data) {
     // This function can alter the returned data before building the table, formatting it in a way
     // that is easier to display and manipulate in a table
@@ -236,11 +245,9 @@ function formatMinerstats(data) {
         item.tSpeed = speed.join(" / ");
         item.tRatio = ratio.join(" / ");
 
-        // Format the device(s)
-        item.Name = item.Name.replace(/-GPU.+$/,'');
-        if (item.ManualUri && item.ManualUri.toString() != '') {
-            item.Name = '<a href="'+esc(item.ManualUri)+'" target="_blank" title="Official miner page">'+esc(item.Name)+'</a>';
-        }
+        // display name only - item.Name has to stay raw, the reset scripts need
+        // the full miner name incl. the -GPU... suffix to find the stat files
+        item.tName = item.Name.replace(/-GPU.+$/,'');
         item.tStatus = 'Ok';
         if (item.Benchmarking) item.tStatus = 'Benchmarking';
         else if (item.NeedsBenchmark) item.tStatus = 'Out-dated Benchmark'
