@@ -144,6 +144,7 @@ function Start-Core {
         $Global:ActiveMiners   = [System.Collections.ArrayList]::new()
         $Global:WatchdogTimers = [System.Collections.Generic.List[PSCustomObject]]::new()
         $Global:CrashCounter   = [System.Collections.Generic.List[PSCustomObject]]::new()
+        $Global:RogueProcessList = [hashtable]@{}
         $Global:AlgorithmMinerName = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 
         $Global:Rates["BTC"] = [Double]1
@@ -681,6 +682,56 @@ function Start-Core {
     }
 
     $true
+}
+
+function Stop-RogueProcess {
+    param(
+        [Parameter(Mandatory = $true)]
+        [Int]$ProcessId,
+        [Parameter(Mandatory = $true)]
+        [String]$ProcessName,
+        [Parameter(Mandatory = $false)]
+        $StartDate = $null,
+        [Parameter(Mandatory = $false)]
+        [System.Collections.Generic.HashSet[string]]$SeenList
+    )
+
+    if (-not (Test-Path Variable:Global:RogueProcessList)) {$Global:RogueProcessList = [hashtable]@{}}
+
+    $Rogue_Key = "$($ProcessId)_$(if ($StartDate) {([DateTime]$StartDate).Ticks} else {0})"
+    if ($SeenList) {[void]$SeenList.Add($Rogue_Key)}
+
+    $Rogue_Attempts = [int]$Global:RogueProcessList[$Rogue_Key]
+
+    if ($Rogue_Attempts -ge 3) {return}
+
+    $Global:RogueProcessList[$Rogue_Key] = $Rogue_Attempts + 1
+
+    if ($Rogue_Attempts -eq 0) {
+        Write-Log -Level Warn "Stopping Process: $($ProcessName) with Id $($ProcessId)"
+        if ($IsLinux -and (Test-OCDaemon)) {
+            Invoke-OCDaemon -Cmd "kill $($ProcessId)" -Quiet > $null
+        } else {
+            Stop-Process -Id $ProcessId -Force -ErrorAction Ignore
+        }
+    } elseif ($Rogue_Attempts -eq 1) {
+        Write-Log -Level Warn "Process $($ProcessName) with Id $($ProcessId) is still alive, escalating"
+        if ($IsWindows) {
+            try {& "$($env:SystemRoot)\System32\taskkill.exe" /PID $ProcessId /T /F *>$null} catch {}
+        } elseif ($IsLinux) {
+            if (Test-OCDaemon) {
+                Invoke-OCDaemon -Cmd "kill -9 $($ProcessId)" -Quiet > $null
+            } else {
+                Stop-Process -Id $ProcessId -Force -ErrorAction Ignore
+            }
+        }
+    } else {
+        if ($IsWindows -and -not $Session.IsAdmin) {
+            Write-Log -Level Warn "Process $($ProcessName) with Id $($ProcessId) cannot be terminated - try `"taskkill /F /T /PID $($ProcessId)`" from an Administrator console or reboot. Suppressing further attempts"
+        } else {
+            Write-Log -Level Warn "Process $($ProcessName) with Id $($ProcessId) cannot be terminated, likely stuck in a driver call - a reboot is required to remove it. Suppressing further attempts"
+        }
+    }
 }
 
 function Invoke-Core {
@@ -4124,6 +4175,8 @@ function Invoke-Core {
         }
     }
 
+    $Rogue_Seen = [System.Collections.Generic.HashSet[string]]::new()
+
     if ($IsWindows) {
         Get-CIMInstance CIM_Process | Where-Object {
             $_.ExecutablePath -and
@@ -4131,8 +4184,7 @@ function Invoke-Core {
             -not $Running_ProcessIds.Contains($_.ProcessId) -and
             $Running_MinerPaths.Contains($_.ProcessName)
         } | ForEach-Object {
-            Write-Log -Level Warn "Stopping Process: $($_.ProcessName) with Id $($_.ProcessId)"
-            Stop-Process -Id $_.ProcessId -Force -ErrorAction Ignore
+            Stop-RogueProcess -ProcessId $_.ProcessId -ProcessName $_.ProcessName -StartDate $_.CreationDate -SeenList $Rogue_Seen
         }
     }
     elseif ($IsLinux) {
@@ -4142,12 +4194,7 @@ function Invoke-Core {
             -not (Test-Intersect $Running_ProcessIds @($_.Id, $_.Parent.Id)) -and
             $Running_MinerPaths.Contains($_.ProcessName)
         } | ForEach-Object {
-            Write-Log -Level Warn "Stopping Process: $($_.ProcessName) with Id $($_.Id)"
-            if (Test-OCDaemon) {
-                Invoke-OCDaemon -Cmd "kill $($_.Id)" -Quiet > $null
-            } else {
-                Stop-Process -Id $_.Id -Force -ErrorAction Ignore
-            }
+            Stop-RogueProcess -ProcessId $_.Id -ProcessName $_.ProcessName -StartDate $(try {$_.StartTime} catch {$null}) -SeenList $Rogue_Seen
         }
     }
 
@@ -4168,8 +4215,7 @@ function Invoke-Core {
                 $_.ProcessName -eq "OhGodAnETHlargementPill-r2.exe" -and
                 -not $Running_ProcessIds.Contains($_.ProcessId)
             } | ForEach-Object {
-                Write-Log -Level Warn "Stopping Process: $($_.ProcessName) with Id $($_.ProcessId)"
-                Stop-Process -Id $_.ProcessId -Force -ErrorAction Ignore
+                Stop-RogueProcess -ProcessId $_.ProcessId -ProcessName $_.ProcessName -StartDate $_.CreationDate -SeenList $Rogue_Seen
             }
         }
         elseif ($IsLinux) {
@@ -4177,13 +4223,15 @@ function Invoke-Core {
                 $_.ProcessName -eq "OhGodAnETHlargementPill-r2" -and
                 -not (Test-Intersect $Running_ProcessIds @($_.Id, $_.Parent.Id))
             } | ForEach-Object {
-                Write-Log -Level Warn "Stopping Process: $($_.ProcessName) with Id $($_.Id)"
-                if (Test-OCDaemon) {
-                    Invoke-OCDaemon -Cmd "kill $($_.Id)" -Quiet > $null
-                } else {
-                    Stop-Process -Id $_.Id -Force -ErrorAction Ignore
-                }
+                Stop-RogueProcess -ProcessId $_.Id -ProcessName $_.ProcessName -StartDate $(try {$_.StartTime} catch {$null}) -SeenList $Rogue_Seen
             }
+        }
+    }
+
+    # Forget rogue processes that have vanished from the process table
+    if ($Global:RogueProcessList -and $Global:RogueProcessList.Count) {
+        foreach ($Rogue_Key in @($Global:RogueProcessList.Keys)) {
+            if (-not $Rogue_Seen.Contains($Rogue_Key)) {[void]$Global:RogueProcessList.Remove($Rogue_Key)}
         }
     }
 
