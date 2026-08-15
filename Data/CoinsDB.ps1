@@ -68,7 +68,7 @@
     "BBR" = [PSCustomObject]@{Algo = "Wildkeccak"; Name = "Boolberry"; Symbol = "BBR"}
     "BBS" = [PSCustomObject]@{Algo = "CryptoNightLiteV7"; Name = "BBSCoin"; Symbol = "BBS"}
     "BC2" = [PSCustomObject]@{Algo = "SHA256d"; Name = "BitCoin II"; Symbol = "BC2"}
-    "BC3" = [PSCustomObject]@{Algo = "Sha3256t"; Name = "BitCoiniii"; Symbol = "BC3"}
+    "BC3" = [PSCustomObject]@{Algo = "SHA3t"; Name = "BitCoiniii"; Symbol = "BC3"}
     "BCA" = [PSCustomObject]@{Algo = "SHA256d"; Name = "Atom"; Symbol = "BCA"}
     "BCD" = [PSCustomObject]@{Algo = "Bcd"; Name = "Bitdiamond"; Symbol = "BCD"}
     "BCH" = [PSCustomObject]@{Algo = "SHA256d"; Name = "Bitcoincash"; Symbol = "BCH"}
@@ -112,6 +112,7 @@
     "BRAZ" = [PSCustomObject]@{Algo = "HMQ1725"; Name = "Brazio"; Symbol = "BRAZ"}
     "BRC" = [PSCustomObject]@{Algo = "Scrypt"; Name = "BeersCoin"; Symbol = "BRC"}
     "BRICS" = [PSCustomObject]@{Algo = "kHeavyHash"; Name = "Brics"; Symbol = "BRICS"}
+    "BRVA" = [PSCustomObject]@{Algo = "Randomzero"; Name = "Brisvia"; Symbol = "BRVA"}
     "BSD" = [PSCustomObject]@{Algo = "Xevan"; Name = "Bitsend"; Symbol = "BSD"}
     "BSF" = [PSCustomObject]@{Algo = "SHA256csm"; Name = "BitcoinSF"; Symbol = "BSF"}
     "BSHA3" = [PSCustomObject]@{Algo = "SHA3d"; Name = "Bsha3"; Symbol = "BSHA3"}
@@ -294,7 +295,7 @@
     "FCH" = [PSCustomObject]@{Algo = "SHA256d"; Name = "Freecash"; Symbol = "FCH"}
     "FIRO" = [PSCustomObject]@{Algo = "FiroPoW"; Name = "Firo"; Symbol = "FIRO"}
     "FIURY" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Fiury"; Symbol = "FIURY"}
-    "FJAR" = [PSCustomObject]@{Algo = "Sha3256t"; Name = "Fjarcode"; Symbol = "FJAR"}
+    "FJAR" = [PSCustomObject]@{Algo = "SHA3t"; Name = "Fjarcode"; Symbol = "FJAR"}
     "FJC" = [PSCustomObject]@{Algo = "ScryptN11"; Name = "Fujicoin"; Symbol = "FJC"}
     "FLC" = [PSCustomObject]@{Algo = "Xcrypt"; Name = "FlowCoin"; Symbol = "FLC"}
     "FLM" = [PSCustomObject]@{Algo = "PHI"; Name = "Folm"; Symbol = "FLM"}
@@ -455,6 +456,7 @@
     "JOSS" = [PSCustomObject]@{Algo = "Allium"; Name = "Joss Network"; Symbol = "JOSS"}
     "JOYS" = [PSCustomObject]@{Algo = "Ethash"; Name = "Joys Digital"; Symbol = "JOYS"}
     "JUNO" = [PSCustomObject]@{Algo = "RandomJUNO"; Name = "Juno Cash"; Symbol = "JUNO"}
+    "KAD" = [PSCustomObject]@{Algo = "Randomkadikama"; Name = "Kadikama"; Symbol = "KAD"}
     "KAS" = [PSCustomObject]@{Algo = "kHeavyHash"; Name = "Kaspa"; Symbol = "KAS"}
     "KCCC" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Kind"; Symbol = "KCCC"}
     "KCN" = [PSCustomObject]@{Algo = "Flex"; Name = "Kylacoin"; Symbol = "KCN"}
@@ -736,6 +738,7 @@
     "SNAP" = [PSCustomObject]@{Algo = "RandomSNAP"; Name = "SnapCoin"; Symbol = "SNAP"}
     "SOH" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Stohn"; Symbol = "SOH"}
     "SONO" = [PSCustomObject]@{Algo = "SonoA"; Name = "Sono"; Symbol = "SONO"}
+    "SOTER" = [PSCustomObject]@{Algo = "Soterg"; Name = "Soteria"; Symbol = "SOTER"}
     "SOV" = [PSCustomObject]@{Algo = "X16r"; Name = "Sovereign"; Symbol = "SOV"}
     "SPACE" = [PSCustomObject]@{Algo = "SHA256d"; Name = "MVC"; Symbol = "SPACE"}
     "SPDR" = [PSCustomObject]@{Algo = "PHI2"; Name = "Spider"; Symbol = "SPDR"}

@@ -13,15 +13,15 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.De
 $ManualUri = "https://bitcointalk.org/index.php?topic=5190081.0"
 $Port = "349{0:d2}"
 $DevFee = 0.85
-$Version = "3.5.3"
+$Version = "3.5.5"
 $Cuda = "11.7"
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.5.3-srbminermulti/SRBMiner-Multi-3-5-3-Linux.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.5.5-srbminermulti/SRBMiner-Multi-3-5-5-Linux.tar.gz"
 } else {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.5.3-srbminermulti/SRBMiner-Multi-3-5-3-win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.5.5-srbminermulti/SRBMiner-Multi-3-5-5-win64.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -115,7 +115,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "sccpow"           ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 3; Vendor = @("AMD","INTEL","NVIDIA"); Algorithm = "firopow"; ExcludeCompute = @("Volta")} #SCCPow/SCC
     #[PSCustomObject]@{MainAlgorithm = "sha256dt"         ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","INTEL","NVIDIA"); ExcludeCompute = @("Volta")} #SHA256dt/NOVO
     #[PSCustomObject]@{MainAlgorithm = "sha256mem"        ;              Params = ""; Fee = 2.50;               Vendor = @("AMD","CPU","NVIDIA"); ExcludeCompute = @("Volta")} #SHA256mem/FAIR
-    #[PSCustomObject]@{MainAlgorithm = "sha3x"            ;              Params = ""; Fee = 0.65;               Vendor = @("AMD","INTEL","NVIDIA"); ExcludeCompute = @("Volta")} #SHA3x/XTM
+    [PSCustomObject]@{MainAlgorithm = "sha3t"            ;              Params = ""; Fee = 1.00;               Vendor = @("AMD","INTEL","NVIDIA"); ExcludeCompute = @("Volta")} #SHA3t/BC3
     [PSCustomObject]@{MainAlgorithm = "verthash"         ;              Params = ""; Fee = 1.00;               Vendor = @("AMD","INTEL","NVIDIA")} #Verthash
     [PSCustomObject]@{MainAlgorithm = "walahash"         ;              Params = ""; Fee = 1.00;               Vendor = @("AMD","INTEL","NVIDIA"); ExcludeCompute = @("Volta")} #WalaHash/WALA
     [PSCustomObject]@{MainAlgorithm = "xelishashv3"      ;              Params = ""; Fee = 1.50;               Vendor = @("AMD","CPU","INTEL","NVIDIA"); ExcludeCompute = @("Volta")} #XelisHashV3
