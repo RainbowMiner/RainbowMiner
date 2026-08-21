@@ -26,7 +26,7 @@
     "ALEO" = [PSCustomObject]@{Algo = "zkSNARK"; Name = "Aleo"; Symbol = "ALEO"}
     "ALEX" = [PSCustomObject]@{Algo = "SHA256d"; Name = "Alexandrite"; Symbol = "ALEX"}
     "ALPH" = [PSCustomObject]@{Algo = "Blake3Alephium"; Name = "Alephium"; Symbol = "ALPH"}
-    "ALPHA" = [PSCustomObject]@{Algo = "Blake3an"; Name = "Unicity Coin"; Symbol = "ALPHA"}
+    "ALPHA" = [PSCustomObject]@{Algo = "Blake3An"; Name = "Unicity Coin"; Symbol = "ALPHA"}
     "ALTEX" = [PSCustomObject]@{Algo = "X11"; Name = "Altex"; Symbol = "ALTEX"}
     "ANDS" = [PSCustomObject]@{Algo = "X16r"; Name = "Anodos"; Symbol = "ANDS"}
     "ANI" = [PSCustomObject]@{Algo = "Anime"; Name = "Anime"; Symbol = "ANI"}
@@ -187,6 +187,7 @@
     "CRNC" = [PSCustomObject]@{Algo = "YespowerLTNCG"; Name = "Crionic"; Symbol = "CRNC"}
     "CRP" = [PSCustomObject]@{Algo = "Yespower"; Name = "Cranepay"; Symbol = "CRP"}
     "CRS" = [PSCustomObject]@{Algo = "Lyra2z"; Name = "Criptoreal"; Symbol = "CRS"}
+    "CSD" = [PSCustomObject]@{Algo = "SHA256csd"; Name = "ComputeSubstrate"; Symbol = "CSD"}
     "CSM" = [PSCustomObject]@{Algo = "SHA256csm"; Name = "Consortium"; Symbol = "CSM"}
     "CSS" = [PSCustomObject]@{Algo = "kHeavyHash"; Name = "Consensuscoin"; Symbol = "CSS"}
     "CTXC" = [PSCustomObject]@{Algo = "Cuckaroo30"; Name = "Cortex"; Symbol = "CTXC"}
@@ -232,6 +233,7 @@
     "DOGM" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Dogm"; Symbol = "DOGM"}
     "DOGPU" = [PSCustomObject]@{Algo = "KawPOW"; Name = "Dogegpu"; Symbol = "DOGPU"}
     "DOGX" = [PSCustomObject]@{Algo = "Ethash"; Name = "Dogethereum"; Symbol = "DOGX"}
+    "DRGX" = [PSCustomObject]@{Algo = "RandomDRGX"; Name = "DragonX"; Symbol = "DRGX"}
     "DSR" = [PSCustomObject]@{Algo = "NeoScrypt"; Name = "Desire"; Symbol = "DSR"}
     "DSTX" = [PSCustomObject]@{Algo = "Ethash"; Name = "Distrix"; Symbol = "DSTX"}
     "DTOR" = [PSCustomObject]@{Algo = "CryptoNightV7"; Name = "Dtor"; Symbol = "DTOR"}
@@ -622,6 +624,7 @@
     "PAS" = [PSCustomObject]@{Algo = "RandomX"; Name = "Pastella"; Symbol = "PAS"}
     "PASC" = [PSCustomObject]@{Algo = "RandomHash2"; Name = "Pascalcoin"; Symbol = "PASC"}
     "PBTC" = [PSCustomObject]@{Algo = "HeavyHash"; Name = "PhotonicBitcoin"; Symbol = "PBTC"}
+    "PCN" = [PSCustomObject]@{Algo = "RandomPCN"; Name = "Pcoin"; Symbol = "PCN"}
     "PCOIN" = [PSCustomObject]@{Algo = "X11"; Name = "Pioneercoin"; Symbol = "PCOIN"}
     "PEP" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Pepe"; Symbol = "PEP"}
     "PEPEW" = [PSCustomObject]@{Algo = "HoohashPepeW"; Name = "Pepepow"; Symbol = "PEPEW"}
@@ -949,6 +952,7 @@
     "ZNY" = [PSCustomObject]@{Algo = "YescryptR8"; Name = "Bitzeny"; Symbol = "ZNY"}
     "ZOC" = [PSCustomObject]@{Algo = "NeoScrypt"; Name = "01Coin"; Symbol = "ZOC"}
     "ZP" = [PSCustomObject]@{Algo = "ZenProtocol"; Name = "ZenProtocol"; Symbol = "ZP"}
+    "ZQVX" = [PSCustomObject]@{Algo = "RandomZQVX"; Name = "Zerqavon"; Symbol = "ZQVX"}
     "ZTH" = [PSCustomObject]@{Algo = "Ethash"; Name = "Zether"; Symbol = "ZTH"}
     "ZTX" = [PSCustomObject]@{Algo = "XelisHash"; Name = "Zytex"; Symbol = "ZTX"}
     "ZUM" = [PSCustomObject]@{Algo = "CryptoNightTurtle"; Name = "ZumCoin"; Symbol = "ZUM"}
