@@ -19,7 +19,7 @@ if (-not $Payout_Currencies) {
     return
 }
 
-if ($Payout_Currencies -contains "SKYDOGE") {$Payout_Currencies[$Payout_Currencies.indexOf("SKYDOGE")] = "SKY"}
+[hashtable]$Payout_CurrenciesXlat = @{"SKYDOGE" = "SKY"; "BTXCHAIN" = "BTX"; "ALP" = "ALPHA"}
 
 try {
     $Pools_Request = Invoke-RestMethodAsync "https://pool.rplant.xyz/api/dash" -tag $Name -timeout 30 -cycletime 120
@@ -32,15 +32,15 @@ catch {
 $Pool_Coins = @($Pools_Request.tbs.PSObject.Properties.Value | Select-Object -ExpandProperty symbol -Unique) 
 
 $Count = 0
-$Payout_Currencies | Where-Object {$Pool_Coins -contains $_.Name -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $_.Name)} | Foreach-Object {
+$Payout_Currencies | Where-Object {$Payout_CurrenciesXlat.Values -notcontains $_.Name -and $Pool_Coins -contains $(if ($Payout_CurrenciesXlat[$_.Name]) {$Payout_CurrenciesXlat[$_.Name]} else {$_.Name}) -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $_.Name)} | Foreach-Object {
     $Pool_Currency = $_.Name
-    $Pool_Name = "$($Pools_Request.tbs.PSObject.Properties | Where-Object {$_.Value.symbol -eq $Pool_Currency} | Foreach-Object {$_.Name} | Select-Object -First 1)"
+    $Pool_CurrencyXlat = if ($Payout_CurrenciesXlat[$Pool_Currency]) {$Payout_CurrenciesXlat[$Pool_Currency]} else {$Pool_Currency}
+    $Pool_Name = "$($Pools_Request.tbs.PSObject.Properties | Where-Object {$_.Value.symbol -eq $Pool_CurrencyXlat} | Foreach-Object {$_.Name} | Select-Object -First 1)"
     if ($Pool_Name) {
         $Request = [PSCustomObject]@{}
         try {
             $Request = Invoke-RestMethodAsync "https://pool.rplant.xyz/api/wallet/$($Pool_Name)/$($_.Value)" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
             $Count++
-            if ($Pool_Currency -eq "SKY") {$Pool_Currency = "SKYDOGE"}
             if (-not $Request.address) {
                 Write-Log -Level Info "Pool Balance API ($Name) for $($Pool_Currency) returned nothing. "
             } else {
