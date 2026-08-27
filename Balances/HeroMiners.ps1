@@ -8,10 +8,9 @@ param(
 # $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "ALPH";  port = 1199; fee = 0.0; rpc = "alephium"; region = $Pool_AllRegions; pass = "x"}
+    [PSCustomObject]@{symbol = "ALPH";  port = 1220; fee = 0.0; rpc = "alephium"; region = $Pool_AllRegions; pass = "x"}
     [PSCustomObject]@{symbol = "BEAM";  port = 1130; fee = 0.9; rpc = "beam"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "CFX";   port = 1170; fee = 0.9; rpc = "conflux"; region = $Pool_AllRegions}
-    [PSCustomObject]@{symbol = "DNX";   port = 1120; fee = 0.9; rpc = "dynex"; region = $Pool_AllRegions; MallobPort = 1119}
     [PSCustomObject]@{symbol = "ERG";   port = 1180; fee = 0.9; rpc = "ergo"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "ETC";   port = 1150; fee = 0.9; rpc = "etc"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "IRON";  port = 1145; fee = 0.0; rpc = "ironfish"; region = $Pool_AllRegions; pass = "x"}
