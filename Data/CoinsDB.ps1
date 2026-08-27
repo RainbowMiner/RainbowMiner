@@ -188,6 +188,7 @@
     "CRNC" = [PSCustomObject]@{Algo = "YespowerLTNCG"; Name = "Crionic"; Symbol = "CRNC"}
     "CRP" = [PSCustomObject]@{Algo = "Yespower"; Name = "Cranepay"; Symbol = "CRP"}
     "CRS" = [PSCustomObject]@{Algo = "Lyra2z"; Name = "Criptoreal"; Symbol = "CRS"}
+    "CS" = [PSCustomObject]@{Algo = "EquihashR25x4"; Name = "CloudService"; Symbol = "CS"}
     "CSD" = [PSCustomObject]@{Algo = "SHA256csd"; Name = "ComputeSubstrate"; Symbol = "CSD"}
     "CSM" = [PSCustomObject]@{Algo = "SHA256csm"; Name = "Consortium"; Symbol = "CSM"}
     "CSS" = [PSCustomObject]@{Algo = "kHeavyHash"; Name = "Consensuscoin"; Symbol = "CSS"}
@@ -319,6 +320,7 @@
     "FUEC" = [PSCustomObject]@{Algo = "Take2"; Name = "FuerteCoin"; Symbol = "FUEC"}
     "FUNZ" = [PSCustomObject]@{Algo = "Ethash"; Name = "Funz"; Symbol = "FUNZ"}
     "FXC" = [PSCustomObject]@{Algo = "Nist5"; Name = "Fexchange"; Symbol = "FXC"}
+    "FXL" = [PSCustomObject]@{Algo = "FusionHash"; Name = "FusionLayer"; Symbol = "FXL"}
     "FXTC-Lyra2z" = [PSCustomObject]@{Algo = "Lyra2z"; Name = "Fxtc Coin"; Symbol = "FXTC"; Multi = $true}
     "FXTC-Scrypt" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Fxtc Coin"; Symbol = "FXTC"; Multi = $true}
     "FXTC-SHA256d" = [PSCustomObject]@{Algo = "SHA256d"; Name = "Fxtc Coin"; Symbol = "FXTC"; Multi = $true}
