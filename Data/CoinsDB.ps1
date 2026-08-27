@@ -267,6 +267,7 @@
     "ERC" = [PSCustomObject]@{Algo = "Hodl"; Name = "EuropeCoin"; Symbol = "ERC"}
     "ERE" = [PSCustomObject]@{Algo = "ProgPoWEthercore"; Name = "Ethercore"; Symbol = "ERE"}
     "ERG" = [PSCustomObject]@{Algo = "Autolykos2"; Name = "Ergo"; Symbol = "ERG"}
+    "ESF" = [PSCustomObject]@{Algo = "SHA256d"; Name = "Elelvenseventyfive"; Symbol = "ESF"}
     "ESN" = [PSCustomObject]@{Algo = "Ethash"; Name = "EtherSocial"; Symbol = "ESN"}
     "ESP" = [PSCustomObject]@{Algo = "HMQ1725"; Name = "Espers"; Symbol = "ESP"}
     "ETC" = [PSCustomObject]@{Algo = "EtcHash"; Name = "EtherClassic"; Symbol = "ETC"}
@@ -478,6 +479,7 @@
     "KRGN-X11" = [PSCustomObject]@{Algo = "X11"; Name = "Kerrigan"; Symbol = "KRGN"; Multi = $true}
     "KRX" = [PSCustomObject]@{Algo = "KeryxHash"; Name = "KERYX"; Symbol = "KRX"}
     "KUS" = [PSCustomObject]@{Algo = "Take2"; Name = "Kusa"; Symbol = "KUS"}
+    "KV5" = [PSCustomObject]@{Algo = "SHA256d"; Name = "Kvanta5"; Symbol = "KV5"}
     "KVA" = [PSCustomObject]@{Algo = "RandomKEVA"; Name = "Kevacoin"; Symbol = "KVA"}
     "KYAN" = [PSCustomObject]@{Algo = "X11k"; Name = "Kyanite"; Symbol = "KYAN"}
     "KYF" = [PSCustomObject]@{Algo = "SHA256d"; Name = "Cryptofranc"; Symbol = "KYF"}
