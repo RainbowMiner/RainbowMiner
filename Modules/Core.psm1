@@ -734,6 +734,27 @@ function Stop-RogueProcess {
     }
 }
 
+function Get-PoolPriorityTier {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        $Pool,
+        [Parameter(Mandatory = $false)]
+        [bool]$LockMiners = $false
+    )
+    # MUST mirror the first four Sort-Object expressions that build $SortedPools in
+    # Invoke-Core ("Selecting best pool for each algorithm"). A pool alternate is only
+    # offered inside the same tier as the winner, so an exclusive rental, a focussed
+    # wallet, a miner lock or post-block mining can never be undercut by an alternate.
+    $Pool_Tier = 0
+    if ($Pool.Exclusive -and -not $Pool.Idle) {$Pool_Tier += 8}
+    $Pool_Name = $Pool.Name
+    if ($Session.Config.Pools.$Pool_Name.FocusWallet -and $Session.Config.Pools.$Pool_Name.FocusWallet.Count -gt 0 -and $Session.Config.Pools.$Pool_Name.FocusWallet -icontains $Pool.Currency) {$Pool_Tier += 4}
+    if ($LockMiners -and $Session.LockMiners.Pools -icontains "$($Pool.Name)-$($Pool.Algorithm0)-$($Pool.CoinSymbol)") {$Pool_Tier += 2}
+    if ($Pool.PostBlockMining) {$Pool_Tier += 1}
+    $Pool_Tier
+}
+
 function Invoke-Core {
 
     #Validate version file
@@ -2732,27 +2753,61 @@ function Invoke-Core {
                                 @{Expression={$ix = $Session.Config.DefaultPoolRegion.IndexOf($_.Region);[int]($ix -ge 0)*(100-$ix)}; Descending=$true},
                                 @{Expression={$_.SSL -eq $Session.Config.Pools."$($_.Name)".SSL}; Descending=$true} | Foreach-Object { [void]$SortedPools.Add($_) }
 
-        $NewPoolAlgorithms = @($NewPools | Foreach-Object {$_.Algorithm.ToLower()} | Select-Object -Unique)
+        # One ordered pass over the ranked list: the first entry for an algorithm is its
+        # winner (same result as the previous per-algorithm lookup), every later entry may
+        # become an alternate for miners that cannot use the winning pool.
+        $MaxPoolAlternates = if ($Session.Config.EnablePoolAlternates) {[int]$Session.Config.MaxPoolAlternates} else {0}
 
-        foreach($Algorithm_Name in $NewPoolAlgorithms) {
-            $FirstMatch = $null
+        $Pools_AltCount        = @{}
+        $Pools_AltSeen         = @{}
+        $Global:PoolAlternates = @{}
 
-            foreach ($Pool in $SortedPools) {
-                if ($Pool.Algorithm -eq $Algorithm_Name -and -not $Pool.DisabledDueToCoinSymbolPBM) {
-                    $FirstMatch = $Pool
-                    break   # Stop once we find the first match
+        foreach ($Pool in $SortedPools) {
+            if ($Pool.DisabledDueToCoinSymbolPBM) {continue}
+
+            $Algorithm_Name = $Pool.Algorithm.ToLower()
+
+            if (-not $Pools.PSObject.Properties[$Algorithm_Name]) {
+                $Pools | Add-Member -MemberType NoteProperty -Name $Algorithm_Name -Value $Pool
+                if ($MaxPoolAlternates -gt 0) {
+                    $Pools_AltCount[$Algorithm_Name] = 0
+                    $Pool_Seen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+                    [void]$Pool_Seen.Add("$($Pool.Name)-$($Pool.Algorithm0)-$($Pool.CoinSymbol)")
+                    $Pools_AltSeen[$Algorithm_Name] = $Pool_Seen
                 }
+                continue
             }
 
-            if ($FirstMatch) {
-                $Pools | Add-Member -MemberType NoteProperty -Name $Algorithm_Name -Value $FirstMatch
+            if ($MaxPoolAlternates -le 0) {continue}
+            if ($Pools_AltCount[$Algorithm_Name] -ge $MaxPoolAlternates) {continue}
+
+            $Pool_Winner = $Pools.$Algorithm_Name
+
+            # an alternate must sit in the same priority tier as the winner, otherwise an
+            # active rental, a focussed wallet or post-block mining could be undercut
+            if ([bool]$Pool.BenchmarkOnly -ne [bool]$Pool_Winner.BenchmarkOnly) {continue}
+            if ((Get-PoolPriorityTier $Pool $LockMiners) -ne (Get-PoolPriorityTier $Pool_Winner $LockMiners)) {continue}
+
+            # dedupe on the canonical pool offering, not on the pool name alone: a pool may
+            # offer the same algorithm for several coins, and MRR emits one entry per SSL mode
+            if (-not $Pools_AltSeen[$Algorithm_Name].Add("$($Pool.Name)-$($Pool.Algorithm0)-$($Pool.CoinSymbol)")) {continue}
+
+            $Pool_AltKey = "$($Algorithm_Name)-@$($Pool.Name)"
+            if ($Pools.PSObject.Properties[$Pool_AltKey]) {$Pool_AltKey = "$($Pool_AltKey)_$($Pool.CoinSymbol)"}
+            if ($Pools.PSObject.Properties[$Pool_AltKey]) {continue}
+
+            $Pools | Add-Member -MemberType NoteProperty -Name $Pool_AltKey -Value $Pool
+            if (-not $Global:PoolAlternates.ContainsKey($Algorithm_Name)) {
+                $Global:PoolAlternates[$Algorithm_Name] = [System.Collections.Generic.List[string]]::new()
             }
+            [void]$Global:PoolAlternates[$Algorithm_Name].Add($Pool_AltKey)
+            $Pools_AltCount[$Algorithm_Name]++
         }
         
         $Pools_OutOfSyncMinutes = 0
         if ($Pools.PSObject.Properties.Name.Count -gt 1) {
             try {
-                $Pools_OutOfSyncMinutes = [double]($Pools.PSObject.Properties.Name | ForEach-Object {$Pools.$_.Name} | Select-Object -Unique | ForEach-Object {($NewPools | Where-Object Name -eq $_ | Where-Object Updated -ge $OutOfSyncTime | Measure-Object Updated -Maximum).Maximum} | Measure-Object -Minimum -Maximum | ForEach-Object {$_.Maximum - $_.Minimum}).TotalMinutes
+                $Pools_OutOfSyncMinutes = [double]($Pools.PSObject.Properties.Name | Where-Object {-not (Test-PoolAlgorithmAlternate $_)} | ForEach-Object {$Pools.$_.Name} | Select-Object -Unique | ForEach-Object {($NewPools | Where-Object Name -eq $_ | Where-Object Updated -ge $OutOfSyncTime | Measure-Object Updated -Maximum).Maximum} | Measure-Object -Minimum -Maximum | ForEach-Object {$_.Maximum - $_.Minimum}).TotalMinutes
                 if ($Pools_OutOfSyncMinutes -gt $Session.SyncWindow) {
                     Write-Log "Pool prices are out of sync ($([int]$Pools_OutOfSyncMinutes) minutes). "
                 }
@@ -2783,7 +2838,9 @@ function Invoke-Core {
     }
 
     #Give API access to the pools information
-    $FilteredPools = foreach ($Pool in $Pools.PSObject.Properties.Value) {
+    $FilteredPools = foreach ($Pool_Property in $Pools.PSObject.Properties) {
+        if (Test-PoolAlgorithmAlternate $Pool_Property.Name) {continue}
+        $Pool = $Pool_Property.Value
         if (-not $Pool.SoloMining -or $Pool.BLK) {
             $Pool
         }
@@ -3062,7 +3119,7 @@ function Invoke-Core {
                                 $Miner.PowerDraw += $Response.data."$($Miner_Models[$Device])".$Miner_Name.$Miner_Algo.pd
                             }
 
-                            if ($Miner.HashRates.PSObject.Properties.Name -eq $Miner_Algo) {
+                            if (($Miner.HashRates.PSObject.Properties.Name -replace '\-.*$') -eq $Miner_Algo) {
                                 Set-Stat -Name "$($Miner.Name)_$($Miner_Algo)_HashRate" `
                                          -Value $Miner_HR `
                                          -Duration (New-TimeSpan -Seconds 10) `
@@ -4305,7 +4362,7 @@ function Invoke-Core {
                 foreach ($Miner_Algorithm in $Miner.Algorithm) {
                     $Miner_Pool = $Pools.$Miner_Algorithm.Name
 
-                    if (Test-Intersect @($Miner_Name,$Miner_Algorithm,$Miner_Pool) $Session.Config.ExcludeFromWatchdog) {
+                    if (Test-Intersect @($Miner_Name,($Miner_Algorithm -replace '\-.*$'),$Miner_Pool) $Session.Config.ExcludeFromWatchdog) {
                         continue
                     }
 
@@ -4348,6 +4405,7 @@ function Invoke-Core {
 
     $Pools = $null
     Remove-Variable -Name Pools -ErrorAction Ignore
+    $Global:PoolAlternates = $null
 
     $IsExclusiveRun = $Session.IsExclusiveRun
 

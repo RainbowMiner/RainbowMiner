@@ -148,7 +148,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                 "--cpu-affinity $($CPUAffinity.ToUpper() -replace "^0X") "
             }
 
-            foreach($MainAlgorithm_Norm in @($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)","$($MainAlgorithm_Norm_0)-GPU")) {
+            foreach($MainAlgorithm_Norm in @(Get-PoolAlgorithmKeys -Pools $Pools -Algorithm $MainAlgorithm_Norm_0 -Model $Miner_Model -ExcludePoolName $ExcludePoolName)) {
                 if (-not $Pools.$MainAlgorithm_Norm.Host) {continue}
                 if ($MainAlgorithm_0 -eq "kaspa" -and $Pools.$MainAlgorithm_Norm.User -notmatch "^kaspa") {continue}
 

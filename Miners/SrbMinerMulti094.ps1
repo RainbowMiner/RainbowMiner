@@ -102,7 +102,7 @@ foreach ($Miner_Vendor in @("AMD")) {
                 $DeviceParams = "$(if ($CPUThreads){" --cpu-threads $CPUThreads"})$(if ($CPUAffinity -and ($CPUThreads -le 64)){" --cpu-affinity $CPUAffinity"})"
             }
 
-            $All_Algorithms = if ($Miner_Vendor -eq "CPU") {@($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")} else {@($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")}
+            $All_Algorithms = if ($Miner_Vendor -eq "CPU") {@(Get-PoolAlgorithmKeys -Pools $Pools -Algorithm $Algorithm_Norm_0 -Model $Miner_Model -NoGPU -ExcludePoolName "$($_.ExcludePoolName)" -CoinSymbols @($_.CoinSymbols) -ExcludeYiimp:([bool]$_.ExcludeYiimp))} else {@(Get-PoolAlgorithmKeys -Pools $Pools -Algorithm $Algorithm_Norm_0 -Model $Miner_Model -ExcludePoolName "$($_.ExcludePoolName)" -CoinSymbols @($_.CoinSymbols) -ExcludeYiimp:([bool]$_.ExcludeYiimp))}
 
 		    foreach($Algorithm_Norm in $All_Algorithms) {
                 if (-not $Pools.$Algorithm_Norm.Host) {continue}

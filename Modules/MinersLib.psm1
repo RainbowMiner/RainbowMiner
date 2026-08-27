@@ -33,6 +33,94 @@ function Test-VRAM {
 }
 
 #
+# Pool selection helpers for miner modules
+#
+# $Pools may carry more than one entry per base algorithm: the device-model variants
+# built in PoolsLib (Algorithm-GPU, Algorithm-<Model>) and the pool alternates
+# registered by Core (Algorithm-@<PoolName>). Every key starts with the base
+# algorithm followed by a dash, so "-replace '\-.*$'" always yields the base name.
+#
+
+function Get-PoolAlgorithmBase {
+    param($Key = "")
+    $Key -replace '\-.*$'
+}
+
+function Test-PoolAlgorithmAlternate {
+    param($Key = "")
+    $Key -match '\-@'
+}
+
+function Test-PoolConstraint {
+    param(
+        $Pool,
+        $ExcludePoolName = "",
+        $PoolName = "",
+        $CoinSymbols = @(),
+        [Switch]$ExcludeYiimp
+    )
+    if (-not $Pool -or -not $Pool.Host) {return $false}
+    # matched against Host AND Name: most miner modules historically listed pool names
+    # but tested them against the hostname, which silently misses every pool that does
+    # not carry its own name in its host (or exposes a bare IP)
+    if ($ExcludePoolName -and (($Pool.Host -match $ExcludePoolName) -or ($Pool.Name -match $ExcludePoolName))) {return $false}
+    if ($PoolName -and -not (($Pool.Host -match $PoolName) -or ($Pool.Name -match $PoolName))) {return $false}
+    if ($CoinSymbols -and $Pool.CoinSymbol -notin $CoinSymbols) {return $false}
+    if ($ExcludeYiimp -and $Session.YiimpPools -and $Session.YiimpPools.Contains("$($Pool.Name)")) {return $false}
+    $true
+}
+
+function Get-PoolAlgorithmKeys {
+    # Called once per $Commands entry per device model, i.e. a few thousand times per round.
+    # Deliberately a simple function with untyped parameters: [CmdletBinding()], typed
+    # parameters and [Parameter()] attributes cost more than this function's entire body.
+    param(
+        $Pools,
+        $Algorithm,
+        $Model = "",
+        [Switch]$NoGPU,
+        $ExcludePoolName = "",
+        $PoolName = "",
+        $CoinSymbols = @(),
+        [Switch]$ExcludeYiimp
+    )
+
+    $Keys = if ($NoGPU) {
+        if ($Model) {@($Algorithm,"$($Algorithm)-$($Model)")} else {@($Algorithm)}
+    } else {
+        if ($Model) {@($Algorithm,"$($Algorithm)-$($Model)","$($Algorithm)-GPU")} else {@($Algorithm,"$($Algorithm)-GPU")}
+    }
+
+    # Fast path: no pool constraint on this entry, feature off, or no alternates registered.
+    # Returns the exact same literal the miner modules used before this feature existed.
+    # Note $CoinSymbols is compared truthy, not by .Count: @($_.CoinSymbols) on an entry
+    # without CoinSymbols yields a one-element array holding $null, whose .Count is 1.
+    if (-not ($ExcludePoolName -or $PoolName -or $CoinSymbols -or $ExcludeYiimp)) {return $Keys}
+    if (-not $Session.Config.EnablePoolAlternates) {return $Keys}
+    $MaxAlternates = [int]$Session.Config.MaxPoolAlternates
+    if ($MaxAlternates -le 0) {return $Keys}
+    if (-not $Global:PoolAlternates -or -not $Global:PoolAlternates.Count) {return $Keys}
+
+    $Result = [System.Collections.Generic.List[string]]::new()
+    foreach ($Key in $Keys) {
+        [void]$Result.Add($Key)
+        if (-not $Pools.$Key) {continue}
+        # only fall back when the winning pool really fails this entry's constraint
+        if (Test-PoolConstraint $Pools.$Key -ExcludePoolName $ExcludePoolName -PoolName $PoolName -CoinSymbols $CoinSymbols -ExcludeYiimp:$ExcludeYiimp) {continue}
+        if (-not $Global:PoolAlternates.ContainsKey($Key)) {continue}
+        $Found = 0
+        foreach ($AltKey in $Global:PoolAlternates[$Key]) {
+            if ($Found -ge $MaxAlternates) {break}
+            if (Test-PoolConstraint $Pools.$AltKey -ExcludePoolName $ExcludePoolName -PoolName $PoolName -CoinSymbols $CoinSymbols -ExcludeYiimp:$ExcludeYiimp) {
+                [void]$Result.Add($AltKey)
+                $Found++
+            }
+        }
+    }
+    $Result.ToArray()
+}
+
+#
 # Get-MinersContent
 #
 

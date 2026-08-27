@@ -25,7 +25,7 @@
     <thead>
         <tr>
             <th data-field="tMinerName" data-sortable="true" data-filter-control="select">Minername</th>
-            <th data-field="Algorithm" data-sortable="true" data-filter-control="select">Algorithm</th>
+            <th data-field="tAlgorithm" data-sortable="true" data-filter-control="select">Algorithm</th>
             <th data-field="DeviceModel" data-sortable="true" data-filter-control="select">Device</th>
             <th data-field="PoolName" data-sortable="true" data-filter-control="select">Poolname</th>
             <th data-field="tKicked" data-sortable="true">Last</th>
@@ -54,6 +54,7 @@ function formatWatchdogTimers(data) {
     // that is easier to display and manipulate in a table
     for (const item of data) {
         item.tMinerName = item.MinerName.replace(/-.+$/, '')
+        item.tAlgorithm = formatAlgorithm(item.Algorithm)
         var diff = (new Date).getTime() - (new Date(item.Kicked)).getTime()
         var days = Math.floor(diff / (1000 * 60 * 60 * 24));
         diff -= days * (1000 * 60 * 60 * 24);

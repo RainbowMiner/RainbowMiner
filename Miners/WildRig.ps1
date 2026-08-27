@@ -120,7 +120,9 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
 
             $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
-		    foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
+		    $All_Algorithms = @(Get-PoolAlgorithmKeys -Pools $Pools -Algorithm $Algorithm_Norm_0 -Model $Miner_Model -ExcludePoolName "$($_.ExcludePoolName)" -CoinSymbols @($_.CoinSymbols))
+
+		    foreach($Algorithm_Norm in $All_Algorithms) {
                 if (-not $Pools.$Algorithm_Norm.Host) {continue}
 
                 $QhashParams = $Worker = ""

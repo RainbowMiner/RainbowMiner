@@ -379,6 +379,10 @@ function formatTSL(data) {
 
 function formatAlgorithm(data) {
     const cfg = ConfigLoader.getConfig();
+    // Pool alternates arrive as "<Algorithm>-@<PoolName>". The pool is shown in its own
+    // column, so display the plain algorithm - and let it hit the AlgorithmMap lookup.
+    // Display only: never write this back onto item.Algorithm, that is the rebench identity.
+    data = String(data).replace(/-@.*$/, '')
     return (cfg && cfg.EnableAlgorithmMapping && cfg.AlgorithmMap[data]) ? cfg.AlgorithmMap[data] : data;
 }
 

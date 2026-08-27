@@ -2108,6 +2108,53 @@
           }
         },
         {
+          "kind": "field",
+          "key": "EnablePoolAlternates",
+          "id": "inputEnablePoolAlternates",
+          "label": {
+            "html": "Pool alternates",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "Some miners support an algorithm only on certain pools. If the most profitable pool is not one of them, offer that miner the best pool it can actually use, instead of dropping it."
+          },
+          "control": "select",
+          "attrs": {},
+          "options": [
+            {
+              "value": "0",
+              "label": "Disable"
+            },
+            {
+              "value": "1",
+              "label": "Enable"
+            }
+          ]
+        },
+        {
+          "kind": "field",
+          "key": "MaxPoolAlternates",
+          "id": "inputMaxPoolAlternates",
+          "label": {
+            "html": "Max. pool alternates",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "Maximum number of alternate pools offered per algorithm (0 to disable)."
+          },
+          "control": "number",
+          "attrs": {
+            "min": "0",
+            "max": "10",
+            "step": "1",
+            "placeholder": "Enter the maximum number of alternate pools"
+          }
+        },
+        {
           "kind": "inputgroup",
           "rowClasses": [],
           "label": {
