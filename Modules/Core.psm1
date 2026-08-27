@@ -2862,6 +2862,12 @@ function Invoke-Core {
 
     $Miner_DontCheckForUnprofitableCpuAlgos = -not $Global:DeviceCache.DevicesByTypes.CPU -or $Session.Config.DisableUnprofitableCpuAlgolist -or $Session.Conifg.EnableNeverprofitableAlgos
 
+    # algorithms with a large fixed memory footprint (RandomX family) are skipped on
+    # machines that cannot hold them in physical RAM: the miner would allocate into the
+    # page file, thrash, and then fail to shut down within the kill timeout
+    $Miner_MinFreeMemoryGB = [double]$Session.Config.MinFreeMemoryGB
+    $Miner_MemWarned       = @{}
+
     $AllMiners = [System.Collections.Generic.List[PSCustomObject]]::new()
     if ($NewPools.Count -and (Test-Path "Miners")) {
 
@@ -2873,6 +2879,17 @@ function Invoke-Core {
             if (-not $Miner.DeviceName) { return }
             if ($Miner.DeviceModel -match '-' -and (Compare-Object $Miner.DeviceName $Global:DeviceCache.DeviceNames."$($Miner.DeviceModel)")) { return }
             if (-not $Miner_DontCheckForUnprofitableCpuAlgos -and $Miner.DeviceModel -eq "CPU" -and $Miner.BaseAlgorithm -in $UnprofitableCpuAlgos) { return }
+            if ($Miner.DeviceModel -eq "CPU") {
+                foreach ($Algo in @($Miner.BaseAlgorithm -split '-')) {
+                    if (-not (Test-AlgorithmMemory -Algorithm $Algo -MinFreeGB $Miner_MinFreeMemoryGB)) {
+                        if (-not $Miner_MemWarned.ContainsKey($Algo)) {
+                            $Miner_MemWarned[$Algo] = $true
+                            Write-Log -Level Warn "$($Algo) needs $(Get-AlgorithmMemory $Algo) GB of RAM plus $($Miner_MinFreeMemoryGB) GB for the system, but this machine has $([double]$Session.SysInfo.Memory.TotalGB) GB. Skipping all CPU miners for $($Algo) - set MinFreeMemoryGB to 0 in config.txt to mine it anyway."
+                        }
+                        return
+                    }
+                }
+            }
             if ($Session.Config.DisableDualMining -and $Miner.HashRates.PSObject.Properties.Name.Count -gt 1) { return }
             if (Compare-Object $Global:DeviceCache.DevicesNames $Miner.DeviceName | Where-Object SideIndicator -EQ "=>") { return }
             if ($Session.Config.Miners."$($Miner_Name)-$($Miner.DeviceModel)-$($Miner.BaseAlgorithm)".Disable) { return }

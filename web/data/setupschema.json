@@ -241,6 +241,26 @@
         },
         {
           "kind": "field",
+          "key": "MinFreeMemoryGB",
+          "id": "inputMinFreeMemoryGB",
+          "label": {
+            "html": "Min. Free RAM",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "RAM in GB to keep free for the system and RainbowMiner. Algorithms with a known large memory footprint (the RandomX family needs a 2 GB dataset) are skipped on machines that cannot hold them in physical RAM, because the miner would otherwise swap and stall. Set to 0 to disable the check."
+          },
+          "control": "number",
+          "attrs": {
+            "min": "0",
+            "step": "0.5",
+            "placeholder": "Enter the RAM to keep free for the system"
+          }
+        },
+        {
+          "kind": "field",
           "key": "CPUMiningAffinity",
           "id": "inputCPUMiningAffinity",
           "label": {

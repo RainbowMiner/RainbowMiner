@@ -1228,6 +1228,51 @@ function Get-EquihashCoinPers {
     if ($Coin -and $Session.GlobalEquihashCoins.ContainsKey($Coin)) {$Session.GlobalEquihashCoins[$Coin]} else {$Default}
 }
 
+function Get-AlgorithmMemory {
+    # Minimum system RAM in GB an algorithm needs on a CPU, from Data\algorithmmemory.json.
+    # 0 = unknown/unconstrained. The OS and RainbowMiner overhead is NOT included here,
+    # the caller adds it (config.txt: MinFreeMemoryGB).
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [String]$Algorithm = ""
+    )
+    if (-not $Algorithm) {return 0.0}
+    if ($Global:AlgorithmMemory -eq $null) {
+        $Global:AlgorithmMemory = @{}
+        try {
+            $Data = Get-ContentByStreamReader ".\Data\algorithmmemory.json" | ConvertFrom-Json -ErrorAction Stop
+            foreach ($p in $Data.PSObject.Properties) {
+                if ($p.Name -notmatch '^_') {$Global:AlgorithmMemory[$p.Name] = [double]$p.Value}
+            }
+        } catch {
+            if ($Error.Count) {$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Data\algorithmmemory.json is missing or invalid, skipping the memory check"
+        }
+    }
+    if ($Global:AlgorithmMemory.ContainsKey($Algorithm)) {[double]$Global:AlgorithmMemory[$Algorithm]} else {0.0}
+}
+
+function Test-AlgorithmMemory {
+    # $true if the algorithm fits into physical RAM, leaving $MinFreeGB for the OS and
+    # RainbowMiner. Fails open: if the requirement or the total RAM is unknown, allow it.
+    # Deliberately checks TOTAL physical memory, not free memory: miners allocate their
+    # dataset once and free memory swings while mining. It also deliberately ignores the
+    # page/swap file - the miner would "succeed" and then thrash.
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [String]$Algorithm = "",
+        [Parameter(Mandatory = $false)]
+        [Double]$MinFreeGB = 0.0
+    )
+    $NeedGB = Get-AlgorithmMemory $Algorithm
+    if ($NeedGB -le 0) {return $true}
+    $TotalGB = [double]$Session.SysInfo.Memory.TotalGB
+    if ($TotalGB -le 0) {return $true}
+    ($NeedGB + $MinFreeGB) -le $TotalGB
+}
+
 function Get-EthDAGSize {
     [CmdletBinding()]
     param(
