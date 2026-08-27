@@ -377,6 +377,28 @@ function formatTSL(data) {
     return data.toFixed(1)
 }
 
+// Algorithms RainbowMiner refuses to mine because their memory footprint does not fit
+// into this machine's RAM (RandomX needs a ~2GB dataset). The log says this once per
+// session, so the banner is what tells the user on every page why an algorithm is gone.
+async function renderMemoryNotice() {
+    const el = document.getElementById("rbm-notice");
+    if (!el) return;
+    try {
+        const res = await rbmFetch("/memoryskipped");
+        if (!res.ok) return;
+        const list = await res.json();
+        if (!Array.isArray(list) || !list.length) { el.classList.add("d-none"); return; }
+        const total = list[0].TotalGB, minfree = list[0].MinFreeGB;
+        const names = list.map(x => esc(formatAlgorithm(x.Algorithm)) + " (" + x.NeedGB + " GB)").join(", ");
+        el.innerHTML = "<strong>Not enough RAM:</strong> " + names +
+            " cannot be mined on this machine (" + total + " GB total, keeping " + minfree +
+            " GB free for the system). Lower or zero <code>MinFreeMemoryGB</code> in " +
+            "<a href=\"/setup.html\">Setup</a> to mine them anyway.";
+        el.classList.remove("d-none");
+    } catch (e) { /* endpoint missing on an older rig: stay quiet */ }
+}
+document.addEventListener("DOMContentLoaded", renderMemoryNotice);
+
 function formatAlgorithm(data) {
     const cfg = ConfigLoader.getConfig();
     // Pool alternates arrive as "<Algorithm>-@<PoolName>". The pool is shown in its own

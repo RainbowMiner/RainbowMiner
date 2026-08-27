@@ -2866,7 +2866,13 @@ function Invoke-Core {
     # machines that cannot hold them in physical RAM: the miner would allocate into the
     # page file, thrash, and then fail to shut down within the kill timeout
     $Miner_MinFreeMemoryGB = [double]$Session.Config.MinFreeMemoryGB
-    $Miner_MemWarned       = @{}
+    $Miner_MemSkipped      = [System.Collections.Specialized.OrderedDictionary]::new()
+    # warn in the log only once per session, not once per round. Reset the memory of that
+    # when MinFreeMemoryGB changes, so a config edit is acknowledged again
+    if ($Global:MemorySkippedLogged -eq $null -or $Global:MemorySkippedLast -ne $Miner_MinFreeMemoryGB) {
+        $Global:MemorySkippedLogged = @{}
+        $Global:MemorySkippedLast   = $Miner_MinFreeMemoryGB
+    }
 
     $AllMiners = [System.Collections.Generic.List[PSCustomObject]]::new()
     if ($NewPools.Count -and (Test-Path "Miners")) {
@@ -2882,9 +2888,17 @@ function Invoke-Core {
             if ($Miner.DeviceModel -eq "CPU") {
                 foreach ($Algo in @($Miner.BaseAlgorithm -split '-')) {
                     if (-not (Test-AlgorithmMemory -Algorithm $Algo -MinFreeGB $Miner_MinFreeMemoryGB)) {
-                        if (-not $Miner_MemWarned.ContainsKey($Algo)) {
-                            $Miner_MemWarned[$Algo] = $true
-                            Write-Log -Level Warn "$($Algo) needs $(Get-AlgorithmMemory $Algo) GB of RAM plus $($Miner_MinFreeMemoryGB) GB for the system, but this machine has $([double]$Session.SysInfo.Memory.TotalGB) GB. Skipping all CPU miners for $($Algo) - set MinFreeMemoryGB to 0 in config.txt to mine it anyway."
+                        if (-not $Miner_MemSkipped.Contains($Algo)) {
+                            $Miner_MemSkipped[$Algo] = [PSCustomObject]@{
+                                Algorithm = $Algo
+                                NeedGB    = [double](Get-AlgorithmMemory $Algo)
+                                MinFreeGB = $Miner_MinFreeMemoryGB
+                                TotalGB   = [double]$Session.SysInfo.Memory.TotalGB
+                            }
+                            if (-not $Global:MemorySkippedLogged.ContainsKey($Algo)) {
+                                $Global:MemorySkippedLogged[$Algo] = $true
+                                Write-Log -Level Warn "$($Algo) needs $(Get-AlgorithmMemory $Algo) GB of RAM plus $($Miner_MinFreeMemoryGB) GB for the system, but this machine has $([double]$Session.SysInfo.Memory.TotalGB) GB. Skipping all CPU miners for $($Algo) - set MinFreeMemoryGB to 0 in config.txt to mine it anyway."
+                            }
                         }
                         return
                     }
@@ -3567,6 +3581,9 @@ function Invoke-Core {
     $Miners_DownloadList    = @()
     $Miners_DownloadListPrq = @()
     $Miners_DownloadMsgPrq  = $null
+
+    $Session.MemorySkipped = @($Miner_MemSkipped.Values)
+    $API.MemorySkipped     = ConvertTo-Json @($Miner_MemSkipped.Values) -Depth 2 -WarningAction Ignore
 
     $Miners = [System.Collections.Generic.List[PSCustomObject]]::new()
 
@@ -4754,6 +4771,14 @@ function Invoke-Core {
 
     $StatusLine = $null
     Remove-Variable -Name StatusLine -ErrorAction Ignore
+
+    #Algorithms that do not fit into this machine's RAM. Shown every round on purpose,
+    #the log only mentions it once per session
+    if ($Session.MemorySkipped -and $Session.MemorySkipped.Count) {
+        Write-Host "Not enough RAM for $(($Session.MemorySkipped | Foreach-Object {"$($_.Algorithm) ($($_.NeedGB)GB)"}) -join ", ")" -ForegroundColor Yellow -NoNewline
+        Write-Host " - this machine has $([double]$Session.SysInfo.Memory.TotalGB)GB. Set MinFreeMemoryGB=0 in config.txt to mine anyway." -ForegroundColor Gray
+        Write-Host " "
+    }
 
     #Check if server is up
     if ($UserConfig.RunMode -eq "Client" -and $UserConfig.ServerName -and $UserConfig.ServerPort) {

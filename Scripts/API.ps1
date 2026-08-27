@@ -1116,6 +1116,10 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             $Data = if ($API.WatchdogTimers) {ConvertTo-Json $API.WatchdogTimers -Depth 2 -WarningAction Ignore} else {"[]"}
             Break
         }
+        "/memoryskipped" {
+            $Data = if ($API.MemorySkipped) {$API.MemorySkipped} else {"[]"}
+            Break
+        }
         "/crashcounter" {
             $Data = if ($API.CrashCounter) {ConvertTo-Json $API.CrashCounter -Depth 2 -WarningAction Ignore} else {"[]"}
             Break
