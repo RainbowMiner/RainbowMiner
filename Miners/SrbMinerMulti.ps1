@@ -13,15 +13,15 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.De
 $ManualUri = "https://bitcointalk.org/index.php?topic=5190081.0"
 $Port = "349{0:d2}"
 $DevFee = 0.85
-$Version = "3.5.9"
+$Version = "3.6.0"
 $Cuda = "11.7"
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.5.9-srbminermulti/SRBMiner-Multi-3-5-9-Linux.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.6.0-srbminermulti/SRBMiner-Multi-3-6-0-Linux.tar.gz"
 } else {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.5.9-srbminermulti/SRBMiner-Multi-3-5-9-win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.6.0-srbminermulti/SRBMiner-Multi-3-6-0-win64.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -107,7 +107,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "memehash"         ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU","INTEL","NVIDIA"); ExcludeCompute = @("Volta")} #MemeHash/PEPEPOW
     [PSCustomObject]@{MainAlgorithm = "meowpow"          ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","INTEL","NVIDIA"); ExcludeCompute = @("Volta")} #MeowPow/MEWC
     [PSCustomObject]@{MainAlgorithm = "oggpow"           ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","INTEL","NVIDIA"); ExcludeCompute = @("Volta")} #OggPoW/OGG
-    [PSCustomObject]@{MainAlgorithm = "pearlhash"        ;              Params = ""; Fee = 2.00;               Vendor = @("AMD","NVIDIA"); ExcludePoolName = "84.32.220.219|129.226.55.135"; ExcludeCompute = @("Volta","Pascal","RDNA4","RDNA3","RDNA2","RDNA1","GCN51","GCN50","8.0","10.3"); NoAutoTune = $true} #PearlHash/PRL
+    [PSCustomObject]@{MainAlgorithm = "pearlhash"        ;              Params = ""; Fee = 2.00;               Vendor = @("AMD","NVIDIA"); ExcludePoolName = "84.32.220.219|129.226.55.135"; ExcludeCompute = @("Volta","Pascal","GCN51","GCN50","8.0","10.3"); NoAutoTune = $true} #PearlHash/PRL
     [PSCustomObject]@{MainAlgorithm = "phihash"          ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","NVIDIA"); ExcludeCompute = @("Volta")} #PhilHashV2/PHI (from 01/30/2025)
     [PSCustomObject]@{MainAlgorithm = "progpow_epic"     ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","INTEL","NVIDIA"); ExcludeCompute = $null} #ProgPowEPIC/EPIC
     #[PSCustomObject]@{MainAlgorithm = "progpow_quai"     ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","INTEL","NVIDIA"); ExcludeCompute = @("Volta")} #ProgPowQuai/QUAI
