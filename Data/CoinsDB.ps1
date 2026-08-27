@@ -25,8 +25,9 @@
     "AKA" = [PSCustomObject]@{Algo = "Ethash"; Name = "Akroma"; Symbol = "AKA"}
     "ALEO" = [PSCustomObject]@{Algo = "zkSNARK"; Name = "Aleo"; Symbol = "ALEO"}
     "ALEX" = [PSCustomObject]@{Algo = "SHA256d"; Name = "Alexandrite"; Symbol = "ALEX"}
+    "ALP" = [PSCustomObject]@{Algo = "Blake3An"; Name = "Alphanumeric"; Symbol = "ALP"}
     "ALPH" = [PSCustomObject]@{Algo = "Blake3Alephium"; Name = "Alephium"; Symbol = "ALPH"}
-    "ALPHA" = [PSCustomObject]@{Algo = "Blake3An"; Name = "Unicity Coin"; Symbol = "ALPHA"}
+    "ALPHA" = [PSCustomObject]@{Algo = "RandomALPHA"; Name = "Unicity Coin"; Symbol = "ALPHA"}
     "ALTEX" = [PSCustomObject]@{Algo = "X11"; Name = "Altex"; Symbol = "ALTEX"}
     "ANDS" = [PSCustomObject]@{Algo = "X16r"; Name = "Anodos"; Symbol = "ANDS"}
     "ANI" = [PSCustomObject]@{Algo = "Anime"; Name = "Anime"; Symbol = "ANI"}
@@ -527,6 +528,7 @@
     "MCL" = [PSCustomObject]@{Algo = "Equihash"; Name = "Marmara"; Symbol = "MCL"}
     "MCM" = [PSCustomObject]@{Algo = "Peach"; Name = "Mochimo"; Symbol = "MCM"}
     "MDEX" = [PSCustomObject]@{Algo = "X16r"; Name = "Moondex"; Symbol = "MDEX"}
+    "MDS" = [PSCustomObject]@{Algo = "Blake3Sequential"; Name = "Midstate"; Symbol = "MDS"}
     "MEC" = [PSCustomObject]@{Algo = "MegaMEC"; Name = "Megacoin"; Symbol = "MEC"}
     "MECU" = [PSCustomObject]@{Algo = "Take2"; Name = "Mecuai"; Symbol = "MECU"}
     "MEER" = [PSCustomObject]@{Algo = "MeerKeccakV1"; Name = "Qitmeer"; Symbol = "MEER"}
@@ -788,6 +790,7 @@
     "TRMP" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Trumpow"; Symbol = "TRMP"}
     "TROLL" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Trollcoin"; Symbol = "TROLL"}
     "TRTL" = [PSCustomObject]@{Algo = "Argon2ChukwaV2"; Name = "Turtle"; Symbol = "TRTL"}
+    "TSC" = [PSCustomObject]@{Algo = "ProofOfInference"; Name = "TensorCash"; Symbol = "TSC"}
     "TSF" = [PSCustomObject]@{Algo = "Ethash"; Name = "Transaction Service Fee"; Symbol = "TSF"}
     "TTN" = [PSCustomObject]@{Algo = "X21s"; Name = "Titan Coin"; Symbol = "TTN"}
     "TTNZ" = [PSCustomObject]@{Algo = "CryptoNightTurtle"; Name = "Tritanium"; Symbol = "TTNZ"}
