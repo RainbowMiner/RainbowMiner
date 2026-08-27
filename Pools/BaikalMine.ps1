@@ -20,12 +20,12 @@ $Pool_Type = "pplns"
 $Pool_Fee  = 0.5
 
 [hashtable]$Pool_RegionsTable = @{}
-@("Netherlands","Moscow") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+@("Netherlands","France","Moscow") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Request = [PSCustomObject]@{}
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://baikalmine.com/api/Pool/GetEntities" -tag "BaikalMine" -body '{"props":["_id","api","active","maintenance","type._id","type.name","type.identifier","coin.symbol","coin.name","coin.identifier","engine.type","ports"]}' -cycletime 3600 -retry 5 -retrywait 250
+    $Pool_Request = Invoke-RestMethodAsync "https://baikalmine.com/api/Pool/GetEntities" -tag "BaikalMine" -body '{"props":["_id","api","active","maintenance","type._id","type.name","type.identifier","coin.symbol","coin.name","coin.identifier","ports"]}' -cycletime 3600 -retry 5 -retrywait 250
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
@@ -61,7 +61,7 @@ $Pool_Request.entities | Where-Object {$_.type.identifier -eq $Pool_Type -and $_
 
     $PoolInfo_Request  = [PSCustomObject]@{}
     try {
-        $PoolInfo_Request   = Invoke-RestMethodAsync "https://baikalmine.com/api/Engines/GetPoolStats"  -tag $Name -body "{`"type`":`"$Pool_Type`",`"coin`":`"$($_.coin.identifier)`",`"engine`":$($_.engine.type)}" -cycletime 120 -delay 250
+        $PoolInfo_Request   = Invoke-RestMethodAsync "https://baikalmine.com/api/Engines/GetPoolStats"  -tag $Name -body "{`"type`":`"$Pool_Type`",`"coin`":`"$($_.coin.identifier)`"}" -cycletime 120 -delay 250
     }
     catch {
         Write-Log -Level Warn "Pool $($Name): Info API for $($Pool_Currency) has failed. "
