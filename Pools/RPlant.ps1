@@ -32,10 +32,10 @@ catch {
 $Pool_Regions = @("eu","asia","na")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
-$Pools_Request.tbs.PSObject.Properties.Value | Where-Object {(($Wallets."$($_.symbol)" -and $_.Symbol -notin @("BTX","SKY")) -or ($Wallets.SKYDOGE -and $_.Symbol -eq "SKY") -or ($Wallets.BTXCHAIN -and $_.Symbol -eq "BTX")) -or $InfoOnly} | ForEach-Object {
+$Pools_Request.tbs.PSObject.Properties.Value | Where-Object {(($Wallets."$($_.symbol)" -and $_.Symbol -notin @("ALPHA","BTX","SKY")) -or ($Wallets.SKYDOGE -and $_.Symbol -eq "SKY") -or ($Wallets.BTXCHAIN -and $_.Symbol -eq "BTX") -or ($Wallets.ALP -and $_.Symbol -eq "ALPHA")) -or $InfoOnly} | ForEach-Object {
     $Pool_Currency       = $_.symbol
     
-    $Pool_CurrencyXlat = if ($Pool_Currency -eq "SKY") {"SKYDOGE"} elseif ($Pool_Currency -eq "BTX") {"BTXCHAIN"} else {$Pool_Currency}
+    $Pool_CurrencyXlat = if ($Pool_Currency -eq "SKY") {"SKYDOGE"} elseif ($Pool_Currency -eq "BTX") {"BTXCHAIN"} elseif ($Pool_Currency -eq "ALPHA") {"ALP"} else {$Pool_Currency}
     
     if ($Pool_Coin = Get-Coin $Pool_CurrencyXlat -Algorithm $_.algo) {
         $Pool_Algorithm_Norm = $Pool_Coin.Algo
