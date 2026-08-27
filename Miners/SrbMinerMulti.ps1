@@ -35,6 +35,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "minotaurx"        ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #Minotaurx/LCC
     [PSCustomObject]@{MainAlgorithm = "neuromorph"       ;              Params = ""; Fee = 1.00;               Vendor = @("CPU")} #Neuromorph/
     [PSCustomObject]@{MainAlgorithm = "panthera"         ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #Panthera
+    [PSCustomObject]@{MainAlgorithm = "randomalpha"      ;              Params = ""; Fee = 1.00;               Vendor = @("CPU"); Rx1GbPages = $true} #RandomALPHA/ALPHA
     [PSCustomObject]@{MainAlgorithm = "randomarq"        ;              Params = ""; Fee = 0.85;               Vendor = @("CPU"); Rx1GbPages = $true} #RandomArq
     [PSCustomObject]@{MainAlgorithm = "randomc64"        ;              Params = ""; Fee = 0.85;               Vendor = @("CPU"); Rx1GbPages = $true} #RandomC64
     [PSCustomObject]@{MainAlgorithm = "randomdrgx"       ;              Params = ""; Fee = 0.85;               Vendor = @("CPU"); Rx1GbPages = $true} #RandomDRGX
@@ -73,7 +74,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "argon2id_exfer"   ;              Params = ""; Fee = 3.00;               Vendor = @("AMD","CPU","NVIDIA"); ExcludeCompute = @("Volta")} #Argon2Exfer
     #[PSCustomObject]@{MainAlgorithm = "aurum"            ;              Params = ""; Fee = 2.00;               Vendor = @("AMD","CPU","INTEL","NVIDIA"); ExcludeCompute = @("Volta")} #Aurum/BIT
     [PSCustomObject]@{MainAlgorithm = "autolykos2"       ; DAG = $true; Params = ""; Fee = 1.00;               Vendor = @("AMD","INTEL","NVIDIA"); ExcludePoolName="Nicehash"} #Autolykos2/ERGO
-    [PSCustomObject]@{MainAlgorithm = "blake3_an"        ;              Params = ""; Fee = 2.00; MinMemGb = 2; Vendor = @("AMD","INTEL","NVIDIA"); ExcludeCompute = @("Volta","GCN51","GCN50")} #Blake3an/ALPH
+    [PSCustomObject]@{MainAlgorithm = "blake3_an"        ;              Params = ""; Fee = 2.00; MinMemGb = 2; Vendor = @("AMD","INTEL","NVIDIA"); ExcludeCompute = @("Volta","GCN51","GCN50")} #Blake3An/ALP
     [PSCustomObject]@{MainAlgorithm = "blake3_decred"    ;              Params = ""; Fee = 1.00; MinMemGb = 2; Vendor = @("AMD","INTEL","NVIDIA"); ExcludeCompute = @("Volta")} #Blake3Decred/DCR
     #[PSCustomObject]@{MainAlgorithm = "blake3_lbrt"      ;              Params = ""; Fee = 2.00; MinMemGb = 2; Vendor = @("AMD","INTEL","NVIDIA"); ExcludeCompute = @("Volta")} #Blake3Lbrt/LBRT
     #[PSCustomObject]@{MainAlgorithm = "blocx_autolykos2" ; DAG = $true; Params = ""; Fee = 1.00;               Vendor = @("AMD","INTEL","NVIDIA"); ExcludePoolName="Nicehash"; ExcludeCompute = @("Volta")} #BlocxAutolykos2/BLOCKX
