@@ -383,17 +383,29 @@ function formatTSL(data) {
 async function renderMemoryNotice() {
     const el = document.getElementById("rbm-notice");
     if (!el) return;
+    const KEY = "rbm-notice-memory";
     try {
         const res = await rbmFetch("/memoryskipped");
         if (!res.ok) return;
         const list = await res.json();
         if (!Array.isArray(list) || !list.length) { el.classList.add("d-none"); return; }
         const total = list[0].TotalGB, minfree = list[0].MinFreeGB;
+        // Dismissal is remembered per situation, not forever: a newly skipped algorithm
+        // or a changed MinFreeMemoryGB re-opens the notice.
+        const sig = list.map(x => x.Algorithm).join(",") + "|" + total + "|" + minfree;
+        let seen = "";
+        try { seen = localStorage.getItem(KEY) || ""; } catch (e) { }
+        if (seen === sig) { el.classList.add("d-none"); return; }
         const names = list.map(x => esc(formatAlgorithm(x.Algorithm)) + " (" + x.NeedGB + " GB)").join(", ");
-        el.innerHTML = "<strong>Not enough RAM:</strong> " + names +
+        el.innerHTML = "<button type=\"button\" class=\"btn-close\" aria-label=\"Close\"></button>" +
+            "<strong>Not enough RAM:</strong> " + names +
             " cannot be mined on this machine (" + total + " GB total, keeping " + minfree +
             " GB free for the system). Lower or zero <code>MinFreeMemoryGB</code> in " +
             "<a href=\"/setup.html\">Setup</a> to mine them anyway.";
+        el.querySelector(".btn-close").addEventListener("click", function () {
+            el.classList.add("d-none");
+            try { localStorage.setItem(KEY, sig); } catch (e) { }
+        });
         el.classList.remove("d-none");
     } catch (e) { /* endpoint missing on an older rig: stay quiet */ }
 }
