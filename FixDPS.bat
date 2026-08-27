@@ -1,4 +1,4 @@
-﻿@echo off
+@echo off
 echo ... Set DPS service start type to manual ...
 echo.
 sc config DPS start= demand
