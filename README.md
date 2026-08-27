@@ -1048,6 +1048,8 @@ For Server (Runmode=server) setup:
 - **HashrateWeight** = adjust weight of pool hashrates on the profit comparison in % (0..100, 0=disable) [default=20]
 - **HashrateWeightStrength** = adjust the strength of the weight (integer, 0=no weight, 100=linear, 200=square) [default=50]
 - **PoolAccuracyWeight** = adjust weight of pool accuracy on the profit comparison in % (0..100, 0=disable) [default=15]
+- **EnablePoolAlternates** = set to 1 to let a miner, that cannot use the most profitable pool of an algorithm, fall back to the best pool it can actually use (some miners only support an algorithm on certain pools) [default=1]
+- **MaxPoolAlternates** = if EnablePoolAlternates: maximum number of alternate pools offered per algorithm (0=disable) [default=2]
 - **MinerFaultToleranceGPU** = set the GPU miner fault tolerance in % (10..100) [default=10]
 - **MinerFaultToleranceCPU** = set the CPU miner fault tolerance in % (10..100) [default=25]
 - **MaxAllowedLuck** = if luck (= time_since_last_block / time_to_find_one_block) is greater than that number, increase the penalty up to 100% (0=disable, inactive for solo pools) [default=3]
@@ -2135,6 +2137,12 @@ The profit switcher can be controlled like follows. To be able to compare the po
   - ![image](https://user-images.githubusercontent.com/39437538/94286009-be1b0900-ff54-11ea-9d3e-b3211b3c3ab1.png)
 
 - all prices will be decreased by an inverse logarithmic function, depending on how far a pool is out of sync (current-time minus last-price-or-hashrate-update time)
+
+- the pool with the highest *PfC* wins its algorithm and is the one handed to the miners
+
+- some miners support an algorithm only on certain pools (e.g. WildRig mines pearlhash on the Pearlhash pool only). If such a miner cannot use the winning pool, it used to be left out completely, which could leave an algorithm unmined. With **EnablePoolAlternates** set to "1", up to **MaxPoolAlternates** runner-up pools are offered to those miners, so they can fall back to the best pool they can actually use. The resulting miners compete on profit like any other.
+  - alternates are only taken from pools of the same rank as the winner, so an exclusive rental (MiningRigRentals), a focussed wallet, a locked miner or post block mining is never undercut by an alternate
+  - hashrates do not depend on the pool, so no additional benchmarks are needed
 
 
 ### How can I make sure, my hand tuned config files in the Bin folders, will not be deleted during miner updates?
