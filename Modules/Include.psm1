@@ -1268,8 +1268,12 @@ function Test-AlgorithmMemory {
     )
     $NeedGB = Get-AlgorithmMemory $Algorithm
     if ($NeedGB -le 0) {return $true}
-    $TotalGB = [double]$Session.SysInfo.Memory.TotalGB
-    if ($TotalGB -le 0) {return $true}
+    # SysInfo is filled by a background job and on Linux by an external script, so it may
+    # be missing, empty or not even numeric. Never let that throw, and never act on an
+    # implausible value: no machine that runs RainbowMiner has less than half a GB
+    $TotalGB = 0.0
+    try {$TotalGB = [double]$Session.SysInfo.Memory.TotalGB} catch {$TotalGB = 0.0}
+    if ($TotalGB -lt 0.5) {return $true}
     ($NeedGB + $MinFreeGB) -le $TotalGB
 }
 
