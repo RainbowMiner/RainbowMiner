@@ -3327,6 +3327,8 @@ class WildRig : Miner {
 }
 
 class TTminerWrapper : Miner {
+    [Double]$MaxPowerDraw = 0
+
     [Void]UpdateMinerData () {
         $MJob = if ($Global:IsLinux) {$this.WrapperJob} else {$this.Job.XJob}
         if ($MJob.HasMoreData) {
@@ -3351,13 +3353,28 @@ class TTminerWrapper : Miner {
                     }
 
                     if ($HashRate -gt 0) {
-                        if ($Line_Simple -match "\[A(\d+):R(\d+):S(\d+)") {
-                            $this.UpdateShares(0,[Double]$Matches[1],[Double]$Matches[2],[Double]$Matches[3])
-                        }
-
                         $PowerDraw = if ($Line_Simple -match "\]\s+((?:\d+[\.,])?\d+)\s+W\s") {[Double]($Matches[1] -replace ',','.')} else {$null}
+                        if ($PowerDraw -gt $this.MaxPowerDraw) {$this.MaxPowerDraw = $PowerDraw}
 
-                        $this.AddMinerData($Line_Simple,[PSCustomObject]@{$HashRate_Name = $HashRate},$null,$PowerDraw)
+                        # TT-Miner's workers can die silently (seen after a pool event):
+                        # the stats thread keeps printing the frozen averages with a
+                        # live asterisk while the GPUs sit at idle clocks. Only the
+                        # share age ("last: MM:SS") and the power draw stay honest,
+                        # so require both signals before flagging the miner crashed
+                        $LastShare_Sec = if ($Line_Simple -match "last:\s+(\d+):(\d+)\s*$") {[int]$Matches[1] * 60 + [int]$Matches[2]} else {-1}
+
+                        if ($LastShare_Sec -gt 300 -and $PowerDraw -gt 0 -and $PowerDraw -lt $this.MaxPowerDraw * 0.25) {
+                            if (-not $this.Restart) {
+                                Write-Log -Level Warn "$($this.Name): appears crashed (no share for $($LastShare_Sec)s, power $($PowerDraw)W vs. peak $($this.MaxPowerDraw)W) - restarting miner"
+                                $this.Restart = $true
+                            }
+                        } else {
+                            if ($Line_Simple -match "\[A(\d+):R(\d+):S(\d+)") {
+                                $this.UpdateShares(0,[Double]$Matches[1],[Double]$Matches[2],[Double]$Matches[3])
+                            }
+
+                            $this.AddMinerData($Line_Simple,[PSCustomObject]@{$HashRate_Name = $HashRate},$null,$PowerDraw)
+                        }
                     }
                 }
             }
