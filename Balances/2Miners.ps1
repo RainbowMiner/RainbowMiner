@@ -31,7 +31,7 @@ $Pools_Data = @(
     #[PSCustomObject]@{rpc = "flux";  symbol = "FLUX";     port = 9090; fee = 1.0; divisor = 1e8; altsymbol = "ZEL"} #FLUX mining ended 2025-10-25
     [PSCustomObject]@{rpc = "grin";  symbol = "GRIN-PRI"; port = 3030; fee = 1.0; divisor = 1e9; cycles = 42}
     [PSCustomObject]@{rpc = "kas";   symbol = "KAS";      port = 2020; fee = 1.0; divisor = 1e8}
-    [PSCustomObject]@{rpc = "kls";   symbol = "KLS";      port = 2020; fee = 1.0; divisor = 1e8}
+    #[PSCustomObject]@{rpc = "kls";   symbol = "KLS";      port = 2020; fee = 1.0; divisor = 1e8} #KLS mining ended, kls.2miners.com is gone 2026-08
     [PSCustomObject]@{rpc = "mwc";   symbol = "MWC-PRI";  port = 7575; fee = 1.0; divisor = 1e9; cycles = 42}
     [PSCustomObject]@{rpc = "neox";  symbol = "NEOX";     port = 4040; fee = 1.0; divisor = 1e8}
     [PSCustomObject]@{rpc = "nexa";  symbol = "NEXA";     port = 5050; fee = 1.0; divisor = 100}
@@ -45,7 +45,7 @@ $Pools_Data = @(
     [PSCustomObject]@{rpc = "etc";   symbol = "BTC"; port = 1010; fee = 1.0; divisor = 1e9; aesymbol = "ETC"}
     [PSCustomObject]@{rpc = "ethw";  symbol = "BTC"; port = 2020; fee = 1.0; divisor = 1e9; aesymbol = "ETHW"}
     [PSCustomObject]@{rpc = "kas";   symbol = "BTC"; port = 2020; fee = 1.0; divisor = 1e8; aesymbol = "KAS"}
-    [PSCustomObject]@{rpc = "kls";   symbol = "BTC"; port = 2020; fee = 1.0; divisor = 1e8; aesymbol = "KLS"}
+    #[PSCustomObject]@{rpc = "kls";   symbol = "BTC"; port = 2020; fee = 1.0; divisor = 1e8; aesymbol = "KLS"} #KLS mining ended, kls.2miners.com is gone 2026-08
     [PSCustomObject]@{rpc = "nexa";  symbol = "BTC"; port = 5050; fee = 1.0; divisor = 100; aesymbol = "NEXA"}
     [PSCustomObject]@{rpc = "rvn";   symbol = "BTC"; port = 6060; fee = 1.0; divisor = 1e8; aesymbol = "RVN"}
     [PSCustomObject]@{rpc = "xna";   symbol = "BTC"; port = 6060; fee = 1.0; divisor = 1e8; aesymbol = "XNA"}

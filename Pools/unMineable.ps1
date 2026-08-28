@@ -46,7 +46,7 @@ $Pools_Data = @(
     [PSCustomObject]@{algo = "ethash";     coin = "ETHW"; port = @(3333,4444); ethproxy = "ethstratumnh"; rpc = "ethash";     divisor = 1e6; mh = 1e6; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "fishhash";   coin = "IRON"; port = @(3333,4444); ethproxy = "stratum";      rpc = "fishhash";   divisor = 1;   mh = 1e12; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "ghostrider"; coin = "RTM"; port = @(3333,4444); ethproxy = $null;           rpc = "ghostrider"; divisor = 1;   mh = 1e9; region = @("us","ca","eu","asia")}
-    [PSCustomObject]@{algo = "kawpow";     coin = "RVN"; port = @(3333,4444); ethproxy = "stratum";       rpc = "kp";         divisor = 1e6; mh = 1e6; region = @("us","ca","eu","asia")}
+    #[PSCustomObject]@{algo = "kawpow";     coin = "RVN"; port = @(3333,4444); ethproxy = "stratum";       rpc = "kp";         divisor = 1e6; mh = 1e6; region = @("us","ca","eu","asia")} #kawpow is INACTIVE_ALGORITHM at the unMineable simulator api 2026-08
     [PSCustomObject]@{algo = "kheavyhash"; coin = "KAS"; port = @(3333,4444); ethproxy = $null;           rpc = "kheavyhash"; divisor = 1;   mh = 1e15; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "nexapow";    coin = "NEXA"; port = @(3333,4444); ethproxy = $null;          rpc = "nexapow";    divisor = 1;   mh = 1e12; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "octopus";    coin = "CFX"; port = @(3333,4444); ethproxy = $null;           rpc = "octopus";    divisor = 1;   mh = 1e12; region = @("us","ca","eu","asia")}

@@ -74,11 +74,11 @@
     {
         "symbol":  "DGB",
         "match":  "^D",
-        "rpc":  "https://digibyteblockexplorer.com/api/v2/address/{w}?details=basic",
-        "address":  "address",
-        "balance":  "balance",
-        "received":  "totalReceived",
-        "divisor":  100000000
+        "rpc":  "https://chainz.cryptoid.info/dgb/api.dws?q=getbalance\u0026a={w}",
+        "address":  "",
+        "balance":  "#",
+        "received":  "",
+        "divisor":  1
     },
     {
         "symbol":  "DOGE",
@@ -126,22 +126,13 @@
         "divisor":  100000000
     },
     {
-        "symbol":  "KLS",
-        "match":  "^karlsen:",
-        "rpc":  "https://api.karlsencoin.com/addresses/{w}/balance",
-        "address":  "address",
-        "balance":  "balance",
-        "received":  "",
-        "divisor":  100000000
-    },
-    {
         "symbol":  "KMD",
         "match":  "^R",
-        "rpc":  "https://komodoblockexplorer.com/api/v2/address/{w}?details=basic",
-        "address":  "address",
+        "rpc":  "https://kmdexplorer.io/insight-api-komodo/addr/{w}/?noTxList=1",
+        "address":  "addrStr",
         "balance":  "balance",
         "received":  "totalReceived",
-        "divisor":  100000000
+        "divisor":  1
     },
     {
         "symbol":  "LCC",
@@ -175,28 +166,19 @@
     {
         "symbol":  "RVN",
         "match":  "^R",
-        "rpc":  "https://rvn.cryptoscope.io/api/getbalance/?address={w}",
-        "address":  "address",
+        "rpc":  "https://explorer.rvn.zelcore.io/api/addr/{w}/?noTxList=1",
+        "address":  "addrStr",
         "balance":  "balance",
-        "received":  "",
+        "received":  "totalReceived",
         "divisor":  1
     },
     {
         "symbol":  "RXD",
         "match":  "^1",
-        "rpc":  "https://radiantexplorer.com/ext/getbalance/{w}",
+        "rpc":  "https://radiantexplorer.com/api/getbalance/{w}",
         "address":  "",
         "balance":  "#",
         "received":  "",
-        "divisor":  1
-    },
-    {
-        "symbol":  "SAFE",
-        "match":  "^R",
-        "rpc":  "https://explorer.safecoin.org/api/addr/{w}/?noTxList=1",
-        "address":  "addrStr",
-        "balance":  "balance",
-        "received":  "totalReceived",
         "divisor":  1
     },
     {
@@ -212,9 +194,9 @@
         "symbol":  "VRSC",
         "match":  "^R",
         "rpc":  "https://explorer.verus.io/ext/getaddress/{w}",
-        "address":  "address",
+        "address":  "addrStr",
         "balance":  "balance",
-        "received":  "received",
+        "received":  "totalReceived",
         "divisor":  1
     },
     {
@@ -260,24 +242,6 @@
         "address":  "",
         "balance":  "data.balance",
         "received":  "",
-        "divisor":  1
-    },
-    {
-        "symbol":  "YTN",
-        "match":  "^Y",
-        "rpc":  "http://ytn.ccore.online/ext/getaddress/{w}",
-        "address":  "address",
-        "balance":  "balance",
-        "received":  "received",
-        "divisor":  1
-    },
-    {
-        "symbol":  "ZEC",
-        "match":  "^t",
-        "rpc":  "https://api.zcha.in/v2/mainnet/accounts/{w}",
-        "address":  "address",
-        "balance":  "balance",
-        "received":  "totalRecv",
         "divisor":  1
     },
     {
