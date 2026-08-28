@@ -3326,6 +3326,48 @@ class WildRig : Miner {
     }
 }
 
+class TTminerWrapper : Miner {
+    [Void]UpdateMinerData () {
+        $MJob = if ($Global:IsLinux) {$this.WrapperJob} else {$this.Job.XJob}
+        if ($MJob.HasMoreData) {
+            $HashRate_Name = [String]$this.Algorithm[0]
+
+            $MJob | Receive-Job | ForEach-Object {
+                $Line = $_ -replace "`n|`r", ""
+                $Line_Simple = $Line -replace "\x1B\[[0-?]*[ -/]*[@-~]", ""
+
+                # TT-Miner prints a summary block every report interval. Only the
+                # whole-rig line counts and only while it is current: an asterisk
+                # marks live values ("All[EPIC]: *59.38 MH/s [A47:R0:S1 2.1%] 626 W"),
+                # a minus repeats stale values while the GPUs sit idle between jobs
+                if ($Line_Simple -match "All\[[^\]]*\]:\s+\*((?:\d+[\.,])?\d+)\s*([kMGTP]?)H/s") {
+                    $HashRate = [Double]($Matches[1] -replace ',','.')
+                    switch -casesensitive ($Matches[2]) {
+                        "k" {$HashRate *= 1E+3;Break}
+                        "M" {$HashRate *= 1E+6;Break}
+                        "G" {$HashRate *= 1E+9;Break}
+                        "T" {$HashRate *= 1E+12;Break}
+                        "P" {$HashRate *= 1E+15;Break}
+                    }
+
+                    if ($HashRate -gt 0) {
+                        if ($Line_Simple -match "\[A(\d+):R(\d+):S(\d+)") {
+                            $this.UpdateShares(0,[Double]$Matches[1],[Double]$Matches[2],[Double]$Matches[3])
+                        }
+
+                        $PowerDraw = if ($Line_Simple -match "\]\s+((?:\d+[\.,])?\d+)\s+W\s") {[Double]($Matches[1] -replace ',','.')} else {$null}
+
+                        $this.AddMinerData($Line_Simple,[PSCustomObject]@{$HashRate_Name = $HashRate},$null,$PowerDraw)
+                    }
+                }
+            }
+        }
+        $MJob = $null
+        $this.CleanupMinerData()
+    }
+}
+
+
 class Wrapper : Miner {
 }
 
