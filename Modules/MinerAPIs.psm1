@@ -3339,12 +3339,13 @@ class TTminerWrapper : Miner {
                 $Line_Simple = $Line -replace "\x1B\[[0-?]*[ -/]*[@-~]", ""
 
                 # TT-Miner prints a summary block every report interval. Only the
-                # whole-rig line counts and only while it is current: an asterisk
-                # marks live values ("All[EPIC]: *59.38 MH/s [A47:R0:S1 2.1%] 626 W"),
-                # a minus repeats stale values while the GPUs sit idle between jobs
-                if ($Line_Simple -match "All\[[^\]]*\]:\s+\*((?:\d+[\.,])?\d+)\s*([kMGTP]?)H/s") {
-                    $HashRate = [Double]($Matches[1] -replace ',','.')
-                    switch -casesensitive ($Matches[2]) {
+                # whole-rig line counts: an asterisk marks live values
+                # ("All[EPIC]: *59.38 MH/s [A47:R0:S1 2.1%] 626 W"), a minus
+                # repeats stale values while the GPUs sit idle between jobs
+                if ($Line_Simple -match "All\[[^\]]*\]:\s+([\*-])((?:\d+[\.,])?\d+)\s*([kMGTP]?)H/s") {
+                    $Line_Live = $Matches[1] -eq "*"
+                    $HashRate = [Double]($Matches[2] -replace ',','.')
+                    switch -casesensitive ($Matches[3]) {
                         "k" {$HashRate *= 1E+3;Break}
                         "M" {$HashRate *= 1E+6;Break}
                         "G" {$HashRate *= 1E+9;Break}
@@ -3357,8 +3358,9 @@ class TTminerWrapper : Miner {
                         if ($PowerDraw -gt $this.MaxPowerDraw) {$this.MaxPowerDraw = $PowerDraw}
 
                         # TT-Miner's workers can die silently (seen after a pool event):
-                        # the stats thread keeps printing the frozen averages with a
-                        # live asterisk while the GPUs sit at idle clocks. Only the
+                        # the stats thread keeps printing the frozen averages while the
+                        # GPUs sit at idle clocks - once with a live asterisk, once as
+                        # an endless stale-minus tail, so check both variants. Only the
                         # share age ("last: MM:SS") and the power draw stay honest,
                         # so require both signals before flagging the miner crashed
                         $LastShare_Sec = if ($Line_Simple -match "last:\s+(\d+):(\d+)\s*$") {[int]$Matches[1] * 60 + [int]$Matches[2]} else {-1}
@@ -3368,7 +3370,7 @@ class TTminerWrapper : Miner {
                                 Write-Log -Level Warn "$($this.Name): appears crashed (no share for $($LastShare_Sec)s, power $($PowerDraw)W vs. peak $($this.MaxPowerDraw)W) - restarting miner"
                                 $this.Restart = $true
                             }
-                        } else {
+                        } elseif ($Line_Live) {
                             if ($Line_Simple -match "\[A(\d+):R(\d+):S(\d+)") {
                                 $this.UpdateShares(0,[Double]$Matches[1],[Double]$Matches[2],[Double]$Matches[3])
                             }
