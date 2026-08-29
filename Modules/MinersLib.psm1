@@ -8,6 +8,9 @@
 $Script:MinerScriptBlockCache = @{}
 $Script:MinerScriptBlockCacheDisabled = $null
 
+# Per-device effective memory sizes for Test-VRAM (Device.Name -> @(memsize, offset))
+$Script:TestVRAMMem = @{}
+
 function Confirm-Cuda {
    [CmdletBinding()]
    param($ActualVersion,$RequiredVersion,$Warning = "")
@@ -24,18 +27,20 @@ function Confirm-Cuda {
 }
 
 function Test-VRAM {
-    [CmdletBinding()]
+    # Hot path: called per device per pool key from ~55 miner modules. Deliberately
+    # plain parameters (see Get-PoolAlgorithmKeys). The Win10/NVIDIA memory factor
+    # and the OpenCL memsize are static per device, so resolve them once per device
+    # and keep the comparison arithmetic byte for byte
     param(
-        [Parameter(Mandatory = $true)]
         $Device,
-        [Parameter(Mandatory = $false)]
         $MinMemGB = 0.0
     )
-    if ($IsWindows -and $Session.IsWin10 -and $Device.Vendor -eq "NVIDIA") {
-        $Device.OpenCL.GlobalMemsize*0.865 -ge ($MinMemGB * 1Gb)
-    } else {
-        $Device.OpenCL.GlobalMemsize -ge (($MinMemGB + 0.25) * 1Gb)
+    $Mem = $Script:TestVRAMMem[$Device.Name]
+    if ($null -eq $Mem) {
+        $Mem = if ($IsWindows -and $Session.IsWin10 -and $Device.Vendor -eq "NVIDIA") {@(($Device.OpenCL.GlobalMemsize*0.865), 0.0)} else {@($Device.OpenCL.GlobalMemsize, 0.25)}
+        $Script:TestVRAMMem[$Device.Name] = $Mem
     }
+    $Mem[0] -ge (($MinMemGB + $Mem[1]) * 1Gb)
 }
 
 #
