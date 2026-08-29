@@ -157,8 +157,6 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
 
             $MainAlgorithm_0  = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
 
-            $HasEthproxy = $MainAlgorithm_Norm_0 -match $Global:RegexAlgoHasEthproxy
-
             foreach($MainAlgorithm_Norm in @(Get-PoolAlgorithmKeys -Pools $Pools -Algorithm $MainAlgorithm_Norm_0 -Model $Miner_Model -ExcludePoolName "$($_.ExcludePoolName)" -PoolName "$($_.PoolName)")) {
                 if (-not $Pools.$MainAlgorithm_Norm.Host) {continue}
 

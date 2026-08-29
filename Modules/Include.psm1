@@ -1119,59 +1119,77 @@ function Get-CoinName {
 }
 
 function Get-Algorithm {
-    [CmdletBinding()]
+    # Hottest shared helper: called thousands of times per round from every miner
+    # module and many pools. Deliberately plain parameters - cmdlet binding costs
+    # more than the body (see Get-PoolAlgorithmKeys in MinersLib.psm1) - plus a
+    # per-runspace result memo for calls without a CoinSymbol. The memo is bound
+    # to the identity of the $Session.GlobalAlgorithms hashtable: any database
+    # reload (algorithms.json change, -Force, Reset-Session) creates a new object
+    # and thereby drops the memo. Implementation sticks to language intrinsics
+    # (hashtable indexer, -eq) - .NET method calls like ContainsKey/TryGetValue
+    # cost an order of magnitude more under pwsh. The memo hashtable uses an
+    # ORDINAL comparer on purpose: unknown algorithms fall through to ToTitleCase,
+    # whose result depends on the input casing. CoinSymbol calls are never
+    # memoized - their result depends on GlobalEthDAGSizes, which refreshes
+    # independently of the algorithm database.
     param(
-        [Parameter(
-            Position = 0,
-            ParameterSetName = '',   
-            ValueFromPipeline = $True,
-            Mandatory = $false)]
         [String]$Algorithm = "",
-        [Parameter(Mandatory = $false)]
         [String]$CoinSymbol = ""
     )
-    if ($Algorithm -eq '*') {$Algorithm}
-    elseif ($Algorithm -match "[,;]") {@($Algorithm -split "\s*[,;]+\s*") | Foreach-Object {Get-Algorithm $_}}
-    else {
-        if (-not $Session.GlobalAlgorithms) {Get-Algorithms -Silent}
-        $Algorithm = $Algorithm -replace "[^a-z0-9]+"
-        if ($Session.GlobalAlgorithms.ContainsKey($Algorithm)) {
-            $Algorithm = $Session.GlobalAlgorithms[$Algorithm]
-            if ($CoinSymbol -ne "" -and $Algorithm -in @("Ethash","KawPOW") -and ($DAGSize = Get-EthDAGSize -CoinSymbol $CoinSymbol -Minimum 1) -le 5) {
-                if ($DAGSize -le 2) {$Algorithm = "$($Algorithm)2g"}
-                elseif ($DAGSize -le 3) {$Algorithm = "$($Algorithm)3g"}
-                elseif ($DAGSize -le 4) {$Algorithm = "$($Algorithm)4g"}
-                elseif ($DAGSize -le 5) {$Algorithm = "$($Algorithm)5g"}
-            }
-        } else {
-            $Algorithm = (Get-Culture).TextInfo.ToTitleCase($Algorithm)
+    if ($Algorithm -eq '*') {return $Algorithm}
+
+    $DB = $Session.GlobalAlgorithms
+
+    if ($CoinSymbol -eq "") {
+        $Memo = $Script:GetAlgorithmMemo
+        if ($Memo -ne $null -and $Script:GetAlgorithmMemoDB -eq $DB) {
+            $Result = $Memo[$Algorithm]
+            if ($Result -ne $null) {return $Result}
         }
-        $Algorithm
     }
+
+    if ($Algorithm -match "[,;]") {return @($Algorithm -split "\s*[,;]+\s*" | Foreach-Object {Get-Algorithm $_})}
+
+    if (-not $DB) {Get-Algorithms -Silent;$DB = $Session.GlobalAlgorithms}
+    $Key = $Algorithm -replace "[^a-z0-9]+"
+    $Result = $DB[$Key]
+    if ($Result -ne $null) {
+        if ($CoinSymbol -ne "" -and ($Result -eq "Ethash" -or $Result -eq "KawPOW") -and ($DAGSize = Get-EthDAGSize -CoinSymbol $CoinSymbol -Minimum 1) -le 5) {
+            if ($DAGSize -le 2) {$Result = "$($Result)2g"}
+            elseif ($DAGSize -le 3) {$Result = "$($Result)3g"}
+            elseif ($DAGSize -le 4) {$Result = "$($Result)4g"}
+            elseif ($DAGSize -le 5) {$Result = "$($Result)5g"}
+        }
+    } else {
+        $Result = (Get-Culture).TextInfo.ToTitleCase($Key)
+    }
+    if ($CoinSymbol -eq "") {
+        if ($Script:GetAlgorithmMemoDB -ne $DB) {
+            $Script:GetAlgorithmMemo = [hashtable]::new([System.StringComparer]::Ordinal)
+            $Script:GetAlgorithmMemoDB = $DB
+        }
+        $Script:GetAlgorithmMemo[$Algorithm] = $Result
+    }
+    $Result
 }
 
 function Get-Coin {
-    [CmdletBinding()]
+    # Deliberately plain parameters (see Get-PoolAlgorithmKeys in MinersLib.psm1).
+    # Intentionally NOT memoized: the returned object is the shared GlobalCoinsDB
+    # entry and the Algo rewrite below must keep re-evaluating against the current
+    # DAG sizes on every call.
     param(
-        [Parameter(
-            Position = 0,
-            ParameterSetName = '',   
-            ValueFromPipeline = $True,
-            Mandatory = $false)]
         [String]$CoinSymbol = "",
-        [Parameter(Mandatory = $false)]
         [String]$Algorithm = ""
     )
-    if ($CoinSymbol -eq '*') {$CoinSymbol}
-    elseif ($CoinSymbol -match "[,;]") {@($CoinSymbol -split "\s*[,;]+\s*") | Foreach-Object {Get-Coin $_}}
-    else {
-        if (-not $Session.GlobalCoinsDB) {Get-CoinsDB -Silent}
-        $CoinSymbol = ($CoinSymbol -replace "[^A-Z0-9`$-]+").ToUpper()
-        $Coin = if ($Session.GlobalCoinsDB.ContainsKey($CoinSymbol)) {$Session.GlobalCoinsDB[$CoinSymbol]}
-                elseif ($Algorithm -ne "" -and $Session.GlobalCoinsDB.ContainsKey("$CoinSymbol-$Algorithm")) {$Session.GlobalCoinsDB["$CoinSymbol-$Algorithm"]}
-        if ($Coin.Algo -in @("Ethash","KawPOW")) {$Coin.Algo = Get-Algorithm $Coin.Algo -CoinSymbol $CoinSymbol}
-        $Coin
-    }
+    if ($CoinSymbol -eq '*') {return $CoinSymbol}
+    if ($CoinSymbol -match "[,;]") {return @($CoinSymbol -split "\s*[,;]+\s*" | Foreach-Object {Get-Coin $_})}
+    if (-not $Session.GlobalCoinsDB) {Get-CoinsDB -Silent}
+    $CoinSymbol = ($CoinSymbol -replace "[^A-Z0-9`$-]+").ToUpper()
+    $Coin = $Session.GlobalCoinsDB[$CoinSymbol]
+    if ($Coin -eq $null -and $Algorithm -ne "") {$Coin = $Session.GlobalCoinsDB["$CoinSymbol-$Algorithm"]}
+    if ($Coin -ne $null -and ($Coin.Algo -eq "Ethash" -or $Coin.Algo -eq "KawPOW")) {$Coin.Algo = Get-Algorithm $Coin.Algo -CoinSymbol $CoinSymbol}
+    $Coin
 }
 
 function Get-MappedAlgorithm {
@@ -1278,19 +1296,25 @@ function Test-AlgorithmMemory {
 }
 
 function Get-EthDAGSize {
-    [CmdletBinding()]
+    # Hot path: called per pool algorithm key inside every DAG miner module's
+    # loops and reentrantly from Get-Algorithm. Deliberately plain parameters
+    # (see Get-PoolAlgorithmKeys in MinersLib.psm1). The parameter ORDER is part
+    # of the contract - some callers pass the coin symbol positionally.
     param(
-        [Parameter(Mandatory = $false)]
         [String]$CoinSymbol = "",
-        [Parameter(Mandatory = $false)]
         [String]$Algorithm = "",
-        [Parameter(Mandatory = $false)]
         [Double]$Minimum = 1
     )
     if (-not $Session.GlobalEthDAGSizes) {Get-EthDAGSizes -Silent}
-    if     ($CoinSymbol -and $Session.GlobalEthDAGSizes.$CoinSymbol -ne $null)          {$Session.GlobalEthDAGSizes.$CoinSymbol} 
-    elseif ($Algorithm -and $Session.GlobalAlgorithms2EthDagSizes.$Algorithm -ne $null) {$Session.GlobalAlgorithms2EthDagSizes.$Algorithm}
-    else   {$Minimum}
+    if ($CoinSymbol) {
+        $Value = $Session.GlobalEthDAGSizes[$CoinSymbol]
+        if ($Value -ne $null) {return $Value}
+    }
+    if ($Algorithm) {
+        $Value = $Session.GlobalAlgorithms2EthDagSizes[$Algorithm]
+        if ($Value -ne $null) {return $Value}
+    }
+    $Minimum
 }
 
 function Get-EthDAGSizeMax {
@@ -1438,26 +1462,26 @@ function Get-EthDAGSizes {
     } else {
         $Request = Get-ContentByStreamReader ".\Data\ethdagsizes.json" | ConvertFrom-Json -ErrorAction Ignore
     }
-    $Session.GlobalEthDAGSizes = [PSCustomObject]@{}
-    $Session.GlobalAlgorithms2EthDagSizes = [PSCustomObject]@{}
+    $Session.GlobalEthDAGSizes = @{}
+    $Session.GlobalAlgorithms2EthDagSizes = @{}
 
-    $Request.PSObject.Properties | Foreach-Object {$Session.GlobalEthDAGSizes | Add-Member $_.Name ($_.Value/1Gb)}
+    $Request.PSObject.Properties | Foreach-Object {$Session.GlobalEthDAGSizes[$_.Name] = $_.Value/1Gb}
 
     $SingleAlgos = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
     $Session.GlobalCoinsDB.Values | Group-Object -Property Algo | Where-Object {$_.Count -eq 1 -or $_.Name -eq "FiroPow" -or $_.Name -eq "ProgPowEpic" -or $_.Name -eq "ProgPowZ"} | Foreach-Object {[void]$SingleAlgos.Add($_.Name)}
 
     foreach ( $Coin in $Session.GlobalCoinsDB.Keys ) {
         $Coin = $Coin -replace "-.+$"
-        if (-not $Session.GlobalEthDAGSizes.$Coin) { continue }
+        if (-not $Session.GlobalEthDAGSizes[$Coin]) { continue }
         $Algo = $Session.GlobalCoinsDB.$Coin.Algo
         if (-not $SingleAlgos.Contains($Algo)) { continue }
         if ($Algo -notmatch $Global:RegexAlgoHasDAGSize) { continue }
         if ($Session.GlobalCoinsDB.$Coin.Name -match "testnet") { continue }
-        
-        if (-not $Session.GlobalAlgorithms2EthDagSizes.PSObject.Properties[$Algo]) {
-            $Session.GlobalAlgorithms2EthDagSizes | Add-Member $Algo $Session.GlobalEthDAGSizes.$Coin -Force
-        } elseif ($Session.GlobalAlgorithms2EthDagSizes.$Algo -lt $Session.GlobalEthDAGSizes.$Coin) {
-            $Session.GlobalAlgorithms2EthDagSizes.$Algo = $Session.GlobalEthDAGSizes.$Coin
+
+        if (-not $Session.GlobalAlgorithms2EthDagSizes.ContainsKey($Algo)) {
+            $Session.GlobalAlgorithms2EthDagSizes[$Algo] = $Session.GlobalEthDAGSizes[$Coin]
+        } elseif ($Session.GlobalAlgorithms2EthDagSizes[$Algo] -lt $Session.GlobalEthDAGSizes[$Coin]) {
+            $Session.GlobalAlgorithms2EthDagSizes[$Algo] = $Session.GlobalEthDAGSizes[$Coin]
         }
     }
 

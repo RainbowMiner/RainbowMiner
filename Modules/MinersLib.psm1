@@ -181,7 +181,14 @@ function Get-MinersContent {
     if ($Global:GlobalCPUInfo.Vendor -eq "ARM" -or $Global:GlobalCPUInfo.Features.ARM) {
         for($i=0; $i -lt $possibleDevices.Count; $i++) { $possibleDevices[$i] = "ARM" + $possibleDevices[$i] }
     }
-    
+
+    # hoisted out of the per-object pipeline below: FullComboModels is stable during
+    # one call, but PSObject.Properties.Name would be reflection per emitted object
+    $FullComboLookup = @{}
+    if ($Global:DeviceCache.DevicesByTypes.FullComboModels) {
+        foreach ($p in $Global:DeviceCache.DevicesByTypes.FullComboModels.PSObject.Properties) {$FullComboLookup[$p.Name] = $p.Value}
+    }
+
     Get-ChildItem "Miners\$($MinerName).ps1" -File -ErrorAction Ignore | Where-Object {
         $scriptName = $_.BaseName
         $Parameters.InfoOnly -or (
@@ -206,7 +213,7 @@ function Get-MinersContent {
                 } -Force -PassThru
             } elseif ($_.PowerDraw -eq 0) {
                 $_.PowerDraw = $Global:StatsCache."$($_.Name)_$($_.BaseAlgorithm -replace '\-.*$')_HashRate".PowerDraw_Average
-                if (@($Global:DeviceCache.DevicesByTypes.FullComboModels.PSObject.Properties.Name) -contains $_.DeviceModel) {$_.DeviceModel = $Global:DeviceCache.DevicesByTypes.FullComboModels."$($_.DeviceModel)"}
+                if ($_.DeviceModel -and $FullComboLookup.ContainsKey($_.DeviceModel)) {$_.DeviceModel = $FullComboLookup[$_.DeviceModel]}
                 $_
             } else {
                 Write-Log -Level Warn "Miner module $($scriptName) returned invalid object. Please open an issue at https://github.com/rainbowminer/RainbowMiner/issues"

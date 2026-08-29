@@ -138,8 +138,6 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
             $MainAlgorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
             $SecondAlgorithm_Norm_0 = if ($SecondAlgorithm_0) {Get-Algorithm $SecondAlgorithm_0} else {$null}
 
-            $HasEthproxy = $MainAlgorithm_Norm_0 -match $Global:RegexAlgoHasEthproxy
-
             $DynexParams = if ($_.MainAlgorithm -eq "dynex") {
                 $DynexVal = "2.0"
                 "--dynex_pow_ratio $("$($DynexVal) "*($Miner_Device | Measure-Object).Count)$(if ($IsWindows) {"-i 59 "})--hung_gpu_ms 10000 "
