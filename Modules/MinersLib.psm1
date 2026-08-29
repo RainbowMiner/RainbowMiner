@@ -2,6 +2,12 @@
 # Miner module functions
 #
 
+# In-memory compiled ScriptBlock cache for the miner modules (BaseName -> entry).
+# Opt-out escape hatch: create an empty "nominerscache.txt" in the RainbowMiner
+# folder and restart to fall back to per-round file invocation.
+$Script:MinerScriptBlockCache = @{}
+$Script:MinerScriptBlockCacheDisabled = $null
+
 function Confirm-Cuda {
    [CmdletBinding()]
    param($ActualVersion,$RequiredVersion,$Warning = "")
@@ -120,6 +126,36 @@ function Get-PoolAlgorithmKeys {
     $Result.ToArray()
 }
 
+function Get-MinerScriptBlock {
+    # Returns a cached, compiled ScriptBlock for a miner file (or the file path as
+    # fallback when the file cannot be read - both are invocable via &). Reusing the
+    # same ScriptBlock instance each round removes the per-round parse cost and lets
+    # PowerShell promote hot miner code to compiled delegates.
+    param($File)
+
+    $Entry = $Script:MinerScriptBlockCache[$File.BaseName]
+    if ($Entry -ne $null -and $Entry.LastWriteTimeUtc -eq $File.LastWriteTimeUtc -and $Entry.Length -eq $File.Length) {
+        return $Entry.ScriptBlock
+    }
+
+    $Text = Get-ContentByStreamReader $File.FullName
+    if (-not $Text) {return $File.FullName}
+
+    # comment out (not remove) the "using module" line: its relative path cannot
+    # resolve without a file context, Include.psm1 is already loaded in the session,
+    # and keeping the line preserves the file's line numbers in error messages
+    $Text = $Text -replace '(?m)^(\s*using\s+module\s.*)$','#$1'
+
+    $ScriptBlock = [ScriptBlock]::Create($Text)
+
+    $Script:MinerScriptBlockCache[$File.BaseName] = @{
+        ScriptBlock      = $ScriptBlock
+        LastWriteTimeUtc = $File.LastWriteTimeUtc
+        Length           = $File.Length
+    }
+    $ScriptBlock
+}
+
 #
 # Get-MinersContent
 #
@@ -130,14 +166,20 @@ function Get-MinersContent {
         [Parameter(Mandatory = $false)]
         [Hashtable]$Parameters = @{},
         [Parameter(Mandatory = $false)]
-        [String]$MinerName = "*"
+        [String]$MinerName = "*",
+        [Parameter(Mandatory = $false)]
+        [Hashtable]$Timer = $null
     )
 
     if ($Parameters.InfoOnly -eq $null) {$Parameters.InfoOnly = $false}
 
+    if ($Script:MinerScriptBlockCacheDisabled -eq $null) {$Script:MinerScriptBlockCacheDisabled = Test-Path ".\nominerscache.txt"}
+
+    $StopWatch = [System.Diagnostics.StopWatch]::New()
+
     $possibleDevices = @($Global:DeviceCache.DevicesToVendors.Values | Select-Object -Unique)
     if ($Global:GlobalCPUInfo.Vendor -eq "ARM" -or $Global:GlobalCPUInfo.Features.ARM) {
-        for($i=0; $i -lt $possibleDevice.Count; $i++) { $possibleDevice[$i] = "ARM" + $possibleDevice[$i] }
+        for($i=0; $i -lt $possibleDevices.Count; $i++) { $possibleDevices[$i] = "ARM" + $possibleDevices[$i] }
     }
     
     Get-ChildItem "Miners\$($MinerName).ps1" -File -ErrorAction Ignore | Where-Object {
@@ -148,12 +190,15 @@ function Get-MinersContent {
             ($Session.Config.ExcludeMinerName.Count -eq 0 -or -not (Test-Intersect $Session.Config.ExcludeMinerName $_.BaseName))
         )
     } | Foreach-Object { 
-        $scriptPath = $_.FullName
         $scriptName = $_.BaseName
         
         $Parameters["Name"] = $scriptName
 
-        & $scriptPath @Parameters | Foreach-Object {
+        $scriptCmd = if ($Script:MinerScriptBlockCacheDisabled -or $Parameters.InfoOnly) {$_.FullName} else {Get-MinerScriptBlock $_}
+
+        $StopWatch.Restart()
+
+        & $scriptCmd @Parameters | Foreach-Object {
             if ($Parameters.InfoOnly) {
                 $_ | Add-Member -NotePropertyMembers @{
                     Name     = if ($_.Name) {$_.Name} else {$scriptName}
@@ -167,6 +212,8 @@ function Get-MinersContent {
                 Write-Log -Level Warn "Miner module $($scriptName) returned invalid object. Please open an issue at https://github.com/rainbowminer/RainbowMiner/issues"
             }
         }
+
+        if ($Timer -ne $null) {$Timer[$scriptName] = [Math]::Round($StopWatch.Elapsed.TotalSeconds, 3)}
     }
 }
 
@@ -183,7 +230,7 @@ function Get-MinersContentMOD {
 
     $possibleDevices = @($Global:DeviceCache.DevicesToVendors.Values | Sort-Object -Unique)
     if ($Global:GlobalCPUInfo.Vendor -eq "ARM" -or $Global:GlobalCPUInfo.Features.ARM) {
-        for($i=0; $i -lt $possibleDevice.Count; $i++) { $possibleDevice[$i] = "ARM" + $possibleDevice[$i] }
+        for($i=0; $i -lt $possibleDevices.Count; $i++) { $possibleDevices[$i] = "ARM" + $possibleDevices[$i] }
     }
     
     if (-not (Test-Path ".\Modules\Miners")) { New-Item ".\Modules\Miners" -ItemType "directory" > $null }
