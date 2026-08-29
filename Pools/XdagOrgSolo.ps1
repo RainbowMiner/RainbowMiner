@@ -87,7 +87,7 @@ if ($Pool_User -or $InfoOnly) {
             Port          = $Pool_Port
             User          = $Pool_User
             Pass          = "{workername:$Worker}$Pool_Params"
-            Region        = $Pool_Regions.$Pool_Region
+            Region        = $Pool_RegionsTable.$Pool_Region
             SSL           = $false
             Updated       = $Stat.Updated
             PoolFee       = $Pool_Fee

@@ -93,7 +93,7 @@ if ($Pool_Wallet -or $InfoOnly) {
                 Port          = $Pool_Port
                 User          = $Pool_Wallet
                 Pass          = $Pool_Pass
-                Region        = $Pool_Regions.$Pool_Region
+                Region        = $Pool_RegionsTable.$Pool_Region
                 SSL           = $Pool_SSL
                 Updated       = $Stat.Updated
                 PoolFee       = $Pool_Fee
