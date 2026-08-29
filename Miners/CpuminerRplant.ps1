@@ -123,71 +123,19 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "x11"; Params = ""; NeverProfitable = $true} #Dash
 )
 
-# $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
-
-if ($InfoOnly) {
-    [PSCustomObject]@{
-        Type      = @("CPU")
-        Name      = $Name
-        Path      = $Path
-        Port      = $Miner_Port
-        Uri       = $Uri
-        DevFee    = $DevFee
-        ManualUri = $ManualUri
-        Commands  = $Commands
-    }
-    return
-}
-
-$Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Object {
-    $First = $true
-    $Miner_Model = $_.Model
-    $Miner_Device = $Global:DeviceCache.DevicesByTypes.CPU | Where-Object {$_.Model -eq $Miner_Model}
-
-    $Commands | Where-Object {(-not $_.LinuxOnly -or $IsLinux) -and (-not $_.NeverProfitable -or $Session.Config.EnableNeverprofitableAlgos)} | ForEach-Object {
-
-        $Algorithm_Norm_0 = Get-Algorithm "$(if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm})"
-
-        $CPUThreads = if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads)  {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads}  elseif ($Session.Config.Miners."$Name-CPU".Threads)  {$Session.Config.Miners."$Name-CPU".Threads}  elseif ($Session.Config.CPUMiningThreads)  {$Session.Config.CPUMiningThreads}
-        $CPUAffinity= if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity) {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity} elseif ($Session.Config.Miners."$Name-CPU".Affinity) {$Session.Config.Miners."$Name-CPU".Affinity} elseif ($Session.Config.CPUMiningAffinity) {$Session.Config.CPUMiningAffinity}
-
-        $DeviceParams = "$(if ($CPUThreads){" -t $CPUThreads"})$(if ($CPUAffinity){" --cpu-affinity $CPUAffinity --no-smart"})"
-
-		$All_Algorithms = @(Get-PoolAlgorithmKeys -Pools $Pools -Algorithm $Algorithm_Norm_0 -Model $Miner_Model -NoGPU -ExcludePoolName "$($_.ExcludePoolName)")
-
-		foreach($Algorithm_Norm in $All_Algorithms) {
-			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName)) {
-                if ($First) {
-                    $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
-                    $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-                    $First = $false
-                }
-                $Miner_Coin = $Pools.$Algorithm_Norm.CoinSymbol
-				[PSCustomObject]@{
-					Name           = $Miner_Name
-					DeviceName     = $Miner_Device.Name
-					DeviceModel    = $Miner_Model
-					Path           = $Path
-					Arguments      = "-b `$mport -a $(if ($Miner_Coin -and $_.$Miner_Coin) {$_.$Miner_Coin} else {$_.MainAlgorithm}) -o stratum+tcp$(if ($Pools.$Algorithm_Norm.SSL) {"s"})://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$($DeviceParams) --no-doh $($_.Params)"
-					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
-					API            = "Ccminer"
-					Port           = $Miner_Port
-					Uri            = $Uri
-                    FaultTolerance = $_.FaultTolerance
-					ExtendInterval = if ($_.ExtendInterval -ne $null) {$_.ExtendInterval} else {2}
-                    Penalty        = 0
-                    MaxRejectedShareRatio = $_.MaxRejectedShareRatio
-					DevFee         = $DevFee
-					ManualUri      = $ManualUri
-                    Version        = $Version
-                    PowerDraw      = 0
-                    BaseName       = $Name
-                    BaseAlgorithm  = $Algorithm_Norm_0
-                    Benchmarked    = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Benchmarked
-                    LogFile        = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".LogFile
-                    ExcludePoolName = $_.ExcludePoolName
-				}
-			}
-		}
-    }
+Invoke-MinerFamily -Name $Name -Pools $Pools -InfoOnly $InfoOnly -Setup @{
+    Vendor = "CPU"
+    SuffixMode = "KeysNoGPU"
+    UseAlgoOverride = $true
+    CmdFilter = $true
+    CpuParams = $true
+    ExtendDefault = 2
+    UseExcludePool = $true
+    EmitsMaxRej = $true
+    Path = $Path; ManualUri = $ManualUri; Port = $Port; DevFee = $DevFee; Version = $Version
+    Uri = $Uri
+    Commands = $Commands
+    MakeArgs = { "-b `$mport -a $(if ($Miner_Coin -and $_.$Miner_Coin) {$_.$Miner_Coin} else {$_.MainAlgorithm}) -o stratum+tcp$(if ($Pools.$Algorithm_Norm.SSL) {"s"})://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$($DeviceParams) --no-doh $($_.Params)" }
+    PerKey = { $Miner_Coin = $Pools.$Algorithm_Norm.CoinSymbol }
+    PreKey = { $DeviceParams = "$(if ($CPUThreads){" -t $CPUThreads"})$(if ($CPUAffinity){" --cpu-affinity $CPUAffinity --no-smart"})" }
 }

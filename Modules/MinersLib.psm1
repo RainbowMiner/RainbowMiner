@@ -131,6 +131,161 @@ function Get-PoolAlgorithmKeys {
     $Result.ToArray()
 }
 
+# Re-bound ScriptBlock slots for Invoke-MinerFamily ("<stub>|<slot>" -> @{Source; ScriptBlock})
+$Script:MinerFamilySBCache = @{}
+
+function Get-MinerFamilySB {
+    # A {..} literal written in a miner stub is bound to that file's session state;
+    # dot-sourced as-is it would not see the driver's loop variables. Recreating the
+    # block from its source text detaches the binding; cached per stub and slot.
+    param($Name, $Slot, $Block)
+    $CacheKey = "$Name|$Slot"
+    $Source = $Block.ToString()
+    $Entry = $Script:MinerFamilySBCache[$CacheKey]
+    if ($Entry -eq $null -or $Entry.Source -cne $Source) {
+        $Entry = @{Source = $Source; ScriptBlock = [ScriptBlock]::Create($Source)}
+        $Script:MinerFamilySBCache[$CacheKey] = $Entry
+    }
+    $Entry.ScriptBlock
+}
+
+function Invoke-MinerFamily {
+    # Shared device/Commands/emission body for the Ccminer/Cpuminer module family.
+    # The stubs keep their platform guards, header variables and $Commands table and
+    # pass everything through -Setup (a module function cannot see the caller's
+    # variables), so this body is compiled and promoted once for the whole family.
+    # Every Setup flag reproduces the exact emission of one original per-file body;
+    # values a body never referenced stay un-emitted (dead Commands data stays dead).
+    param(
+        [String]$Name,
+        [PSCustomObject]$Pools,
+        [Bool]$InfoOnly,
+        [Hashtable]$Setup
+    )
+
+    # direct assignments instead of a Set-Variable loop: the cmdlet costs ~10us per
+    # key and this function runs once per module per round
+    $Vendor = $Setup["Vendor"]; $SuffixMode = $Setup["SuffixMode"]; $InfoTypes = $Setup["InfoTypes"]
+    $Path = $Setup["Path"]; $Uri = $Setup["Uri"]; $UriCuda = $Setup["UriCuda"]; $ManualUri = $Setup["ManualUri"]
+    $Port = $Setup["Port"]; $DevFee = $Setup["DevFee"]; $Version = $Setup["Version"]; $Commands = $Setup["Commands"]
+    $CheckSSL = $Setup["CheckSSL"]; $MaxDevCount = $Setup["MaxDevCount"]; $PerEntryVRAM = $Setup["PerEntryVRAM"]
+    $ArchIn = $Setup["ArchIn"]; $ArchNotIn = $Setup["ArchNotIn"]; $UseAlgoOverride = $Setup["UseAlgoOverride"]
+    $CmdFilter = $Setup["CmdFilter"]; $CpuParams = $Setup["CpuParams"]; $ExtendDefault = $Setup["ExtendDefault"]
+    $DevFeeZero = $Setup["DevFeeZero"]; $HashRateMode = $Setup["HashRateMode"]; $MaxRejDefault = $Setup["MaxRejDefault"]
+    $MiningPriority = $Setup["MiningPriority"]; $UseExcludePool = $Setup["UseExcludePool"]
+    $UseCoinSymbols = $Setup["UseCoinSymbols"]; $EmitsNoCPU = $Setup["EmitsNoCPU"]; $EmitsMaxRej = $Setup["EmitsMaxRej"]
+    $API = $Setup["API"]; $MakeArgs = $Setup["MakeArgs"]; $PerModel = $Setup["PerModel"]
+    $PreKey = $Setup["PreKey"]; $PerKey = $Setup["PerKey"]
+    # rare stub-scope variables referenced by MakeArgs/hooks (e.g. UseCPUAffinity)
+    if ($Setup["Vars"]) { foreach ($VarKey in $Setup["Vars"].Keys) { Set-Variable -Name $VarKey -Value $Setup["Vars"][$VarKey] } }
+
+    if ($InfoOnly) {
+        [PSCustomObject]@{
+            Type      = if ($InfoTypes) {$InfoTypes} else {@($Vendor)}
+            Name      = $Name
+            Path      = $Path
+            Port      = $null
+            Uri       = if ($UriCuda) {$UriCuda.Uri} else {$Uri}
+            DevFee    = $DevFee
+            ManualUri = $ManualUri
+            Commands  = $Commands
+        }
+        return
+    }
+
+    if (-not $API) { $API = "Ccminer" }
+    $IsGPU = $Vendor -ne "CPU"
+    $ArgsSB = Get-MinerFamilySB $Name "MakeArgs" $MakeArgs
+    $PerModelSB = if ($PerModel) { Get-MinerFamilySB $Name "PerModel" $PerModel } else { $null }
+    $PreKeySB   = if ($PreKey)   { Get-MinerFamilySB $Name "PreKey"   $PreKey }   else { $null }
+    $PerKeySB   = if ($PerKey)   { Get-MinerFamilySB $Name "PerKey"   $PerKey }   else { $null }
+
+    $Global:DeviceCache.DevicesByTypes."$Vendor" | Select-Object Vendor, Model -Unique | ForEach-Object {
+        $First = $true
+        $Miner_Model = $_.Model
+        # NOT "$($_.Vendor)": CPU devices carry the silicon vendor (INTEL/AMD) there,
+        # only GPU devices match their DevicesByTypes key; $Vendor is the type key
+        $Miner_Device_All = $Global:DeviceCache.DevicesByTypes."$Vendor" | Where-Object {$_.Model -eq $Miner_Model}
+        $Miner_Device = if ($PerEntryVRAM) { $null } elseif ($ArchIn) { $Miner_Device_All | Where-Object {$_.OpenCL.Architecture -in $ArchIn} } elseif ($ArchNotIn) { $Miner_Device_All | Where-Object {$_.OpenCL.Architecture -notin $ArchNotIn} } else { $Miner_Device_All }
+
+        if ($PerModelSB) { . $PerModelSB }
+
+        $(if ($CmdFilter) { $Commands | Where-Object {(-not $_.LinuxOnly -or $IsLinux) -and (-not $_.NeverProfitable -or $Session.Config.EnableNeverprofitableAlgos)} } else { $Commands }) | ForEach-Object {
+
+            $Algorithm_Norm_0 = if ($UseAlgoOverride) { Get-Algorithm "$(if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm})" } else { Get-Algorithm $_.MainAlgorithm }
+
+            if ($PerEntryVRAM) {
+                $MinMemGB = $_.MinMemGB
+                $Miner_Device = if ($ArchIn) { $Miner_Device_All | Where-Object {(Test-VRAM $_ $MinMemGB) -and $_.OpenCL.Architecture -in $ArchIn} } else { $Miner_Device_All | Where-Object {(Test-VRAM $_ $MinMemGB) -and $_.OpenCL.Architecture -notin $ArchNotIn} }
+            }
+
+            if ($CpuParams) {
+                $CPUThreads = if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads)  {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads}  elseif ($Session.Config.Miners."$Name-CPU".Threads)  {$Session.Config.Miners."$Name-CPU".Threads}  elseif ($Session.Config.CPUMiningThreads)  {$Session.Config.CPUMiningThreads}
+                $CPUAffinity= if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity) {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity} elseif ($Session.Config.Miners."$Name-CPU".Affinity) {$Session.Config.Miners."$Name-CPU".Affinity} elseif ($Session.Config.CPUMiningAffinity) {$Session.Config.CPUMiningAffinity}
+                $DeviceParams = "$(if ($CPUThreads){" -t $CPUThreads"})$(if ($CPUAffinity){" --cpu-affinity $CPUAffinity"})"
+            }
+
+            if ($PreKeySB) { . $PreKeySB }
+
+            $AlgoKeys = if ($SuffixMode -eq "ListGPU") { @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU") }
+                        elseif ($SuffixMode -eq "ListCPU") { @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)") }
+                        elseif ($SuffixMode -eq "KeysNoGPU") { @(Get-PoolAlgorithmKeys -Pools $Pools -Algorithm $Algorithm_Norm_0 -Model $Miner_Model -NoGPU -ExcludePoolName "$($_.ExcludePoolName)") }
+                        elseif ($SuffixMode -eq "KeysCoin") { @(Get-PoolAlgorithmKeys -Pools $Pools -Algorithm $Algorithm_Norm_0 -Model $Miner_Model -ExcludePoolName "$($_.ExcludePoolName)" -CoinSymbols @($_.CoinSymbols)) }
+                        else { @(Get-PoolAlgorithmKeys -Pools $Pools -Algorithm $Algorithm_Norm_0 -Model $Miner_Model -ExcludePoolName "$($_.ExcludePoolName)") }
+
+            foreach ($Algorithm_Norm in $AlgoKeys) {
+                if ($PerKeySB) { . $PerKeySB }
+                if ((-not $CheckSSL -or -not $Pools.$Algorithm_Norm.SSL) -and $Pools.$Algorithm_Norm.Host -and $Miner_Device -and
+                    (-not $MaxDevCount -or ($Miner_Device | Measure-Object).Count -le $MaxDevCount) -and
+                    (-not $UseExcludePool -or -not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName) -and
+                    (-not $UseCoinSymbols -or -not $_.CoinSymbols -or $Pools.$Algorithm_Norm.CoinSymbol -in $_.CoinSymbols)) {
+
+                    if ($First) {
+                        $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
+                        $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+                        if ($IsGPU) { $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ',' }
+                        $First = $false
+                    }
+                    if ($IsGPU) {
+                        $Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
+                    }
+
+                    [PSCustomObject]@{
+                        Name           = $Miner_Name
+                        DeviceName     = $Miner_Device.Name
+                        DeviceModel    = $Miner_Model
+                        Path           = if ($_.Path) {$_.Path} else {$Path}
+                        Arguments      = (. $ArgsSB)
+                        HashRates      = if ($HashRateMode -eq "DayPenalty") { [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Day * $(if ($_.Penalty -ne $null) {$_.Penalty} else {1})} }
+                                         else { [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate"."$(if ($_.HashrateDuration){$_.HashrateDuration}else{"Week"})"} }
+                        API            = $API
+                        Port           = $Miner_Port
+                        Uri            = $Uri
+                        FaultTolerance = $_.FaultTolerance
+                        ExtendInterval = if ($_.ExtendInterval -ne $null) {$_.ExtendInterval} else {$ExtendDefault}
+                        Penalty        = 0
+                        DevFee         = if ($DevFeeZero) {0.0} else {$DevFee}
+                        ManualUri      = $ManualUri
+                        Version        = $Version
+                        PowerDraw      = 0
+                        BaseName       = $Name
+                        BaseAlgorithm  = $Algorithm_Norm_0
+                        Benchmarked    = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Benchmarked
+                        LogFile        = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".LogFile
+                        MiningPriority = $MiningPriority
+                        ExcludePoolName = if ($UseExcludePool) {$_.ExcludePoolName} else {$null}
+                        NoCPUMining    = if ($EmitsNoCPU) {$_.NoCPUMining} else {$null}
+                        MaxRejectedShareRatio = if ($EmitsMaxRej) { if ($_.MaxRejectedShareRatio) {$_.MaxRejectedShareRatio} else {$MaxRejDefault} } else {$null}
+                        PrerequisitePath = $PrereqPath
+                        PrerequisiteURI  = $PrereqURI
+                        PrerequisiteMsg  = $PrereqMsg
+                    }
+                }
+            }
+        }
+    }
+}
+
 function Get-MinerScriptBlock {
     # Returns a cached, compiled ScriptBlock for a miner file (or the file path as
     # fallback when the file cannot be read - both are invocable via &). Reusing the
