@@ -753,6 +753,15 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 Get-ChildItem $NewFile | Foreach-Object {$_.LastWriteTime = $_.CreationTime = $_.LastAccessTime = $LastWriteTime}
             }
 
+            # last round's per-module timing snapshots (timerselect/timerpools/timerminers.json)
+            @(Get-ChildItem ".\Logs\timer*.json" -ErrorAction Ignore | Select-Object) | Foreach-Object {
+                $LastWriteTime = $_.LastWriteTime
+                $NewFile = "$DebugPath\$($_.Name)"
+                $PurgeString = & $MaskDebugText (Get-ContentByStreamReader $_)
+                Out-File -InputObject $PurgeString -FilePath $NewFile
+                Get-ChildItem $NewFile | Foreach-Object {$_.LastWriteTime = $_.CreationTime = $_.LastAccessTime = $LastWriteTime}
+            }
+
             if ($Session.Config) {
                 $NewFile = "$DebugPath\config.json"
                 Out-File -InputObject (& $MaskDebugText ($RunningConfig | ConvertTo-Json -Depth 10)) -FilePath $NewFile
