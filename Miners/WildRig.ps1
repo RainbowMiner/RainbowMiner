@@ -193,8 +193,6 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
                         BaseAlgorithm  = $Algorithm_Norm_0
                         Benchmarked    = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Benchmarked
                         LogFile        = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".LogFile
-                        ListDevices    = "--print-devices"
-                        ListPlatforms  = "--print-platforms"
                         ExcludePoolName = $_.ExcludePoolName
 				    }
 			    }
