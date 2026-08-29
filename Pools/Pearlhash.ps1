@@ -59,8 +59,11 @@ if (-not $InfoOnly) {
     $timestamp       = Get-UnixTimestamp
     $timestamp24h    = $timestamp - 86400
 
-    $blocks_reward   = ($PoolBlocks_Request.transactions | Where-Object {-not $_.vin[0].isAddress -and $_.vin[0].coinbase} | Select-Object -First 1).value / 1e8
-    $blocks          = $PoolBlocks_Request.transactions | Where-Object {-not $_.vin[0].isAddress -and $_.vin[0].coinbase} | Select-Object -ExpandProperty blockTime | Sort-Object -Descending
+    # the pool wallet api dropped the blockbook tx shape (vin/value/blockTime):
+    # coinbase rows now come typed, with grains and a millisecond timestamp
+    $blocks_txs      = $PoolBlocks_Request.transactions | Where-Object {$_.type -eq "coinbase"}
+    $blocks_reward   = ($blocks_txs | Select-Object -First 1).receivedGrains / 1e8
+    $blocks          = $blocks_txs | Foreach-Object {[int64]($_.timeMs / 1000)} | Sort-Object -Descending
     $blocks_measure  = $blocks | Where-Object {$_ -gt $timestamp24h} | Measure-Object -Minimum -Maximum
     $Pool_BLK        = [int]$($(if ($blocks_measure.Count -gt 1 -and ($blocks_measure.Maximum - $blocks_measure.Minimum)) {86400/($blocks_measure.Maximum - $blocks_measure.Minimum)} else {1})*$blocks_measure.Count)
     $Pool_TSL        = [int]($timestamp - ($blocks | Select-Object -First 1))
