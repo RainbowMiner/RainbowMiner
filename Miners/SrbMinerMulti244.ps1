@@ -85,7 +85,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 
     $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
         $Miner_Model = $_.Model
-        $Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Model -eq $Miner_Model -and (($Miner_Vendor -in @("CPU","INTEL")) -or ($Miner_Vendor -eq "AMD" -and $_.OpenCL.DeviceCapability -in $ValidCompute_AMD) -or ($Miner_Vendor -eq "NVIDIA" -and $_.OpenCL.Architecture -in $ValidCompute_NVIDIA))}
+        $Device = @($Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Model -eq $Miner_Model -and (($Miner_Vendor -in @("CPU","INTEL")) -or ($Miner_Vendor -eq "AMD" -and $_.OpenCL.DeviceCapability -in $ValidCompute_AMD) -or ($Miner_Vendor -eq "NVIDIA" -and $_.OpenCL.Architecture -in $ValidCompute_NVIDIA))})
 
         $Pool_Port_Index = if ($Miner_Vendor -eq "CPU") {"CPU"} else {"GPU"}
 

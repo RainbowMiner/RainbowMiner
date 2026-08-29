@@ -86,7 +86,7 @@ foreach ($Miner_Vendor in @("AMD")) {
 
     $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Select-Object Vendor, Model -Unique | ForEach-Object {
         $Miner_Model = $_.Model
-        $Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Model -eq $Miner_Model -and ($Miner_Vendor -eq "CPU" -or $_.OpenCL.DeviceCapability -in $ValidCompute)}
+        $Device = @($Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Model -eq $Miner_Model -and ($Miner_Vendor -eq "CPU" -or $_.OpenCL.DeviceCapability -in $ValidCompute)})
 
         $Commands | Where-Object {$_.Vendor -icontains $Miner_Vendor -and $Device.Count} | ForEach-Object {
             $First = $true
