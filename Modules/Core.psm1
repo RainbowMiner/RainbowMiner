@@ -1875,9 +1875,11 @@ function Invoke-Core {
             $PoolSetup = $null
             $AutoexPools = $null
         } else {
-            $ApiInfo = ConvertFrom-Json $API.Info -ErrorAction Ignore
-            $ApiInfo.AvailPools = @($Session.AvailPools + @($Session.Config.UserPools.Name) | Sort-Object -Unique)
-            $API.Info = ConvertTo-Json $ApiInfo -Depth 10
+            $ApiInfo = if ("$($API.Info)" -ne "") {ConvertFrom-Json $API.Info -ErrorAction Ignore}
+            if ($ApiInfo -ne $null) {
+                $ApiInfo.AvailPools = @($Session.AvailPools + @($Session.Config.UserPools.Name) | Sort-Object -Unique)
+                $API.Info = ConvertTo-Json $ApiInfo -Depth 10
+            }
             $ApiInfo = $null
         }
     }
@@ -2424,7 +2426,9 @@ function Invoke-Core {
         Get-CoinSymbol -Clear
     }
 
-    $TimerPools | ConvertTo-Json | Set-Content ".\Logs\timerpools.json" -Force
+    if ($Session.Config.EnableDebugMode -or $Session.Config.EnableDebugTimers) {
+        $TimerPools | ConvertTo-Json | Set-Content ".\Logs\timerpools.json" -Force
+    }
 
     $StopWatch = $TimerPools = $null
     Remove-Variable -Name StopWatch, TimerPools -ErrorAction Ignore
@@ -2875,9 +2879,16 @@ function Invoke-Core {
     }
 
     $AllMiners = [System.Collections.Generic.List[PSCustomObject]]::new()
-    if ($NewPools.Count -and (Test-Path "Miners")) {
 
-        Get-MinersContent -Parameters @{Pools = $Pools; InfoOnly = $false} | Foreach-Object {
+    $DevicesNames_Set = [System.Collections.Generic.HashSet[string]]::new([String[]]@($Global:DeviceCache.DevicesNames), [System.StringComparer]::OrdinalIgnoreCase)
+
+    $StopWatchSelect = [System.Diagnostics.StopWatch]::New()
+    $TimerSelect     = @{}
+    $TimerMiners     = if ($Session.Config.EnableDebugMode -or $Session.Config.EnableDebugTimers) {@{}}
+    $StopWatchSelect.Restart()
+
+    if ($NewPools.Count -and (Test-Path "Miners")) {
+        Get-MinersContent -Parameters @{Pools = $Pools; InfoOnly = $false} -Timer $TimerMiners | Foreach-Object {
             $Miner = $_
 
             $Miner_Name = $Miner.BaseName
@@ -2905,7 +2916,19 @@ function Invoke-Core {
                 }
             }
             if ($Session.Config.DisableDualMining -and $Miner.HashRates.PSObject.Properties.Name.Count -gt 1) { return }
-            if (Compare-Object $Global:DeviceCache.DevicesNames $Miner.DeviceName | Where-Object SideIndicator -EQ "=>") { return }
+            # Compare-Object was a multiset diff against the deduplicated DevicesNames list: a
+            # device name that is unknown, or listed twice by the miner, made it non-empty
+            $Miner_DeviceUnknown = $false
+            $Miner_DeviceNameArr = @($Miner.DeviceName)
+            for ($Miner_DeviceIx = 0; $Miner_DeviceIx -lt $Miner_DeviceNameArr.Count; $Miner_DeviceIx++) {
+                $Miner_DeviceName = $Miner_DeviceNameArr[$Miner_DeviceIx]
+                if (-not $DevicesNames_Set.Contains($Miner_DeviceName)) {$Miner_DeviceUnknown = $true; break}
+                for ($Miner_DeviceIx2 = 0; $Miner_DeviceIx2 -lt $Miner_DeviceIx; $Miner_DeviceIx2++) {
+                    if ($Miner_DeviceNameArr[$Miner_DeviceIx2] -eq $Miner_DeviceName) {$Miner_DeviceUnknown = $true; break}
+                }
+                if ($Miner_DeviceUnknown) {break}
+            }
+            if ($Miner_DeviceUnknown) { return }
             if ($Session.Config.Miners."$($Miner_Name)-$($Miner.DeviceModel)-$($Miner.BaseAlgorithm)".Disable) { return }
 
             foreach ($Algo in $Miner.HashRates.PSObject.Properties.Name) {
@@ -2956,6 +2979,17 @@ function Invoke-Core {
             [void]$AllMiners.Add($Miner)
         }
     }
+
+    $TimerSelect["MinerModules"] = [Math]::Round($StopWatchSelect.Elapsed.TotalSeconds, 3)
+
+    Write-Log "Miner modules loaded in $($TimerSelect["MinerModules"])s "
+
+    if ($TimerMiners -and $TimerMiners.Count) {
+        $TimerMiners | ConvertTo-Json | Set-Content ".\Logs\timerminers.json" -Force
+    }
+
+    $DevicesNames_Set = $Miner_DeviceNameArr = $TimerMiners = $null
+    Remove-Variable -Name DevicesNames_Set, Miner_DeviceNameArr, TimerMiners -ErrorAction Ignore
 
     if ($Session.Config.MiningMode -eq "combo") {
 
@@ -3205,9 +3239,15 @@ function Invoke-Core {
 
     $MinerUpdateDB = $null
 
+    $StopWatchSelect.Restart()
+
     foreach ( $Miner in $AllMiners ) {
 
         $Miner_AlgoNames = @($Miner.HashRates.PSObject.Properties.Name | Select-Object)
+
+        # loop invariant, split and stripped five to six times per miner before
+        $Miner_DeviceModel_Parts  = @($Miner.DeviceModel -split '-')
+        $Miner_BaseAlgorithm_Root = "$($Miner.BaseAlgorithm -replace '-.*$')"
 
         $Miner_Setup = @{
             Pools         = $(if ($Miner_AlgoNames.Count -eq 1) {[PSCustomObject]@{$Miner_AlgoNames[0] = $Pools.$($Miner_AlgoNames[0])}} else {[PSCustomObject]@{$Miner_AlgoNames[0] = $Pools.$($Miner_AlgoNames[0]);$Miner_AlgoNames[1] = $Pools.$($Miner_AlgoNames[1])}})
@@ -3235,7 +3275,7 @@ function Invoke-Core {
 
         $Miner_IsCPU = $Miner.DeviceModel -eq "CPU"
 
-        foreach($p in @($Miner.DeviceModel -split '-')) {$Miner.OCprofile[$p] = ""}
+        foreach($p in $Miner_DeviceModel_Parts) {$Miner.OCprofile[$p] = ""}
 
         $Miner_FaultTolerance = if ($Miner_IsCPU) {$MinerFaultToleranceCPU} else {$MinerFaultToleranceGPU}
         $Miner.FaultTolerance = if ($Miner.FaultTolerance) {[Math]::Max($Miner.FaultTolerance,$Miner_FaultTolerance)} else {$Miner_FaultTolerance}
@@ -3251,7 +3291,7 @@ function Invoke-Core {
             [void]$Miner_CommonCommands_array.AddRange([string[]]@($Miner.BaseAlgorithm -split '-'))
             for($i=$Miner_CommonCommands_array.Count;$i -gt 0; $i--) {
                 $Miner_CommonCommands = $Miner_CommonCommands_array.GetRange(0,$i) -join '-'
-                if (Get-Member -InputObject $Session.Config.Miners -Name $Miner_CommonCommands -MemberType NoteProperty) {
+                if ($null -ne $Session.Config.Miners.PSObject.Properties[$Miner_CommonCommands]) {
                     if ($Session.Config.Miners.$Miner_CommonCommands.Params -and $Miner_Arguments -eq '') {$Miner_Arguments = $Session.Config.Miners.$Miner_CommonCommands.Params}
                     if ($Session.Config.Miners.$Miner_CommonCommands.Difficulty -and $Miner_Difficulty -eq '') {$Miner_Difficulty = $Session.Config.Miners.$Miner_CommonCommands.Difficulty}
                     if ($Session.Config.Miners.$Miner_CommonCommands.MSIAprofile -and $Miner_MSIAprofile -eq 0) {$Miner_MSIAprofile = [int]$Session.Config.Miners.$Miner_CommonCommands.MSIAprofile}
@@ -3261,14 +3301,14 @@ function Invoke-Core {
                     if ($Session.Config.Miners.$Miner_CommonCommands.ShareCheck -ne $null -and $Session.Config.Miners.$Miner_CommonCommands.ShareCheck -ne '' -and $Miner_ShareCheck -eq -1) {$Miner_ShareCheck = [int]$Session.Config.Miners.$Miner_CommonCommands.ShareCheck}
                     if ($Session.Config.Miners.$Miner_CommonCommands.ExtendInterval -and $Miner_ExtendInterval -eq -1) {$Miner_ExtendInterval = [int]$Session.Config.Miners.$Miner_CommonCommands.ExtendInterval}
                     if ($Session.Config.Miners.$Miner_CommonCommands.FaultTolerance -and $Miner_FaultTolerance -eq -1) {$Miner_FaultTolerance = [double]$Session.Config.Miners.$Miner_CommonCommands.FaultTolerance}
-                    if ($Session.Config.Miners.$Miner_CommonCommands.OCprofile -and $i -gt 1) {foreach ($p in @($Miner.DeviceModel -split '-')) {if (-not $Miner.OCprofile[$p]) {$Miner.OCprofile[$p]=$Session.Config.Miners.$Miner_CommonCommands.OCprofile}}}
+                    if ($Session.Config.Miners.$Miner_CommonCommands.OCprofile -and $i -gt 1) {foreach ($p in $Miner_DeviceModel_Parts) {if (-not $Miner.OCprofile[$p]) {$Miner.OCprofile[$p]=$Session.Config.Miners.$Miner_CommonCommands.OCprofile}}}
                     if ($Miner_IsCPU -and $Session.Config.Miners.$Miner_CommonCommands.PowerDraw -ne $null -and $Miner_PowerDraw -eq -1) {$Miner_PowerDraw = $Session.Config.Miners.$Miner_CommonCommands.PowerDraw}
                     $Miner_CommonCommands_found = $true
                 }
             }
             if (-not $Miner_CommonCommands_found -and $Session.Config.MiningMode -eq "combo" -and $Miner.DeviceModel -match '-') {
                 #combo handling - we know that combos always have equal params, because we preselected them, already
-                foreach($p in @($Miner.DeviceModel -split '-')) {
+                foreach($p in $Miner_DeviceModel_Parts) {
                     $Miner_CommonCommands_array[1] = $p
                     $Miner_CommonCommands = $Miner_CommonCommands_array -join '-'
                     if ($Session.Config.Miners.$Miner_CommonCommands.Params -and $Miner_Arguments -eq '') {$Miner_Arguments = $Session.Config.Miners.$Miner_CommonCommands.Params}
@@ -3284,12 +3324,12 @@ function Invoke-Core {
             }
 
             #overclocking is different
-            foreach($p in @($Miner.DeviceModel -split '-')) {
+            foreach($p in $Miner_DeviceModel_Parts) {
                 if ($Miner.OCprofile[$p] -ne '') {continue}
                 $Miner_CommonCommands_array[1] = $p
                 for($i=$Miner_CommonCommands_array.Count;$i -gt 1; $i--) {
                     $Miner_CommonCommands = $Miner_CommonCommands_array.GetRange(0,$i) -join '-'
-                    if (Get-Member -InputObject $Session.Config.Miners -Name $Miner_CommonCommands -MemberType NoteProperty) {
+                    if ($null -ne $Session.Config.Miners.PSObject.Properties[$Miner_CommonCommands]) {
                         if ($Session.Config.Miners.$Miner_CommonCommands.OCprofile) {$Miner.OCprofile[$p]=$Session.Config.Miners.$Miner_CommonCommands.OCprofile}
                     }
                 }
@@ -3339,9 +3379,9 @@ function Invoke-Core {
             if ($Miner_PowerDraw -ne -1)      {$Miner.PowerDraw = $Miner_PowerDraw}
         }
 
-        if (-not $Miner.MSIAprofile -and $Miner_AlgoNames.Count -eq 1 -and $Session.Config.Algorithms."$($Miner.BaseAlgorithm -replace '-.*$')".MSIAprofile -gt 0) {$Miner | Add-Member -Name MSIAprofile -Value $Session.Config.Algorithms."$($Miner.BaseAlgorithm -replace '-.*$')".MSIAprofile -MemberType NoteProperty -Force}
+        if (-not $Miner.MSIAprofile -and $Miner_AlgoNames.Count -eq 1 -and $Session.Config.Algorithms.$Miner_BaseAlgorithm_Root.MSIAprofile -gt 0) {$Miner | Add-Member -Name MSIAprofile -Value $Session.Config.Algorithms.$Miner_BaseAlgorithm_Root.MSIAprofile -MemberType NoteProperty -Force}
 
-        foreach($p in @($Miner.DeviceModel -split '-')) {if ($Miner.OCprofile[$p] -eq '') {$Miner.OCprofile[$p]=if ($Miner_AlgoNames.Count -eq 1 -and $Session.Config.Algorithms."$($Miner.BaseAlgorithm -replace '-.*$')".OCprofile -ne "") {$Session.Config.Algorithms."$($Miner.BaseAlgorithm -replace '-.*$')".OCprofile} else {$Session.Config.Devices.$p.DefaultOCprofile}}}
+        foreach($p in $Miner_DeviceModel_Parts) {if ($Miner.OCprofile[$p] -eq '') {$Miner.OCprofile[$p]=if ($Miner_AlgoNames.Count -eq 1 -and $Session.Config.Algorithms.$Miner_BaseAlgorithm_Root.OCprofile -ne "") {$Session.Config.Algorithms.$Miner_BaseAlgorithm_Root.OCprofile} else {$Session.Config.Devices.$p.DefaultOCprofile}}}
 
         $Miner.DeviceName = @($Miner.DeviceName | Select-Object -Unique | Sort-Object)
 
@@ -3549,9 +3589,13 @@ function Invoke-Core {
             $Miner.Profit_Unbias = 0
             $Miner.Profit_Cost   = 0
         } else {
-            $Miner.Profit        = [Double]($Miner_Profits.Values | Measure-Object -Sum).Sum
-            $Miner.Profit_Bias   = [Double]($Miner_Profits_Bias.Values | Measure-Object -Sum).Sum * 1e15
-            $Miner.Profit_Unbias = [Double]($Miner_Profits_Unbias.Values | Measure-Object -Sum).Sum * 1e15
+            $Miner_Profit_Sum = $Miner_Profit_Bias_Sum = $Miner_Profit_Unbias_Sum = [Double]0
+            foreach ($Miner_Profit_Value in $Miner_Profits.Values)        {$Miner_Profit_Sum        += [Double]$Miner_Profit_Value}
+            foreach ($Miner_Profit_Value in $Miner_Profits_Bias.Values)   {$Miner_Profit_Bias_Sum   += [Double]$Miner_Profit_Value}
+            foreach ($Miner_Profit_Value in $Miner_Profits_Unbias.Values) {$Miner_Profit_Unbias_Sum += [Double]$Miner_Profit_Value}
+            $Miner.Profit        = $Miner_Profit_Sum
+            $Miner.Profit_Bias   = $Miner_Profit_Bias_Sum * 1e15
+            $Miner.Profit_Unbias = $Miner_Profit_Unbias_Sum * 1e15
             $Miner.Profit_Cost   = if ($Miner_IsCPU -and ($Session.Config.PowerOffset -gt 0 -or $Session.Config.PowerOffsetPercent -gt 0)) {0} else {
                 [Double]($Miner.PowerDraw*$MinerPowerPrice)
             }
@@ -3576,6 +3620,8 @@ function Invoke-Core {
         if (-not $Miner.Penalty) {$Miner.Penalty = 0}
     }
 
+    $TimerSelect["ProfitLoop"] = [Math]::Round($StopWatchSelect.Elapsed.TotalSeconds, 3)
+
     $MinerUpdateDB = $AlgoVariants = $null
 
     $Miners_DownloadList    = @()
@@ -3587,10 +3633,17 @@ function Invoke-Core {
 
     $Miners = [System.Collections.Generic.List[PSCustomObject]]::new()
 
-    $AllMiners.Where({ 
-        (Test-Path $_.Path) -and 
-        ((-not $_.PrerequisitePath) -or (Test-Path $_.PrerequisitePath)) -and 
-        $AllMiners_VersionCheck[$_.BaseName].Ok
+    # thousands of candidates share about a hundred distinct paths - stat each one once
+    $Miner_PathExists = @{}
+    $AllMiners.Where({
+        $Miner_Path_Ok = $Miner_PathExists[$_.Path]
+        if ($Miner_Path_Ok -eq $null) {$Miner_Path_Ok = $Miner_PathExists[$_.Path] = [bool](Test-Path $_.Path)}
+        $Miner_Prq_Ok = $true
+        if ($_.PrerequisitePath) {
+            $Miner_Prq_Ok = $Miner_PathExists[$_.PrerequisitePath]
+            if ($Miner_Prq_Ok -eq $null) {$Miner_Prq_Ok = $Miner_PathExists[$_.PrerequisitePath] = [bool](Test-Path $_.PrerequisitePath)}
+        }
+        $Miner_Path_Ok -and $Miner_Prq_Ok -and $AllMiners_VersionCheck[$_.BaseName].Ok
     }).ForEach({ [void]$Miners.Add($_) })
 
     if (($AllMiners.Count -ne $Miners.Count) -or $Session.StartDownloader) {
@@ -3623,8 +3676,8 @@ function Invoke-Core {
 
     #$Global:StatsCache = $null
 
-    $AllMiners = $null
-    Remove-Variable -Name AllMiners -ErrorAction Ignore
+    $AllMiners = $Miner_PathExists = $Miner_DeviceModel_Parts = $Miner_BaseAlgorithm_Root = $null
+    Remove-Variable -Name AllMiners, Miner_PathExists, Miner_DeviceModel_Parts, Miner_BaseAlgorithm_Root -ErrorAction Ignore
 
     #Open firewall ports for all miners
     if ($IsWindows) {
@@ -3841,20 +3894,36 @@ function Invoke-Core {
     Write-Log "Update active miners."
     
     #Update the active miners
+    $StopWatchSelect.Restart()
+
+    # $Global:ActiveMiners only ever grows - every pool switch adds entries, because the pool is part
+    # of the arguments - so the linear scan this replaces got slower the longer a session ran.
+    # the key is the same conjunction the scan tested: Compare-Object on the algorithms is an
+    # order insensitive, case insensitive comparison, and the hashtable is case insensitive too.
+    # every legacy match lands in the probe's bucket (algorithm and miner names never contain a
+    # pipe, so the join is unambiguous there), but Arguments is free text - the short in-bucket
+    # scan re-checks the scalar fields, so even a crafted "|" in Arguments cannot alias two
+    # different miners onto one key. buckets keep insertion order = list order, so the first
+    # bucket hit is the same miner the full scan found
+    $ActiveMiners_Index = @{}
+    $m = $null
+    foreach ($m in $Global:ActiveMiners) {
+        $ActiveMiner_Key = "$($m.Name)|$($m.Path)|$($m.Arguments)|$($m.API)|$(@($m.Algorithm | Sort-Object) -join '|')"
+        if (-not $ActiveMiners_Index.ContainsKey($ActiveMiner_Key)) {$ActiveMiners_Index[$ActiveMiner_Key] = [System.Collections.Generic.List[Object]]::new()}
+        [void]$ActiveMiners_Index[$ActiveMiner_Key].Add($m)
+    }
+
     $Miner = $null
     foreach ($Miner in $Miners) {
 
+        $ActiveMiner_Key = "$($Miner.Name)|$($Miner.Path)|$($Miner.Arguments)|$($Miner.API)|$(@($Miner.HashRates.PSObject.Properties.Name | Sort-Object) -join '|')"
         $ActiveMiner = $m = $null
-        foreach ($m in $Global:ActiveMiners) {
-            if (
-                $m.Name -eq $Miner.Name -and
-                $m.Path -eq $Miner.Path -and
-                $m.Arguments -eq $Miner.Arguments -and
-                $m.API -eq $Miner.API -and
-                -not (Compare-Object $m.Algorithm ($Miner.HashRates.PSObject.Properties.Name | Select-Object))
-            ) {
-                $ActiveMiner = $m
-                break
+        if ($ActiveMiner_Bucket = $ActiveMiners_Index[$ActiveMiner_Key]) {
+            foreach ($m in $ActiveMiner_Bucket) {
+                if ($m.Name -eq $Miner.Name -and $m.Path -eq $Miner.Path -and $m.Arguments -eq $Miner.Arguments -and $m.API -eq $Miner.API) {
+                    $ActiveMiner = $m
+                    break
+                }
             }
         }
 
@@ -4008,6 +4077,9 @@ function Invoke-Core {
                 }
                 if ($ActiveMiner) {
                     [void]$Global:ActiveMiners.Add($ActiveMiner)
+                    $ActiveMiner_Key = "$($ActiveMiner.Name)|$($ActiveMiner.Path)|$($ActiveMiner.Arguments)|$($ActiveMiner.API)|$(@($ActiveMiner.Algorithm | Sort-Object) -join '|')"
+                    if (-not $ActiveMiners_Index.ContainsKey($ActiveMiner_Key)) {$ActiveMiners_Index[$ActiveMiner_Key] = [System.Collections.Generic.List[Object]]::new()}
+                    [void]$ActiveMiners_Index[$ActiveMiner_Key].Add($ActiveMiner)
                 }
             } catch {
                 Write-Log -Level Warn "Failed to create miner object $($Miner.BaseName): $($Miner.HashRates.PSObject.Properties.Name -join '+') $($_.Exception.Message)"
@@ -4015,6 +4087,11 @@ function Invoke-Core {
             #$Miner.OCprofile.Keys | Foreach-Object {$ActiveMiner.OCprofile[$_] = $Miner.OCprofile[$_]}
         }
     }
+
+    $TimerSelect["ActiveMinersSync"] = [Math]::Round($StopWatchSelect.Elapsed.TotalSeconds, 3)
+
+    $ActiveMiners_Index = $ActiveMiner_Bucket = $ActiveMiner_Key = $null
+    Remove-Variable -Name ActiveMiners_Index, ActiveMiner_Bucket, ActiveMiner_Key -ErrorAction Ignore
 
     $ActiveMiners_DeviceNames = @(($Global:ActiveMiners | Where-Object {$_.Enabled}).DeviceName | Select-Object -Unique | Sort-Object)
 
@@ -4033,15 +4110,31 @@ function Invoke-Core {
     $MinersRunning = $false
 
     if ($Miners.Count -gt 0) {
-        
+
+        $StopWatchSelect.Restart()
+
         #Get most profitable miner combination
         $ActiveMiners_Sorted = @($Global:ActiveMiners | Where-Object {$_.Enabled -and ($_.NeedsBenchmark -or -not $_.BenchmarkOnly)} | Sort-Object @{Expression={$_.IsExclusiveMiner}; Descending = $true}, @{Expression={$_.IsLocked}; Descending = $true}, @{Expression={$_.Profit -eq $null}; Descending = $true}, @{Expression={$_.IsFocusWalletMiner}; Descending=$true}, @{Expression={$_.PostBlockMining -gt 0}; Descending=$true}, @{Expression={$_.IsRunningFirstRounds -and -not $_.NeedsBenchmark}; Descending=$true}, @{Expression={[double]$_.Profit_Bias}; Descending=$true}, @{Expression={$_.Benchmarked}; Descending=$true}, @{Expression={$_.ExtendInterval}; Descending=$true}, @{Expression={$_.Algorithm[0] -eq $_.BaseAlgorithm[0]}; Descending=$true})
 
+        $TimerSelect["Sort"] = [Math]::Round($StopWatchSelect.Elapsed.TotalSeconds, 3)
+
         $BestMiners = [System.Collections.ArrayList]::new()
 
-        $ActiveMiners_Sorted | Select-Object DeviceName -Unique | ForEach-Object {
-            $Miner_GPU = $_
-            if ($BestMiner = $ActiveMiners_Sorted | Where-Object {-not (Compare-Object $Miner_GPU.DeviceName $_.DeviceName)} | Select-Object -First 1) {
+        # two passes over the already sorted list instead of a Compare-Object scan per device group.
+        # the sorted DeviceName join is exactly the set comparison Compare-Object did, so it is
+        # matched case insensitively, while the groups themselves come from Select-Object -Unique,
+        # which compares the arrays as they are - hence the ordinal set for the group keys
+        $BestMiner_First = @{}
+        $BestMiner_Seen  = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+
+        $BestMiner_Cand = $null
+        foreach ($BestMiner_Cand in $ActiveMiners_Sorted) {
+            $Miner_Device_Key = (@($BestMiner_Cand.DeviceName | Sort-Object) -join '|')
+            if (-not $BestMiner_First.ContainsKey($Miner_Device_Key)) {$BestMiner_First[$Miner_Device_Key] = $BestMiner_Cand}
+        }
+        foreach ($BestMiner_Cand in $ActiveMiners_Sorted) {
+            if (-not $BestMiner_Seen.Add(($BestMiner_Cand.DeviceName -join '|'))) {continue}
+            if ($BestMiner = $BestMiner_First[(@($BestMiner_Cand.DeviceName | Sort-Object) -join '|')]) {
                 [void]$BestMiners.Add($BestMiner)
             }
         }
@@ -4049,9 +4142,19 @@ function Invoke-Core {
         #If post block mining: check for minimum profit
         if ($Miners_PBM = $BestMiners | Where-Object {$_.PostBlockMining -gt 0 -and -not $_.IsExclusiveMiner -and -not $_.IsLocked -and -not $_.IsFocusWalletMiner -and -not $_.NeedsBenchmark -and -not $_.IsRunningFirstRounds -and $Session.Config.Coins."$($_.CoinSymbol)".MinProfitPercent -gt 0}) {
             $Miners_PBM_Remove = [System.Collections.ArrayList]::new()
+
+            # first non post block mining miner per device set, so the loop below is a lookup
+            $BestMiner_PBM0_First = @{}
+            $BestMiner_Cand = $null
+            foreach ($BestMiner_Cand in $ActiveMiners_Sorted) {
+                if ($BestMiner_Cand.PostBlockMining -ne 0) {continue}
+                $Miner_Device_Key = (@($BestMiner_Cand.DeviceName | Sort-Object) -join '|')
+                if (-not $BestMiner_PBM0_First.ContainsKey($Miner_Device_Key)) {$BestMiner_PBM0_First[$Miner_Device_Key] = $BestMiner_Cand}
+            }
+
             $Miners_PBM | Foreach-Object {
                 $Miner_PBM = $_
-                if ($BestMiner = $ActiveMiners_Sorted | Where-Object {$_.PostBlockMining -eq 0 -and -not (Compare-Object $Miner_PBM.DeviceName $_.DeviceName)} | Select-Object -First 1) {
+                if ($BestMiner = $BestMiner_PBM0_First[(@($Miner_PBM.DeviceName | Sort-Object) -join '|')]) {
                     $BestMiner_Profit = $BestMiner.Profit
                     if ($Session.Config.UsePowerPrice -and $BestMiner.Profit_Cost -ne $null -and $BestMiner.Profit_Cost -gt 0) { $BestMiner_Profit += $BestMiner.Profit_Cost }
 
@@ -4076,9 +4179,20 @@ function Invoke-Core {
         $NoCPUMining = $Session.Config.EnableCheckMiningConflict -and $MinersNeedingBenchmarkCount -eq 0 -and ($BestMiners | Where-Object DeviceModel -eq "CPU" | Measure-Object).Count -and ($BestMiners | Where-Object NoCPUMining -eq $true | Measure-Object).Count
         if ($NoCPUMining) {
             $BestMiners2 = [System.Collections.ArrayList]::new()
-            $ActiveMiners_Sorted | Select-Object DeviceName -Unique | ForEach-Object {
-                $Miner_GPU = $_
-                if ($BestMiner = $ActiveMiners_Sorted | Where-Object {-not $_.NoCPUMining -and -not (Compare-Object $Miner_GPU.DeviceName $_.DeviceName)} | Select-Object -First 1) {
+
+            # same two pass shape as above, but only miners that tolerate CPU mining may win a group
+            $BestMiner2_First = @{}
+            $BestMiner2_Seen  = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+
+            $BestMiner_Cand = $null
+            foreach ($BestMiner_Cand in $ActiveMiners_Sorted) {
+                if ($BestMiner_Cand.NoCPUMining) {continue}
+                $Miner_Device_Key = (@($BestMiner_Cand.DeviceName | Sort-Object) -join '|')
+                if (-not $BestMiner2_First.ContainsKey($Miner_Device_Key)) {$BestMiner2_First[$Miner_Device_Key] = $BestMiner_Cand}
+            }
+            foreach ($BestMiner_Cand in $ActiveMiners_Sorted) {
+                if (-not $BestMiner2_Seen.Add(($BestMiner_Cand.DeviceName -join '|'))) {continue}
+                if ($BestMiner = $BestMiner2_First[(@($BestMiner_Cand.DeviceName | Sort-Object) -join '|')]) {
                     [void]$BestMiners2.Add($BestMiner)
                 }
             }
@@ -4137,6 +4251,8 @@ function Invoke-Core {
             }
         }
 
+        $StopWatchSelect.Restart()
+
         if ($NoCPUMining) {
             $BestMiners_Message = "CPU"
             $BestMiners_Combo  = Get-BestMinerDeviceCombos @($BestMiners | Where-Object DeviceModel -ne "CPU") -SortBy "Profit_Bias"
@@ -4151,6 +4267,8 @@ function Invoke-Core {
         } else {
             $BestMiners_Combo = Get-BestMinerDeviceCombos $BestMiners -SortBy "Profit_Bias"        
         }
+
+        $TimerSelect["Combos"] = [Math]::Round($StopWatchSelect.Elapsed.TotalSeconds, 3)
 
         #Prefer multi-miner over single-miners
         if ($Session.Config.MiningMode -eq "combo" -and $MinersNeedingBenchmarkCount -eq 0 -and ($Global:DeviceCache.DeviceCombos -match '-' | Measure-Object).Count) {
@@ -4183,6 +4301,13 @@ function Invoke-Core {
             $BestMiners_Combo | Where-Object {-not $Global:PauseMiners.Test() -or $_.IsExclusiveMiner} | ForEach-Object {$_.Best = $true; $MinersRunning = $true}
         }
     }
+
+    if ($Session.Config.EnableDebugMode -or $Session.Config.EnableDebugTimers) {
+        $TimerSelect | ConvertTo-Json | Set-Content ".\Logs\timerselect.json" -Force
+    }
+
+    $StopWatchSelect = $TimerSelect = $null
+    Remove-Variable -Name StopWatchSelect, TimerSelect -ErrorAction Ignore
 
     if ($Session.RoundCounter -eq 0) {Write-Host "Starting mining operation .."}
 
@@ -4372,7 +4497,7 @@ function Invoke-Core {
             if ($Miner.Speed -contains $null) {
                 Write-Log "Benchmarking miner ($($Miner.Name)): '$($Miner.Path) $($Miner.Arguments)' (Extend Interval $($Miner.ExtendInterval))"
             } else {
-                Write-Log "Starting miner ($($Miner.Name)): '$($Miner.Path) $($Miner.Arguments)'"
+                Write-Log "Starting miner ($($Miner.Name)): '$($Miner.Path) $($Miner.GetArguments())'"
             }
 
             $Session.DecayStart = $Session.Timer
@@ -4849,6 +4974,8 @@ function Invoke-Core {
     if ($ServerPools) { $ServerPools.Clear() }
     $Miner = $Miner_Table = $Miners = $Pool = $UserPool = $Pool_Parameters = $AvailablePools = $Result = $NewPools = $ServerPools = $null
     Remove-Variable -Name Miner, Miner_Table, Miners, Pool, UserPool, Pool_Parameters, AvailablePools, Result, NewPools, ServerPools -ErrorAction Ignore
+    $BestMiner_First = $BestMiner_Seen = $BestMiner2_First = $BestMiner2_Seen = $BestMiner_PBM0_First = $BestMiner_Cand = $Miner_Device_Key = $null
+    Remove-Variable -Name BestMiner_First, BestMiner_Seen, BestMiner2_First, BestMiner2_Seen, BestMiner_PBM0_First, BestMiner_Cand, Miner_Device_Key -ErrorAction Ignore
 
     if ($Global:Error.Count) {
         $logDate = Get-Date -Format "yyyy-MM-dd"
@@ -5613,6 +5740,53 @@ function Get-Balance {
     $Balances
 }
 
+function Get-ExactDeviceCovers {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [Int]$DeviceCount,
+        [Parameter(Mandatory = $true)]
+        $GroupDeviceIx,
+        [Parameter(Mandatory = $true)]
+        $GroupsByDevice,
+        [Parameter(Mandatory = $true)]
+        $Covered,
+        [Parameter(Mandatory = $true)]
+        [Int]$NumCovered,
+        [Parameter(Mandatory = $true)]
+        $Chosen,
+        [Parameter(Mandatory = $true)]
+        $Covers
+    )
+
+    # depth first search over the device groups: every device must be covered exactly once.
+    # picking the lowest uncovered device first keeps the tree at the number of partial covers
+    # instead of the 2^groups the plain subset walk would produce
+
+    if ($NumCovered -eq $DeviceCount) {
+        [void]$Covers.Add([Int[]]$Chosen.ToArray())
+        return
+    }
+
+    $Device = -1
+    for ($i = 0; $i -lt $DeviceCount; $i++) {
+        if (-not $Covered[$i]) {$Device = $i; break}
+    }
+    if ($Device -lt 0) {return}
+
+    foreach ($Group in $GroupsByDevice[$Device]) {
+        $Group_Ix = $GroupDeviceIx[$Group]
+        $Fits = $true
+        foreach ($i in $Group_Ix) {if ($Covered[$i]) {$Fits = $false; break}}
+        if (-not $Fits) {continue}
+        foreach ($i in $Group_Ix) {$Covered[$i] = $true}
+        [void]$Chosen.Add($Group)
+        Get-ExactDeviceCovers -DeviceCount $DeviceCount -GroupDeviceIx $GroupDeviceIx -GroupsByDevice $GroupsByDevice -Covered $Covered -NumCovered ($NumCovered + $Group_Ix.Count) -Chosen $Chosen -Covers $Covers
+        [void]$Chosen.RemoveAt($Chosen.Count - 1)
+        foreach ($i in $Group_Ix) {$Covered[$i] = $false}
+    }
+}
+
 function Get-BestMinerDeviceCombos {
     [CmdletBinding()]
     param(
@@ -5624,15 +5798,95 @@ function Get-BestMinerDeviceCombos {
     $BestMiners = @($BestMiners | Where-Object { $_ })
     if ($BestMiners) {
         $BestMiners_DeviceNames = @($BestMiners | Foreach-Object {$_.DeviceName} | Sort-Object -Unique)
-        $Miners_Device_Combos   = (Get-Combination ($BestMiners | Select-Object DeviceName -Unique) | Where-Object {-not (Compare-Object ($_.Combination | Select-Object -ExpandProperty DeviceName) $BestMiners_DeviceNames)})
-        $Miners_Device_Combos | ForEach-Object {
-            $Miner_Device_Combo = $_.Combination
-            [PSCustomObject]@{
-                Combination = $Miner_Device_Combo | ForEach-Object {
-                    $Miner_Device_Count = $_.DeviceName.Count
-                    [Regex]$Miner_Device_Regex = "^(" + (($_.DeviceName | ForEach-Object {[Regex]::Escape($_)}) -join '|') + ")$"
-                    $BestMiners | Where-Object {([Array]$_.DeviceName -notmatch $Miner_Device_Regex).Count -eq 0 -and ([Array]$_.DeviceName -match $Miner_Device_Regex).Count -eq $Miner_Device_Count}
+
+        # one entry per distinct DeviceName set, in first appearance order
+        $Miners_Device_Groups = @($BestMiners | Select-Object DeviceName -Unique)
+
+        # the only combinations that survive are those whose groups tile the device set exactly:
+        # Compare-Object against the sorted unique device names is empty for no other case.
+        # degenerate inputs (a group without devices, or no device names at all) are not
+        # expressible that way, so they keep the original subset walk
+        $Use_Combination_Walk = $BestMiners_DeviceNames.Count -eq 0
+        if (-not $Use_Combination_Walk) {
+            foreach ($Group in $Miners_Device_Groups) {
+                if ($Group.DeviceName -eq $null -or @($Group.DeviceName).Count -eq 0) {$Use_Combination_Walk = $true; break}
+            }
+        }
+
+        if ($Use_Combination_Walk) {
+            $Miners_Device_Combos = @(Get-Combination @(0..($Miners_Device_Groups.Count - 1)) | Where-Object {-not (Compare-Object @(foreach ($j in $_.Combination) {$Miners_Device_Groups[$j].DeviceName}) $BestMiners_DeviceNames)} | Foreach-Object {,@($_.Combination)})
+        } else {
+            if ($Script:BestMinerCombosCache -eq $null) {$Script:BestMinerCombosCache = @{}}
+
+            # the covers depend on the device sets only, never on prices, so they survive a round
+            $Combos_Signature     = (@(foreach ($Group in $Miners_Device_Groups) {$Group.DeviceName -join '|'}) -join ';')
+            $Miners_Device_Combos = $Script:BestMinerCombosCache[$Combos_Signature]
+
+            if ($Miners_Device_Combos -eq $null) {
+
+                # Get-Combination hands its subsets out in the order Get-Member returns the 2^i
+                # property names, which is lexicographic over their decimal string, not numeric.
+                # that order decides the member order of every combination and with it the order
+                # miners are started in, so derive it the same way instead of assuming it
+                $Combination_Probe = [PSCustomObject]@{}
+                for ($i = 0; $i -lt $Miners_Device_Groups.Count; $i++) {
+                    $Combination_Probe | Add-Member @{[Math]::Pow(2, $i) = $i}
                 }
+                $Group_Rank = New-Object 'Int[]' $Miners_Device_Groups.Count
+                $i = 0
+                foreach ($Group_Key in @($Combination_Probe | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name)) {
+                    $Group_Rank[$Combination_Probe.$Group_Key] = $i
+                    $i++
+                }
+
+                $Device_Ix = @{}
+                for ($i = 0; $i -lt $BestMiners_DeviceNames.Count; $i++) {$Device_Ix[$BestMiners_DeviceNames[$i]] = $i}
+
+                $Group_Device_Ix  = New-Object 'Object[]' $Miners_Device_Groups.Count
+                $Groups_By_Device = New-Object 'Object[]' $BestMiners_DeviceNames.Count
+                for ($i = 0; $i -lt $Groups_By_Device.Count; $i++) {$Groups_By_Device[$i] = [System.Collections.Generic.List[Int]]::new()}
+
+                for ($i = 0; $i -lt $Miners_Device_Groups.Count; $i++) {
+                    $Group_Ix  = [System.Collections.Generic.List[Int]]::new()
+                    $Group_Dup = $false
+                    foreach ($Device_Name in $Miners_Device_Groups[$i].DeviceName) {
+                        $j = [Int]$Device_Ix[$Device_Name]
+                        if ($Group_Ix.Contains($j)) {$Group_Dup = $true; break}
+                        [void]$Group_Ix.Add($j)
+                    }
+                    # a group naming the same device twice can never be part of an exact cover
+                    if ($Group_Dup) {continue}
+                    $Group_Device_Ix[$i] = [Int[]]$Group_Ix.ToArray()
+                    foreach ($j in $Group_Device_Ix[$i]) {[void]$Groups_By_Device[$j].Add($i)}
+                }
+
+                $Covers = [System.Collections.Generic.List[Int[]]]::new()
+                Get-ExactDeviceCovers -DeviceCount $BestMiners_DeviceNames.Count -GroupDeviceIx $Group_Device_Ix -GroupsByDevice $Groups_By_Device -Covered (New-Object 'Bool[]' $BestMiners_DeviceNames.Count) -NumCovered 0 -Chosen ([System.Collections.Generic.List[Int]]::new()) -Covers $Covers
+
+                # restore the emission order of the subset walk: group count ascending, then the
+                # subset bitmask ascending, which is the descending index list compared left to right
+                $Miners_Device_Combos = @($Covers | Sort-Object @{Expression={$_.Count}}, @{Expression={(@($_ | Sort-Object -Descending | Foreach-Object {"{0:D5}" -f $_}) -join '')}} | Foreach-Object {,@($_ | Sort-Object {$Group_Rank[$_]})})
+
+                if ($Script:BestMinerCombosCache.Count -ge 16) {$Script:BestMinerCombosCache.Clear()}
+                $Script:BestMinerCombosCache[$Combos_Signature] = $Miners_Device_Combos
+            }
+        }
+
+        # every group is one distinct device set, so the miners behind it are a lookup, not a search
+        $Miners_By_Devices = @{}
+        foreach ($Miner in $BestMiners) {
+            $Miner_Device_Key = (@($Miner.DeviceName | Sort-Object) -join '|')
+            if (-not $Miners_By_Devices.ContainsKey($Miner_Device_Key)) {$Miners_By_Devices[$Miner_Device_Key] = [System.Collections.Generic.List[Object]]::new()}
+            [void]$Miners_By_Devices[$Miner_Device_Key].Add($Miner)
+        }
+        $Group_Device_Keys = @(foreach ($Group in $Miners_Device_Groups) {(@($Group.DeviceName | Sort-Object) -join '|')})
+
+        $Miners_Device_Combos | ForEach-Object {
+            $Miner_Device_Combo = $_
+            [PSCustomObject]@{
+                Combination = @(foreach ($j in $Miner_Device_Combo) {
+                    foreach ($Miner in $Miners_By_Devices[$Group_Device_Keys[$j]]) {$Miner}
+                })
             }
         } | Sort-Object @{Expression={($_.Combination | Where-Object Profit -EQ $null | Measure-Object).Count}; Descending=$true}, @{Expression={($_.Combination | Measure-Object -Property $SortBy -Sum).Sum}; Descending=$true} | Select-Object -First 1 | Select-Object -ExpandProperty Combination
     }

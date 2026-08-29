@@ -1974,6 +1974,32 @@
         },
         {
           "kind": "field",
+          "key": "EnableDebugTimers",
+          "id": "inputEnableDebugTimers",
+          "label": {
+            "html": "Enable timing debug files",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "If enabled, writes per-round timing files to the Logs folder (timerpools.json, timerminers.json, timerselect.json) for profiling, without full debug mode."
+          },
+          "control": "select",
+          "attrs": {},
+          "options": [
+            {
+              "value": "0",
+              "label": "Disable"
+            },
+            {
+              "value": "1",
+              "label": "Enable"
+            }
+          ]
+        },
+        {
+          "kind": "field",
           "key": "EnableFastlaneBenchmark",
           "id": "inputEnableFastlaneBenchmark",
           "label": {
