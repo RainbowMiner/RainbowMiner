@@ -576,7 +576,9 @@ Param(
                             $Data = ([regex]"(?si):\s*(\d{19,})[`r`n,\s\]\}]").Replace($Data,{param($m) $m.Groups[0].Value -replace $m.Groups[1].Value,"$([double]$m.Groups[1].Value)"})
                         } catch {}
                     }
-                    try {$Data = ConvertFrom-Json $Data -ErrorAction Stop} catch { $method = "WEB"}
+                    if ("$Data" -ne "") {
+                        try {$Data = ConvertFrom-Json $Data -ErrorAction Stop} catch { $method = "WEB"}
+                    } else { $method = "WEB" }
                 }
                 if ($Data -and $Data.unlocked -ne $null) {[void]$Data.PSObject.Properties.Remove("unlocked")}
             } else {
@@ -734,7 +736,9 @@ Param(
                                     $Result.Data = ([regex]"(?si):\s*(\d{19,})[`r`n,\s\]\}]").Replace($Result.Data,{param($m) $m.Groups[0].Value -replace $m.Groups[1].Value,"$([double]$m.Groups[1].Value)"})
                                 } catch {}
                             }
-                            try {$Result.Data = ConvertFrom-Json $Result.Data -ErrorAction Stop} catch {}
+                            if ("$($Result.Data)" -ne "") {
+                                try {$Result.Data = ConvertFrom-Json $Result.Data -ErrorAction Stop} catch {}
+                            }
                         }
                         if ($Result.Data -and $Result.Data.unlocked -ne $null) {[void]$Result.Data.PSObject.Properties.Remove("unlocked")}
                     }
@@ -821,7 +825,9 @@ Param(
                                     $Result.Data = ([regex]"(?si):\s*(\d{19,})[`r`n,\s\]\}]").Replace($Result.Data,{param($m) $m.Groups[0].Value -replace $m.Groups[1].Value,"$([double]$m.Groups[1].Value)"})
                                 } catch {}
                             }
-                            try {$Result.Data = ConvertFrom-Json $Result.Data -ErrorAction Stop} catch {}
+                            if ("$($Result.Data)" -ne "") {
+                                try {$Result.Data = ConvertFrom-Json $Result.Data -ErrorAction Stop} catch {}
+                            }
                         }
                         if ($Result.Data -and $Result.Data.unlocked -ne $null) {[void]$Result.Data.PSObject.Properties.Remove("unlocked")}
                     }
