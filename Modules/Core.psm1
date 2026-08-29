@@ -2796,7 +2796,12 @@ function Invoke-Core {
             # offer the same algorithm for several coins, and MRR emits one entry per SSL mode
             if (-not $Pools_AltSeen[$Algorithm_Name].Add("$($Pool.Name)-$($Pool.Algorithm0)-$($Pool.CoinSymbol)")) {continue}
 
-            $Pool_AltKey = "$($Algorithm_Name)-@$($Pool.Name)"
+            # built from $Pool.Algorithm, not from the lowercased $Algorithm_Name: the key
+            # travels verbatim into Miner.HashRates/Pools/Ratios and from there into the
+            # stat file name and every algorithm display, which all use the Get-Algorithm
+            # casing. A lowercased base would show the same algorithm twice in the UI and
+            # split its benchmark into a second stat file on case-sensitive filesystems
+            $Pool_AltKey = "$($Pool.Algorithm)-@$($Pool.Name)"
             if ($Pools.PSObject.Properties[$Pool_AltKey]) {$Pool_AltKey = "$($Pool_AltKey)_$($Pool.CoinSymbol)"}
             if ($Pools.PSObject.Properties[$Pool_AltKey]) {continue}
 
@@ -4660,7 +4665,7 @@ function Invoke-Core {
             Switch ($col) {
                 "Miner"     {[void]$Miner_Table.Add(@{Label = "Miner"; Expression = {$_.Name -replace '\-.*$'}})}
                 "Fee"       {[void]$Miner_Table.Add(@{Label = "Fee"; Expression = {$m = $_;($m.HashRates.PSObject.Properties.Name | ForEach-Object {if ($m.DevFee.$_) {'{0:p2}' -f ($m.DevFee.$_/100) -replace ",*0+\s%"," %"}else {"-"}}) -join ','}; Align = 'right'})}
-                "Algorithm" {[void]$Miner_Table.Add(@{Label = "Algorithm"; Expression = {Get-MappedAlgorithm $_.HashRates.PSObject.Properties.Name}})}
+                "Algorithm" {[void]$Miner_Table.Add(@{Label = "Algorithm"; Expression = {Get-MappedAlgorithm ($_.HashRates.PSObject.Properties.Name -replace '\-@.*$')}})}
                 "Speed"     {[void]$Miner_Table.Add(@{Label = "Speed"; Expression = {$_.HashRates.PSObject.Properties.Value | ForEach-Object {if ($_ -ne $null) {"$($_ | ConvertTo-Hash)/s"} elseif ($Session.Benchmarking) {"Benchmarking"} else {"Waiting"}}}; Align = 'right'})}
                 "Diff"      {[void]$Miner_Table.Add(@{Label = "Diff"; Expression = {$m = $_;($m.HashRates.PSObject.Properties.Name | ForEach-Object {if ($m.Difficulties.$_) {($m.Difficulties.$_ | ConvertTo-Float) -replace " "} else {"-"}}) -join ','}; Align = 'right'})}
                 "Power"     {[void]$Miner_Table.Add(@{Label = "Power$(if ($Session.Config.UsePowerPrice -and ($Session.Config.PowerOffset -gt 0 -or $Session.Config.PowerOffsetPercent -gt 0)){"*"})"; Expression = {"{0:d}W" -f [int]$_.PowerDraw}; Align = 'right'})}
