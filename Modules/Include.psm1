@@ -577,12 +577,6 @@ Function Write-Log {
     }
     Process {
 
-        $filename = ".\Logs\RainbowMiner_$(Get-Date -Format "yyyy-MM-dd").txt"
-
-        if (-not (Test-Path "Stats\Pools")) {New-Item "Stats\Pools" -ItemType "directory" > $null}
-        if (-not (Test-Path "Stats\Miners")) {New-Item "Stats\Miners" -ItemType "directory" > $null}
-        if (-not (Test-Path "Stats\Totals")) {New-Item "Stats\Totals" -ItemType "directory" > $null}
-
         $Color = ""
 
         switch ($Level) {
@@ -636,28 +630,28 @@ Function Write-Log {
                 }
                 $grow_out = $null
             }
-            # Generate a unique mutex name for the log directory
-            $mutexName = "RBM$(Get-MD5Hash ([io.fileinfo](".\Logs")).FullName)"
-            $mutex = [System.Threading.Mutex]::new($false, $mutexName)
+            # Mutex object and resolved log path are cached per runspace; the mutex name is derived from the path, so all runspaces share the same OS mutex
+            if ($Script:LogFileMutex -eq $null) {
+                $Script:LogsPathAbs  = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Logs")
+                $Script:LogFileMutex = [System.Threading.Mutex]::new($false, "RBM$(Get-MD5Hash $Script:LogsPathAbs)")
+                $Script:LogUtf8NoBom = [System.Text.UTF8Encoding]::new($false)
+            }
             try {
                 # Attempt to acquire the mutex, waiting up to 2 seconds
-                if ($mutex.WaitOne(2000)) {
+                if ($Script:LogFileMutex.WaitOne(2000)) {
                     try {
-                        "[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] $LevelText $Message" | Out-File $filename -Append -Encoding utf8
+                        [System.IO.File]::AppendAllText((Join-Path $Script:LogsPathAbs "RainbowMiner_$(Get-Date -Format "yyyy-MM-dd").txt"), "[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] $LevelText $Message$([Environment]::NewLine)", $Script:LogUtf8NoBom)
                     }
                     finally {
-                        $mutex.ReleaseMutex()
+                        $Script:LogFileMutex.ReleaseMutex()
                     }
                 }
                 else {
-                    Write-Error "Log file is locked, unable to write message to $FileName."
+                    Write-Error "Log file is locked, unable to write message."
                 }
             }
             catch {
-                Write-Error "Error acquiring mutex: $($_.Exception.Message)"
-            }
-            finally {
-                $mutex.Dispose()
+                Write-Error "Error writing to log file: $($_.Exception.Message)"
             }
         }
     }
