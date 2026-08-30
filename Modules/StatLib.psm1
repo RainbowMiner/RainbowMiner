@@ -2,6 +2,21 @@
 # Stat functions
 #
 
+$Script:StatFluctuationFields = @("Minute_Fluctuation","Minute_5_Fluctuation","Minute_10_Fluctuation","Hour_Fluctuation","Day_Fluctuation","ThreeDay_Fluctuation","Week_Fluctuation")
+$Script:StatDirsChecked = @{}
+$Script:Utf8NoBomEncoding = [System.Text.UTF8Encoding]::new($false)
+
+function Test-StatDir {
+    param(
+        [Parameter(Mandatory = $true)]
+        [String]$Dir
+    )
+    if (-not $Script:StatDirsChecked.ContainsKey($Dir)) {
+        if (-not (Test-Path $Dir)) {New-Item $Dir -ItemType "directory" > $null}
+        $Script:StatDirsChecked[$Dir] = $true
+    }
+}
+
 function Set-Stat {
     [CmdletBinding()]
     param(
@@ -336,7 +351,7 @@ function Set-Stat {
                         }
                     }
                 }
-                $Stat.PSObject.Properties.Name | Where-Object {$_ -match "Fluctuation" -and $Stat.$_ -gt 1} | Foreach-Object {$Stat.$_ = 0}
+                foreach ($fluct in $Script:StatFluctuationFields) {if ($Stat.$fluct -gt 1) {$Stat.$fluct = 0}}
             }
         }
         catch {
@@ -452,10 +467,10 @@ function Set-Stat {
         }
     }
 
-    if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
+    Test-StatDir $Path0
 
     if ($Stat.Duration -ne 0) {
-        $(Switch($Mode) {
+        $OutStat = Switch($Mode) {
             "Miners" {
                 [PSCustomObject]@{
                     Live = [Decimal]$Stat.Live
@@ -551,7 +566,12 @@ function Set-Stat {
                     PowerDraw_Average  = [Double]$Stat.PowerDraw_Average
                 }
             }
-        }) | ConvertTo-Json -Depth 10 | Set-Content $Path
+        }
+        try {
+            [System.IO.File]::WriteAllText($Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path), (ConvertTo-Json $OutStat -Depth 10 -Compress), $Script:Utf8NoBomEncoding)
+        } catch {
+            Write-Log -Level $LogLevel "Could not write stat file ($Name): $($_.Exception.Message) "
+        }
     }
 
     if ($Cached) {$Global:StatsCache[$Name] = $Stat}
@@ -578,7 +598,7 @@ function Get-StatFromFile {
         }
     }
 
-    if (-not $Cached -or $Global:StatsCache[$Name] -eq $null -or -not (Test-Path $Path)) {
+    if (-not $Cached -or $Global:StatsCache[$Name] -eq $null -or -not [System.IO.File]::Exists($Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path))) {
         try {
             $Stat = ConvertFrom-Json "$(Get-ContentByStreamReader $Path)" -ErrorAction Stop
             if ($Cached) {
@@ -648,7 +668,7 @@ function Get-Stat {
         elseif ($Name -match '_Poolstats$') {$Path = "Stats\Pools"}
         else {$Path = "Stats"}
 
-        if (-not (Test-Path $Path)) {New-Item $Path -ItemType "directory" > $null}
+        Test-StatDir $Path
 
         if ($Sub) {
             $Path = "$Path\$Sub-$Name.txt"
@@ -661,11 +681,11 @@ function Get-Stat {
         # Return all stats
         [hashtable]$NewStats = @{}
 
-        if (($Miners -or $All) -and -not (Test-Path "Stats\Miners")) {New-Item "Stats\Miners" -ItemType "directory" > $null}
-        if (($Disabled -or $All) -and -not (Test-Path "Stats\Disabled")) {New-Item "Stats\Disabled" -ItemType "directory" > $null}
-        if (($Pools -or $Poolstats -or $All) -and -not (Test-Path "Stats\Pools")) {New-Item "Stats\Pools" -ItemType "directory" > $null}
-        if (($Totals -or $TotalAvgs -or $All) -and -not (Test-Path "Stats\Totals")) {New-Item "Stats\Totals" -ItemType "directory" > $null}
-        if (($Balances -or $All) -and -not (Test-Path "Stats\Balances")) {New-Item "Stats\Balances" -ItemType "directory" > $null}
+        if ($Miners -or $All) {Test-StatDir "Stats\Miners"}
+        if ($Disabled -or $All) {Test-StatDir "Stats\Disabled"}
+        if ($Pools -or $Poolstats -or $All) {Test-StatDir "Stats\Pools"}
+        if ($Totals -or $TotalAvgs -or $All) {Test-StatDir "Stats\Totals"}
+        if ($Balances -or $All) {Test-StatDir "Stats\Balances"}
 
         $Check = ""
 
