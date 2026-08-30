@@ -1130,6 +1130,7 @@ function Invoke-Core {
     if (-not $Session.Config.DisableMSIAmonitor -and (Test-Afterburner) -eq -1 -and ($Session.RoundCounter -eq 0 -or $Session.Config.DisableMSIAmonitor -ne $ConfigBackup.DisableMSIAmonitor)) {Start-Afterburner}
     if (-not $psISE -and ($RestartRunspaces -or $Session.Config.DisableAPI -or $Session.Config.APIport -ne $ConfigBackup.APIport -or $Session.Config.APIauth -ne $ConfigBackup.APIauth -or $Session.Config.APIuser -ne $ConfigBackup.APIuser -or $Session.Config.APIpassword -ne $ConfigBackup.APIpassword -or $Session.Config.APIthreads -ne $ConfigBackup.APIthreads) -and (Test-Path Variable:Global:API) -and -not $API.IsVirtual) {Stop-APIServer}
     if (-not $psISE -and -not $Session.Config.DisableAPI -and -not (Test-Path Variable:Global:API)) {Start-APIServer}
+    Clear-APIServerStreams
     if($psISE -or -not (Test-Path Variable:Global:API)) {
         $Global:API = [hashtable]@{}
         $API.Stop = $false
