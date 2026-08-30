@@ -32,66 +32,24 @@ $Commands = [PSCustomObject[]]@(
 
 # $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-if ($InfoOnly) {
-    [PSCustomObject]@{
-        Type      = @("NVIDIA")
-        Name      = $Name
-        Path      = $Path
-        Port      = $Miner_Port
-        Uri       = $Uri
-        DevFee    = $DevFee
-        ManualUri = $ManualUri
-        Commands  = $Commands
-    }
-    return
+if (-not $InfoOnly) {
+if (-not (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name)) {return}
 }
 
-if (-not (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name)) {return}
-
-$Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-Object {
-    $Miner_Model = $_.Model
-    $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)" | Where-Object {$_.Model -eq $Miner_Model}
-
-    $Commands | ForEach-Object {
-        $First = $true
-        $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
-
-        $MinMemGB = $_.MinMemGB        
-        $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
-        
-		foreach($Algorithm_Norm in @(Get-PoolAlgorithmKeys -Pools $Pools -Algorithm $Algorithm_Norm_0 -Model $Miner_Model -ExcludePoolName "$($_.ExcludePoolName)")) {
-			if ($Pools.$Algorithm_Norm.Host -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName) -and $Miner_Device) {
-                if ($First) {
-                    $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
-                    $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-                    $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ' '
-                    $First = $false
-                }
-				$Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
-				[PSCustomObject]@{
-					Name           = $Miner_Name
-					DeviceName     = $Miner_Device.Name
-					DeviceModel    = $Miner_Model
-					Path           = $Path
-					Arguments      = "--api 127.0.0.1:`$mport --cuda_devices $($DeviceIDsAll) --server $($Pools.$Algorithm_Norm.Host) --port $($Pool_Port) --fee 0 --eexit 1 --user $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" --pass $($Pools.$Algorithm_Norm.Pass)"})$(if ($Algorithm_Norm -match "^Equihash") {" --pers $(Get-EquihashCoinPers $Pools.$Algorithm_Norm.CoinSymbol -Default "auto")"}) $($_.Params)"
-					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week)}
-					API            = "DSTM"
-					Port           = $Miner_Port
-                    FaultTolerance = $_.FaultTolerance
-					ExtendInterval = 2
-                    Penalty        = 0
-					DevFee         = $DevFee
-					Uri            = $Uri
-					ManualUri      = $ManualUri
-                    Version        = $Version
-                    PowerDraw      = 0
-                    BaseName       = $Name
-                    BaseAlgorithm  = $Algorithm_Norm_0
-                    Benchmarked    = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Benchmarked
-                    LogFile        = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".LogFile
-                    ExcludePoolName = $_.ExcludePoolName
-				}
-			}
-		}
+Invoke-MinerFamily -Name $Name -Pools $Pools -InfoOnly $InfoOnly -Setup @{
+    Vendor = "NVIDIA"
+    SuffixMode = "Keys"
+    FirstPerCmd = $true
+    UseExcludePool = $true
+    API = "DSTM"
+    DevIdJoin = " "
+    ExtendDefault = 2
+    Path = $Path; ManualUri = $ManualUri; Port = $Port; DevFee = $DevFee; Version = $Version
+    Uri = $Uri
+    Commands = $Commands
+    MakeArgs = { "--api 127.0.0.1:`$mport --cuda_devices $($DeviceIDsAll) --server $($Pools.$Algorithm_Norm.Host) --port $($Pool_Port) --fee 0 --eexit 1 --user $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" --pass $($Pools.$Algorithm_Norm.Pass)"})$(if ($Algorithm_Norm -match "^Equihash") {" --pers $(Get-EquihashCoinPers $Pools.$Algorithm_Norm.CoinSymbol -Default "auto")"}) $($_.Params)" }
+    PreKey = {
+        $MinMemGB = $_.MinMemGB
+        $Miner_Device = $Miner_Device_All | Where-Object {Test-VRAM $_ $MinMemGB}
     }
 }

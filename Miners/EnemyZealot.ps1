@@ -90,20 +90,7 @@ $Commands = [PSCustomObject[]]@(
 
 # $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-if ($InfoOnly) {
-    [PSCustomObject]@{
-        Type      = @("NVIDIA")
-        Name      = $Name
-        Path      = $Path
-        Port      = $Miner_Port
-        Uri       = $UriCuda.Uri
-        DevFee    = $DevFee
-        ManualUri = $ManualUri
-        Commands  = $Commands
-    }
-    return
-}
-
+if (-not $InfoOnly) {
 $Cuda = $null
 for($i=0;$i -lt $UriCuda.Count -and -not $Cuda;$i++) {
     if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $UriCuda[$i].Cuda -Warning $(if ($i -lt $UriCuda.Count-1) {""}else{$Name})) {
@@ -114,58 +101,23 @@ for($i=0;$i -lt $UriCuda.Count -and -not $Cuda;$i++) {
 }
 
 if (-not $Cuda) {return}
+}
 
-$Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-Object {
-    $Miner_Model = $_.Model
-    $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)" | Where-Object {$_.Model -eq $Miner_Model}
-
-    $Miner_AllowAmpere = (Compare-Version $Version "2.6.3") -ge 0
-
-    $Commands | Foreach-Object {
-        $First = $true
-
-        $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
-        
-        $MainAlgorithm_0 = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
-
-		foreach($Algorithm_Norm in @(Get-PoolAlgorithmKeys -Pools $Pools -Algorithm $Algorithm_Norm_0 -Model $Miner_Model -ExcludePoolName "$($_.ExcludePoolName)")) {
-            if (-not $Pools.$Algorithm_Norm.Host) {continue}
-
-            $MinMemGB = if ($_.DAG) {if ($Pools.$Algorithm_Norm.DagSizeMax) {$Pools.$Algorithm_Norm.DagSizeMax} else {Get-EthDAGSize -CoinSymbol $Pools.$Algorithm_Norm.CoinSymbol -Algorithm $Algorithm_Norm_0 -Minimum $_.MinMemGb}} else {$_.MinMemGb}
-            $Miner_Device = $Device | Where-Object {(Test-VRAM $_ $MinMemGb) -and ($Miner_AllowAmpere -or $_.OpenCL.Architecture -ne "Ampere")}
-
-			if ($Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName)) {
-                if ($First) {
-                    $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
-                    $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-                    $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ','
-                    $First = $false
-                }
-				$Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
-				[PSCustomObject]@{
-					Name           = $Miner_Name
-					DeviceName     = $Miner_Device.Name
-					DeviceModel    = $Miner_Model
-					Path           = $Path
-					Arguments      = "-R 1 --api-bind=0 --api-bind-http=`$mport -d $($DeviceIDsAll) -a $($MainAlgorithm_0) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$($Pools.$Algorithm_Norm.Failover | Select-Object | Foreach-Object {" -o $($_.Protocol)://$($_.Host):$($_.Port) -u $($_.User)$(if ($_.Pass) {" -p $($_.Pass)"})"}) --no-cert-verify $($_.Params)"
-					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate"."$(if ($_.HashrateDuration){$_.HashrateDuration}else{"Week"})"}
-					API            = "EnemyZ"
-					Port           = $Miner_Port
-					Uri            = $Uri
-                    FaultTolerance = $_.FaultTolerance
-					ExtendInterval = if ($_.ExtendInterval) {$_.ExtendInterval} else {2}
-                    Penalty        = 0
-					DevFee         = $DevFee
-					ManualUri      = $ManualUri
-                    Version        = $Version
-                    PowerDraw      = 0
-                    BaseName       = $Name
-                    BaseAlgorithm  = $Algorithm_Norm_0
-                    Benchmarked    = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Benchmarked
-                    LogFile        = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".LogFile
-                    ExcludePoolName = $_.ExcludePoolName
-				}
-			}
-		}
+Invoke-MinerFamily -Name $Name -Pools $Pools -InfoOnly $InfoOnly -Setup @{
+    Vendor = "NVIDIA"
+    SuffixMode = "Keys"
+    FirstPerCmd = $true
+    UseExcludePool = $true
+    API = "EnemyZ"
+    ExtendDefault = 2
+    Path = $Path; ManualUri = $ManualUri; Port = $Port; DevFee = $DevFee; Version = $Version
+    Uri = $Uri; UriCuda = $UriCuda
+    Commands = $Commands
+    MakeArgs = { "-R 1 --api-bind=0 --api-bind-http=`$mport -d $($DeviceIDsAll) -a $($MainAlgorithm_0) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$($Pools.$Algorithm_Norm.Failover | Select-Object | Foreach-Object {" -o $($_.Protocol)://$($_.Host):$($_.Port) -u $($_.User)$(if ($_.Pass) {" -p $($_.Pass)"})"}) --no-cert-verify $($_.Params)" }
+    PerModel = { $Miner_AllowAmpere = (Compare-Version $Version "2.6.3") -ge 0 }
+    PreKey = { $MainAlgorithm_0 = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm} }
+    PerKey = {
+        $MinMemGB = if ($_.DAG) {if ($Pools.$Algorithm_Norm.DagSizeMax) {$Pools.$Algorithm_Norm.DagSizeMax} else {Get-EthDAGSize -CoinSymbol $Pools.$Algorithm_Norm.CoinSymbol -Algorithm $Algorithm_Norm_0 -Minimum $_.MinMemGb}} else {$_.MinMemGb}
+        $Miner_Device = $Miner_Device_All | Where-Object {(Test-VRAM $_ $MinMemGb) -and ($Miner_AllowAmpere -or $_.OpenCL.Architecture -ne "Ampere")}
     }
 }

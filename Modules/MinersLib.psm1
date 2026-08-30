@@ -176,6 +176,9 @@ function Invoke-MinerFamily {
     $UseCoinSymbols = $Setup["UseCoinSymbols"]; $EmitsNoCPU = $Setup["EmitsNoCPU"]; $EmitsMaxRej = $Setup["EmitsMaxRej"]
     $API = $Setup["API"]; $MakeArgs = $Setup["MakeArgs"]; $PerModel = $Setup["PerModel"]
     $PreKey = $Setup["PreKey"]; $PerKey = $Setup["PerKey"]
+    $FirstPerCmd = $Setup["FirstPerCmd"]; $NeedsPlatformId = $Setup["NeedsPlatformId"]; $EnvVars = $Setup["EnvVars"]
+    $DevIdProp = $Setup["DevIdProp"]; $DevIdJoin = $Setup["DevIdJoin"]; $DevIdHex = $Setup["DevIdHex"]
+    $DevFeeCmd = $Setup["DevFeeCmd"]; $WinOrSingleDev = $Setup["WinOrSingleDev"]
     # rare stub-scope variables referenced by MakeArgs/hooks (e.g. UseCPUAffinity)
     if ($Setup["Vars"]) { foreach ($VarKey in $Setup["Vars"].Keys) { Set-Variable -Name $VarKey -Value $Setup["Vars"][$VarKey] } }
 
@@ -195,6 +198,8 @@ function Invoke-MinerFamily {
 
     if (-not $API) { $API = "Ccminer" }
     $IsGPU = $Vendor -ne "CPU"
+    if (-not $DevIdProp) { $DevIdProp = "Type_Vendor_Index" }
+    if ($DevIdJoin -eq $null) { $DevIdJoin = "," }
     $ArgsSB = Get-MinerFamilySB $Name "MakeArgs" $MakeArgs
     $PerModelSB = if ($PerModel) { Get-MinerFamilySB $Name "PerModel" $PerModel } else { $null }
     $PreKeySB   = if ($PreKey)   { Get-MinerFamilySB $Name "PreKey"   $PreKey }   else { $null }
@@ -206,11 +211,21 @@ function Invoke-MinerFamily {
         # NOT "$($_.Vendor)": CPU devices carry the silicon vendor (INTEL/AMD) there,
         # only GPU devices match their DevicesByTypes key; $Vendor is the type key
         $Miner_Device_All = $Global:DeviceCache.DevicesByTypes."$Vendor" | Where-Object {$_.Model -eq $Miner_Model}
+        if ($NeedsPlatformId) {
+            # AMD miners address devices per OpenCL platform; a model spanning
+            # platforms (PlatformId not a single int) cannot be started
+            $Miner_PlatformId = $Miner_Device_All | Select-Object -ExpandProperty PlatformId -Unique
+            if ($Miner_PlatformId -isnot [int]) {return}
+            $PlatformId = $Miner_PlatformId
+        }
+
         $Miner_Device = if ($PerEntryVRAM) { $null } elseif ($ArchIn) { $Miner_Device_All | Where-Object {$_.OpenCL.Architecture -in $ArchIn} } elseif ($ArchNotIn) { $Miner_Device_All | Where-Object {$_.OpenCL.Architecture -notin $ArchNotIn} } else { $Miner_Device_All }
 
         if ($PerModelSB) { . $PerModelSB }
 
         $(if ($CmdFilter) { $Commands | Where-Object {(-not $_.LinuxOnly -or $IsLinux) -and (-not $_.NeverProfitable -or $Session.Config.EnableNeverprofitableAlgos)} } else { $Commands }) | ForEach-Object {
+
+            if ($FirstPerCmd) { $First = $true }
 
             $Algorithm_Norm_0 = if ($UseAlgoOverride) { Get-Algorithm "$(if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm})" } else { Get-Algorithm $_.MainAlgorithm }
 
@@ -237,13 +252,14 @@ function Invoke-MinerFamily {
                 if ($PerKeySB) { . $PerKeySB }
                 if ((-not $CheckSSL -or -not $Pools.$Algorithm_Norm.SSL) -and $Pools.$Algorithm_Norm.Host -and $Miner_Device -and
                     (-not $MaxDevCount -or ($Miner_Device | Measure-Object).Count -le $MaxDevCount) -and
+                    (-not $WinOrSingleDev -or $IsWindows -or ($Miner_Device | Measure-Object).Count -eq 1) -and
                     (-not $UseExcludePool -or -not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName) -and
                     (-not $UseCoinSymbols -or -not $_.CoinSymbols -or $Pools.$Algorithm_Norm.CoinSymbol -in $_.CoinSymbols)) {
 
                     if ($First) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                         $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-                        if ($IsGPU) { $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ',' }
+                        if ($IsGPU) { $DeviceIDsAll = if ($DevIdHex) { ($Miner_Device | ForEach-Object {'{0:x}' -f $_."$DevIdProp"}) -join $DevIdJoin } else { $Miner_Device."$DevIdProp" -join $DevIdJoin } }
                         $First = $false
                     }
                     if ($IsGPU) {
@@ -264,8 +280,9 @@ function Invoke-MinerFamily {
                         FaultTolerance = $_.FaultTolerance
                         ExtendInterval = if ($_.ExtendInterval -ne $null) {$_.ExtendInterval} else {$ExtendDefault}
                         Penalty        = 0
-                        DevFee         = if ($DevFeeZero) {0.0} else {$DevFee}
+                        DevFee         = if ($DevFeeZero) {0.0} elseif ($DevFeeCmd) { if ($_.DevFee -ne $null) {$_.DevFee} else {$DevFee} } else {$DevFee}
                         ManualUri      = $ManualUri
+                        EnvVars        = $EnvVars
                         Version        = $Version
                         PowerDraw      = 0
                         BaseName       = $Name
