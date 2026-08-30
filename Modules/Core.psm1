@@ -3914,8 +3914,9 @@ function Invoke-Core {
     #Update the active miners
     $StopWatchSelect.Restart()
 
-    # $Global:ActiveMiners only ever grows - every pool switch adds entries, because the pool is part
-    # of the arguments - so the linear scan this replaces got slower the longer a session ran.
+    # $Global:ActiveMiners grows with every pool switch, because the pool is part of the arguments
+    # (idle entries are evicted after RBM_ACTIVEMINERS_MAXHOURS, default 24h, further down) - so the
+    # linear scan this replaces got slower the longer a session ran.
     # the key is the same conjunction the scan tested: Compare-Object on the algorithms is an
     # order insensitive, case insensitive comparison, and the hashtable is case insensitive too.
     # every legacy match lands in the probe's bucket (algorithm and miner names never contain a
@@ -4601,6 +4602,28 @@ function Invoke-Core {
         $ShiftDonationRun = $Session.Timer.AddHours(1 - $DonateDelayHours).AddMinutes($DonateMinutes)
         if (-not $Session.LastDonated -or $Session.LastDonated -lt $ShiftDonationRun) {$Session.LastDonated = Set-LastDrun $ShiftDonationRun}
     }
+
+    # evict idle miner objects that no candidate has matched for RBM_ACTIVEMINERS_MAXHOURS (default 24h);
+    # durable state lives in the stats files and the name-keyed watchdog/crash structures
+    $ActiveMiners_MaxHours = if ($env:RBM_ACTIVEMINERS_MAXHOURS -match "^\d+$") {[int]$env:RBM_ACTIVEMINERS_MAXHOURS} else {24}
+    $ActiveMiners_Expire   = (Get-Date).ToUniversalTime().AddHours(-$ActiveMiners_MaxHours)
+    $ActiveMiners_ExpireUI = (Get-Date).AddSeconds(-5 * $Session.Config.Interval)
+    $ActiveMiners_Evicted  = 0
+    for ($ActiveMiners_Ix = $Global:ActiveMiners.Count - 1; $ActiveMiners_Ix -ge 0; $ActiveMiners_Ix--) {
+        $Miner = $Global:ActiveMiners[$ActiveMiners_Ix]
+        if ($Miner.AccessLast -lt $ActiveMiners_Expire -and
+            $Miner.Status -ne [MinerStatus]::Running -and
+            -not $Miner.Best -and -not $Miner.Enabled -and -not $Miner.Stopped -and -not $Miner.New -and
+            $Miner.Job -eq $null -and $Miner.EthPillJob -eq $null -and $Miner.WrapperJob -eq $null -and
+            $Miner.GetActiveLast() -lt $ActiveMiners_ExpireUI) {
+            $Global:ActiveMiners.RemoveAt($ActiveMiners_Ix)
+            $ActiveMiners_Evicted++
+        }
+    }
+    if ($ActiveMiners_Evicted -gt 0) {
+        Write-Log "Evicted $($ActiveMiners_Evicted) stale miner object$(if ($ActiveMiners_Evicted -gt 1) {"s"}), $($Global:ActiveMiners.Count) left in the active list."
+    }
+    $Miner = $null
 
     #Update API miner information
     $API.WatchdogTimers = [System.Collections.Generic.List[PSCustomObject]]$Global:WatchdogTimers
