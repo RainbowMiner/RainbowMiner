@@ -1945,7 +1945,7 @@ function Update-DeviceVRAMReservation {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $false)]
-        [Double]$SafetyMarginGB = 0.4
+        [Double]$SafetyMarginGB = 0.6
     )
 
     if (-not $IsWindows) {return}
