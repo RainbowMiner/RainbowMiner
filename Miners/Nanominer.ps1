@@ -125,7 +125,8 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                         $First = $false
                     }
                     $Pool_Port = if ($Miner_Vendor -ne "CPU" -and $Pools.$MainAlgorithm_Norm.Ports -ne $null -and $Pools.$MainAlgorithm_Norm.Ports.GPU) {$Pools.$MainAlgorithm_Norm.Ports.GPU} else {$Pools.$MainAlgorithm_Norm.Port}
-                    $Wallet    = if ($Pools.$MainAlgorithm_Norm.Wallet) {$Pools.$MainAlgorithm_Norm.Wallet} else {$Pools.$MainAlgorithm_Norm.User}
+                    # nanominer gets the worker as separate rigName - strip it from the User fallback (e.g. Kryptex "krx.../{workername}"), or the login carries the worker twice and the pool rejects the subscribe
+                    $Wallet    = if ($Pools.$MainAlgorithm_Norm.Wallet) {$Pools.$MainAlgorithm_Norm.Wallet} else {$Pools.$MainAlgorithm_Norm.User -replace "[\./]\{workername[^\}]*\}$"}
 
                     $PaymentId = $null
                     #if ($Wallet -match "^(.+?)[\.\+]([0-9a-f]{16,})") {
@@ -149,7 +150,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
 			                if ($Pools.$SecondAlgorithm_Norm.Host -and (-not $_.CoinSymbols -or $Pools.$SecondAlgorithm_Norm.CoinSymbol -in $_.CoinSymbols) -and (-not $_.ExcludePoolName -or $Pools.$SecondAlgorithm_Norm.Host -notmatch $_.ExcludePoolName) -and (-not $_.ExcludeYiimp -or -not $Session.YiimpPools.Contains("$($Pools.$SecondAlgorithm_Norm_0.Name)"))) {
 
                                 $SecondPool_Port = if ($Pools.$SecondAlgorithm_Norm.Ports -ne $null -and $Pools.$SecondAlgorithm_Norm.Ports.$Pool_Port_Index) {$Pools.$SecondAlgorithm_Norm.Ports.$Pool_Port_Index} else {$Pools.$SecondAlgorithm_Norm.Port}
-                                $SecondWallet    = if ($Pools.$SecondAlgorithm_Norm.Wallet) {$Pools.$SecondAlgorithm_Norm.Wallet} else {$Pools.$SecondAlgorithm_Norm.User}
+                                $SecondWallet    = if ($Pools.$SecondAlgorithm_Norm.Wallet) {$Pools.$SecondAlgorithm_Norm.Wallet} else {$Pools.$SecondAlgorithm_Norm.User -replace "[\./]\{workername[^\}]*\}$"}
 
                                 $SecondWallet = $SecondWallet -replace "@","%40"
 
