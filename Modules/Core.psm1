@@ -2541,7 +2541,7 @@ function Invoke-Core {
         if ($PoolsToBeReaddedSet.Count) {
             Write-Log "Re-Adding currently failed pools: $($PoolsToBeReaddedSet -join ", ")"
             foreach ( $Pool in $Global:AllPools ) {
-                if ( $PoolsToBeReaddedSet.Contains($_.Name) ) { [void]$NewPools.Add($_) }
+                if ( $PoolsToBeReaddedSet.Contains($Pool.Name) ) { [void]$NewPools.Add($Pool) }
             }
         }
         $PoolsToBeReaddedSet = $null
