@@ -12,6 +12,35 @@ $BasePath = Join-Path $PWD "web"
 
 Set-OsFlags
 
+function Get-APIDataJson {
+    param(
+        [Parameter(Mandatory = $true)]
+        [String]$Key,
+        [Parameter(Mandatory = $false)]
+        [int]$Depth = 10,
+        [Parameter(Mandatory = $false)]
+        [Switch]$ExcludeJob
+    )
+    $Src = $API."$($Key)Data"
+    if ($Src -eq $null) {return $null}
+    $CacheKey = "json_$($Key)"
+    $Entry = $APICacheDB[$CacheKey]
+    if ($Entry -ne $null -and [object]::ReferenceEquals($Entry.SourceRef.Target,$Src)) {
+        $Entry.LastAccess = (Get-Date).ToUniversalTime()
+        return $Entry.Json
+    }
+    try {
+        $Json = if ($ExcludeJob) {ConvertTo-Json @($Src | Foreach-Object {$_ | Select-Object -Property * -ExcludeProperty *Job}) -Depth $Depth -ErrorAction Stop}
+                else {ConvertTo-Json $Src -Depth $Depth -ErrorAction Stop}
+        $CacheTime = (Get-Date).ToUniversalTime()
+        # SourceRef stays a WeakReference so the cache never keeps a superseded round's object graph alive
+        $APICacheDB[$CacheKey] = [PSCustomObject]@{SourceRef = [WeakReference]::new($Src); Json = $Json; LastWrite = $CacheTime; LastAccess = $CacheTime}
+        $Json
+    } catch {
+        if ($Entry -ne $null) {$Entry.Json}
+    }
+}
+
 $GCStopWatch = [System.Diagnostics.StopWatch]::New()
 $GCStopWatch.Start()
 
@@ -133,8 +162,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             }))} else {'*'}
 
             $CurrentMiners = @()
-            if (($IsLinux -or -not $Session.Config.ShowMinerWindow) -and $API.RunningMiners) {
-                $RunningMiners = ConvertFrom-Json $API.RunningMiners -ErrorAction Ignore
+            $RunningMiners = if (($IsLinux -or -not $Session.Config.ShowMinerWindow) -and $API.RunningMinersData) {ConvertFrom-Json "$(Get-APIDataJson "RunningMiners" -ExcludeJob)" -ErrorAction Ignore}
+            if ($RunningMiners) {
                 $CurrentMiners = @($RunningMiners | Where-Object {$_.LogFile -and (Test-Path $_.LogFile)} | Sort-Object -Property Name | Foreach-Object {
                     [PSCustomObject]@{
                         Name = "$($_.DeviceModel) $($_.BaseName)"
@@ -187,15 +216,18 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             break
         }
         "/activeminers" {
-            $Data = if ($API.ActiveMiners) {$API.ActiveMiners} else {"[]"}
+            $Data = Get-APIDataJson "ActiveMiners" -ExcludeJob
+            if (-not $Data) {$Data = "[]"}
             break
         }
         "/runningminers" {
-            $Data = if ($API.RunningMiners) {$API.RunningMiners} else {"[]"}
+            $Data = Get-APIDataJson "RunningMiners" -ExcludeJob
+            if (-not $Data) {$Data = "[]"}
             Break
         }
         "/failedminers" {
-            $Data = if ($API.FailedMiners) {$API.FailedMiners} else {"[]"}
+            $Data = Get-APIDataJson "FailedMiners" -ExcludeJob
+            if (-not $Data) {$Data = "[]"}
             Break
         }
         "/remoteminers" {
@@ -228,11 +260,13 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             Break
         }
         "/pools" {
-            $Data = if ($API.Pools) {$API.Pools} else {"[]"}
+            $Data = Get-APIDataJson "Pools"
+            if (-not $Data) {$Data = "[]"}
             Break
         }
         "/allpools" {
-            $Data = if ($API.AllPools) {$API.AllPools} else {"[]"}
+            $Data = Get-APIDataJson "AllPools"
+            if (-not $Data) {$Data = "[]"}
             Break
         }
         "/newpools" {
@@ -244,11 +278,13 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             Break
         }
         "/miners" {
-            $Data = if (Test-Path ".\Data\miners.json") {Get-ContentByStreamReader ".\Data\miners.json"} else {"[]"}
+            $Data = Get-APIDataJson "Miners"
+            if (-not $Data) {$Data = if (Test-Path ".\Data\miners.json") {Get-ContentByStreamReader ".\Data\miners.json"} else {"[]"}}
             Break
         }
         "/fastestminers" {
-            $Data = if ($API.FastestMiners) {$API.FastestMiners} else {"[]"}
+            $Data = Get-APIDataJson "FastestMiners"
+            if (-not $Data) {$Data = "[]"}
             Break
         }
         "/availminers" {
@@ -272,8 +308,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             $WTMdata = Get-WhatToMineData
             $WTMdata_algos = @($WTMdata | Where-Object {$_.id} | Foreach-Object {if ($_.algo -eq "ProgPow") {"ProgPowZ","ProgPowSero"} else {$_.algo}} | Select-Object)
             $WTMdata_result = [hashtable]@{}
-            if ($API.FastestMiners) {
-                $API_FastestMiners = ConvertFrom-Json $API.FastestMiners -ErrorAction Ignore
+            if ($API.FastestMinersData) {
+                $API_FastestMiners = ConvertFrom-Json "$(Get-APIDataJson "FastestMiners")" -ErrorAction Ignore
                 $API_FastestMiners | Where-Object {$_.BaseAlgorithm -notmatch '-' -and $WTMdata_algos -icontains $_.BaseAlgorithm} | Group-Object -Property DeviceModel | Foreach-Object {
                     $Group = $_.Group
                     $WTMdata_result[$_.Name] = "https://whattomine.com/coins?$(@($WTMdata | Where-Object {$_.id} | Foreach-Object {$Algo = @(if ($_.algo -eq "ProgPow") {"ProgPowZ","ProgPowSero"} else {$_.algo});if (($One = $Group | Where-Object {$_.BaseAlgorithm -in $Algo} | Select-Object -First 1) -and (($OneHR = if ($One.HashRates."$($One.BaseAlgorithm)") {$One.HashRates."$($One.BaseAlgorithm)"} elseif ($One.HashRates."$($One.BaseAlgorithm)-$($One.DeviceModel)") {$One.HashRates."$($One.BaseAlgorithm)-$($One.DeviceModel)"} else {$One.HashRates."$($One.BaseAlgorithm)-GPU"}) -gt 0)) {"$($_.id)=true&factor[$($_.id)_hr]=$([Math]::Round($OneHR/$_.factor,3))&factor[$($_.id)_p]=$([int]$One.PowerDraw)"} else {"$($_.id)=false&factor[$($_.id)_hr]=$(if ($_.id -eq "eth") {"0.000001"} else {"0"})&factor[$($_.id)_p]=0"}}) -join '&')&factor[cost]=$(if ($Session.Config.UsePowerPrice) {[Math]::Round($API.CurrentPowerPrice*$(if ($Session.Config.PowerPriceCurrency -ne "USD" -and $Rates."$($Session.Config.PowerPriceCurrency)") {$Rates.USD/$Rates."$($Session.Config.PowerPriceCurrency)"} else {1}),4)} else {0})&sort=Profitability24&volume=0&revenue=24h&dataset=$($Session.Config.WorkerName)&commit=Calculate"
@@ -864,8 +900,9 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             "="*80 | Out-File $TestFileName -Append -Encoding utf8
             " " | Out-File $TestFileName -Append -Encoding utf8
 
-            if (Test-Path ".\Data\miners.json") {
-                $API_Miners = ConvertFrom-Json "$(Get-ContentByStreamReader ".\Data\miners.json")" -ErrorAction Ignore
+            $API_Miners = if ($API.MinersData) {ConvertFrom-Json "$(Get-APIDataJson "Miners")" -ErrorAction Ignore}
+                          elseif (Test-Path ".\Data\miners.json") {ConvertFrom-Json "$(Get-ContentByStreamReader ".\Data\miners.json")" -ErrorAction Ignore}
+            if ($API_Miners) {
                 $API_Miners | Where-Object {$_.ListDevices -ne $null} | Select-Object -Unique -Property BaseName,Path,ListDevices,ListPlatforms | Sort-Object -Property BaseName | Where-Object {Test-Path $_.Path} | Foreach-Object {
                     try {
                         " " | Out-File $TestFileName -Append -Encoding utf8
@@ -1285,8 +1322,9 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             [hashtable]$JsonUri_Dates = @{}
             [hashtable]$Miners_List = @{}
             [System.Collections.ArrayList]$Out = @()
-            if (Test-Path ".\Data\miners.json") {
-                $API_Miners = ConvertFrom-Json "$(Get-ContentByStreamReader ".\Data\miners.json")" -ErrorAction Ignore
+            $API_Miners = if ($API.MinersData) {ConvertFrom-Json "$(Get-APIDataJson "Miners")" -ErrorAction Ignore}
+                          elseif (Test-Path ".\Data\miners.json") {ConvertFrom-Json "$(Get-ContentByStreamReader ".\Data\miners.json")" -ErrorAction Ignore}
+            if ($API_Miners) {
 
                 $API_Miners | Where-Object {$_.DeviceModel -notmatch '-' -or $Session.Config.MiningMode -eq "legacy"} | Foreach-Object {
                     if (-not $JsonUri_Dates.ContainsKey($_.BaseName)) {
@@ -1839,8 +1877,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             if ($Pool_Request = Get-MiningRigRentalAlgos) {
                 $ActiveMiners = @()
 
-                if ($API.ActiveMiners) {
-                    $ActiveMiners = ConvertFrom-Json $API.ActiveMiners -ErrorAction Ignore
+                if ($API.ActiveMinersData) {
+                    $ActiveMiners = ConvertFrom-Json "$(Get-APIDataJson "ActiveMiners" -ExcludeJob)" -ErrorAction Ignore
                 }
 
                 [hashtable]$StatsCPU = @{}
@@ -1886,8 +1924,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 if (($Pool_Request = Get-MiningRigRentalAlgos) -and ($AllRigs_Request = Get-MiningRigRentalRigs -key $Session.Config.Pools.MiningRigRentals.API_Key -secret $Session.Config.Pools.MiningRigRentals.API_Secret -workers $Workers)) {
                     $ActiveMiners = @()
 
-                    if ($API.ActiveMiners) {
-                        $ActiveMiners = ConvertFrom-Json $API.ActiveMiners -ErrorAction Ignore
+                    if ($API.ActiveMinersData) {
+                        $ActiveMiners = ConvertFrom-Json "$(Get-APIDataJson "ActiveMiners" -ExcludeJob)" -ErrorAction Ignore
                     }
                     
                     [hashtable]$StatsCPU = @{}
