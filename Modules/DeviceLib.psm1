@@ -341,6 +341,7 @@ function Get-Device {
                         BusId = $null
                         SubId = $SubId
                         IsLHR = $false
+                        ReservedVRAMGB = $null
                         GpuGroup = ""
 
                         Data = [PSCustomObject]@{
@@ -1928,6 +1929,53 @@ param(
                 Invoke-Exe -FilePath $NVSMI -ArgumentList $ArgumentsString -ExcludeEmptyLines -ExpandLines -Runas:$Runas
             }
         }
+    }
+}
+
+function Update-DeviceVRAMReservation {
+    # Measure the real per-GPU VRAM reservation once at startup, BEFORE any miner
+    # is started. On Windows the WDDM/driver reservation is roughly constant per
+    # GPU (a few hundred MB, ~1GB on the display GPU), NOT proportional to the
+    # total memory - the static 0.865 factor in Test-VRAM overcharges big cards.
+    # Stores measured used memory + safety margin in ReservedVRAMGB on the device
+    # objects in $Global:GlobalCachedDevices. Implausible values (usable < 50% of
+    # total, e.g. an orphaned miner still holding VRAM after a crash restart)
+    # leave ReservedVRAMGB at $null, so all consumers keep the static arithmetic.
+    # Runs without $Session.Config (Start-Core) - Get-NvidiaSmi handles that.
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [Double]$SafetyMarginGB = 0.4
+    )
+
+    if (-not $IsWindows) {return}
+
+    $NV_Devices = @($Global:GlobalCachedDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -eq "NVIDIA"})
+    if (-not $NV_Devices) {return}
+
+    try {
+        $SMI_Result = @(Invoke-NvidiaSmi "index","memory.used","pci.bus_id" | Where-Object {$_.index -ne $null} | Sort-Object index)
+        if (-not $SMI_Result) {return}
+
+        $DeviceId = 0
+        foreach ($Smi in $SMI_Result) {
+            $Smi_BusId = if ("$($Smi.pci_bus_id)" -match ":([0-9A-Fa-f]{2}:[0-9A-Fa-f]{2})") {$Matches[1]} else {$null}
+            $Device = if ($Smi_BusId) {$NV_Devices | Where-Object {$_.BusId -and $_.BusId -ieq $Smi_BusId} | Select-Object -First 1}
+            if (-not $Device) {$Device = $NV_Devices | Where-Object Type_Vendor_Index -eq $DeviceId | Select-Object -First 1}
+            if ($Device -and $Smi.memory_used -ne $null -and $Device.OpenCL.GlobalMemsize) {
+                $ReservedGB = [Math]::Round($Smi.memory_used / 1kb + $SafetyMarginGB, 2)
+                $TotalGB    = $Device.OpenCL.GlobalMemsize / 1gb
+                if (($TotalGB - $ReservedGB) -ge 0.5 * $TotalGB) {
+                    $Device.ReservedVRAMGB = $ReservedGB
+                    Write-Log "VRAM reservation on $($Device.Name): $($ReservedGB)GB (incl. $($SafetyMarginGB)GB margin) of $([Math]::Round($TotalGB,2))GB"
+                } else {
+                    Write-Log -Level Info "VRAM reservation on $($Device.Name) implausible ($($ReservedGB)GB of $([Math]::Round($TotalGB,2))GB) - using static defaults"
+                }
+            }
+            $DeviceId++
+        }
+    } catch {
+        Write-Log -Level Info "VRAM reservation measurement failed: $($_.Exception.Message)"
     }
 }
 

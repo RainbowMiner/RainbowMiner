@@ -28,8 +28,9 @@ function Confirm-Cuda {
 
 function Test-VRAM {
     # Hot path: called per device per pool key from ~55 miner modules. Deliberately
-    # plain parameters (see Get-PoolAlgorithmKeys). The Win10/NVIDIA memory factor
-    # and the OpenCL memsize are static per device, so resolve them once per device
+    # plain parameters (see Get-PoolAlgorithmKeys). The usable memory is static per
+    # device within a round, so resolve it once per device (measured reservation or
+    # config override via Get-DeviceUsableVRAMGB, else the historic static factors)
     # and keep the comparison arithmetic byte for byte
     param(
         $Device,
@@ -37,10 +38,20 @@ function Test-VRAM {
     )
     $Mem = $Script:TestVRAMMem[$Device.Name]
     if ($null -eq $Mem) {
-        $Mem = if ($IsWindows -and $Session.IsWin10 -and $Device.Vendor -eq "NVIDIA") {@(($Device.OpenCL.GlobalMemsize*0.865), 0.0)} else {@($Device.OpenCL.GlobalMemsize, 0.25)}
+        $UsableGB = Get-DeviceUsableVRAMGB $Device
+        $Mem = if ($null -ne $UsableGB) {@(($UsableGB * 1Gb), 0.0)}
+               elseif ($IsWindows -and $Session.IsWin10 -and $Device.Vendor -eq "NVIDIA") {@(($Device.OpenCL.GlobalMemsize*0.865), 0.0)}
+               else {@($Device.OpenCL.GlobalMemsize, 0.25)}
         $Script:TestVRAMMem[$Device.Name] = $Mem
     }
     $Mem[0] -ge (($MinMemGB + $Mem[1]) * 1Gb)
+}
+
+function Reset-TestVRAM {
+    # Clears the per-device memoization. Call after anything that changes the
+    # inputs of Test-VRAM mid-session: a config re-read (GPUReservedVRAMGB may
+    # have changed) or a future Get-Device -Refresh (device list rebuild).
+    $Script:TestVRAMMem = @{}
 }
 
 #

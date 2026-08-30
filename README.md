@@ -862,6 +862,7 @@ An example:
 - **MinerStatusMaxCrashesPerHour** = maximum allowed crashes per hour, triggers push message, if above [default=5]
 - **DiskMinGB** = minimum free disk space in GB, triggers push message, if below [default=5]
 - **MinFreeMemoryGB** = RAM in GB to keep free for the system and RainbowMiner. Algorithms with a known large memory footprint (the RandomX family needs a ~2GB dataset) are skipped on machines that cannot hold them in physical RAM, since the miner would otherwise allocate into the page file and stall. Set to 0 to disable the check [default=1.5]
+- **GPUReservedVRAMGB** = VRAM in GB that the OS/driver reserves per GPU. This is subtracted from each GPU's memory before miners are matched against their minimum VRAM requirements. Leave empty for auto-detection: at every start, RainbowMiner reads the actual per-GPU usage via nvidia-smi (Windows/NVIDIA). Set to 0 to use the full VRAM, or enter a flat per-GPU reservation in GB [default=]
 
 Notes for the automatic values for **APIThreads**:
 - if the **RunMode** is set to "Server", the thread count will be set to the number of CPU threads (with a maximum of 8)

@@ -53,6 +53,6 @@ Invoke-MinerFamily -Name $Name -Pools $Pools -InfoOnly $InfoOnly -Setup @{
     PreKey = {
         $MinMemGb = $_.MinMemGb
         $Params = $_.Params
-        $Miner_Device = $Miner_Device_All | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb) -and $_.OpenCL.Name -match "^(Ellesmere|Polaris|Vega|gfx900)"}
+        $Miner_Device = $Miner_Device_All | Where-Object {(Test-VRAM $_ $MinMemGb) -and $_.OpenCL.Name -match "^(Ellesmere|Polaris|Vega|gfx900)"}
     }
 }

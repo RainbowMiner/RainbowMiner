@@ -1118,10 +1118,15 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                         $RigType ="$($RigDevice.Foreach("Type") | Select-Object -Unique)".ToUpper()
 
                         if ($RigType -eq "GPU") {
-                            $RigDeviceRam = ($RigDevice | Foreach-Object {$_.OpenCL.GlobalMemsize} | Measure-Object -Minimum).Minimum / 1GB
-                            if ($IsWindows -and $Session.IsWin10 -and -not $Session.Config.EnableEthashZombieMode) {
-                                $RigDeviceRam *= 0.8652
-                            }
+                            $RigDeviceRam = ($RigDevice | Foreach-Object {
+                                    $DevRam = $null
+                                    if (-not $Session.Config.EnableEthashZombieMode) {$DevRam = Get-DeviceUsableVRAMGB $_}
+                                    if ($DevRam -eq $null) {
+                                        $DevRam = $_.OpenCL.GlobalMemsize / 1GB
+                                        if ($IsWindows -and $Session.IsWin10 -and -not $Session.Config.EnableEthashZombieMode) {$DevRam = $DevRam * 0.8652}
+                                    }
+                                    $DevRam
+                                } | Measure-Object -Minimum).Minimum
                             $RigDeviceRam = [Math]::Round($RigDeviceRam,3)
                             foreach ($dRam in @(24,20,16,12,11,10,8,6,5,4,3,5,3,2,1)) {
                                 if ($dRam -le $RigDeviceRam) {

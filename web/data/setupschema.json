@@ -261,6 +261,24 @@
         },
         {
           "kind": "field",
+          "key": "GPUReservedVRAMGB",
+          "id": "inputGPUReservedVRAMGB",
+          "label": {
+            "html": "Reserved GPU VRAM",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "VRAM in GB that the OS/driver reserves per GPU, subtracted before miners are matched against their memory requirements. Leave empty to auto-detect the real reservation via nvidia-smi at start (recommended), enter 0 to use the full VRAM, or any other value as a flat per-GPU reservation."
+          },
+          "control": "text",
+          "attrs": {
+            "placeholder": "Leave empty for auto-detection"
+          }
+        },
+        {
+          "kind": "field",
           "key": "CPUMiningAffinity",
           "id": "inputCPUMiningAffinity",
           "label": {

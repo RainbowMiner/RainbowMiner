@@ -1295,6 +1295,24 @@ function Test-AlgorithmMemory {
     ($NeedGB + $MinFreeGB) -le $TotalGB
 }
 
+function Get-DeviceUsableVRAMGB {
+    # Usable VRAM of a GPU device in GB, honoring (in this order) the
+    # GPUReservedVRAMGB config override ("" = auto, 0 = no reservation, else a
+    # flat per-GPU reservation in GB) and the reservation measured at startup by
+    # Update-DeviceVRAMReservation (DeviceLib.psm1). Returns $null when neither
+    # is available - callers then apply their historic static fallback
+    # (Test-VRAM: 0.865 factor / 0.25GB offset; MiningRigRentals: 0.8652).
+    # Lives in Include.psm1 on purpose: the MiningRigRentals pool code runs in
+    # Get-PoolsContentRS runspaces that do not import MinersLib.psm1.
+    param($Device)
+    if (-not $Device.OpenCL -or -not $Device.OpenCL.GlobalMemsize) {return $null}
+    $ReservedGB = $null
+    $CfgValue = if ($Session.Config) {"$($Session.Config.GPUReservedVRAMGB)".Trim()} else {""}
+    if ($CfgValue -match "^\d+(\.\d+)?$") {$ReservedGB = [double]$CfgValue}
+    elseif ($Device.ReservedVRAMGB -ne $null) {$ReservedGB = [double]$Device.ReservedVRAMGB}
+    if ($ReservedGB -ne $null) {[Math]::Round([Math]::Max(($Device.OpenCL.GlobalMemsize / 1gb) - $ReservedGB, 0), 3)}
+}
+
 function Get-EthDAGSize {
     # Hot path: called per pool algorithm key inside every DAG miner module's
     # loops and reentrantly from Get-Algorithm. Deliberately plain parameters

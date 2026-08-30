@@ -341,6 +341,9 @@ function Start-Core {
         $PauseByError = $true
     }
 
+    # Measure per-GPU VRAM reservation before any miner is started (Test-VRAM input)
+    Update-DeviceVRAMReservation
+
     if ($IsWindows -and ($Session.MineOnCPU -ne $false -or $Session.MineOnGPU -ne $false)) {
         $GpuMemSizeMB = if ($Session.MineOnGPU -eq $false) {0} else {(($Global:DeviceCache.AllDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -in @("AMD","INTEL","NVIDIA")}).OpenCL.GlobalMemSizeGB | Measure-Object -Sum).Sum*1100}
         $CpuMemSizeMB = if ($Session.MineOnCPU -eq $false) {0} else {[Math]::Max(0,32-(Get-CimInstance Win32_PhysicalMemory | Measure-Object -Property capacity -Sum).Sum/1GB)*1100}
@@ -835,6 +838,9 @@ function Invoke-Core {
                 $Session.Config | Add-Member Combos ([PSCustomObject]@{}) -Force
                 $Session.Config | Add-Member Scheduler @() -Force
                 $Session.Config | Add-Member Userpools @() -Force
+
+                # config may change GPUReservedVRAMGB - drop Test-VRAM's per-device memo
+                Reset-TestVRAM
 
                 $ConfigSetup = $null
                 $Parameters = $null
