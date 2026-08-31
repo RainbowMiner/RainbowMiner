@@ -772,6 +772,17 @@ function ConvertTo-APIJson {
     }
 }
 
+function ConvertTo-ReportJson {
+    param($InputObject, [int]$Depth = 10)
+    # native RBMToolBox writer; fall back to the built-in serializer if it fails
+    try {
+        [RBMToolBox]::ConvertToJson($InputObject, $Depth)
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        ConvertTo-Json $InputObject -Depth $Depth -Compress
+    }
+}
+
 function Invoke-Core {
 
     #Validate version file
@@ -6132,7 +6143,7 @@ function Invoke-ReportMinerStatus {
     $PowerDraw = 0.0
     $TempAlert = 0
 
-    $minerreport = ConvertTo-Json @(
+    $minerreport = ConvertTo-ReportJson @(
         $Global:ActiveMiners | Where-Object {$_.Activated -gt 0 -and $_.Status -eq [MinerStatus]::Running} | ForEach-Object {
             $Miner = $_
             $Miner_PowerDraw = $Miner.GetPowerDraw()
@@ -6140,28 +6151,38 @@ function Invoke-ReportMinerStatus {
             $PowerDraw += [Double]$Miner_PowerDraw
 
             $Devices = [System.Collections.Generic.List[PSCustomObject]]::new()
-            Get-Device $Miner.DeviceName | Foreach-Object {
-                if ($_.Type -eq "GPU") {
-                    if ($_.Data.Temperature -gt $Session.Config.MinerStatusMaxTemp) {$TempAlert++}
+            foreach ($Device in $Global:GlobalCachedDevices) {
+                if ($Miner.DeviceName -notcontains $Device.Name) {continue}
+                if ($Device.Type -eq "GPU") {
+                    if ($Device.Data.Temperature -gt $Session.Config.MinerStatusMaxTemp) {$TempAlert++}
                     [void]$Devices.Add([PSCustomObject]@{
-                        Id    = $_.Type_PlatformId_Index
-                        Name  = $_.Model
-                        Mem   = [int]($_.OpenCL.GlobalMemSize / 1GB)
-                        Temp  = $_.Data.Temperature
-                        Fan   = $_.Data.FanSpeed
-                        Watt  = $_.Data.PowerDraw
-                        Core  = $_.Data.Clock
-                        MemC  = $_.Data.ClockMem
-                        MaxTemp = $_.DataMax.Temperature
+                        Id    = $Device.Type_PlatformId_Index
+                        Name  = $Device.Model
+                        Mem   = [int]($Device.OpenCL.GlobalMemSize / 1GB)
+                        Temp  = $Device.Data.Temperature
+                        Fan   = $Device.Data.FanSpeed
+                        Watt  = $Device.Data.PowerDraw
+                        Core  = $Device.Data.Clock
+                        MemC  = $Device.Data.ClockMem
+                        MaxTemp = $Device.DataMax.Temperature
                     })
                 } else {
                     [void]$Devices.Add([PSCustomObject]@{
-                        Id    = $_.Type_PlatformId_Index
-                        Name  = $_.Model_Name
-                        Watt  = $_.Data.PowerDraw
-                        Temp  = $_.Data.Temperature
+                        Id    = $Device.Type_PlatformId_Index
+                        Name  = $Device.Model_Name
+                        Watt  = $Device.Data.PowerDraw
+                        Temp  = $Device.Data.Temperature
                     })
                 }
+            }
+
+            $Accepted = [System.Collections.Generic.List[object]]::new()
+            $Rejected = [System.Collections.Generic.List[object]]::new()
+            $Stale    = [System.Collections.Generic.List[object]]::new()
+            foreach ($Stratum in $Miner.Stratum) {
+                [void]$Accepted.Add($Stratum.Accepted)
+                [void]$Rejected.Add($Stratum.Rejected)
+                [void]$Stale.Add($Stratum.Stale)
             }
 
             # Create a custom object to convert to json. Type, Pool, CurrentSpeed and EstimatedSpeed are all forced to be arrays, since they sometimes have multiple values.
@@ -6174,14 +6195,14 @@ function Invoke-ReportMinerStatus {
                 Algorithm      = @($Miner.BaseAlgorithm)
                 BLK            = @($Miner.BLK)
                 Currency       = $Miner.Currency
-                CoinName       = @($Miner.CoinName | Where-Object {$_} | Select-Object)
-                CoinSymbol     = @($Miner.CoinSymbol | Where-Object {$_} | Select-Object)
+                CoinName       = @($Miner.CoinName | Where-Object {$_})
+                CoinSymbol     = @($Miner.CoinSymbol | Where-Object {$_})
                 Pool           = @($Miner.Pool)
                 CurrentSpeed   = @($Miner.Speed_Live)
                 EstimatedSpeed = @($Miner.Speed)
-                Accepted       = @($Miner.Stratum | Foreach-Object {$_.Accepted} | Select-Object)
-                Rejected       = @($Miner.Stratum | Foreach-Object {$_.Rejected} | Select-Object)
-                Stale          = @($Miner.Stratum | Foreach-Object {$_.Stale} | Select-Object)
+                Accepted       = $Accepted
+                Rejected       = $Rejected
+                Stale          = $Stale
                 PowerDraw      = $Miner_PowerDraw
                 'BTC/day'      = $Miner.Profit
                 Profit         = $Miner.Profit
@@ -6191,10 +6212,10 @@ function Invoke-ReportMinerStatus {
             }
             $Devices = $null
         }
-    ) -Depth 10 -Compress
+    )
     
-    $Profit = [Math]::Round($Profit, 8) | ConvertTo-Json
-    $PowerDraw = [Math]::Round($PowerDraw, 2) | ConvertTo-Json
+    $Profit = "$([Math]::Round($Profit, 8))"
+    $PowerDraw = "$([Math]::Round($PowerDraw, 2))"
 
     $Pool_Totals = if ($Session.ReportTotals) {
         Set-TotalsAvg -CleanupOnly
@@ -6205,15 +6226,24 @@ function Invoke-ReportMinerStatus {
         Set-ContentJson -PathToFile ".\Data\pool_totals.json" -Data $Pool_Totals > $null
     }
 
-    if (Test-Path ".\Data\reportapi.json") {try {$ReportAPI = Get-ContentByStreamReader ".\Data\reportapi.json" | ConvertFrom-Json -ErrorAction Stop} catch {$ReportAPI=$null}}
+    $ReportAPI = $null
+    if (Test-Path ".\Data\reportapi.json") {
+        $ReportAPIWriteTime = (Get-Item ".\Data\reportapi.json").LastWriteTimeUtc
+        if (-not $Session.ReportAPICache -or $Session.ReportAPICacheTime -ne $ReportAPIWriteTime) {
+            try {$Session.ReportAPICache = Get-ContentByStreamReader ".\Data\reportapi.json" | ConvertFrom-Json -ErrorAction Stop} catch {$Session.ReportAPICache = $null}
+            $Session.ReportAPICacheTime = $ReportAPIWriteTime
+        }
+        $ReportAPI = $Session.ReportAPICache
+    }
     if (-not $ReportAPI) {$ReportAPI = @([PSCustomObject]@{match    = "rbminer.net";apiurl   = "https://api.rbminer.net/report.php"})}
 
     # Create crash alerts - the crash counter may retain more than one hour when CrashTrackingWindowMinutes is larger, so keep the reported data at one hour
     $CrashTimeLimit = (Get-Date).AddHours(-1)
+    $Crashes = @($Global:CrashCounter | Where-Object {$_.Timestamp -gt $CrashTimeLimit})
     $CrashData = $null
-    if ($Session.IsCore -or $Session.EnableCurl) {
+    if ($Crashes.Count -and ($Session.IsCore -or $Session.EnableCurl)) {
         try {
-            ConvertTo-Json @($Global:CrashCounter | Where-Object {$_.Timestamp -gt $CrashTimeLimit} | Foreach-Object {[PSCustomObject]@{
+            ConvertTo-ReportJson @($Crashes | Foreach-Object {[PSCustomObject]@{
                 Timestamp      = "{0:yyyy-MM-dd HH:mm:ss}" -f $_.TimeStamp
                 Start          = "{0:yyyy-MM-dd HH:mm:ss}" -f $_.Start
                 End            = "{0:yyyy-MM-dd HH:mm:ss}" -f $_.End
@@ -6222,7 +6252,7 @@ function Invoke-ReportMinerStatus {
                 Device         = $_.Device
                 Algorithm      = $_.Algorithm
                 Pool           = $_.Pool
-            }}) -Depth 10 -Compress | Set-Content ".\Data\crashdata.json"
+            }}) | Set-Content ".\Data\crashdata.json"
             if (Test-Path ".\Data\crashdata.json") {
                 $CrashData = Get-Item ".\Data\crashdata.json"
                 if ($CrashData.Length -le 4) {$CrashData = $null}
@@ -6233,14 +6263,15 @@ function Invoke-ReportMinerStatus {
     }
 
     # Create out-of-space alert
-    $DiskMinGBAlert = ConvertTo-Json @($Session.SysInfo.Disks | Where-Object {($IsLinux -or "$PWD" -match "^$($_.Drive)") -and ($_.TotalGB - $_.UsedGB) -lt $Session.Config.DiskMinGB} | Select-Object) -Compress
+    $DiskMinGBAlert = ConvertTo-ReportJson @($Session.SysInfo.Disks | Where-Object {($IsLinux -or "$PWD" -match "^$($_.Drive)") -and ($_.TotalGB - $_.UsedGB) -lt $Session.Config.DiskMinGB} | Select-Object)
 
     # Add current console.txt
     $Console = $null
     if ($Session.IsCore -or $Session.EnableCurl) {
         try {
-            if (Test-Path ".\Logs\console.txt") {
-                @(Get-ContentByStreamReader -FilePath ".\Logs\console.txt" -ExpandLines) | Foreach-Object {$_ -replace "\x1B\[[;\d]+m"} | Set-Content -Path ".\Cache\console.txt" -Encoding Utf8
+            $ConsoleText = Get-ContentByStreamReader -FilePath ".\Logs\console.txt"
+            if ($ConsoleText) {
+                Set-Content -Path ".\Cache\console.txt" -Value ($ConsoleText -replace "\x1B\[[;\d]+m") -Encoding Utf8 -NoNewline
                 $Console = Get-Item ".\Cache\console.txt"
                 if ($Console.Length -le 100) {$Console = $null}
             }
@@ -6250,14 +6281,14 @@ function Invoke-ReportMinerStatus {
     }
 
 
-    $CrashesLastHour = @($Global:CrashCounter | Where-Object {$_.Timestamp -gt $CrashTimeLimit}).Count
+    $CrashesLastHour = $Crashes.Count
     $CrashAlert = if ($Session.Config.MinerStatusMaxCrashesPerHour -ge 0 -and $CrashesLastHour -gt $Session.Config.MinerStatusMaxCrashesPerHour) {$CrashesLastHour} else {0}
 
     # All device data
     $DeviceData = $null
     if ($Session.ReportDeviceData) {
         try {
-            ConvertTo-Json $Global:GlobalCachedDevices -Depth 10 -Compress | Set-Content ".\Data\devicedata.json"
+            ConvertTo-ReportJson $Global:GlobalCachedDevices | Set-Content ".\Data\devicedata.json"
             if (Test-Path ".\Data\devicedata.json") {
                 if ($Session.IsCore -or $Session.EnableCurl) {
                     $DeviceData = Get-Item ".\Data\devicedata.json"
@@ -6305,8 +6336,8 @@ function Invoke-ReportMinerStatus {
                             powerdraw      = "$PowerDraw"
                             earnings_avg   = "$($Session.Earnings_Avg)"
                             earnings_1d    = "$($Session.Earnings_1d)"
-                            pool_totals    = ConvertTo-Json @($Pool_Totals | Select-Object) -Depth 10 -Compress
-                            rates          = ConvertTo-Json $ReportRates -Depth 10 -Compress
+                            pool_totals    = ConvertTo-ReportJson @($Pool_Totals | Select-Object)
+                            rates          = ConvertTo-ReportJson $ReportRates
                             interval       = $ReportInterval
                             uptime         = "$((Get-Uptime).TotalSeconds)"
                             sysuptime      = "$((Get-Uptime -System).TotalSeconds)"
