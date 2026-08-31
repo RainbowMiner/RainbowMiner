@@ -968,26 +968,63 @@ public static class RBMToolBox
     public static string ConvertToJson(object obj, int depth = 10, int capacity = 0)
     {
         JsonByteWriter sb = new JsonByteWriter(capacity);
-        JsonWriteValue(sb, obj, depth);
-        return Encoding.ASCII.GetString(sb.Buf, 0, sb.Pos);
+        try
+        {
+            JsonWriteValue(sb, obj, depth);
+            return Encoding.ASCII.GetString(sb.Buf, 0, sb.Pos);
+        }
+        finally { sb.Release(); }
     }
 
     public static byte[] ConvertToJsonBytes(object obj, int depth = 10, int capacity = 0)
     {
         JsonByteWriter sb = new JsonByteWriter(capacity);
-        JsonWriteValue(sb, obj, depth);
-        return sb.ToArray();
+        try
+        {
+            JsonWriteValue(sb, obj, depth);
+            return sb.ToArray();
+        }
+        finally { sb.Release(); }
     }
 
     private sealed class JsonByteWriter
     {
+        // one cached working buffer per thread: the serializers run back to back on the
+        // main loop, so a single slot turns the per-call multi-MB buffer into one stable
+        // long-lived allocation instead of fresh LOH garbage every round
+        [ThreadStatic] private static byte[] CachedBuf;
+        private const int MaxCachedLength = 1 << 24; // don't keep a freak payload's buffer alive
+
         public byte[] Buf;
         public int Pos;
 
         public JsonByteWriter(int capacity)
         {
-            Buf = new byte[capacity > 0 ? capacity : 4096];
+            int needed = capacity > 0 ? capacity : 4096;
+            byte[] cached = CachedBuf;
+            if (cached != null && cached.Length >= needed)
+            {
+                CachedBuf = null;
+                Buf = cached;
+            }
+            else
+            {
+                Buf = new byte[needed];
+            }
             Pos = 0;
+        }
+
+        // hand the working buffer back for reuse; a skipped call (exception path
+        // without finally) only costs the reuse, never correctness
+        public void Release()
+        {
+            byte[] buf = Buf;
+            Buf = null;
+            if (buf != null && buf.Length <= MaxCachedLength)
+            {
+                byte[] cached = CachedBuf;
+                if (cached == null || cached.Length < buf.Length) CachedBuf = buf;
+            }
         }
 
         private void Grow(int add)
