@@ -765,7 +765,9 @@ function ConvertTo-APIJson {
     # buffer pre-size (last round's payload, or a plain length).
     $Capacity = if ($Previous -is [byte[]]) {$Previous.Length + 4096} elseif ($Previous -is [int] -and $Previous -gt 0) {$Previous + 4096} else {0}
     try {
-        [RBMToolBox]::ConvertToJsonBytes($InputObject, 10, $Capacity)
+        # -NoEnumerate keeps the byte[] intact: a plain return would enumerate it into
+        # an object[] of boxed bytes, ~20x the memory per snapshot
+        Write-Output ([RBMToolBox]::ConvertToJsonBytes($InputObject, 10, $Capacity)) -NoEnumerate
     } catch {
         if ($Error.Count){$Error.RemoveAt(0)}
         $null
