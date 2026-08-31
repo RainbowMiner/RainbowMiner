@@ -6820,7 +6820,7 @@ function Set-Balance {
     } catch {
         if (Test-Path $Path) {Write-Log -Level $(if ($Quiet) {"Info"} else {"Warn"}) "Balances file ($Name) is corrupt and will be reset. "}
         $Stat = [PSCustomObject]@{
-                    PoolName = $Balance.Namedown
+                    PoolName = $Balance.Name
                     Currency = $Balance.Currency
                     Balance  = $Balance_Total
                     Paid     = $Balance_Paid
