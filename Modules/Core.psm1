@@ -758,6 +758,20 @@ function Get-PoolPriorityTier {
     $Pool_Tier
 }
 
+function ConvertTo-APIJson {
+    param($InputObject, $Previous)
+    # RBMToolBox emits the JSON as UTF-8 bytes in a single pass - the API sends
+    # byte data unchanged, so no char string is needed. Previous supplies the
+    # buffer pre-size (last round's payload, or a plain length).
+    $Capacity = if ($Previous -is [byte[]]) {$Previous.Length + 4096} elseif ($Previous -is [int] -and $Previous -gt 0) {$Previous + 4096} else {0}
+    try {
+        [RBMToolBox]::ConvertToJsonBytes($InputObject, 10, $Capacity)
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        $null
+    }
+}
+
 function Invoke-Core {
 
     #Validate version file
@@ -2611,7 +2625,7 @@ function Invoke-Core {
 
     $AllPools_BeforeWD_Count = $NewPools.Count
 
-    $API.AllPools   = ConvertTo-Json $NewPools -Depth 10 -ErrorAction Ignore
+    $API.AllPools   = ConvertTo-APIJson $NewPools $API.AllPools
     #ConvertTo-Json $NewPools -Depth 10 -ErrorAction Ignore | Set-Content ".\Data\allpools.json" -ErrorAction Ignore
     $API.Algorithms = @($NewPools.Algorithm | Sort-Object -Unique) 
 
@@ -2864,7 +2878,7 @@ function Invoke-Core {
     if (-not $FilteredPools) { $FilteredPools = @() }
     elseif ($FilteredPools -isnot [array]) { $FilteredPools = @($FilteredPools) }
 
-    $API.Pools = ConvertTo-Json $FilteredPools -Depth 10 -ErrorAction Ignore
+    $API.Pools = ConvertTo-APIJson $FilteredPools $API.Pools
  
     $FilteredPools = $null
 
@@ -3796,7 +3810,12 @@ function Invoke-Core {
     })
 
     #Give API access to the miners information
-    ConvertTo-Json $Miners -Depth 10 -ErrorAction Ignore | Set-Content ".\Data\miners.json"
+    $MinersJson = ConvertTo-APIJson $Miners $Script:APIMinersJsonLength
+    if ($MinersJson) {
+        $Script:APIMinersJsonLength = $MinersJson.Length
+        [System.IO.File]::WriteAllBytes((Join-Path (Get-Location).Path "Data\miners.json"), $MinersJson)
+    }
+    $MinersJson = $null
 
     # Remove all failed and disabled miners
     [void]$Miners.RemoveAll({
@@ -3892,8 +3911,8 @@ function Invoke-Core {
     elseif ($Miners -isnot [array]) {$Miners = @($Miners)}
 
     #Give API access to the fasted miners information
-    $API.FastestMiners = ConvertTo-Json $Miners -Depth 10 -ErrorAction Ignore
-    $API.FastestMiners | Set-Content ".\Data\fastestminers.json"
+    $API.FastestMiners = ConvertTo-APIJson $Miners $API.FastestMiners
+    if ($API.FastestMiners) {[System.IO.File]::WriteAllBytes((Join-Path (Get-Location).Path "Data\fastestminers.json"), $API.FastestMiners)}
 
     #Get count of miners, that need to be benchmarked. If greater than 0, the UIstyle "full" will be used
     $MinersNeedingBenchmark = $Miners.Where({ $_.HashRates.PSObject.Properties.Value -contains $null })
@@ -4624,9 +4643,9 @@ function Invoke-Core {
     $API.WatchdogTimers = [System.Collections.Generic.List[PSCustomObject]]$Global:WatchdogTimers
     $API.CrashCounter   = [System.Collections.Generic.List[PSCustomObject]]$Global:CrashCounter
 
-    $API.ActiveMiners   = ConvertTo-Json @($Global:ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Running -or $_.Profit -or $_.IsFocusWalletMiner} | Foreach-Object {$_ | Select-Object -Property * -ExcludeProperty *Job}) -Depth 10 -ErrorAction Ignore
-    $API.RunningMiners  = ConvertTo-Json @($Global:ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Running} | Foreach-Object {$_ | Select-Object -Property * -ExcludeProperty *Job}) -Depth 10 -ErrorAction Ignore
-    $API.FailedMiners   = ConvertTo-Json @($Global:ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Failed} | Foreach-Object {$_ | Select-Object -Property * -ExcludeProperty *Job}) -Depth 10 -ErrorAction Ignore
+    $API.ActiveMiners   = ConvertTo-APIJson @($Global:ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Running -or $_.Profit -or $_.IsFocusWalletMiner} | Foreach-Object {$_ | Select-Object -Property * -ExcludeProperty *Job}) $API.ActiveMiners
+    $API.RunningMiners  = ConvertTo-APIJson @($Global:ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Running} | Foreach-Object {$_ | Select-Object -Property * -ExcludeProperty *Job}) $API.RunningMiners
+    $API.FailedMiners   = ConvertTo-APIJson @($Global:ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Failed} | Foreach-Object {$_ | Select-Object -Property * -ExcludeProperty *Job}) $API.FailedMiners
 
     #
     #Start output to host
@@ -6426,7 +6445,7 @@ function Update-ActiveMiners {
     }
 
     if ($MinersFailed) {
-        $API.RunningMiners = ConvertTo-Json @($Global:ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Running} | ForEach-Object {$_ | Select-Object -Property * -ExcludeProperty *Job}) -Depth 10 -ErrorAction Ignore 
+        $API.RunningMiners = ConvertTo-APIJson @($Global:ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Running} | ForEach-Object {$_ | Select-Object -Property * -ExcludeProperty *Job}) $API.RunningMiners
     }
     if (-not $Silent) {
         [PSCustomObject]@{

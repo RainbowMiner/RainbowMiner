@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Management.Automation;
 using System.Reflection;
 
@@ -955,5 +956,226 @@ public static class RBMToolBox
         return new object[0];
     }
 #endif
+
+    // 12. JSON serialization
+    // Compact single-pass writer over PSObject property views - no intermediate
+    // token tree, invariant culture, pure-ASCII output (non-ASCII is \u-escaped).
+    // The core emits bytes directly, so the byte variant never materializes a
+    // char string; the string variant is an ASCII decode of the same buffer.
+    // Output is parseable by ConvertFrom-Json and JSON.parse; NaN/Infinity are
+    // emitted bare like ConvertTo-Json does.
+    // capacity pre-sizes the buffer (pass the previous round's output length).
+    public static string ConvertToJson(object obj, int depth = 10, int capacity = 0)
+    {
+        JsonByteWriter sb = new JsonByteWriter(capacity);
+        JsonWriteValue(sb, obj, depth);
+        return Encoding.ASCII.GetString(sb.Buf, 0, sb.Pos);
+    }
+
+    public static byte[] ConvertToJsonBytes(object obj, int depth = 10, int capacity = 0)
+    {
+        JsonByteWriter sb = new JsonByteWriter(capacity);
+        JsonWriteValue(sb, obj, depth);
+        return sb.ToArray();
+    }
+
+    private sealed class JsonByteWriter
+    {
+        public byte[] Buf;
+        public int Pos;
+
+        public JsonByteWriter(int capacity)
+        {
+            Buf = new byte[capacity > 0 ? capacity : 4096];
+            Pos = 0;
+        }
+
+        private void Grow(int add)
+        {
+            int n = Buf.Length * 2;
+            while (n < Pos + add) n *= 2;
+            byte[] nb = new byte[n];
+            Buffer.BlockCopy(Buf, 0, nb, 0, Pos);
+            Buf = nb;
+        }
+
+        public void Append(char c)
+        {
+            if (Pos + 1 > Buf.Length) Grow(1);
+            Buf[Pos++] = (byte)c;
+        }
+
+        // callers only pass ASCII content here
+        public void Append(string s)
+        {
+            if (Pos + s.Length > Buf.Length) Grow(s.Length);
+            for (int i = 0; i < s.Length; i++) Buf[Pos++] = (byte)s[i];
+        }
+
+        public byte[] ToArray()
+        {
+            byte[] r = new byte[Pos];
+            Buffer.BlockCopy(Buf, 0, r, 0, Pos);
+            return r;
+        }
+    }
+
+    private static void JsonWriteValue(JsonByteWriter sb, object value, int depth)
+    {
+        if (value == null || value is DBNull) { sb.Append("null"); return; }
+
+        PSObject pso = value as PSObject;
+        if (pso != null)
+        {
+            if (pso.BaseObject is PSCustomObject) { JsonWriteObject(sb, pso, depth); return; }
+            value = pso.BaseObject;
+            if (value == null) { sb.Append("null"); return; }
+        }
+
+        string s = value as string;
+        if (s != null) { JsonWriteString(sb, s); return; }
+
+        if (value is bool) { sb.Append((bool)value ? "true" : "false"); return; }
+
+        Type t = value.GetType();
+        if (t.IsEnum)
+        {
+            try { sb.Append(Convert.ToInt64(value).ToString(CultureInfo.InvariantCulture)); }
+            catch { sb.Append(Convert.ToUInt64(value).ToString(CultureInfo.InvariantCulture)); }
+            return;
+        }
+
+        if (value is int || value is long || value is short || value is sbyte ||
+            value is uint || value is ulong || value is ushort || value is byte ||
+            value is decimal)
+        {
+            sb.Append(((IFormattable)value).ToString(null, CultureInfo.InvariantCulture));
+            return;
+        }
+
+        if (value is double) { JsonWriteDouble(sb, (double)value); return; }
+        if (value is float) { JsonWriteDouble(sb, (double)(float)value); return; }
+
+        if (value is DateTime)
+        {
+            JsonWriteString(sb, ((DateTime)value).ToString("yyyy-MM-ddTHH:mm:ss.FFFFFFFK", CultureInfo.InvariantCulture));
+            return;
+        }
+
+        if (value is char || value is Guid || value is TimeSpan || value is Uri)
+        {
+            JsonWriteString(sb, Convert.ToString(value, CultureInfo.InvariantCulture));
+            return;
+        }
+
+        ScriptBlock sblock = value as ScriptBlock;
+        if (sblock != null) { JsonWriteString(sb, sblock.ToString()); return; }
+
+        IDictionary dict = value as IDictionary;
+        if (dict != null) { JsonWriteDictionary(sb, dict, depth); return; }
+
+        IEnumerable en = value as IEnumerable;
+        if (en != null) { JsonWriteArray(sb, en, depth); return; }
+
+        JsonWriteObject(sb, PSObject.AsPSObject(value), depth);
+    }
+
+    private static void JsonWriteDouble(JsonByteWriter sb, double d)
+    {
+        if (double.IsNaN(d)) { sb.Append("NaN"); return; }
+        if (double.IsPositiveInfinity(d)) { sb.Append("Infinity"); return; }
+        if (double.IsNegativeInfinity(d)) { sb.Append("-Infinity"); return; }
+#if NETCOREAPP3_0_OR_GREATER
+        // Core 3+: default formatting is shortest-round-trip and much faster than "R"
+        string s = d.ToString(CultureInfo.InvariantCulture);
+#else
+        string s = d.ToString("R", CultureInfo.InvariantCulture);
+#endif
+        sb.Append(s);
+        // keep whole doubles typed as doubles on re-parse, like ConvertTo-Json (1 -> 1.0)
+        if (s.IndexOf('.') < 0 && s.IndexOf('E') < 0 && s.IndexOf('e') < 0) sb.Append(".0");
+    }
+
+    private static void JsonWriteString(JsonByteWriter sb, string s)
+    {
+        sb.Append('"');
+        for (int i = 0; i < s.Length; i++)
+        {
+            char c = s[i];
+            switch (c)
+            {
+                case '"': sb.Append("\\\""); break;
+                case '\\': sb.Append("\\\\"); break;
+                case '\b': sb.Append("\\b"); break;
+                case '\f': sb.Append("\\f"); break;
+                case '\n': sb.Append("\\n"); break;
+                case '\r': sb.Append("\\r"); break;
+                case '\t': sb.Append("\\t"); break;
+                default:
+                    if (c < ' ' || c > '~')
+                    {
+                        // escaping each UTF-16 unit keeps surrogate pairs valid JSON
+                        sb.Append("\\u");
+                        sb.Append(((int)c).ToString("x4", CultureInfo.InvariantCulture));
+                    }
+                    else sb.Append(c);
+                    break;
+            }
+        }
+        sb.Append('"');
+    }
+
+    private static string JsonSafeToString(object value)
+    {
+        try { return Convert.ToString(value, CultureInfo.InvariantCulture); } catch { return ""; }
+    }
+
+    private static void JsonWriteObject(JsonByteWriter sb, PSObject pso, int depth)
+    {
+        if (depth <= 0) { JsonWriteString(sb, JsonSafeToString(pso)); return; }
+        sb.Append('{');
+        bool first = true;
+        foreach (PSPropertyInfo p in pso.Properties)
+        {
+            object v = null;
+            try { v = p.Value; } catch { v = null; }
+            if (!first) sb.Append(',');
+            first = false;
+            JsonWriteString(sb, p.Name);
+            sb.Append(':');
+            JsonWriteValue(sb, v, depth - 1);
+        }
+        sb.Append('}');
+    }
+
+    private static void JsonWriteDictionary(JsonByteWriter sb, IDictionary dict, int depth)
+    {
+        if (depth <= 0) { JsonWriteString(sb, JsonSafeToString(dict)); return; }
+        sb.Append('{');
+        bool first = true;
+        foreach (DictionaryEntry e in dict)
+        {
+            if (!first) sb.Append(',');
+            first = false;
+            JsonWriteString(sb, JsonSafeToString(e.Key));
+            sb.Append(':');
+            JsonWriteValue(sb, e.Value, depth - 1);
+        }
+        sb.Append('}');
+    }
+
+    private static void JsonWriteArray(JsonByteWriter sb, IEnumerable en, int depth)
+    {
+        if (depth <= 0) { JsonWriteString(sb, JsonSafeToString(en)); return; }
+        sb.Append('[');
+        bool first = true;
+        foreach (object item in en)
+        {
+            if (!first) sb.Append(',');
+            first = false;
+            JsonWriteValue(sb, item, depth - 1);
+        }
+        sb.Append(']');
+    }
 
 }

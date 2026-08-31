@@ -12,8 +12,16 @@ $BasePath = Join-Path $PWD "web"
 
 Set-OsFlags
 
+function ConvertFrom-APIJson {
+    param($Data)
+    # the Core stores the API payloads as UTF-8 byte arrays (RBMToolBox writer)
+    if ($Data -is [byte[]]) {$Data = [System.Text.Encoding]::UTF8.GetString($Data)}
+    if ($Data) {ConvertFrom-Json $Data -ErrorAction Ignore}
+}
+
 $GCStopWatch = [System.Diagnostics.StopWatch]::New()
 $GCStopWatch.Start()
+$GCRuns = 0
 
 $EnableFixBigInt = (Get-Command "Invoke-GetUrlAsync").parameters.fixbigint -ne $null
 
@@ -134,7 +142,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
 
             $CurrentMiners = @()
             if (($IsLinux -or -not $Session.Config.ShowMinerWindow) -and $API.RunningMiners) {
-                $RunningMiners = ConvertFrom-Json $API.RunningMiners -ErrorAction Ignore
+                $RunningMiners = ConvertFrom-APIJson $API.RunningMiners
                 $CurrentMiners = @($RunningMiners | Where-Object {$_.LogFile -and (Test-Path $_.LogFile)} | Sort-Object -Property Name | Foreach-Object {
                     [PSCustomObject]@{
                         Name = "$($_.DeviceModel) $($_.BaseName)"
@@ -273,7 +281,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             $WTMdata_algos = @($WTMdata | Where-Object {$_.id} | Foreach-Object {if ($_.algo -eq "ProgPow") {"ProgPowZ","ProgPowSero"} else {$_.algo}} | Select-Object)
             $WTMdata_result = [hashtable]@{}
             if ($API.FastestMiners) {
-                $API_FastestMiners = ConvertFrom-Json $API.FastestMiners -ErrorAction Ignore
+                $API_FastestMiners = ConvertFrom-APIJson $API.FastestMiners
                 $API_FastestMiners | Where-Object {$_.BaseAlgorithm -notmatch '-' -and $WTMdata_algos -icontains $_.BaseAlgorithm} | Group-Object -Property DeviceModel | Foreach-Object {
                     $Group = $_.Group
                     $WTMdata_result[$_.Name] = "https://whattomine.com/coins?$(@($WTMdata | Where-Object {$_.id} | Foreach-Object {$Algo = @(if ($_.algo -eq "ProgPow") {"ProgPowZ","ProgPowSero"} else {$_.algo});if (($One = $Group | Where-Object {$_.BaseAlgorithm -in $Algo} | Select-Object -First 1) -and (($OneHR = if ($One.HashRates."$($One.BaseAlgorithm)") {$One.HashRates."$($One.BaseAlgorithm)"} elseif ($One.HashRates."$($One.BaseAlgorithm)-$($One.DeviceModel)") {$One.HashRates."$($One.BaseAlgorithm)-$($One.DeviceModel)"} else {$One.HashRates."$($One.BaseAlgorithm)-GPU"}) -gt 0)) {"$($_.id)=true&factor[$($_.id)_hr]=$([Math]::Round($OneHR/$_.factor,3))&factor[$($_.id)_p]=$([int]$One.PowerDraw)"} else {"$($_.id)=false&factor[$($_.id)_hr]=$(if ($_.id -eq "eth") {"0.000001"} else {"0"})&factor[$($_.id)_p]=0"}}) -join '&')&factor[cost]=$(if ($Session.Config.UsePowerPrice) {[Math]::Round($API.CurrentPowerPrice*$(if ($Session.Config.PowerPriceCurrency -ne "USD" -and $Rates."$($Session.Config.PowerPriceCurrency)") {$Rates.USD/$Rates."$($Session.Config.PowerPriceCurrency)"} else {1}),4)} else {0})&sort=Profitability24&volume=0&revenue=24h&dataset=$($Session.Config.WorkerName)&commit=Calculate"
@@ -1840,7 +1848,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 $ActiveMiners = @()
 
                 if ($API.ActiveMiners) {
-                    $ActiveMiners = ConvertFrom-Json $API.ActiveMiners -ErrorAction Ignore
+                    $ActiveMiners = ConvertFrom-APIJson $API.ActiveMiners
                 }
 
                 [hashtable]$StatsCPU = @{}
@@ -1887,7 +1895,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                     $ActiveMiners = @()
 
                     if ($API.ActiveMiners) {
-                        $ActiveMiners = ConvertFrom-Json $API.ActiveMiners -ErrorAction Ignore
+                        $ActiveMiners = ConvertFrom-APIJson $API.ActiveMiners
                     }
                     
                     [hashtable]$StatsCPU = @{}
@@ -2114,6 +2122,13 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
     $key = $null
 
     if ($GCStopWatch.Elapsed.TotalSeconds -gt 120) {
+        $GCRuns++
+        if ($GCRuns -ge 10) {
+            # the per-round JSON payloads land on the large object heap - compact
+            # it once in a while, otherwise the freed blocks only fragment it
+            [System.Runtime.GCSettings]::LargeObjectHeapCompactionMode = [System.Runtime.GCLargeObjectHeapCompactionMode]::CompactOnce
+            $GCRuns = 0
+        }
         [System.GC]::Collect()
         $GCStopWatch.Restart()
     }
