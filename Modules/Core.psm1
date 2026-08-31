@@ -3912,7 +3912,7 @@ function Invoke-Core {
 
     #Give API access to the fasted miners information
     $API.FastestMiners = ConvertTo-APIJson $Miners $API.FastestMiners
-    if ($API.FastestMiners) {[System.IO.File]::WriteAllBytes((Join-Path (Get-Location).Path "Data\fastestminers.json"), $API.FastestMiners)}
+    if ($API.FastestMiners -and $Session.Config.EnableDebugMode) {[System.IO.File]::WriteAllBytes((Join-Path (Get-Location).Path "Data\fastestminers.json"), $API.FastestMiners)}
 
     #Get count of miners, that need to be benchmarked. If greater than 0, the UIstyle "full" will be used
     $MinersNeedingBenchmark = $Miners.Where({ $_.HashRates.PSObject.Properties.Value -contains $null })
