@@ -2611,7 +2611,7 @@ function Invoke-Core {
 
     $AllPools_BeforeWD_Count = $NewPools.Count
 
-    $API.AllPoolsData = $NewPools.ToArray()
+    $API.AllPools   = ConvertTo-Json $NewPools -Depth 10 -ErrorAction Ignore
     #ConvertTo-Json $NewPools -Depth 10 -ErrorAction Ignore | Set-Content ".\Data\allpools.json" -ErrorAction Ignore
     $API.Algorithms = @($NewPools.Algorithm | Sort-Object -Unique) 
 
@@ -2849,7 +2849,7 @@ function Invoke-Core {
             $Pools.$_.HasMinerExclusions = $Session.Config.Pools.$Pool_Name.MinerName.Count -or $Session.Config.Pools.$Pool_Name.ExcludeMinerName.Count -or $Pools.$_.MinerName.Count -or $Pools.$_.ExcludeMinerName.Count
         }
     } else {
-        $API.AllPoolsData = $null
+        $API.AllPools   = $null
         $API.Algorithms = $null
     }
 
@@ -2864,7 +2864,7 @@ function Invoke-Core {
     if (-not $FilteredPools) { $FilteredPools = @() }
     elseif ($FilteredPools -isnot [array]) { $FilteredPools = @($FilteredPools) }
 
-    $API.PoolsData = $FilteredPools
+    $API.Pools = ConvertTo-Json $FilteredPools -Depth 10 -ErrorAction Ignore
  
     $FilteredPools = $null
 
@@ -3796,10 +3796,7 @@ function Invoke-Core {
     })
 
     #Give API access to the miners information
-    $API.MinersData = $Miners.ToArray()
-    if ($Session.Config.EnableDebugMode) {
-        ConvertTo-Json $Miners -Depth 10 -ErrorAction Ignore | Set-Content ".\Data\miners.json"
-    }
+    ConvertTo-Json $Miners -Depth 10 -ErrorAction Ignore | Set-Content ".\Data\miners.json"
 
     # Remove all failed and disabled miners
     [void]$Miners.RemoveAll({
@@ -3895,10 +3892,8 @@ function Invoke-Core {
     elseif ($Miners -isnot [array]) {$Miners = @($Miners)}
 
     #Give API access to the fasted miners information
-    $API.FastestMinersData = $Miners
-    if ($Session.Config.EnableDebugMode) {
-        ConvertTo-Json $Miners -Depth 10 -ErrorAction Ignore | Set-Content ".\Data\fastestminers.json"
-    }
+    $API.FastestMiners = ConvertTo-Json $Miners -Depth 10 -ErrorAction Ignore
+    $API.FastestMiners | Set-Content ".\Data\fastestminers.json"
 
     #Get count of miners, that need to be benchmarked. If greater than 0, the UIstyle "full" will be used
     $MinersNeedingBenchmark = $Miners.Where({ $_.HashRates.PSObject.Properties.Value -contains $null })
@@ -4629,9 +4624,9 @@ function Invoke-Core {
     $API.WatchdogTimers = [System.Collections.Generic.List[PSCustomObject]]$Global:WatchdogTimers
     $API.CrashCounter   = [System.Collections.Generic.List[PSCustomObject]]$Global:CrashCounter
 
-    $API.ActiveMinersData  = @($Global:ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Running -or $_.Profit -or $_.IsFocusWalletMiner})
-    $API.RunningMinersData = @($Global:ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Running})
-    $API.FailedMinersData  = @($Global:ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Failed})
+    $API.ActiveMiners   = ConvertTo-Json @($Global:ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Running -or $_.Profit -or $_.IsFocusWalletMiner} | Foreach-Object {$_ | Select-Object -Property * -ExcludeProperty *Job}) -Depth 10 -ErrorAction Ignore
+    $API.RunningMiners  = ConvertTo-Json @($Global:ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Running} | Foreach-Object {$_ | Select-Object -Property * -ExcludeProperty *Job}) -Depth 10 -ErrorAction Ignore
+    $API.FailedMiners   = ConvertTo-Json @($Global:ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Failed} | Foreach-Object {$_ | Select-Object -Property * -ExcludeProperty *Job}) -Depth 10 -ErrorAction Ignore
 
     #
     #Start output to host
@@ -6431,7 +6426,7 @@ function Update-ActiveMiners {
     }
 
     if ($MinersFailed) {
-        $API.RunningMinersData = @($Global:ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Running})
+        $API.RunningMiners = ConvertTo-Json @($Global:ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Running} | ForEach-Object {$_ | Select-Object -Property * -ExcludeProperty *Job}) -Depth 10 -ErrorAction Ignore 
     }
     if (-not $Silent) {
         [PSCustomObject]@{
