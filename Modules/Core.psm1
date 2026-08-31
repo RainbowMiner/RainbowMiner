@@ -5663,33 +5663,33 @@ function Get-Balance {
         }
     }
 
-    $Balances = $Global:CachedPoolBalances | ConvertTo-Json -Depth 10 -Compress | ConvertFrom-Json -ErrorAction Ignore
-    if (-not $Session.Config.ShowWalletBalances) {
-        $Balances = $Balances | Where-Object {$_.BaseName -ne "Wallet"}
-    }
+    #shallow copies suffice: the code below only ever adds top-level note properties to them
+    $Balances = @(foreach ($Balance in $Global:CachedPoolBalances) {
+        if ($Session.Config.ShowWalletBalances -or $Balance.BaseName -ne "Wallet") {$Balance.PSObject.Copy()}
+    })
 
-    if (-not $Balances) {return}
+    if (-not $Balances.Count) {return}
 
     #Get exchange rates for all payout currencies
     $CurrenciesWithBalances = [System.Collections.Generic.List[string]]::new()
     $CurrenciesToExchange   = [System.Collections.Generic.List[string]]::new()
     $CurrenciesMissing      = [System.Collections.Generic.List[string]]::new()
 
-    $RatesAPI = [PSCustomObject]@{}
-    
-    $Balances.currency | Select-Object -Unique | Sort-Object | Foreach-Object {[void]$CurrenciesWithBalances.Add($_)}
+    $RatesAPI = @{}
+
+    $Balances.Currency | Foreach-Object {"$($_)".ToUpper()} | Select-Object -Unique | Sort-Object | Foreach-Object {[void]$CurrenciesWithBalances.Add($_)}
     @("BTC") + $Config.Currency | Select-Object -Unique | Sort-Object | Foreach-Object {[void]$CurrenciesToExchange.Add($_)}
     $CurrenciesWithBalances + $CurrenciesToExchange | Where-Object {-not $Global:Rates.ContainsKey($_)} | Foreach-Object {[void]$CurrenciesMissing.Add($_)}
 
     if ($CurrenciesMissing.Count) {Update-Rates $CurrenciesMissing}
 
-    $CurrenciesWithBalances | Foreach-Object {
-        $Currency = $_
+    foreach ($Currency in $CurrenciesWithBalances) {
         if ($Global:Rates.ContainsKey($Currency) -and $Global:Rates[$Currency]) {
-            $RatesAPI | Add-Member "$($Currency)" ([PSCustomObject]@{})
-            $CurrenciesToExchange | Where-Object {$Global:Rates.ContainsKey($_)} | Foreach-Object {
-                $RatesAPI.$Currency | Add-Member $_ ($Global:Rates.$_/$Global:Rates.$Currency)
+            $RatesAPI_Currency = @{}
+            foreach ($ExCurrency in $CurrenciesToExchange) {
+                if ($Global:Rates.ContainsKey($ExCurrency)) {$RatesAPI_Currency[$ExCurrency] = $Global:Rates[$ExCurrency]/$Global:Rates[$Currency]}
             }
+            $RatesAPI[$Currency] = $RatesAPI_Currency
         }
     }
 
@@ -5718,73 +5718,109 @@ function Get-Balance {
     $Digits = [hashtable]@{}
     $CurrenciesWithBalances + $Config.Currency | Where-Object {$_} | Select-Object -Unique | Foreach-Object {$Digits[$_] = if ($WorldCurrencies -icontains $_) {2} else {8}}
 
-    $CurrenciesWithBalances | ForEach-Object {
-        $Currency = $_.ToUpper()
-        $Balances | Where-Object Currency -eq $Currency | Foreach-Object {$_ | Add-Member "Balance ($Currency)" $_.Total -Force;$_ | Add-Member "Pending ($Currency)" $_.Pending -Force}
-        $Balance_Sum = ($Balances."Balance ($Currency)" | Measure-Object -Sum).Sum
-        $Pending_Sum = ($Balances."Pending ($Currency)" | Measure-Object -Sum).Sum
+    $BalancesByCurrency = @{}
+    foreach ($Balance in $Balances) {
+        $Currency = "$($Balance.Currency)".ToUpper()
+        if (-not $BalancesByCurrency.ContainsKey($Currency)) {$BalancesByCurrency[$Currency] = [System.Collections.Generic.List[PSCustomObject]]::new()}
+        [void]$BalancesByCurrency[$Currency].Add($Balance)
+    }
+
+    foreach ($Currency in $CurrenciesWithBalances) {
+        $Balance_Sum  = [Double]0
+        $Pending_Sum  = [Double]0
+        $Balance_Sum2 = [Double]0
+        foreach ($Balance in $BalancesByCurrency[$Currency]) {
+            $Balance.PSObject.Properties.Add([PSNoteProperty]::new("Balance ($Currency)",$Balance.Total))
+            $Balance.PSObject.Properties.Add([PSNoteProperty]::new("Pending ($Currency)",$Balance.Pending))
+            $Balance_Sum += [Double]$Balance.Total
+            $Pending_Sum += [Double]$Balance.Pending
+            if ($Balance.BaseName -ne "Wallet") {$Balance_Sum2 += [Double]$Balance.Total}
+        }
         if ($Balance_Sum) {
-            $Totals | Add-Member "Balance ($Currency)" $Balance_Sum -Force
+            $Totals.PSObject.Properties.Add([PSNoteProperty]::new("Balance ($Currency)",$Balance_Sum))
         }
         if ($Pending_Sum) {
-            $Totals | Add-Member "Pending ($Currency)" $Pending_Sum -Force
+            $Totals.PSObject.Properties.Add([PSNoteProperty]::new("Pending ($Currency)",$Pending_Sum))
         }
         if ($Session.Config.ShowWalletBalances) {
-            $Balance_Sum2 = ($Balances | Where-Object {$_.BaseName -ne "Wallet" -and $_."Balance ($Currency)"} | Select-Object -ExpandProperty "Balance ($Currency)" | Measure-Object -Sum).Sum
             if ($Balance_Sum2) {
-                $Totals_Pools | Add-Member "Balance ($Currency)" $Balance_Sum2 -Force
+                $Totals_Pools.PSObject.Properties.Add([PSNoteProperty]::new("Balance ($Currency)",$Balance_Sum2))
             }
             if ($Balance_Sum -gt $Balance_Sum2) {
-                $Totals_Wallets | Add-Member "Balance ($Currency)" ($Balance_Sum - $Balance_Sum2) -Force
+                $Totals_Wallets.PSObject.Properties.Add([PSNoteProperty]::new("Balance ($Currency)",$Balance_Sum - $Balance_Sum2))
             }
         }
     }
 
     #Add converted values
-    $Config.Currency | Sort-Object | ForEach-Object {
-        $Currency = $_.ToUpper()
-        $Balances | Foreach-Object {
-            $Balance = $_
-            $Balance | Add-Member "Value in $Currency" $(if ($RatesAPI.$($Balance.Currency).$Currency -ne $null) {$Balance.Total * $RatesAPI.$($Balance.Currency).$Currency}elseif($RatesAPI.$Currency.$($Balance.Currency)) {$Balance.Total / $RatesAPI.$Currency.$($Balance.Currency)}else{"-"}) -Force
+    foreach ($Currency in @($Config.Currency | Foreach-Object {"$($_)".ToUpper()} | Select-Object -Unique | Sort-Object)) {
+        $Balance_Sum  = [Double]0
+        $Balance_Sum2 = [Double]0
+        foreach ($Balance in $Balances) {
+            $Rate_Self = $RatesAPI["$($Balance.Currency)"]
+            $Value = if ($Rate_Self -ne $null -and $Rate_Self[$Currency] -ne $null) {
+                        $Balance.Total * $Rate_Self[$Currency]
+                    } else {
+                        $Rate_Cross = $RatesAPI[$Currency]
+                        if ($Rate_Cross -ne $null -and $Rate_Cross["$($Balance.Currency)"]) {$Balance.Total / $Rate_Cross["$($Balance.Currency)"]} else {"-"}
+                    }
+            $Balance.PSObject.Properties.Add([PSNoteProperty]::new("Value in $Currency",$Value))
+            if ($Value -ne "-") {
+                $Balance_Sum += [Double]$Value
+                if ($Balance.BaseName -ne "Wallet") {$Balance_Sum2 += [Double]$Value}
+            }
         }
-        $Balance_Sum = ($Balances."Value in $Currency" | Where-Object {$_ -ne "-"} | Measure-Object -Sum -ErrorAction Ignore).Sum
         if ($Balance_Sum)  {
-            $Totals | Add-Member "Value in $Currency" $Balance_Sum -Force
+            $Totals.PSObject.Properties.Add([PSNoteProperty]::new("Value in $Currency",$Balance_Sum))
         }
         if ($Session.Config.ShowWalletBalances) {
-            $Balance_Sum2 = ($Balances | Where-Object {$_.BaseName -ne "Wallet" -and $_."Value in $Currency"} | Select-Object -ExpandProperty "Value in $Currency" | Where-Object {$_ -ne "-"} | Measure-Object -Sum -ErrorAction Ignore).Sum
             if ($Balance_Sum2)  {
-                $Totals_Pools | Add-Member "Value in $Currency" $Balance_Sum2 -Force
+                $Totals_Pools.PSObject.Properties.Add([PSNoteProperty]::new("Value in $Currency",$Balance_Sum2))
             }
             if ($Balance_Sum -gt $Balance_Sum2) {
-                $Totals_Wallets | Add-Member "Value in $Currency" ($Balance_Sum - $Balance_Sum2) -Force
+                $Totals_Wallets.PSObject.Properties.Add([PSNoteProperty]::new("Value in $Currency",$Balance_Sum - $Balance_Sum2))
             }
         }
     }
 
     if (-not $Config.ShowPoolBalancesDetails) {
         #Consolidate result
-        $Balances = $Balances | Group-Object -Property Name | Foreach-Object {
-            $_.Group | Sort-Object @{Expression={$_.Currency -eq "BTC"};Descending=$true},Caption | Select-Object -First 1 | Foreach-Object {
+        $Balances = @($Balances | Group-Object -Property Name | Foreach-Object {
+            $Balance_Group = $_.Group
+            $Balance_Group | Sort-Object @{Expression={$_.Currency -eq "BTC"};Descending=$true},Caption | Select-Object -First 1 | Foreach-Object {
                 $Balance = [PSCustomObject]@{
                     Caption = $_.Caption
                     Currency = "BTC"
                     Name = $_.Name
                     Payouts = @(if ($_.Currency -eq "BTC") {$_.Payouts})
                 }
-                $_.PSObject.Properties.Name | Where-Object {$_ -match "^Value in"} | Foreach-Object {
-                    $Field = $_
-                    $Balance | Add-Member $Field ($Balances | Where-Object {$_.Name -eq $Balance.Name -and $_.$Field -and $_.$Field -ne "-"} | Measure-Object -Property $Field -Sum -ErrorAction Ignore).sum
+                foreach ($Field in $_.PSObject.Properties.Name) {
+                    if ($Field -match "^Value in") {
+                        $Field_Sum = $null
+                        foreach ($Balance_Member in $Balance_Group) {
+                            $Value = $Balance_Member.$Field
+                            if ($Value -and $Value -ne "-") {$Field_Sum += $Value}
+                        }
+                        $Balance.PSObject.Properties.Add([PSNoteProperty]::new($Field,$Field_Sum))
+                    }
                 }
                 $Balance
             }
+        })
+    }
+
+    $Balances_Pools   = [System.Collections.Generic.List[PSCustomObject]]::new()
+    $Balances_Wallets = [System.Collections.Generic.List[PSCustomObject]]::new()
+    foreach ($Balance in $Balances) {
+        if ($Balance.Total) {
+            if ($Balance.BaseName -eq "Wallet") {[void]$Balances_Wallets.Add($Balance)} else {[void]$Balances_Pools.Add($Balance)}
         }
     }
 
-    if ($Session.Config.ShowWalletBalances -and ($Balances | Where-Object {$_.BaseName -eq "Wallet" -and $_.Total} | Measure-Object).Count) {
-        $Balances = @($Balances | Where-Object {$_.BaseName -ne "Wallet" -and $_.Total} | Select-Object) + $Totals_Pools + @($Balances | Where-Object {$_.BaseName -eq "Wallet" -and $_.Total} | Select-Object) + $Totals_Wallets + $Totals
+    $Balances = if ($Session.Config.ShowWalletBalances -and $Balances_Wallets.Count) {
+        @($Balances_Pools) + $Totals_Pools + @($Balances_Wallets) + $Totals_Wallets + $Totals
     } else {
-        $Balances = @($Balances | Where-Object {$_.Total} | Select-Object) + $Totals
+        @($Balances_Pools) + @($Balances_Wallets) + $Totals
     }
 
     $Balances | Foreach-Object {
@@ -6738,105 +6774,137 @@ function Set-Balance {
     $Path0 = "Stats\Balances"
     $Path = "$Path0\$($Name).txt"
 
-    $Stat = Get-ContentByStreamReader $Path
+    if ($Script:BalancesStatCache -eq $null) {$Script:BalancesStatCache = @{}}
 
     $Balance_Total = [Decimal]$Balance.Balance
     $Balance_Paid  = [Decimal]$Balance.Paid
 
-    try {
-        $Stat = $Stat | ConvertFrom-Json -ErrorAction Stop
+    $Stat = $Script:BalancesStatCache[$Name]
+    $WriteStat = $false
 
-        $Stat_LastEarnings = [System.Collections.ArrayList]::new(@($Stat.Last_Earnings | Foreach-Object {[PSCustomObject]@{Date = [DateTime]$_.Date;Value = [Decimal]$_.Value}} | Select-Object))
+    if ($Stat -eq $null) {
+        #parse the stat file only once, afterwards the cached object is authoritative (nothing else reads these files)
+        try {
+            $Stat = Get-ContentByStreamReader $Path | ConvertFrom-Json -ErrorAction Stop
 
-        $Stat = [PSCustomObject]@{
-                    PoolName = $Balance.Name
-                    Currency = $Balance.Currency
-                    Balance  = [Decimal]$Stat.Balance
-                    Paid     = [Decimal]$Stat.Paid
-                    Earnings = [Decimal]$Stat.Earnings
-                    Earnings_1h   = [Decimal]$Stat.Earnings_1h
-                    Earnings_1d   = [Decimal]$Stat.Earnings_1d
-                    Earnings_1w   = [Decimal]$Stat.Earnings_1w
-                    Earnings_Avg  = [Decimal]$Stat.Earnings_Avg
-                    Last_Earnings = $Stat_LastEarnings
-                    Started  = [DateTime]$Stat.Started
-                    Updated  = [DateTime]$Stat.Updated
-        }
+            $Stat_LastEarnings = [System.Collections.ArrayList]::new(@($Stat.Last_Earnings | Foreach-Object {[PSCustomObject]@{Date = [DateTime]$_.Date;Value = [Decimal]$_.Value}} | Select-Object))
 
-        if ($Balance.Paid -ne $null) {
-            $Earnings = [Decimal]($Balance_Total - $Stat.Balance + $Balance_Paid - $Stat.Paid)
-        } else {
-            $Earnings = [Decimal]($Balance_Total - $Stat.Balance)
-            if ($Earnings -lt 0) {$Earnings = $Balance_Total}
-        }
-
-        if ($Earnings -gt 0) {
-            $Stat.Balance   = $Balance_Total
-            $Stat.Paid      = $Balance_Paid
-            $Stat.Earnings += $Earnings
-            $Stat.Updated   = $Updated_UTC
-
-            [void]$Stat.Last_Earnings.Add([PSCustomObject]@{Date=$Updated_UTC;Value=$Earnings})
-
-            $Rate = [Decimal]$Global:Rates."$($Balance.Currency)"
-            if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
-            
-            $CsvLine = [PSCustomObject]@{
-                Date      = $Updated
-                Date_UTC  = $Updated_UTC
-                PoolName  = $Balance.Name
-                Currency  = $Balance.Currency
-                Rate      = $Rate
-                Balance   = $Stat.Balance
-                Paid      = $Stat.Paid
-                Earnings  = $Stat.Earnings
-                Value     = $Earnings
-                Balance_Sat = if ($Rate -gt 0) {[int64]($Stat.Balance / $Rate * 1e8)} else {0}
-                Paid_Sat  = if ($Rate -gt 0) {[int64]($Stat.Paid  / $Rate * 1e8)} else {0}
-                Earnings_Sat = if ($Rate -gt 0) {[int64]($Stat.Earnings / $Rate * 1e8)} else {0}
-                Value_Sat  = if ($Rate -gt 0) {[int64]($Earnings  / $Rate * 1e8)} else {0}
+            $Stat = [PSCustomObject]@{
+                        PoolName = $Balance.Name
+                        Currency = $Balance.Currency
+                        Balance  = [Decimal]$Stat.Balance
+                        Paid     = [Decimal]$Stat.Paid
+                        Earnings = [Decimal]$Stat.Earnings
+                        Earnings_1h   = [Decimal]$Stat.Earnings_1h
+                        Earnings_1d   = [Decimal]$Stat.Earnings_1d
+                        Earnings_1w   = [Decimal]$Stat.Earnings_1w
+                        Earnings_Avg  = [Decimal]$Stat.Earnings_Avg
+                        Last_Earnings = $Stat_LastEarnings
+                        Started  = [DateTime]$Stat.Started
+                        Updated  = [DateTime]$Stat.Updated
             }
-            $CsvLine | Export-ToCsvFile "$($Path0)\Earnings_Localized.csv" -UseCulture
-            $CsvLine.PSObject.Properties | Foreach-Object {$_.Value = "$($_.Value)"}
-            $CsvLine | Export-ToCsvFile "$($Path0)\Earnings.csv"
+        } catch {
+            if (Test-Path $Path) {Write-Log -Level $(if ($Quiet) {"Info"} else {"Warn"}) "Balances file ($Name) is corrupt and will be reset. "}
+            $Stat = [PSCustomObject]@{
+                        PoolName = $Balance.Name
+                        Currency = $Balance.Currency
+                        Balance  = $Balance_Total
+                        Paid     = $Balance_Paid
+                        Earnings = 0
+                        Earnings_1h   = 0
+                        Earnings_1d   = 0
+                        Earnings_1w   = 0
+                        Earnings_Avg  = 0
+                        Last_Earnings = [System.Collections.ArrayList]::new()
+                        Started  = $Updated_UTC
+                        Updated  = $Updated_UTC
+                    }
+            $WriteStat = $true
         }
-
-        $Stat.Last_Earnings = @($Stat.Last_Earnings | Where-Object Date -gt ($Updated_UTC.AddDays(-7)) | Select-Object)
-
-        $Stat.Earnings_1h = [Decimal]($Stat.Last_Earnings | Where-Object Date -ge ($Updated_UTC.AddHours(-1)) | Measure-Object -Property Value -Sum).Sum
-        $Stat.Earnings_1d = [Decimal]($Stat.Last_Earnings | Where-Object Date -ge ($Updated_UTC.AddDays(-1)) | Measure-Object -Property Value -Sum).Sum
-        $Stat.Earnings_1w = [Decimal]($Stat.Last_Earnings | Where-Object Date -ge ($Updated_UTC.AddDays(-7)) | Measure-Object -Property Value -Sum).Sum
-
-        if ($Stat.Earnings_1w) {
-            $Duration = ($Updated_UTC - ($Stat.Last_Earnings | Select-Object -First 1).Date).TotalDays
-            if ($Duration -gt 1) {
-                $Stat.Earnings_Avg = [Decimal](($Stat.Last_Earnings | Measure-Object -Property Value -Sum).Sum / $Duration)
-            } else {
-                $Stat.Earnings_Avg = $Stat.Earnings_1d
-            }
-        } else {
-            $Stat.Earnings_Avg = 0
-        }
-    } catch {
-        if (Test-Path $Path) {Write-Log -Level $(if ($Quiet) {"Info"} else {"Warn"}) "Balances file ($Name) is corrupt and will be reset. "}
-        $Stat = [PSCustomObject]@{
-                    PoolName = $Balance.Name
-                    Currency = $Balance.Currency
-                    Balance  = $Balance_Total
-                    Paid     = $Balance_Paid
-                    Earnings = 0
-                    Earnings_1h   = 0
-                    Earnings_1d   = 0
-                    Earnings_1w   = 0
-                    Earnings_Avg  = 0
-                    Last_Earnings = @()
-                    Started  = $Updated_UTC
-                    Updated  = $Updated_UTC
-                }
+        $Script:BalancesStatCache[$Name] = $Stat
     }
 
-    if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
-    $Stat | ConvertTo-Json -Depth 10 | Set-Content $Path
+    if ($Balance.Paid -ne $null) {
+        $Earnings = [Decimal]($Balance_Total - $Stat.Balance + $Balance_Paid - $Stat.Paid)
+    } else {
+        $Earnings = [Decimal]($Balance_Total - $Stat.Balance)
+        if ($Earnings -lt 0) {$Earnings = $Balance_Total}
+    }
+
+    if ($Earnings -gt 0) {
+        $Stat.Balance   = $Balance_Total
+        $Stat.Paid      = $Balance_Paid
+        $Stat.Earnings += $Earnings
+        $Stat.Updated   = $Updated_UTC
+
+        [void]$Stat.Last_Earnings.Add([PSCustomObject]@{Date=$Updated_UTC;Value=$Earnings})
+
+        $Rate = [Decimal]$Global:Rates."$($Balance.Currency)"
+        if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
+
+        $CsvLine = [PSCustomObject]@{
+            Date      = $Updated
+            Date_UTC  = $Updated_UTC
+            PoolName  = $Balance.Name
+            Currency  = $Balance.Currency
+            Rate      = $Rate
+            Balance   = $Stat.Balance
+            Paid      = $Stat.Paid
+            Earnings  = $Stat.Earnings
+            Value     = $Earnings
+            Balance_Sat = if ($Rate -gt 0) {[int64]($Stat.Balance / $Rate * 1e8)} else {0}
+            Paid_Sat  = if ($Rate -gt 0) {[int64]($Stat.Paid  / $Rate * 1e8)} else {0}
+            Earnings_Sat = if ($Rate -gt 0) {[int64]($Stat.Earnings / $Rate * 1e8)} else {0}
+            Value_Sat  = if ($Rate -gt 0) {[int64]($Earnings  / $Rate * 1e8)} else {0}
+        }
+        $CsvLine | Export-ToCsvFile "$($Path0)\Earnings_Localized.csv" -UseCulture
+        $CsvLine.PSObject.Properties | Foreach-Object {$_.Value = "$($_.Value)"}
+        $CsvLine | Export-ToCsvFile "$($Path0)\Earnings.csv"
+
+        $WriteStat = $true
+    }
+
+    $Cutoff_1w = $Updated_UTC.AddDays(-7)
+    if ($Stat.Last_Earnings.Count -and $Stat.Last_Earnings[0].Date -le $Cutoff_1w) {
+        $Stat.Last_Earnings = [System.Collections.ArrayList]::new(@($Stat.Last_Earnings | Where-Object Date -gt $Cutoff_1w | Select-Object))
+    }
+
+    #accumulate in [Double] like Measure-Object -Sum did, to keep the stored values bit-identical
+    $Cutoff_1h = $Updated_UTC.AddHours(-1)
+    $Cutoff_1d = $Updated_UTC.AddDays(-1)
+    $Earnings_1h = [Double]0
+    $Earnings_1d = [Double]0
+    $Earnings_1w = [Double]0
+    foreach ($Last_Earning in $Stat.Last_Earnings) {
+        if ($Last_Earning.Date -ge $Cutoff_1w) {
+            $Earnings_1w += [Double]$Last_Earning.Value
+            if ($Last_Earning.Date -ge $Cutoff_1d) {
+                $Earnings_1d += [Double]$Last_Earning.Value
+                if ($Last_Earning.Date -ge $Cutoff_1h) {$Earnings_1h += [Double]$Last_Earning.Value}
+            }
+        }
+    }
+    $Stat.Earnings_1h = [Decimal]$Earnings_1h
+    $Stat.Earnings_1d = [Decimal]$Earnings_1d
+    $Stat.Earnings_1w = [Decimal]$Earnings_1w
+
+    if ($Stat.Earnings_1w) {
+        $Duration = ($Updated_UTC - $Stat.Last_Earnings[0].Date).TotalDays
+        if ($Duration -gt 1) {
+            $Earnings_Total = [Double]0
+            foreach ($Last_Earning in $Stat.Last_Earnings) {$Earnings_Total += [Double]$Last_Earning.Value}
+            $Stat.Earnings_Avg = [Decimal]($Earnings_Total / $Duration)
+        } else {
+            $Stat.Earnings_Avg = $Stat.Earnings_1d
+        }
+    } else {
+        $Stat.Earnings_Avg = 0
+    }
+
+    if ($WriteStat) {
+        if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
+        $Stat | ConvertTo-Json -Depth 10 | Set-Content $Path
+    }
     $Stat
 }
 
