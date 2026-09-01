@@ -601,6 +601,14 @@ function Get-StatFromFile {
     if (-not $Cached -or $Global:StatsCache[$Name] -eq $null -or -not [System.IO.File]::Exists($Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path))) {
         try {
             $Stat = ConvertFrom-Json "$(Get-ContentByStreamReader $Path)" -ErrorAction Stop
+            if ($Stat -ne $null -and $Stat.PSObject.BaseObject -is [System.Management.Automation.PSCustomObject]) {
+                # rebuild with interned property names: ConvertFrom-Json allocates fresh name strings per file, otherwise each cached stat keeps its own copy of the ~30 recurring field names
+                $StatInterned = [PSCustomObject]@{}
+                foreach ($StatProperty in $Stat.PSObject.Properties) {
+                    $StatInterned.PSObject.Properties.Add([System.Management.Automation.PSNoteProperty]::new([string]::Intern($StatProperty.Name), $StatProperty.Value))
+                }
+                $Stat = $StatInterned
+            }
             if ($Cached) {
                 if ($Stat) {
                     $Global:StatsCache[$Name] = $Stat
