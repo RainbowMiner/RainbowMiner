@@ -3745,8 +3745,9 @@ function Invoke-Core {
                             Import-Module '$env:Windir\System32\WindowsPowerShell\v1.0\Modules\NetSecurity\NetSecurity.psd1'$(if ($Session.IsCore) { " -SkipEditionCheck" })
                             @('$($Miner_Paths -join "','")') | ForEach-Object {New-NetFirewallRule -DisplayName 'RainbowMiner' -Program `$_}
                         "
+                        # remember the attempted paths for this session: retrying a declined or failed elevation every round would nag or stall non-admin rigs (a missing rule is retried on the next start)
+                        [void]$Global:MinerFirewalls.UnionWith($Miner_Paths)
                         Start-Process (@{desktop = "powershell"; core = "pwsh"}.$PSEdition) -ArgumentList "-Command &{ $ScriptBlock }" -Verb runAs -WindowStyle Hidden
-                        $Global:MinerFirewalls = $null
                     }
                 }
             }
