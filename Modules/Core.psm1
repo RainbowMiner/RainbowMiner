@@ -3721,13 +3721,19 @@ function Invoke-Core {
     #Open firewall ports for all miners
     if ($IsWindows) {
         try {
-            if (Get-Command "Get-MpPreference" -ErrorAction Ignore) {
-                if (Get-Command "Get-NetFirewallRule" -ErrorAction Ignore) {
+            # gate on the module manifests: a Get-Command probe for Get-MpPreference/Get-NetFirewallRule autoloads the Defender and NetSecurity modules (~28 MB in-process, plus a persistent WinPS compat process under pwsh)
+            if (Test-Path "$env:Windir\System32\WindowsPowerShell\v1.0\Modules\Defender\Defender.psd1") {
+                if (Test-Path "$env:Windir\System32\WindowsPowerShell\v1.0\Modules\NetSecurity\NetSecurity.psd1") {
                     if ($Global:MinerFirewalls -eq $null) {
                         $Global:MinerFirewalls = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
-                        foreach( $AppWall in Get-NetFirewallApplicationFilter ) {
-                            if ($AppWall.Program -like "$(Get-Location)\Bin\*") {
-                                [void]$Global:MinerFirewalls.Add($AppWall.Program)
+                        # read the rules from the registry: Get-NetFirewallApplicationFilter would need NetSecurity in-process, the elevated helper below imports it in its own process
+                        $FwPrograms = Get-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Services\SharedAccess\Parameters\FirewallPolicy\FirewallRules" -ErrorAction Ignore
+                        if ($FwPrograms) {
+                            $FwPrefix = "$(Get-Location)\Bin\*"
+                            foreach ($FwProp in $FwPrograms.PSObject.Properties) {
+                                if ($FwProp.Value -is [string] -and $FwProp.Value -match '(?i)\|App=([^|]+)\|' -and $Matches[1] -like $FwPrefix) {
+                                    [void]$Global:MinerFirewalls.Add($Matches[1])
+                                }
                             }
                         }
                     }

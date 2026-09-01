@@ -1087,8 +1087,21 @@ function Invoke-Process {
 function Get-MyIP {
     if ($IsWindows -and ($cmd = Get-Command "ipconfig" -ErrorAction Ignore)) {
         $IpcResult = Invoke-Exe $cmd.Source -ExpandLines | Where-Object {$_ -match 'IPv4.+\s(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'} | Foreach-Object {$Matches[1]}
-        if ($IpcResult.Count -gt 1 -and (Get-Command "Get-NetRoute" -ErrorAction Ignore) -and ($Trunc = Get-NetRoute -DestinationPrefix 0.0.0.0/0 | Select-Object -ExpandProperty NextHop | Where-Object {$_ -match '^(\d{1,3}\.\d{1,3}\.)'} | Foreach-Object {$Matches[1]} | Select-Object -First 1)) {
-            $IpcResult = $IpcResult | Where-Object {$_ -match "^$($Trunc)"}
+        if ($IpcResult.Count -gt 1) {
+            # find the default gateway's leading octets via .NET: a Get-Command "Get-NetRoute" probe would autoload the NetTCPIP CDXML module (~8 MB)
+            $Trunc = $null
+            try {
+                foreach ($NetIf in [System.Net.NetworkInformation.NetworkInterface]::GetAllNetworkInterfaces()) {
+                    if ($Trunc -eq $null -and $NetIf.OperationalStatus -eq [System.Net.NetworkInformation.OperationalStatus]::Up) {
+                        foreach ($GwAddr in $NetIf.GetIPProperties().GatewayAddresses) {
+                            if ("$($GwAddr.Address)" -match '^(\d{1,3}\.\d{1,3}\.)') {$Trunc = $Matches[1];break}
+                        }
+                    }
+                }
+            } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+            if ($Trunc) {
+                $IpcResult = $IpcResult | Where-Object {$_ -match "^$($Trunc)"}
+            }
         }
         $IpcResult | Select-Object -First 1
     } elseif ($IsLinux) {

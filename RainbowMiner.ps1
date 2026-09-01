@@ -542,9 +542,11 @@ $MyCommandParameters | Foreach-Object {
 }
 
 if ($IsWindows -and $Session.IsAdmin) {
-    if ((Get-Command "Get-MpPreference" -ErrorAction Ignore)) {
+    if (Test-Path "$env:Windir\System32\WindowsPowerShell\v1.0\Modules\Defender\Defender.psd1") {
         try {
-            if ((Get-MpPreference).ExclusionPath -notcontains (Convert-Path .)) {
+            # read the exclusion list via CIM: Get-MpPreference would load the Defender module in-process (and spawn a persistent WinPS compat process under pwsh)
+            $MpPreference = Get-CimInstance -Namespace "root\Microsoft\Windows\Defender" -ClassName "MSFT_MpPreference" -ErrorAction Stop
+            if ($MpPreference -and $MpPreference.ExclusionPath -notcontains (Convert-Path .)) {
                 Start-Process (@{desktop = "powershell"; core = "pwsh"}.$PSEdition) "-Command Import-Module '$env:Windir\System32\WindowsPowerShell\v1.0\Modules\Defender\Defender.psd1'$(if ($Session.IsCore) {" -SkipEditionCheck"}); Add-MpPreference -ExclusionPath '$(Convert-Path .)'" -Verb runAs -WindowStyle Hidden
             }
         } catch {
