@@ -11,8 +11,10 @@ $PriorityClass = @{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNorm
 
 # kill-on-close job object: once the miner is assigned, the kernel terminates
 # it and its children as soon as the process holding the job handle dies -
-# RainbowMiner itself with ThreadJob, the Start-Job child otherwise. This
-# covers X-close, crash and taskkill; the handle is intentionally never closed.
+# RainbowMiner itself, since the monitor runs on its pooled runspace. This
+# covers X-close, crash and taskkill; the regular teardown terminates the job
+# explicitly (see the tail of the watch loop), which also takes down worker
+# processes the miner forked.
 if (-not ("RBMJob" -as [type])) {
     Add-Type -ErrorAction Ignore -TypeDefinition @'
 using System;
@@ -30,6 +32,9 @@ public static class RBMJob {
 
     [DllImport("kernel32.dll", SetLastError = true)]
     static extern bool CloseHandle(IntPtr hObject);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    static extern bool TerminateJobObject(IntPtr hJob, uint uExitCode);
 
     [StructLayout(LayoutKind.Sequential)]
     struct JOBOBJECT_BASIC_LIMIT_INFORMATION {
@@ -78,6 +83,15 @@ public static class RBMJob {
         if (!ok) { CloseHandle(hJob); return IntPtr.Zero; }
         return hJob;
     }
+
+    // kills every process still assigned to the job - the miner's forked
+    // workers included - and releases the handle
+    public static bool Terminate(IntPtr hJob) {
+        if (hJob == IntPtr.Zero) return false;
+        bool ok = TerminateJobObject(hJob, 1);
+        CloseHandle(hJob);
+        return ok;
+    }
 }
 '@
 }
@@ -107,13 +121,16 @@ $MiningProcess = New-Object System.Diagnostics.Process
 $MiningProcess.StartInfo = $psi
 
 # stdout/stderr are queued on the .NET event thread and drained to the log by
-# the watch loop, so a filled redirect pipe can never stall the miner
+# the watch loop, so a filled redirect pipe can never stall the miner.
+# A null line marks EOF on a stream (the last handle to its pipe was closed);
+# it is counted so the tail wait after the exit can be bounded
 $OutputQueue = New-Object System.Collections.Concurrent.ConcurrentQueue[string]
-$OutEvent = Register-ObjectEvent -InputObject $MiningProcess -EventName OutputDataReceived -MessageData $OutputQueue -Action {
-    if ($EventArgs.Data -ne $null) {$Event.MessageData.Enqueue($EventArgs.Data)}
+$Streams = [hashtable]::Synchronized(@{Queue = $OutputQueue; Eof = 0})
+$OutEvent = Register-ObjectEvent -InputObject $MiningProcess -EventName OutputDataReceived -MessageData $Streams -Action {
+    if ($EventArgs.Data -ne $null) {$Event.MessageData.Queue.Enqueue($EventArgs.Data)} else {$Event.MessageData.Eof++}
 }
-$ErrEvent = Register-ObjectEvent -InputObject $MiningProcess -EventName ErrorDataReceived -MessageData $OutputQueue -Action {
-    if ($EventArgs.Data -ne $null) {$Event.MessageData.Enqueue($EventArgs.Data)}
+$ErrEvent = Register-ObjectEvent -InputObject $MiningProcess -EventName ErrorDataReceived -MessageData $Streams -Action {
+    if ($EventArgs.Data -ne $null) {$Event.MessageData.Queue.Enqueue($EventArgs.Data)} else {$Event.MessageData.Eof++}
 }
 
 try {
@@ -132,6 +149,8 @@ try {
 # hand the PID back to Start-SubProcessInBackground: single-process miners
 # then need no CIM-based discovery at all
 if ($Comm -ne $null) {$Comm["ProcessId"] = $MiningProcess.Id}
+$MinerStartTime = Get-Date
+try {$MinerStartTime = $MiningProcess.StartTime} catch {}
 
 $JobHandle = [IntPtr]::Zero
 try {if ("RBMJob" -as [type]) {$JobHandle = [RBMJob]::Guard($MiningProcess.Handle)}} catch {}
@@ -163,6 +182,25 @@ try {
         }
     }
 
+    # fallback for a miner outside the job guard: kill the process tree below
+    # the main PID. Only processes younger than the miner qualify, so a
+    # recycled PID can never match
+    $KillDescendants = {
+        param($RootId, $NotBefore)
+        $Procs = @(Get-CimInstance -ClassName Win32_Process -ErrorAction Ignore | Select-Object ProcessId, ParentProcessId, CreationDate)
+        $Parents = [System.Collections.Generic.Queue[int]]::new()
+        $Parents.Enqueue([int]$RootId)
+        while ($Parents.Count) {
+            $ParentId = $Parents.Dequeue()
+            foreach ($p in $Procs) {
+                if ($p.ParentProcessId -eq $ParentId -and $p.ProcessId -ne $ParentId -and (-not $p.CreationDate -or $p.CreationDate -ge $NotBefore)) {
+                    $Parents.Enqueue([int]$p.ProcessId)
+                    Stop-Process -Id $p.ProcessId -Force -ErrorAction Ignore
+                }
+            }
+        }
+    }
+
     do {
         $Done = $ControllerProcess.WaitForExit(1000)
         try {& $DrainToLog $OutputQueue $LogPath} catch {}
@@ -171,16 +209,39 @@ try {
         }
     } until ($Done -or $MiningProcess.HasExited)
 
-    # bounded wait for a killed miner, then WaitForExit() flushes the async
-    # readers to EOF so no tail lines are lost
-    try {
-        if (-not $MiningProcess.HasExited) {[void]$MiningProcess.WaitForExit(5000)}
-        if ($MiningProcess.HasExited) {$MiningProcess.WaitForExit()}
-    } catch {}
-    Start-Sleep -Milliseconds 100
+    # bounded wait for a killed miner
+    try {if (-not $MiningProcess.HasExited) {[void]$MiningProcess.WaitForExit(5000)}} catch {}
+
+    # Never WaitForExit() without a timeout here: it returns only once the
+    # async readers hit EOF, and a miner that forks worker processes (BzMiner
+    # v100+) leaves them holding the inherited stdout/stderr pipe after the
+    # main PID is killed - the call would never return, and PowerShell.Stop()
+    # on the core loop would freeze with it. Terminate the job object first
+    # (the workers die and the pipe closes), then wait for EOF with a limit
+    if ($JobHandle -ne [IntPtr]::Zero) {
+        try {[RBMJob]::Terminate($JobHandle) > $null} catch {}
+        $JobHandle = [IntPtr]::Zero
+    } else {
+        try {& $KillDescendants $MiningProcess.Id $MinerStartTime} catch {}
+    }
+    $sw = [System.Diagnostics.Stopwatch]::StartNew()
+    $Swept = $false
+    while ($Streams.Eof -lt 2 -and $sw.Elapsed.TotalSeconds -lt 10) {
+        Start-Sleep -Milliseconds 100
+        if (-not $Swept -and $sw.Elapsed.TotalSeconds -gt 2) {
+            # a process outside the job still holds the pipe: sweep the tree
+            $Swept = $true
+            try {& $KillDescendants $MiningProcess.Id $MinerStartTime} catch {}
+        }
+    }
+    if ($Streams.Eof -lt 2 -and $LogPath) {Add-Content -LiteralPath $LogPath -Value "Warning: output streams of $($FilePath) did not reach EOF within 10s - a foreign process still holds them" -ErrorAction Ignore}
     try {& $DrainToLog $OutputQueue $LogPath} catch {}
 } finally {
     try {if (-not $MiningProcess.HasExited) {$MiningProcess.Kill()}} catch {}
+    if ($JobHandle -ne [IntPtr]::Zero) {
+        try {[RBMJob]::Terminate($JobHandle) > $null} catch {}
+        $JobHandle = [IntPtr]::Zero
+    }
     if ($Comm -ne $null) {
         $Comm["ExitTime"] = Get-Date
         try {if ($MiningProcess.HasExited) {$Comm["ExitCode"] = $MiningProcess.ExitCode}} catch {}

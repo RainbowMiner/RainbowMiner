@@ -5,8 +5,12 @@
 $Script:MinerRSPool   = $null
 $Script:MinerRSScript = $null
 $Script:MinerRSCount  = 0
+# monitors whose pipeline ignored the stop request: parked here and disposed
+# once they end, instead of blocking the core loop (see Stop-MinerJobRS)
+$Script:MinerRSAbandoned = [System.Collections.Generic.List[object]]::new()
 
 function Initialize-MinerRunspacePool {
+    Clear-MinerJobAbandoned
     if ($Script:MinerRSPool -and $Script:MinerRSPool.RunspacePoolStateInfo.State -ne "Opened") {
         try {$Script:MinerRSPool.Dispose()} catch {}
         $Script:MinerRSPool = $null
@@ -28,11 +32,36 @@ function Initialize-MinerRunspacePool {
 }
 
 function Stop-MinerRunspacePool {
+    Clear-MinerJobAbandoned
     if ($Script:MinerRSPool) {
-        try {$Script:MinerRSPool.Close()} catch {}
-        try {$Script:MinerRSPool.Dispose()} catch {}
+        # Close() waits for every pipeline in the pool: a monitor that is still
+        # blocked must not hold up the shutdown, so close asynchronously with a
+        # bounded grace period and leave the pool behind otherwise
+        try {
+            $CloseHandle = $Script:MinerRSPool.BeginClose($null, $null)
+            $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
+            while (-not $CloseHandle.IsCompleted -and $StopWatch.Elapsed.TotalSeconds -lt 10) {Start-Sleep -Milliseconds 250}
+            if ($CloseHandle.IsCompleted) {
+                try {$Script:MinerRSPool.EndClose($CloseHandle)} catch {}
+                try {$Script:MinerRSPool.Dispose()} catch {}
+            } else {
+                Write-Log -Level Warn "Miner runspace pool did not close within 10 seconds - left behind"
+            }
+        } catch {}
         $Script:MinerRSPool = $null
         $Script:MinerRSScript = $null
+    }
+}
+
+function Clear-MinerJobAbandoned {
+    if ($Script:MinerRSAbandoned.Count -gt 0) {
+        $Ended = @($Script:MinerRSAbandoned | Where-Object {-not $_.PowerShell -or "$($_.PowerShell.InvocationStateInfo.State)" -notin @("Running","Stopping")})
+        foreach ($XJob in $Ended) {
+            try {if ($XJob.Handle -and $XJob.Handle.IsCompleted) {$XJob.PowerShell.EndInvoke($XJob.Handle) > $null}} catch {}
+            Remove-MinerJobRS $XJob
+            [void]$Script:MinerRSAbandoned.Remove($XJob)
+            Write-Log "$($XJob.Title): abandoned background monitor has ended and was disposed"
+        }
     }
 }
 
@@ -57,6 +86,7 @@ function Stop-MinerJobRS {
         [String]$Title = "Process"
     )
     if ($XJob -eq $null) {return}
+    $Abandon = $false
     try {
         if ($XJob.Handle -and -not $XJob.Handle.IsCompleted) {
             # the miner PIDs are already dead at this point, so the monitor
@@ -68,14 +98,34 @@ function Stop-MinerJobRS {
             if ($XJob.Handle -and $XJob.Handle.IsCompleted) {
                 try {$XJob.PowerShell.EndInvoke($XJob.Handle) > $null} catch {}
             } else {
+                # never the synchronous Stop() here: it returns only once the
+                # pipeline thread reaches a stop point, and a monitor stuck in
+                # a native wait would freeze the core loop with it
                 Write-Log -Level Warn "$($Title): background monitor did not finish in time - stopping pipeline"
-                try {$XJob.PowerShell.Stop()} catch {}
+                try {$XJob.PowerShell.BeginStop($null, $null) > $null} catch {}
+                $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
+                while ("$($XJob.PowerShell.InvocationStateInfo.State)" -in @("Running","Stopping") -and $StopWatch.Elapsed.TotalSeconds -lt 5) {Start-Sleep -Milliseconds 250}
+                if ("$($XJob.PowerShell.InvocationStateInfo.State)" -in @("Running","Stopping")) {$Abandon = $true}
             }
-            if ($XJob.PowerShell.InvocationStateInfo.State -eq "Failed") {
+            if (-not $Abandon -and $XJob.PowerShell.InvocationStateInfo.State -eq "Failed") {
                 Write-Log -Level Warn "$($Title): background monitor failed: $($XJob.PowerShell.InvocationStateInfo.Reason.Message)"
             }
         }
     } catch {}
+    if ($Abandon) {
+        # Dispose() would call Stop() synchronously: park the record instead,
+        # Clear-MinerJobAbandoned disposes it once the pipeline has ended
+        Write-Log -Level Warn "$($Title): background monitor ignored the stop request - abandoned, its pooled runspace stays blocked until it ends"
+        $XJob | Add-Member -MemberType NoteProperty -Name Title -Value $Title -Force
+        [void]$Script:MinerRSAbandoned.Add($XJob)
+        return
+    }
+    Remove-MinerJobRS $XJob
+}
+
+function Remove-MinerJobRS {
+    [CmdletBinding()]
+    param($XJob)
     try {if ($XJob.Output) {if ($XJob.Output.Count) {$XJob.Output.ReadAll() > $null}; $XJob.Output.Dispose()}} catch {}
     try {if ($XJob.Input) {$XJob.Input.Dispose()}} catch {}
     try {if ($XJob.PowerShell) {$XJob.PowerShell.Dispose()}} catch {}
