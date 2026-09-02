@@ -1,4 +1,4 @@
-﻿param($ControllerProcessID, $WorkingDirectory, $FilePath, $ArgumentList, $LogPath, $EnvVars, $Priority, $CurrentPwd)
+﻿param($ControllerProcessID, $WorkingDirectory, $FilePath, $ArgumentList, $LogPath, $EnvVars, $Priority, $CurrentPwd, $Comm = $null)
 
 $ControllerProcess = Get-Process -Id $ControllerProcessID -ErrorAction Ignore
 if ($ControllerProcess -eq $null) {return}
@@ -119,60 +119,81 @@ $ErrEvent = Register-ObjectEvent -InputObject $MiningProcess -EventName ErrorDat
 try {
     [void]$MiningProcess.Start()
 } catch {
+    if ($Comm -ne $null) {$Comm["StartFailed"] = "$($_.Exception.Message)"}
     if ($LogPath) {Add-Content -LiteralPath $LogPath -Value "Failed to start $($FilePath): $($_.Exception.Message)" -ErrorAction Ignore}
     Unregister-Event -SourceIdentifier $OutEvent.Name -ErrorAction Ignore
     Unregister-Event -SourceIdentifier $ErrEvent.Name -ErrorAction Ignore
+    Remove-Job $OutEvent -Force -ErrorAction Ignore
+    Remove-Job $ErrEvent -Force -ErrorAction Ignore
     $MiningProcess.Dispose()
     return
 }
+
+# hand the PID back to Start-SubProcessInBackground: single-process miners
+# then need no CIM-based discovery at all
+if ($Comm -ne $null) {$Comm["ProcessId"] = $MiningProcess.Id}
 
 $JobHandle = [IntPtr]::Zero
 try {if ("RBMJob" -as [type]) {$JobHandle = [RBMJob]::Guard($MiningProcess.Handle)}} catch {}
 if ($JobHandle -eq [IntPtr]::Zero -and $LogPath) {Add-Content -LiteralPath $LogPath -Value "Warning: kill-on-close job guard not active for $($FilePath)" -ErrorAction Ignore}
 
-$MiningProcess.BeginOutputReadLine()
-$MiningProcess.BeginErrorReadLine()
-
-# Set-SubProcessPriority in ProcLib re-applies this to all discovered PIDs
-try {$MiningProcess.PriorityClass = [System.Diagnostics.ProcessPriorityClass]$PriorityClass} catch {}
-
-# must never throw: if the watch loop died, the event subscriptions would keep
-# queueing miner output unread until Stop-SubProcess removes the job.
-# Lines are always emitted to the job output stream as well: the *Wrapper APIs
-# parse them via Receive-Job on Windows (EndOfRoundCleanup null-drains them
-# for all other miners).
-$DrainToLog = {
-    param($Queue, $Path)
-    $line  = $null
-    $lines = New-Object System.Collections.Generic.List[string]
-    while ($Queue.TryDequeue([ref]$line)) {[void]$lines.Add($line)}
-    if ($lines.Count) {
-        if ($Path) {Add-Content -LiteralPath $Path -Value $lines -ErrorAction Ignore}
-        $lines
-    }
-}
-
-do {
-    $Done = $ControllerProcess.WaitForExit(1000)
-    try {& $DrainToLog $OutputQueue $LogPath} catch {}
-    if ($Done -and -not $MiningProcess.HasExited) {
-        try {$MiningProcess.Kill()} catch {}
-    }
-} until ($Done -or $MiningProcess.HasExited)
-
-# bounded wait for a killed miner, then WaitForExit() flushes the async
-# readers to EOF so no tail lines are lost
+# the cleanup lives in a finally: if the pipeline is stopped from the outside
+# (PowerShell.Stop() on a pooled runspace), the event subscriptions and a
+# still-running miner must not leak into a runspace that gets reused
 try {
-    if (-not $MiningProcess.HasExited) {[void]$MiningProcess.WaitForExit(5000)}
-    if ($MiningProcess.HasExited) {$MiningProcess.WaitForExit()}
-} catch {}
-Start-Sleep -Milliseconds 100
-try {& $DrainToLog $OutputQueue $LogPath} catch {}
+    $MiningProcess.BeginOutputReadLine()
+    $MiningProcess.BeginErrorReadLine()
 
-try {$MiningProcess.CancelOutputRead()} catch {}
-try {$MiningProcess.CancelErrorRead()} catch {}
-Unregister-Event -SourceIdentifier $OutEvent.Name -ErrorAction Ignore
-Unregister-Event -SourceIdentifier $ErrEvent.Name -ErrorAction Ignore
+    # Set-SubProcessPriority in ProcLib re-applies this to all discovered PIDs
+    try {$MiningProcess.PriorityClass = [System.Diagnostics.ProcessPriorityClass]$PriorityClass} catch {}
 
-$MiningProcess.Dispose()
-$MiningProcess = $null
+    # must never throw: if the watch loop died, the event subscriptions would keep
+    # queueing miner output unread until Stop-SubProcess removes the job.
+    # Lines are always emitted to the pipeline output stream as well: the *Wrapper
+    # APIs parse them via Read-MinerJobOutput on Windows (EndOfRoundCleanup
+    # null-drains them for all other miners).
+    $DrainToLog = {
+        param($Queue, $Path)
+        $line  = $null
+        $lines = New-Object System.Collections.Generic.List[string]
+        while ($Queue.TryDequeue([ref]$line)) {[void]$lines.Add($line)}
+        if ($lines.Count) {
+            if ($Path) {Add-Content -LiteralPath $Path -Value $lines -ErrorAction Ignore}
+            $lines
+        }
+    }
+
+    do {
+        $Done = $ControllerProcess.WaitForExit(1000)
+        try {& $DrainToLog $OutputQueue $LogPath} catch {}
+        if ($Done -and -not $MiningProcess.HasExited) {
+            try {$MiningProcess.Kill()} catch {}
+        }
+    } until ($Done -or $MiningProcess.HasExited)
+
+    # bounded wait for a killed miner, then WaitForExit() flushes the async
+    # readers to EOF so no tail lines are lost
+    try {
+        if (-not $MiningProcess.HasExited) {[void]$MiningProcess.WaitForExit(5000)}
+        if ($MiningProcess.HasExited) {$MiningProcess.WaitForExit()}
+    } catch {}
+    Start-Sleep -Milliseconds 100
+    try {& $DrainToLog $OutputQueue $LogPath} catch {}
+} finally {
+    try {if (-not $MiningProcess.HasExited) {$MiningProcess.Kill()}} catch {}
+    if ($Comm -ne $null) {
+        $Comm["ExitTime"] = Get-Date
+        try {if ($MiningProcess.HasExited) {$Comm["ExitCode"] = $MiningProcess.ExitCode}} catch {}
+    }
+    try {$MiningProcess.CancelOutputRead()} catch {}
+    try {$MiningProcess.CancelErrorRead()} catch {}
+    Unregister-Event -SourceIdentifier $OutEvent.Name -ErrorAction Ignore
+    Unregister-Event -SourceIdentifier $ErrEvent.Name -ErrorAction Ignore
+    # the -Action subscriptions are PSEventJobs: without Remove-Job they pile
+    # up in the reused pooled runspace's job table (2 per miner start)
+    Remove-Job $OutEvent -Force -ErrorAction Ignore
+    Remove-Job $ErrEvent -Force -ErrorAction Ignore
+
+    $MiningProcess.Dispose()
+    $MiningProcess = $null
+}

@@ -1,4 +1,92 @@
-﻿function Start-SubProcess {
+﻿# Persistent runspace pool for the Windows background miner monitors: reusing
+# pooled runspaces caps the process-wide TypeTable count - one-runspace-per-start
+# jobs leaked dead TypeTables via the engine's binder call-site caches - and
+# needs no ThreadJob module (Windows PowerShell 5.1 ships without it)
+$Script:MinerRSPool   = $null
+$Script:MinerRSScript = $null
+$Script:MinerRSCount  = 0
+
+function Initialize-MinerRunspacePool {
+    if ($Script:MinerRSPool -and $Script:MinerRSPool.RunspacePoolStateInfo.State -ne "Opened") {
+        try {$Script:MinerRSPool.Dispose()} catch {}
+        $Script:MinerRSPool = $null
+    }
+    if (-not $Script:MinerRSPool) {
+        $MaxRS = 0
+        if ("$($env:RBM_MINERPOOL_MAXTHREADS)" -match "^\d+$") {$MaxRS = [int]$env:RBM_MINERPOOL_MAXTHREADS}
+        if ($MaxRS -lt 1) {$MaxRS = [Math]::Max(8, ($Global:GlobalCachedDevices | Measure-Object).Count + 2)}
+        # the (int,int) overload uses a default host on purpose: passing $Host
+        # would mirror every Write-Host of the process into the pipelines'
+        # information buffers (see Clear-APIServerStreams in API.psm1)
+        $Script:MinerRSPool = [RunspaceFactory]::CreateRunspacePool(1, $MaxRS)
+        $Script:MinerRSPool.Open()
+        Write-Log "Created miner runspace pool with max $($MaxRS) runspaces"
+    }
+    if (-not $Script:MinerRSScript) {
+        $Script:MinerRSScript = [System.IO.File]::ReadAllText((Join-Path (Split-Path $PSScriptRoot) "Scripts\StartInBackground.ps1"))
+    }
+}
+
+function Stop-MinerRunspacePool {
+    if ($Script:MinerRSPool) {
+        try {$Script:MinerRSPool.Close()} catch {}
+        try {$Script:MinerRSPool.Dispose()} catch {}
+        $Script:MinerRSPool = $null
+        $Script:MinerRSScript = $null
+    }
+}
+
+function Read-MinerJobOutput {
+    [CmdletBinding()]
+    param($MJob)
+    if ($MJob -ne $null) {
+        if ($MJob -is [System.Management.Automation.Job]) {
+            if ($MJob.HasMoreData) {$MJob | Receive-Job}
+        } elseif ($MJob.Output -and $MJob.Output.Count -gt 0) {
+            $MJob.Output.ReadAll()
+        }
+    }
+}
+
+function Stop-MinerJobRS {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        $XJob,
+        [Parameter(Mandatory = $false)]
+        [String]$Title = "Process"
+    )
+    if ($XJob -eq $null) {return}
+    try {
+        if ($XJob.Handle -and -not $XJob.Handle.IsCompleted) {
+            # the miner PIDs are already dead at this point, so the monitor
+            # pipeline finishes on its own within a few seconds
+            $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
+            while (-not $XJob.Handle.IsCompleted -and $StopWatch.Elapsed.TotalSeconds -lt 10) {Start-Sleep -Milliseconds 250}
+        }
+        if ($XJob.PowerShell) {
+            if ($XJob.Handle -and $XJob.Handle.IsCompleted) {
+                try {$XJob.PowerShell.EndInvoke($XJob.Handle) > $null} catch {}
+            } else {
+                Write-Log -Level Warn "$($Title): background monitor did not finish in time - stopping pipeline"
+                try {$XJob.PowerShell.Stop()} catch {}
+            }
+            if ($XJob.PowerShell.InvocationStateInfo.State -eq "Failed") {
+                Write-Log -Level Warn "$($Title): background monitor failed: $($XJob.PowerShell.InvocationStateInfo.Reason.Message)"
+            }
+        }
+    } catch {}
+    try {if ($XJob.Output) {if ($XJob.Output.Count) {$XJob.Output.ReadAll() > $null}; $XJob.Output.Dispose()}} catch {}
+    try {if ($XJob.Input) {$XJob.Input.Dispose()}} catch {}
+    try {if ($XJob.PowerShell) {$XJob.PowerShell.Dispose()}} catch {}
+    $XJob.PowerShell = $null
+    $XJob.Handle = $null
+    $XJob.Output = $null
+    $XJob.Input = $null
+    $XJob.Comm = $null
+}
+
+function Start-SubProcess {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
@@ -78,15 +166,83 @@ function Start-SubProcessInBackground {
     )
 
     $Running = [System.Collections.Generic.List[int]]::new()
-    Get-SubProcessRunningIds $FilePath | Where-Object {$_} | Foreach-Object {[void]$Running.Add([int]$_)}
+    if ($MultiProcess -gt 0) {
+        # only the CIM-based discovery of additional PIDs needs the pre-start
+        # snapshot; the main PID is handed back by the monitor itself
+        Get-SubProcessRunningIds $FilePath | Where-Object {$_} | Foreach-Object {[void]$Running.Add([int]$_)}
+    }
 
-    $Job = Start-ThreadJob -FilePath .\Scripts\StartInBackground.ps1 -ArgumentList $PID, $WorkingDirectory, $FilePath, $ArgumentList, $LogPath, $EnvVars, $Priority, $PWD
+    Initialize-MinerRunspacePool
+
+    $Script:MinerRSCount++
+    $Comm   = [hashtable]::Synchronized(@{})
+    $InCol  = [System.Management.Automation.PSDataCollection[psobject]]::new()
+    $OutCol = [System.Management.Automation.PSDataCollection[psobject]]::new()
+
+    $PS = [PowerShell]::Create()
+    $PS.RunspacePool = $Script:MinerRSPool
+    [void]$PS.AddScript($Script:MinerRSScript, $true).AddParameters(@{
+        ControllerProcessID = $PID
+        WorkingDirectory    = $WorkingDirectory
+        FilePath            = $FilePath
+        ArgumentList        = $ArgumentList
+        LogPath             = $LogPath
+        EnvVars             = $EnvVars
+        Priority            = $Priority
+        CurrentPwd          = "$PWD"
+        Comm                = $Comm
+    })
+    $Handle = $PS.BeginInvoke($InCol, $OutCol)
+
+    $XJob = [PSCustomObject]@{
+        PowerShell  = $PS
+        Handle      = $Handle
+        Output      = $OutCol
+        Input       = $InCol
+        Comm        = $Comm
+        StartTime   = (Get-Date)
+        RunspaceJob = $true
+    }
+    # duck-typed job facade: MinerAPIs reads State/HasMoreData/PSBeginTime/
+    # PSEndTime off real jobs on the console/screen/tmux paths, so the pooled
+    # record answers to the same member names
+    $XJob | Add-Member -MemberType ScriptProperty -Name State -Value {
+        if ($this.PowerShell -eq $null) {"Completed"}
+        elseif ("$($this.PowerShell.InvocationStateInfo.State)" -in @("Running","Stopping")) {"Running"}
+        elseif ("$($this.PowerShell.InvocationStateInfo.State)" -eq "Failed") {"Failed"}
+        elseif ("$($this.PowerShell.InvocationStateInfo.State)" -eq "NotStarted") {"NotStarted"}
+        else {"Completed"}
+    }
+    $XJob | Add-Member -MemberType ScriptProperty -Name HasMoreData -Value {
+        [bool]($this.Output -and $this.Output.Count -gt 0)
+    }
+    $XJob | Add-Member -MemberType ScriptProperty -Name PSBeginTime -Value {$this.StartTime}
+    $XJob | Add-Member -MemberType ScriptProperty -Name PSEndTime -Value {
+        if ($this.Comm -and $this.Comm.ContainsKey("ExitTime")) {$this.Comm["ExitTime"]}
+        elseif ($this.Handle -and $this.Handle.IsCompleted) {Get-Date}
+        else {$null}
+    }
+
+    $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
+    while (-not $Comm.ContainsKey("ProcessId") -and -not $Comm.ContainsKey("StartFailed") -and -not $Handle.IsCompleted -and $StopWatch.Elapsed.TotalSeconds -lt 10) {
+        Start-Sleep -Milliseconds 50
+    }
 
     $ProcessIds = [System.Collections.Generic.List[int]]::new()
-    if ($Job) {
+    if ($Comm.ContainsKey("StartFailed")) {
+        Write-Log -Level Warn "Failed to launch $($FilePath): $($Comm["StartFailed"])"
+    } elseif ($MultiProcess -gt 0) {
+        Get-SubProcessIds -FilePath $FilePath -ArgumentList $ArgumentList -MultiProcess $MultiProcess -Running $Running -Executables $Executables | Where-Object {$_} | Foreach-Object {[void]$ProcessIds.Add([int]$_)}
+        if ($Comm.ContainsKey("ProcessId") -and -not $ProcessIds.Contains([int]$Comm["ProcessId"])) {[void]$ProcessIds.Add([int]$Comm["ProcessId"])}
+    } elseif ($Comm.ContainsKey("ProcessId")) {
+        [void]$ProcessIds.Add([int]$Comm["ProcessId"])
+    } else {
+        if ("$($PS.InvocationStateInfo.State)" -eq "NotStarted") {
+            Write-Log -Level Warn "Miner runspace pool exhausted - process start for $($FilePath) is queued (increase RBM_MINERPOOL_MAXTHREADS)"
+        }
         Get-SubProcessIds -FilePath $FilePath -ArgumentList $ArgumentList -MultiProcess $MultiProcess -Running $Running -Executables $Executables | Where-Object {$_} | Foreach-Object {[void]$ProcessIds.Add([int]$_)}
     }
-    
+
     if ($Priority -lt 10) {
         Set-SubProcessPriority $ProcessIds -Priority $Priority -CPUAffinity $CPUAffinity -Quiet:$Quiet
     }
@@ -94,9 +250,9 @@ function Start-SubProcessInBackground {
     [PSCustomObject]@{
         ScreenName = ""
         ScreenCmd  = ""
-        Name       = $Job.Name
+        Name       = "MinerRS$($Script:MinerRSCount)"
         WorkingDir = $WorkingDirectory
-        XJob       = $Job
+        XJob       = $XJob
         OwnWindow  = $false
         ProcessId  = [int[]]@($ProcessIds | Where-Object {$_ -gt 0})
     }
@@ -931,8 +1087,12 @@ function Stop-SubProcess {
     }
 
     if ($Job.XJob) {
-        if ($Job.XJob.HasMoreData) {Receive-Job $Job.XJob > $null}
-        Remove-Job $Job.XJob -Force -ErrorAction Ignore
+        if ($Job.XJob -is [System.Management.Automation.Job]) {
+            if ($Job.XJob.HasMoreData) {Receive-Job $Job.XJob > $null}
+            Remove-Job $Job.XJob -Force -ErrorAction Ignore
+        } else {
+            Stop-MinerJobRS -XJob $Job.XJob -Title $Title
+        }
         $Job.Name = $null
         $Job.XJob = $null
     }

@@ -133,11 +133,11 @@ class Miner {
         return $this.API -match "Wrapper"
     }
 
-    [System.Management.Automation.Job]GetMiningJob() {
+    [object]GetMiningJob() {
         return $this.Job.XJob
     }
 
-    [System.Management.Automation.Job]GetWrapperJob() {
+    [object]GetWrapperJob() {
         if ($Global:IsLinux) {
             return $this.WrapperJob
         } else {
@@ -314,7 +314,7 @@ class Miner {
 
     EndOfRoundCleanup() {
         if ($Global:IsLinux -or ($this.API -notmatch "Wrapper")) {
-            if ($this.Job.XJob.HasMoreData) {$this.Job.XJob | Receive-Job > $null}
+            if ($this.Job.XJob.HasMoreData) {Read-MinerJobOutput $this.Job.XJob > $null}
         }
         if (($this.Speed_Live | Measure-Object -Sum).Sum) {$this.ZeroRounds = 0} else {$this.ZeroRounds++}
         $this.Rounds++
@@ -518,7 +518,7 @@ class Miner {
         if ($MJob.HasMoreData) {
             $Date = (Get-Date).ToUniversalTime()
 
-            $MJob | Receive-Job | ForEach-Object {
+            Read-MinerJobOutput $MJob | ForEach-Object {
                 $Line = $_ -replace "`n|`r", ""
                 $Line_Simple = $Line -replace "\x1B\[[0-?]*[ -/]*[@-~]", ""
                 if ($Line_Simple) {
@@ -1376,7 +1376,7 @@ class DynexsolveWrapper : Miner {
         if ($MJob.HasMoreData) {
             $HashRate_Name = $this.Algorithm[0]
 
-            $MJob | Receive-Job | ForEach-Object {
+            Read-MinerJobOutput $MJob | ForEach-Object {
                 $Line = $_ -replace "`n|`r", ""
                 $Line_Simple = $Line -replace "\x1B\[[0-?]*[ -/]*[@-~]", ""
                 if ($Line_Simple -match "\[GPU \*\].+ HASHRATE ([\d\s\./hkMGTPs]+?) \|") {
@@ -1556,7 +1556,7 @@ class EthminerWrapper : Miner {
         if ($MJob.HasMoreData) {
             $HashRate_Name = $this.Algorithm[0]
 
-            $MJob | Receive-Job | ForEach-Object {
+            Read-MinerJobOutput $MJob | ForEach-Object {
                 $Line = $_ -replace "`n|`r", ""
                 $Line_Simple = $Line -replace "\x1B\[[0-?]*[ -/]*[@-~]", ""
                 if ($Line_Simple) {
@@ -2527,7 +2527,7 @@ class RHWrapper : Miner {
         if ($MJob.HasMoreData) {
             $HashRate_Name = $this.Algorithm[0]
 
-            $MJob | Receive-Job | ForEach-Object {
+            Read-MinerJobOutput $MJob | ForEach-Object {
                 $Line = $_ -replace "`n|`r", ""
                 $Line_Simple = $Line -replace "\x1B\[[0-?]*[ -/]*[@-~]", ""
                 if ($Line_Simple) {
@@ -2673,7 +2673,7 @@ class SixMinerWrapper : Miner {
         if ($MJob.HasMoreData) {
             $HashRate_Name = $this.Algorithm[0]
 
-            $MJob | Receive-Job | ForEach-Object {
+            Read-MinerJobOutput $MJob | ForEach-Object {
                 $Line = $_ -replace "`n|`r", ""
                 $Line_Simple = $Line -replace "\x1B\[[0-?]*[ -/]*[@-~]", ""
                 if ($Line_Simple -match "^.+?(speed|accepted)\s+(.+?)$") {
@@ -2717,7 +2717,7 @@ class SPMinerWrapper : Miner {
         if ($MJob.HasMoreData) {
             $HashRate_Name = $this.Algorithm[0]
 
-            $MJob | Receive-Job | ForEach-Object {
+            Read-MinerJobOutput $MJob | ForEach-Object {
                 $Line = $_ -replace "`n|`r", ""
                 $Line_Simple = $Line -replace "\x1B\[[0-?]*[ -/]*[@-~]", ""
                 if ($Line_Simple -match "accepted:\s*(\d+)/(\d+).+\s+([\d\.]+)\s+([hkMGTP]+)/s") {
@@ -3046,7 +3046,7 @@ class SwapminerWrapper : Miner {
         if ($MJob.HasMoreData) {
             $HashRate_Name = $this.Algorithm[0]
 
-            $MJob | Receive-Job | ForEach-Object {
+            Read-MinerJobOutput $MJob | ForEach-Object {
                 $Line = $_ -replace "`n|`r", ""
                 $Line_Simple = $Line -replace "\x1B\[[0-?]*[ -/]*[@-~]", ""
                 if ($Line_Simple) {
@@ -3126,7 +3126,7 @@ class TeamblackWrapper : Miner {
         if ($MJob.HasMoreData) {
             $HashRate_Name = $this.Algorithm[0]
 
-            $MJob | Receive-Job | ForEach-Object {
+            Read-MinerJobOutput $MJob | ForEach-Object {
                 $Line = $_ -replace "`n|`r", ""
                 $Line_Simple = $Line -replace "\x1B\[[0-?]*[ -/]*[@-~]", ""
                 if ($Line_Simple -notmatch "GPU\d" -and $Line_Simple -match "([\d\s\./hkMGTPs]+?)(\d+)/(\d+)[/\s].*\([\d\.]+\)$") {
@@ -3251,7 +3251,7 @@ class VerthashWrapper : Miner {
         if ($MJob.HasMoreData) {
             $HashRate_Name = $this.Algorithm[0]
 
-            $MJob | Receive-Job | ForEach-Object {
+            Read-MinerJobOutput $MJob | ForEach-Object {
                 $Line = $_ -replace "`n|`r"
                 $Line_Simple = $Line -replace "\x1B\[[0-?]*[ -/]*[@-~]"
                 if ($Line_Simple -match "^.+?accepted[:\s]+(\d+)/(\d+).+hashrate[^\d]+(.+?)\s+(.+?)/s") {
@@ -3334,7 +3334,7 @@ class TTminerWrapper : Miner {
         if ($MJob.HasMoreData) {
             $HashRate_Name = [String]$this.Algorithm[0]
 
-            $MJob | Receive-Job | ForEach-Object {
+            Read-MinerJobOutput $MJob | ForEach-Object {
                 $Line = $_ -replace "`n|`r", ""
                 $Line_Simple = $Line -replace "\x1B\[[0-?]*[ -/]*[@-~]", ""
 
@@ -3961,7 +3961,7 @@ class XmrigWrapper : Miner {
         if ($MJob.HasMoreData) {
             $HashRate_Name = $this.Algorithm[0]
 
-            $MJob | Receive-Job | ForEach-Object {
+            Read-MinerJobOutput $MJob | ForEach-Object {
                 $Line = $_ -replace "`n|`r", ""
                 $Line_Simple = $Line -replace "\x1B\[[0-?]*[ -/]*[@-~]", ""
                 if ($Line_Simple -match "^.+?(speed|accepted)\s+(.+?)$") {

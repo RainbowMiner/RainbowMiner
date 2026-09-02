@@ -5512,6 +5512,7 @@ function Stop-Core {
             }
         }
     }
+    Stop-MinerRunspacePool
     if ($IsWindows) {
         Get-CIMInstance CIM_Process | Where-Object ExecutablePath | Where-Object {$_.ExecutablePath -like "$(Get-Location)\Bin\*"} | Stop-Process -Force -ErrorAction Ignore
     } elseif ($IsLinux) {
