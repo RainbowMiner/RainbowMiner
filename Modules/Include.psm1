@@ -1309,8 +1309,8 @@ function Get-DeviceUsableVRAMGB {
     # Update-DeviceVRAMReservation (DeviceLib.psm1). Returns $null when neither
     # is available - callers then apply their historic static fallback
     # (Test-VRAM: 0.865 factor / 0.25GB offset; MiningRigRentals: 0.8652).
-    # Lives in Include.psm1 on purpose: the MiningRigRentals pool code runs in
-    # Get-PoolsContentRS runspaces that do not import MinersLib.psm1.
+    # Lives in Include.psm1 on purpose: the MiningRigRentals pool code calls it
+    # and must not depend on MinersLib.psm1.
     param($Device)
     if (-not $Device.OpenCL -or -not $Device.OpenCL.GlobalMemsize) {return $null}
     $ReservedGB = $null
