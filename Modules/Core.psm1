@@ -3459,10 +3459,11 @@ function Invoke-Core {
                             $MinerUpdateDB | Foreach-Object {
                                 $_.FromVersion = Get-MinerVersion $_.FromVersion
                                 $_.ToVersion   = Get-MinerVersion $_.ToVersion
-                                $_.Algorithm   = $_.Algorithm.Foreach({$algo = Get-Algorithm $_;if ($AlgoVariants.$algo) {$AlgoVariants.$algo} else {$algo}})
+                                # an $AlgoVariants list holds only the variants, not the base algorithm itself - keep the base in the list
+                                $_.Algorithm   = $_.Algorithm.Foreach({$algo = Get-Algorithm $_;$algo;if ($AlgoVariants.$algo) {$AlgoVariants.$algo}})
                                 if ($_.Driver) {
                                     $_.Driver | Foreach-Object {
-                                        $_.Algorithm   = $_.Algorithm.Foreach({$algo = Get-Algorithm $_;if ($AlgoVariants.$algo) {$AlgoVariants.$algo} else {$algo}})
+                                        $_.Algorithm   = $_.Algorithm.Foreach({$algo = Get-Algorithm $_;$algo;if ($AlgoVariants.$algo) {$AlgoVariants.$algo}})
                                     }
                                 }
                             }
