@@ -241,6 +241,7 @@ function Start-SubProcessInBackground {
         Priority            = $Priority
         CurrentPwd          = "$PWD"
         Comm                = $Comm
+        CPUAffinity         = $CPUAffinity
     })
     $Handle = $PS.BeginInvoke($InCol, $OutCol)
 
@@ -293,7 +294,10 @@ function Start-SubProcessInBackground {
         Get-SubProcessIds -FilePath $FilePath -ArgumentList $ArgumentList -MultiProcess $MultiProcess -Running $Running -Executables $Executables | Where-Object {$_} | Foreach-Object {[void]$ProcessIds.Add([int]$_)}
     }
 
-    if ($Priority -lt 10) {
+    # the monitor enforces priority and affinity through the job object for
+    # the whole process tree (JobLimits 0); the per-PID pass only remains for
+    # a miner outside the job guard or a partially rejected limit
+    if ($Priority -lt 10 -and -not ($Comm.ContainsKey("JobLimits") -and $Comm["JobLimits"] -eq 0)) {
         Set-SubProcessPriority $ProcessIds -Priority $Priority -CPUAffinity $CPUAffinity -Quiet:$Quiet
     }
 

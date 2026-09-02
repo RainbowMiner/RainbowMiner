@@ -1,4 +1,4 @@
-﻿param($ControllerProcessID, $WorkingDirectory, $FilePath, $ArgumentList, $LogPath, $EnvVars, $Priority, $CurrentPwd, $Comm = $null)
+﻿param($ControllerProcessID, $WorkingDirectory, $FilePath, $ArgumentList, $LogPath, $EnvVars, $Priority, $CurrentPwd, $Comm = $null, $CPUAffinity = 0)
 
 $ControllerProcess = Get-Process -Id $ControllerProcessID -ErrorAction Ignore
 if ($ControllerProcess -eq $null) {return}
@@ -84,6 +84,38 @@ public static class RBMJob {
         return hJob;
     }
 
+    static bool Apply(IntPtr hJob, uint priorityClass, ulong affinity) {
+        JOBOBJECT_EXTENDED_LIMIT_INFORMATION info = new JOBOBJECT_EXTENDED_LIMIT_INFORMATION();
+        info.BasicLimitInformation.LimitFlags = 0x2000; // JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+        if (priorityClass != 0) {
+            info.BasicLimitInformation.LimitFlags |= 0x20; // JOB_OBJECT_LIMIT_PRIORITY_CLASS
+            info.BasicLimitInformation.PriorityClass = priorityClass;
+        }
+        if (affinity != 0) {
+            info.BasicLimitInformation.LimitFlags |= 0x10; // JOB_OBJECT_LIMIT_AFFINITY
+            info.BasicLimitInformation.Affinity = (UIntPtr)affinity;
+        }
+        int size = Marshal.SizeOf(typeof(JOBOBJECT_EXTENDED_LIMIT_INFORMATION));
+        IntPtr p = Marshal.AllocHGlobal(size);
+        Marshal.StructureToPtr(info, p, false);
+        bool ok = SetInformationJobObject(hJob, 9, p, (uint)size);
+        Marshal.FreeHGlobal(p);
+        return ok;
+    }
+
+    // priority class (Win32 *_PRIORITY_CLASS value, 0 = leave alone) and CPU
+    // affinity mask (0 = leave alone) as job limits: the kernel applies them to
+    // every process in the job, forked workers and later respawns included,
+    // without knowing their PIDs. Returns 0 = applied, 1 = affinity rejected
+    // and dropped (priority applied), 2 = nothing applied. A rejected call
+    // leaves the earlier kill-on-close limit untouched
+    public static int Limit(IntPtr hJob, uint priorityClass, ulong affinity) {
+        if (hJob == IntPtr.Zero) return 2;
+        if (Apply(hJob, priorityClass, affinity)) return 0;
+        if (affinity != 0 && Apply(hJob, priorityClass, 0)) return 1;
+        return 2;
+    }
+
     // kills every process still assigned to the job - the miner's forked
     // workers included - and releases the handle
     public static bool Terminate(IntPtr hJob) {
@@ -155,6 +187,19 @@ try {$MinerStartTime = $MiningProcess.StartTime} catch {}
 $JobHandle = [IntPtr]::Zero
 try {if ("RBMJob" -as [type]) {$JobHandle = [RBMJob]::Guard($MiningProcess.Handle)}} catch {}
 if ($JobHandle -eq [IntPtr]::Zero -and $LogPath) {Add-Content -LiteralPath $LogPath -Value "Warning: kill-on-close job guard not active for $($FilePath)" -ErrorAction Ignore}
+
+# priority class and affinity go on the job as well: a per-PID
+# SetPriorityClass never reaches the workers a miner forks (BzMiner v100+),
+# and a child inherits its parent's class only for Idle/BelowNormal and only
+# if the class was set before the fork. Start-SubProcessInBackground skips
+# the per-PID pass when the job enforces both (JobLimits = 0)
+if ($JobHandle -ne [IntPtr]::Zero) {
+    $Win32PriorityClass = @{-2 = 0x40; -1 = 0x4000; 0 = 0x20; 1 = 0x8000; 2 = 0x80; 3 = 0x100}[[int]$Priority]
+    $JobLimits = 2
+    try {$JobLimits = [RBMJob]::Limit($JobHandle, [uint32]$Win32PriorityClass, [uint64]([int64]$CPUAffinity -band 0xFFFFFFFF))} catch {}
+    if ($Comm -ne $null) {$Comm["JobLimits"] = $JobLimits}
+    if ($JobLimits -ne 0 -and $LogPath) {Add-Content -LiteralPath $LogPath -Value "Warning: job limits for $($FilePath) $(if ($JobLimits -eq 1) {"applied without the CPU affinity mask $('0x{0:X}' -f $CPUAffinity) - it is not a subset of the available processors"} else {"could not be applied (priority $($Priority), affinity $('0x{0:X}' -f $CPUAffinity)) - falling back to per-process settings"})" -ErrorAction Ignore}
+}
 
 # the cleanup lives in a finally: if the pipeline is stopped from the outside
 # (PowerShell.Stop() on a pooled runspace), the event subscriptions and a
