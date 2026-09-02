@@ -4448,14 +4448,38 @@ function Invoke-Core {
     $Rogue_Seen = [System.Collections.Generic.HashSet[string]]::new()
 
     if ($IsWindows) {
-        Get-CIMInstance CIM_Process | Where-Object {
+        $Rogue_Procs = @(Get-CIMInstance CIM_Process | Select-Object ProcessId, ParentProcessId, ProcessName, ExecutablePath, CreationDate)
+
+        # only the main PID of a miner is registered: worker processes it forked
+        # (BzMiner v100+) live in the same folder and would be killed as rogue
+        # every round. Shield the whole descendant tree of the registered PIDs;
+        # a child must be younger than its parent, so a stale ParentProcessId of
+        # an orphan pointing at a recycled PID cannot shield it
+        $Running_Tree = [System.Collections.Generic.HashSet[int]]::new($Running_ProcessIds)
+        if ($Running_Tree.Count -gt 0) {
+            $Rogue_Created = @{}
+            foreach ($p in $Rogue_Procs) {$Rogue_Created[[int]$p.ProcessId] = $p.CreationDate}
+            do {
+                $Rogue_Added = $false
+                foreach ($p in $Rogue_Procs) {
+                    if (-not $Running_Tree.Contains([int]$p.ProcessId) -and $Running_Tree.Contains([int]$p.ParentProcessId) -and $p.CreationDate -and $Rogue_Created[[int]$p.ParentProcessId] -and $p.CreationDate -ge $Rogue_Created[[int]$p.ParentProcessId]) {
+                        [void]$Running_Tree.Add([int]$p.ProcessId)
+                        $Rogue_Added = $true
+                    }
+                }
+            } while ($Rogue_Added)
+            $Rogue_Created = $null
+        }
+
+        $Rogue_Procs | Where-Object {
             $_.ExecutablePath -and
             $_.ExecutablePath -like "$(Get-Location)\Bin\*" -and
-            -not $Running_ProcessIds.Contains($_.ProcessId) -and
+            -not $Running_Tree.Contains([int]$_.ProcessId) -and
             $Running_MinerPaths.Contains($_.ProcessName)
         } | ForEach-Object {
             Stop-RogueProcess -ProcessId $_.ProcessId -ProcessName $_.ProcessName -StartDate $_.CreationDate -SeenList $Rogue_Seen
         }
+        $Rogue_Procs = $Running_Tree = $null
     }
     elseif ($IsLinux) {
         Get-Process | Where-Object {
