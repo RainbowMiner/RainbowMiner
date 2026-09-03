@@ -413,6 +413,9 @@ document.addEventListener("DOMContentLoaded", renderMemoryNotice);
 
 function formatAlgorithm(data) {
     const cfg = ConfigLoader.getConfig();
+    // A missing second algorithm must stay empty - String(undefined) would render
+    // a literal "undefined" and end up appended as " + undefined".
+    if (data === null || data === undefined || data === "") return "";
     // Pool alternates arrive as "<Algorithm>-@<PoolName>". The pool is shown in its own
     // column, so display the plain algorithm - and let it hit the AlgorithmMap lookup.
     // Display only: never write this back onto item.Algorithm, that is the rebench identity.
