@@ -3103,23 +3103,44 @@ function Invoke-Core {
             foreach ( $Miner in $AllMiners ) {
                 if ($Miner.DeviceModel -ne "CPU" -and $Miner.HashRates.PSObject.Properties.Value -contains $null -and $Miner.DeviceModel -match '-') {
 
-                    $Miner.PowerDraw = 0
+                    # A combo is only synthesized when every member device has its own miner
+                    # with a successful benchmark (all hashrates > 0). A member whose benchmark
+                    # failed is stored with hashrate 0 and would otherwise silently sum into a
+                    # combo that then wins the selection while the failed member sits idle.
+                    # Leaving the hashrates at $null lets the RemoveAll below drop the combo.
 
-                    $Miner.DeviceModel -split '-' | Foreach-Object {
+                    $ComboMembers  = [System.Collections.Generic.List[object]]::new()
+                    $ComboComplete = $true
 
-                        $ComboDevice = $_
-
+                    foreach ($ComboDevice in @($Miner.DeviceModel -split '-')) {
+                        $cbMember = $null
                         foreach ($cbMiner in $AllMiners) {
                             if ($cbMiner.BaseName -eq $Miner.BaseName -and $cbMiner.BaseAlgorithm -eq $Miner.BaseAlgorithm -and $cbMiner.DeviceModel -eq $ComboDevice) {
-                                $ComboHash = [PSCustomObject]@{}
-                                foreach ($HashProp in $cbMiner.HashRates.PSObject.Properties) {
-                                    $ComboHash | Add-Member "$($HashProp.Name -replace "-.+$")" $HashProp.Value
-                                }
-                                $Miner.PowerDraw += $cbMiner.PowerDraw
-                                $ComboHash
+                                $cbMember = $cbMiner
                                 break
                             }
                         }
+                        if ($cbMember -eq $null -or @($cbMember.HashRates.PSObject.Properties.Value | Where-Object {-not ($_ -gt 0)}).Count) {
+                            $ComboComplete = $false
+                            break
+                        }
+                        [void]$ComboMembers.Add($cbMember)
+                    }
+
+                    if (-not $ComboComplete) { continue }
+
+                    $Miner.PowerDraw = 0
+
+                    $ComboMembers | Foreach-Object {
+
+                        $cbMiner = $_
+
+                        $ComboHash = [PSCustomObject]@{}
+                        foreach ($HashProp in $cbMiner.HashRates.PSObject.Properties) {
+                            $ComboHash | Add-Member "$($HashProp.Name -replace "-.+$")" $HashProp.Value
+                        }
+                        $Miner.PowerDraw += $cbMiner.PowerDraw
+                        $ComboHash
 
                     } | Measure-Object -Sum @($Miner.BaseAlgorithm -split '-') | Foreach-Object {
                         $ComboValue = $_
