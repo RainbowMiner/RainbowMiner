@@ -1089,7 +1089,12 @@ class BzMiner : Miner {
 
     [Void]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
+        [void]$this.UpdateFromApi()
+        $this.CleanupMinerData()
+    }
 
+    # one poll of the status endpoint; $true when it answered and the data was added
+    hidden [Bool]UpdateFromApi () {
         $Server = "127.0.0.1" #"localhost"
         $Timeout = 10 #seconds
 
@@ -1103,7 +1108,7 @@ class BzMiner : Miner {
         }
         catch {
             Write-Log -Level Info "Failed to connect to miner $($this.Name). "
-            return
+            return $false
         }
 
         $Count = $this.Algorithm.Count
@@ -1140,8 +1145,165 @@ class BzMiner : Miner {
         }
 
         $this.AddMinerData("",$HashRate,$null,$PowerDraw)
+        return $true
+    }
+}
 
+class BzMinerWrapper : BzMiner {
+    # BzMiner v100 keeps hashing while its status endpoint stops answering for good
+    # on some rigs (pearl and ergo on a busy 2-core rig: curl waited 60s for nothing),
+    # and every unanswered poll costs the core loop the full 10s timeout. The API stays
+    # the primary source; after three failed polls in a row it is only retried every
+    # sixth poll, and in between the hashrates come from the console tables that the
+    # log output reprints every 30s:
+    #   |    # | cfg |   tbs | a/r/p |      eff |  pool hr | miner hr | status | pool |
+    #   |  9:0 |  i0 | 1m42s | 2/0/0 | 426.2ghw |  82.99th |  71.47th | Mining | ...  |
+    #   | smry |     | 1m42s | 2/0/0 | 426.2ghw |  82.99th |  71.47th | connected: yes |
+    # the "smry" row carries the rig total, the device table above it the power draw
+    # ("| 9:0 | RTX 3070 | 6.55gb | 8.00gb | 1620 (+100) | 8001 (+2000) | 61% | 167.7w | 62C |").
+    # The columns are located from the header rows, so a custom --mining-columns
+    # still works as long as it keeps "miner hr". The wrapper name makes the Linux
+    # side tail the log file (WrapperJob) exactly like the other console wrappers.
+
+    hidden [Int]$ApiFailures   = 0
+    hidden [Int]$ApiSkipped    = 0
+    hidden [Bool]$ConsoleMode  = $false
+    hidden [Int]$HrColumn      = -1
+    hidden [Int]$SharesColumn  = -1
+    hidden [Int]$PowerColumn   = -1
+    hidden [Double]$ConsolePower = 0
+    hidden [Int]$TableAlgoIndex  = -1
+
+    # the miner object outlives a restart: a fresh run starts with the API again
+    hidden StartMiningPreProcess() {
+        ([Miner]$this).StartMiningPreProcess()
+        $this.ApiFailures    = 0
+        $this.ApiSkipped     = 0
+        $this.ConsoleMode    = $false
+        $this.HrColumn       = -1
+        $this.SharesColumn   = -1
+        $this.PowerColumn    = -1
+        $this.ConsolePower   = 0
+        $this.TableAlgoIndex = -1
+    }
+
+    [Void]UpdateMinerData () {
+        if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
+
+        $ApiOk = $false
+        $TryApi = $true
+        if ($this.ApiFailures -ge 3) {
+            $this.ApiSkipped++
+            if ($this.ApiSkipped -lt 6) {$TryApi = $false} else {$this.ApiSkipped = 0}
+        }
+
+        if ($TryApi) {
+            $ApiOk = $this.UpdateFromApi()
+            if ($ApiOk) {
+                if ($this.ConsoleMode) {
+                    Write-Log "$($this.Name): status API answers again, back to API hashrates"
+                    $this.ConsoleMode = $false
+                }
+                $this.ApiFailures = 0
+                $this.ApiSkipped  = 0
+            } else {
+                $this.ApiFailures++
+                if ($this.ApiFailures -eq 3) {
+                    Write-Log -Level Warn "$($this.Name): status API does not answer, reading hashrates from the console output"
+                    $this.ConsoleMode = $true
+                }
+            }
+        }
+
+        # the console output is drained every poll (the base class does that at the end
+        # of a round for non-wrapper miners only); its samples are used while the API
+        # fails, so a working API never gets doubled up by the 30s table
+        $MJob = if ($Global:IsLinux) {$this.WrapperJob} else {$this.Job.XJob}
+        if ($MJob.HasMoreData) {
+            $UseConsole = -not $ApiOk
+            Read-MinerJobOutput $MJob | ForEach-Object {
+                $Line = "$_" -replace "`n|`r", ""
+                $Line_Simple = $Line -replace "\x1B\[[0-?]*[ -/]*[@-~]", ""
+                if ($Line_Simple) {[void]$this.ParseConsoleLine($Line_Simple,$UseConsole)}
+            }
+        }
+        $MJob = $null
         $this.CleanupMinerData()
+    }
+
+    # "71.47th" / "63.46gh" / "0.00h" -> H/s
+    hidden [Double]ParseHashCell ([String]$Cell) {
+        if ($Cell -match "^((?:\d+[\.,])?\d+)\s*([kmgtpe]?)h$") {
+            $Value = [Double]($Matches[1] -replace ',','.')
+            switch ($Matches[2].ToLower()) {
+                "k" {$Value *= 1E+3;Break}
+                "m" {$Value *= 1E+6;Break}
+                "g" {$Value *= 1E+9;Break}
+                "t" {$Value *= 1E+12;Break}
+                "p" {$Value *= 1E+15;Break}
+                "e" {$Value *= 1E+18;Break}
+            }
+            return $Value
+        }
+        return 0
+    }
+
+    # feeds one console line; $true when a summary row produced a data point
+    hidden [Bool]ParseConsoleLine ([String]$Line, [Bool]$Emit) {
+        # "---- pearl ------ stratum+tcp://host:port ----" opens the table of that algorithm
+        if ($Line -match "^-{2,}\s+(\S+)\s+-{2,}\s+\S+://") {
+            $this.TableAlgoIndex++
+            return $false
+        }
+        # "---- 09-04 16:40:38 ---- uptime: 0d 0h 3m 37s ---- bzminer v100.11 ----" closes a block
+        if ($Line -match "^-{2,}.*\buptime:") {
+            $this.TableAlgoIndex = -1
+            return $false
+        }
+        if (-not $Line.StartsWith("|")) {return $false}
+
+        $Cells = @($Line.Trim('|') -split '\|' | ForEach-Object {$_.Trim()})
+        if ($Cells.Count -lt 3) {return $false}
+
+        if ($Cells[0] -eq "#") {
+            # a header row: the mining table names "miner hr", the device table "power"
+            $HrIx = [Array]::IndexOf($Cells,"miner hr")
+            if ($HrIx -ge 0) {
+                $this.HrColumn     = $HrIx
+                $this.SharesColumn = [Array]::IndexOf($Cells,"a/r/p")
+            } else {
+                $PowerIx = [Array]::IndexOf($Cells,"power")
+                if ($PowerIx -ge 0) {
+                    $this.PowerColumn  = $PowerIx
+                    $this.ConsolePower = 0
+                }
+            }
+            return $false
+        }
+
+        if ($Cells[0] -eq "smry") {
+            if ($this.HrColumn -lt 0 -or $this.HrColumn -ge $Cells.Count) {return $false}
+            $HashRate_Value = $this.ParseHashCell($Cells[$this.HrColumn])
+            if ($HashRate_Value -le 0) {return $false}
+
+            $Index = if ($this.TableAlgoIndex -gt 0 -and $this.TableAlgoIndex -lt $this.Algorithm.Count) {$this.TableAlgoIndex} else {0}
+            $HashRate_Name = [String]$this.Algorithm[$Index]
+
+            if (-not $Emit) {return $false}
+
+            if ($this.SharesColumn -ge 0 -and $this.SharesColumn -lt $Cells.Count -and $Cells[$this.SharesColumn] -match "^(\d+)/(\d+)/(\d+)$") {
+                $this.UpdateShares($Index,[Double]$Matches[1],[Double]$Matches[2],0)
+            }
+
+            $this.AddMinerData($Line,[PSCustomObject]@{$HashRate_Name = $HashRate_Value},$null,$this.ConsolePower)
+            return $true
+        }
+
+        # a device row of the device table: "| 9:0 | RTX 3070 | ... | 167.7w | 62C |"
+        if ($Cells[0] -match "^\d+:\d+$" -and $this.PowerColumn -ge 0 -and $this.PowerColumn -lt $Cells.Count -and $Cells[$this.PowerColumn] -match "^((?:\d+[\.,])?\d+)\s*w$") {
+            $this.ConsolePower += [Double]($Matches[1] -replace ',','.')
+        }
+        return $false
     }
 }
 

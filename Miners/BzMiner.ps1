@@ -131,7 +131,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                         Path            = $Path
                         Arguments       = "-a $($MainAlgorithm_0) $($VendorParams)$($CPUParams)$(if ($DisableDevices) {" --devices $($DisableDevices)"}) -p $($Pool_Protocol)://$($Pools.$MainAlgorithm_Norm.Host)$(if ($Pool_Port -and $Pools.$MainAlgorithm_Norm.Host -notmatch "/") {":$($Pool_Port)"}) $(if ($Pools.$MainAlgorithm_Norm.Worker -and "$($Pools.$MainAlgorithm_Norm.User)".IndexOf("$($Pools.$MainAlgorithm_Norm.Worker)") -ge 0) {"-u $($Pools.$MainAlgorithm_Norm.User)"} else {"-w $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.Worker) {" --worker $($Pools.$MainAlgorithm_Norm.Worker)"})"})$(if ($Pools.$MainAlgorithm_Norm.Pass) {" --pass $($Pools.$MainAlgorithm_Norm.Pass)"}) $($AffinityParams)$($CommonParams) $($_.Params)"
                         HashRates       = [PSCustomObject]@{$MainAlgorithm_Norm = $($Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))}
-                        API             = "BzMiner"
+                        API             = "BzMinerWrapper"
                         Port            = $Miner_Port
                         FaultTolerance  = $_.FaultTolerance
                         ExtendInterval  = $_.ExtendInterval
