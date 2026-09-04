@@ -36,7 +36,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "etchash"; DAG = $true; MinMemGb = 3; Params = ""; Vendor = @("AMD","NVIDIA");         ExtendInterval = 2; Fee = 0.5} #Etchash/ETC
     [PSCustomObject]@{MainAlgorithm = "ethash";  DAG = $true; MinMemGb = 3; Params = ""; Vendor = @("AMD","NVIDIA");         ExtendInterval = 2; Fee = 0.5} #Ethash/ETHW
     [PSCustomObject]@{MainAlgorithm = "kawpow";  DAG = $true; MinMemGb = 3; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0} #KawPow
-    [PSCustomObject]@{MainAlgorithm = "pearl";                MinMemGb = 2; Params = ""; Vendor = @("AMD","CPU","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0} #PearlHash/PRL
+    [PSCustomObject]@{MainAlgorithm = "pearl";                MinMemGb = 2; Params = ""; Vendor = @("AMD","CPU","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0; ExcludePoolName = "84.32.220.219|129.226.55.135"} #PearlHash/PRL
     [PSCustomObject]@{MainAlgorithm = "randomx";              MinMemGb = 2; Params = ""; Vendor = @("CPU");                  ExtendInterval = 2; Fee = 1.0} #RandomX/XMR
     [PSCustomObject]@{MainAlgorithm = "verus";                MinMemGb = 1; Params = ""; Vendor = @("CPU");                  ExtendInterval = 2; Fee = 1.0} #VerusHash/VRSC
     [PSCustomObject]@{MainAlgorithm = "warthog";              MinMemGb = 2; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 2.0; WithCPU = $true; NoCPUMining = $true} #JanusHash/WART, needs GPU and CPU together
@@ -96,7 +96,9 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                 if ($CPUAffinity) {"--cpu_affinity $((ConvertFrom-CPUAffinity $CPUAffinity) -join ",") "}
             }
 
-            foreach($MainAlgorithm_Norm in @(Get-PoolAlgorithmKeys -Pools $Pools -Algorithm $MainAlgorithm_Norm_0 -Model $Miner_Model -ExcludePoolName $ExcludePoolName)) {
+            $Miner_ExcludePoolName = @($ExcludePoolName,$_.ExcludePoolName | Where-Object {$_}) -join '|'
+
+            foreach($MainAlgorithm_Norm in @(Get-PoolAlgorithmKeys -Pools $Pools -Algorithm $MainAlgorithm_Norm_0 -Model $Miner_Model -ExcludePoolName $Miner_ExcludePoolName)) {
                 if (-not $Pools.$MainAlgorithm_Norm.Host) {continue}
 
                 if ($Miner_Vendor -ne "CPU") {
@@ -108,7 +110,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                     $DisableDevices = $null
                 }
 
-                if ($Miner_Device -and (-not $ExcludePoolName -or $Pools.$MainAlgorithm_Norm.Host -notmatch $ExcludePoolName) -and (-not $_.CoinSymbol -or $_.CoinSymbol -icontains $Pools.$MainAlgorithm_Norm.CoinSymbol) -and (-not $_.ExcludeCoinSymbol -or $_.ExcludeCoinSymbol -inotcontains $Pools.$MainAlgorithm_Norm.CoinSymbol) -and ($Pools.$MainAlgorithm_Norm.User -notmatch "@")) {
+                if ($Miner_Device -and (-not $Miner_ExcludePoolName -or $Pools.$MainAlgorithm_Norm.Host -notmatch $Miner_ExcludePoolName) -and (-not $_.CoinSymbol -or $_.CoinSymbol -icontains $Pools.$MainAlgorithm_Norm.CoinSymbol) -and (-not $_.ExcludeCoinSymbol -or $_.ExcludeCoinSymbol -inotcontains $Pools.$MainAlgorithm_Norm.CoinSymbol) -and ($Pools.$MainAlgorithm_Norm.User -notmatch "@")) {
                     if ($First) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                         $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
@@ -146,7 +148,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                         BaseAlgorithm   = $MainAlgorithm_Norm_0
                         Benchmarked     = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Benchmarked
                         LogFile         = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".LogFile
-                        ExcludePoolName = $ExcludePoolName
+                        ExcludePoolName = $Miner_ExcludePoolName
                     }
                 }
             }
