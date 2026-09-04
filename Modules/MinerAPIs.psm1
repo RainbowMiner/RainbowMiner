@@ -1168,6 +1168,7 @@ class BzMinerWrapper : BzMiner {
     hidden [Int]$ApiFailures   = 0
     hidden [Int]$ApiSkipped    = 0
     hidden [Bool]$ConsoleMode  = $false
+    hidden [Int]$ApiRecovered  = 0
     hidden [Int]$HrColumn      = -1
     hidden [Int]$SharesColumn  = -1
     hidden [Int]$PowerColumn   = -1
@@ -1179,6 +1180,7 @@ class BzMinerWrapper : BzMiner {
         ([Miner]$this).StartMiningPreProcess()
         $this.ApiFailures    = 0
         $this.ApiSkipped     = 0
+        $this.ApiRecovered   = 0
         $this.ConsoleMode    = $false
         $this.HrColumn       = -1
         $this.SharesColumn   = -1
@@ -1201,12 +1203,23 @@ class BzMinerWrapper : BzMiner {
             $ApiOk = $this.UpdateFromApi()
             if ($ApiOk) {
                 if ($this.ConsoleMode) {
-                    Write-Log "$($this.Name): status API answers again, back to API hashrates"
-                    $this.ConsoleMode = $false
+                    # an endpoint that answers once in a while is not back: the console
+                    # mode is left after two answered retries in a row only, otherwise
+                    # every stray answer buys three more 10s timeouts before the next backoff
+                    $this.ApiRecovered++
+                    if ($this.ApiRecovered -ge 2) {
+                        Write-Log "$($this.Name): status API answers again, back to API hashrates"
+                        $this.ConsoleMode  = $false
+                        $this.ApiFailures  = 0
+                        $this.ApiSkipped   = 0
+                        $this.ApiRecovered = 0
+                    }
+                } else {
+                    $this.ApiFailures = 0
+                    $this.ApiSkipped  = 0
                 }
-                $this.ApiFailures = 0
-                $this.ApiSkipped  = 0
             } else {
+                $this.ApiRecovered = 0
                 $this.ApiFailures++
                 if ($this.ApiFailures -eq 3) {
                     Write-Log -Level Warn "$($this.Name): status API does not answer, reading hashrates from the console output"
