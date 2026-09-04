@@ -164,6 +164,7 @@ function Start-Core {
             GpuGroups     = @{Path='';LastWriteTime=0;Healthy=$false}
             Scheduler     = @{Path='';LastWriteTime=0;Healthy=$false}
             Combos        = @{Path='';LastWriteTime=0;Healthy=$false}
+            CustomMiners  = @{Path='';LastWriteTime=0;Healthy=$false}
             MRR           = @{Path='';LastWriteTime=0;Healthy=$true}
             MRRAlgorithms = @{Path='';LastWriteTime=0;Healthy=$true}
         }
@@ -477,7 +478,7 @@ function Start-Core {
                 Get-ChildItem "$($ConfigFile_Path)\Backup" -Filter "*" | Where-Object {$_.BaseName -match "^(\d{14})" -and $Matches[1] -le $BackupDateDelete} | Remove-Item -Force -ErrorAction Ignore
             }
 
-            $Session.ConfigFiles.Keys | Sort-Object -Descending {if ($_ -eq "Config") {2} elseif ($_ -eq "Userpools") {1} else {0}}  | Foreach-Object {
+            $Session.ConfigFiles.Keys | Sort-Object -Descending {if ($_ -eq "Config") {2} elseif ($_ -in @("Userpools","CustomMiners")) {1} else {0}}  | Foreach-Object {
                 $FNtmp   = "$(if ($_ -ne "Config") {"$($_.ToLower())."})$ConfigFile_Name"
                 $Session.ConfigFiles[$_].Path = Join-Path $ConfigFile_Path $FNtmp
                 if (-not $psISE -and (Test-Path $Session.ConfigFiles[$_].Path)) {Copy-Item $Session.ConfigFiles[$_].Path -Destination (Join-Path (Join-Path $ConfigFile_Path "Backup") "$($BackupDate)_$($FNtmp)")}
@@ -865,6 +866,7 @@ function Invoke-Core {
                 $Session.Config | Add-Member Combos ([PSCustomObject]@{}) -Force
                 $Session.Config | Add-Member Scheduler @() -Force
                 $Session.Config | Add-Member Userpools @() -Force
+                $Session.Config | Add-Member CustomMiners @() -Force
 
                 # config may change GPUReservedVRAMGB - drop Test-VRAM's per-device memo
                 Reset-TestVRAM
@@ -1705,6 +1707,18 @@ function Invoke-Core {
             }
             $UserPoolsConfig = $null
             Remove-Variable -Name UserPoolsConfig -ErrorAction Ignore
+        }
+    }
+
+    #Check for custom miners config
+    if (Set-ConfigDefault "CustomMiners") {
+        if ($CheckConfig -or -not [bool]$Session.Config.PSObject.Properties["CustomMiners"] -or (Test-Config "CustomMiners" -LastWriteTime)) {
+            if ($Session.RoundCounter -ne 0) {Write-Log "Updating custom miners config data"}
+            $Session.Config | Add-Member CustomMiners @(Get-CustomMinerDefinitions -UpdateLastWriteTime) -Force
+        }
+        # user-defined miners join the module list every round (MinerInfo, stats housekeeping, setup validation, API)
+        if ($Session.Config.CustomMiners.Count) {
+            [string[]]$Session.AvailMiners = @(@($Session.AvailMiners) + @($Session.Config.CustomMiners | Select-Object -ExpandProperty Name) | Sort-Object -Unique)
         }
     }
 
@@ -4076,6 +4090,7 @@ function Invoke-Core {
             $ActiveMiner.Executables        = $Miner.Executables
             $ActiveMiner.SetLDLIBRARYPATH   = $Miner.SetLDLIBRARYPATH -eq $null -or $Miner.SetLDLIBRARYPATH
             $ActiveMiner.ShareCheck         = [int]$Miner.ShareCheck
+            $ActiveMiner.HashRateRegex      = "$($Miner.HashRateRegex)"
             $ActiveMiner.AccessLast         = $accessNow
 
             #$Miner.HashRates.PSObject.Properties.Name | Foreach-Object {
@@ -4153,6 +4168,7 @@ function Invoke-Core {
                     SetLDLIBRARYPATH     = $Miner.SetLDLIBRARYPATH -eq $null -or $Miner.SetLDLIBRARYPATH
                     ShareCheck           = [int]$Miner.ShareCheck
                     ExcludePoolName      = $Miner.ExcludePoolName
+                    HashRateRegex        = "$($Miner.HashRateRegex)"
                     AccessLast           = $accessNow
                 }
                 if ($ActiveMiner) {

@@ -1,0 +1,845 @@
+﻿<!--#include file="/parts/head.html" -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 id="title" data-navbaractive="navcustomminers" class="h2">Custom Miners</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <button type="button" id="cm-new" class="btn btn-sm btn-primary me-2"><i class="bi bi-plus-lg"></i> New custom miner</button>
+        <button type="button" id="cm-import" class="btn btn-sm btn-outline-secondary"><i class="bi bi-box-arrow-in-down"></i> Import flight sheet</button>
+    </div>
+</div>
+
+<div id="cm-managed" class="alert alert-warning" style="display:none"></div>
+
+<p class="text-muted small">
+    Add your own miner programs: RainbowMiner downloads the binary, benchmarks every algorithm you list and includes the miner in the profit switching.
+    HiveOS flight sheets can be imported. The full field reference is in
+    <a href="https://github.com/RainbowMiner/RainbowMiner/blob/master/Doc/CUSTOMMINERS.md" target="_blank">Doc/CUSTOMMINERS.md</a>.
+</p>
+
+<table id="customminers" class="rbm-table-init table"
+       data-url="/customminers"
+       data-response-handler="formatCustomMiners"
+       data-cache="false"
+       data-sort-name="Name"
+       data-sort-order="asc">
+    <thead>
+        <tr>
+            <th data-field="Name" data-sortable="true" data-formatter="formatCmName">Name</th>
+            <th data-field="tEnable" data-align="center" data-sortable="true" data-formatter="formatCmEnable">Enabled</th>
+            <th data-field="Vendors" data-sortable="true">Devices</th>
+            <th data-field="tAPI" data-sortable="true">API</th>
+            <th data-field="tAlgorithms">Algorithms</th>
+            <th data-field="Version" data-sortable="true">Version</th>
+            <th data-field="tStatus" data-formatter="formatCmStatus">Status</th>
+            <th data-field="tStats" data-align="right" data-sortable="true">Benchmarks</th>
+            <th data-field="tActions" data-align="right" data-formatter="formatCmActions">Actions</th>
+        </tr>
+    </thead>
+</table>
+
+<!-- Editor -->
+<div id="cm-editor" class="card mt-3" style="display:none">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span id="cm-editor-title">New custom miner</span>
+        <button type="button" class="btn-close" id="cm-cancel-x" aria-label="Close"></button>
+    </div>
+    <div class="card-body">
+        <form id="cm-form" autocomplete="off">
+            <input type="hidden" id="cm--OldName" value="">
+
+            <h5 class="mt-1">General</h5>
+            <div class="row mb-3">
+                <label for="cm--Name" class="col-sm-2 col-form-label">Name</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="cm--Name" pattern="[A-Za-z0-9_]+" required placeholder="MyMiner">
+                    <div class="form-text">Letters, digits and underscore only. Used for the Bin\Custom-&lt;Name&gt; folder, the miners.config.txt keys and the benchmark files.</div>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label for="cm--Enable" class="col-sm-2 col-form-label">Enable</label>
+                <div class="col-sm-10">
+                    <select class="form-select" id="cm--Enable"><option value="1">Enable</option><option value="0">Disable</option></select>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label for="cm--Version" class="col-sm-2 col-form-label">Version</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="cm--Version" placeholder="1.0">
+                    <div class="form-text">Version of the binary. Changing it resets the benchmarks of this miner, changing only the URL downloads again and keeps them.</div>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label for="cm--ManualUri" class="col-sm-2 col-form-label">Homepage</label>
+                <div class="col-sm-10"><input type="text" class="form-control" id="cm--ManualUri" placeholder="https://github.com/.../releases"></div>
+            </div>
+            <div class="row mb-3">
+                <label for="cm--Comment" class="col-sm-2 col-form-label">Comment</label>
+                <div class="col-sm-10"><input type="text" class="form-control" id="cm--Comment"></div>
+            </div>
+
+            <h5 class="mt-4">Download</h5>
+            <div class="row mb-3">
+                <label for="cm--Windows--Uri" class="col-sm-2 col-form-label">Windows URL</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="cm--Windows--Uri" placeholder="https://.../miner_windows.zip">
+                    <div class="form-text">Archive (zip, 7z) or a single executable. A single top level folder inside the archive is removed automatically.</div>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label for="cm--Windows--Path" class="col-sm-2 col-form-label">Windows executable</label>
+                <div class="col-sm-10"><input type="text" class="form-control" id="cm--Windows--Path" placeholder="miner.exe (path inside the archive)"></div>
+            </div>
+            <div class="row mb-3">
+                <label for="cm--Linux--Uri" class="col-sm-2 col-form-label">Linux URL</label>
+                <div class="col-sm-10"><input type="text" class="form-control" id="cm--Linux--Uri" placeholder="https://.../miner_linux.tar.gz"></div>
+            </div>
+            <div class="row mb-3">
+                <label for="cm--Linux--Path" class="col-sm-2 col-form-label">Linux executable</label>
+                <div class="col-sm-10"><input type="text" class="form-control" id="cm--Linux--Path" placeholder="miner (path inside the archive)"></div>
+            </div>
+
+            <h5 class="mt-4">Devices</h5>
+            <div class="row mb-3">
+                <label class="col-sm-2 col-form-label">Device types</label>
+                <div class="col-sm-10 pt-2">
+                    <div class="form-check form-check-inline"><input class="form-check-input cm-vendor" type="checkbox" id="cm--Vendor--NVIDIA" value="NVIDIA"><label class="form-check-label" for="cm--Vendor--NVIDIA">NVIDIA</label></div>
+                    <div class="form-check form-check-inline"><input class="form-check-input cm-vendor" type="checkbox" id="cm--Vendor--AMD" value="AMD"><label class="form-check-label" for="cm--Vendor--AMD">AMD</label></div>
+                    <div class="form-check form-check-inline"><input class="form-check-input cm-vendor" type="checkbox" id="cm--Vendor--INTEL" value="INTEL"><label class="form-check-label" for="cm--Vendor--INTEL">INTEL</label></div>
+                    <div class="form-check form-check-inline"><input class="form-check-input cm-vendor" type="checkbox" id="cm--Vendor--CPU" value="CPU"><label class="form-check-label" for="cm--Vendor--CPU">CPU</label></div>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label for="cm--DeviceIndexProperty" class="col-sm-2 col-form-label">Device index</label>
+                <div class="col-sm-4">
+                    <select class="form-select" id="cm--DeviceIndexProperty">
+                        <option value="Type_Vendor_Index">Type_Vendor_Index (per vendor, default)</option>
+                        <option value="Type_PlatformId_Index">Type_PlatformId_Index (OpenCL platform)</option>
+                        <option value="Type_Index">Type_Index (all GPUs)</option>
+                        <option value="Type_Mineable_Index">Type_Mineable_Index</option>
+                        <option value="Vendor_Index">Vendor_Index</option>
+                        <option value="Index">Index (RainbowMiner device index)</option>
+                        <option value="BusId">BusId</option>
+                        <option value="PCIBusId">PCIBusId</option>
+                    </select>
+                </div>
+                <label for="cm--DeviceIndexHex" class="col-sm-1 col-form-label">Hex</label>
+                <div class="col-sm-2"><select class="form-select" id="cm--DeviceIndexHex"><option value="0">No</option><option value="1">Yes</option></select></div>
+                <label for="cm--DeviceSeparator" class="col-sm-1 col-form-label">Separator</label>
+                <div class="col-sm-2"><input type="text" class="form-control" id="cm--DeviceSeparator" value="," maxlength="3"></div>
+                <div class="col-sm-10 offset-sm-2"><div class="form-text">How the selected devices are listed in %DEVICES%.</div></div>
+            </div>
+
+            <h5 class="mt-4">Hashrate and API</h5>
+            <div class="row mb-3">
+                <label for="cm--API" class="col-sm-2 col-form-label">API</label>
+                <div class="col-sm-4">
+                    <select class="form-select" id="cm--API"><option value="Wrapper">Wrapper</option></select>
+                    <div class="form-text">How RainbowMiner reads the hashrate. "Wrapper" parses the miner output for values like "12.3 MH/s", the other entries are the APIs of the built-in miners.</div>
+                </div>
+                <label for="cm--Port" class="col-sm-2 col-form-label">API port</label>
+                <div class="col-sm-4">
+                    <input type="number" class="form-control" id="cm--Port" min="1024" max="65000" value="4028">
+                    <div class="form-text">Base port, use $mport (or %MPORT%) in the arguments. Each miner needs its own base.</div>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label for="cm--HashRateRegex" class="col-sm-2 col-form-label">Hashrate regex</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control font-monospace" id="cm--HashRateRegex" placeholder="(?<hashrate>[\d.]+)\s*(?<unit>[kMG]?H/s)">
+                    <div class="form-text">Optional. If set, the output lines are matched with this regular expression instead of the API selected above (named groups hashrate, unit, accepted, rejected; or group 1 = value, group 2 = unit).</div>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label for="cm--DevFee" class="col-sm-2 col-form-label">Dev fee %</label>
+                <div class="col-sm-4"><input type="number" class="form-control" id="cm--DevFee" min="0" max="100" step="0.01" value="0"></div>
+                <label for="cm--ExtendInterval" class="col-sm-2 col-form-label">Extend interval</label>
+                <div class="col-sm-4">
+                    <input type="number" class="form-control" id="cm--ExtendInterval" min="1" max="10" value="2">
+                    <div class="form-text">Benchmark duration in multiples of BenchmarkInterval.</div>
+                </div>
+            </div>
+
+            <h5 class="mt-4">Command line</h5>
+            <div class="row mb-3">
+                <label for="cm--Arguments" class="col-sm-2 col-form-label">Arguments</label>
+                <div class="col-sm-10">
+                    <textarea class="form-control font-monospace" id="cm--Arguments" rows="3" placeholder="-a %ALGO% -o %PROTOCOL%://%URL% -u %WAL% -p %PASS% --api-port $mport"></textarea>
+                    <div class="form-text">
+                        Placeholders:
+                        <code>%ALGO%</code> algorithm name of the entry,
+                        <code>%URL%</code> host:port, <code>%HOST%</code>, <code>%PORT%</code>, <code>%PROTOCOL%</code> (stratum+tcp / stratum+ssl),
+                        <code>%WAL%</code> or <code>%USER%</code> pool user (wallet.worker), <code>%WALLET%</code> plain wallet, <code>%PASS%</code>, <code>%WORKER_NAME%</code>, <code>%COIN%</code>, <code>%ETHMODE%</code>,
+                        <code>%DEVICES%</code> device list, <code>%DEVCOUNT%</code>,
+                        <code>%THREADS%</code>, <code>%AFFINITY%</code>, <code>%AFFINITY_LIST%</code> (CPU),
+                        <code>$mport</code> or <code>%MPORT%</code> API port. Unknown placeholders stay as they are.
+                    </div>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label for="cm--SSLArguments" class="col-sm-2 col-form-label">SSL arguments</label>
+                <div class="col-sm-4">
+                    <input type="text" class="form-control font-monospace" id="cm--SSLArguments" placeholder="--tls">
+                    <div class="form-text">Appended when the pool uses SSL.</div>
+                </div>
+                <label for="cm--EnableSSL" class="col-sm-2 col-form-label">SSL pools</label>
+                <div class="col-sm-4">
+                    <select class="form-select" id="cm--EnableSSL"><option value="1">Allow</option><option value="0">Skip SSL pools</option></select>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label for="cm--EnvVars" class="col-sm-2 col-form-label">Environment</label>
+                <div class="col-sm-4">
+                    <input type="text" class="form-control font-monospace" id="cm--EnvVars" placeholder="GPU_MAX_HEAP_SIZE=100,GPU_USE_SYNC_OBJECTS=1">
+                    <div class="form-text">Comma separated NAME=VALUE pairs.</div>
+                </div>
+                <label for="cm--ExcludePoolName" class="col-sm-2 col-form-label">Exclude pools</label>
+                <div class="col-sm-4">
+                    <input type="text" class="form-control" id="cm--ExcludePoolName" placeholder="nicehash|prohashing">
+                    <div class="form-text">Regular expression matched against the pool host.</div>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label for="cm--ShowMinerWindow" class="col-sm-2 col-form-label">Miner window</label>
+                <div class="col-sm-4">
+                    <select class="form-select" id="cm--ShowMinerWindow"><option value="0">Hidden</option><option value="1">Show</option></select>
+                    <div class="form-text">Ignored on Windows when the hashrate is read from the output (Wrapper).</div>
+                </div>
+            </div>
+
+            <h5 class="mt-4">Algorithms</h5>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle" id="cm-commands">
+                    <thead>
+                        <tr>
+                            <th>Algorithm</th>
+                            <th>Miner name</th>
+                            <th>Extra params</th>
+                            <th style="width:6em">Fee %</th>
+                            <th style="width:6em">Min GB</th>
+                            <th style="width:4em">DAG</th>
+                            <th style="width:6em">Extend</th>
+                            <th>Devices</th>
+                            <th style="width:3em"></th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <datalist id="cm-algolist"></datalist>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="cm-addcmd"><i class="bi bi-plus-lg"></i> Add algorithm</button>
+            <div class="form-text">Algorithm = RainbowMiner name (see the Algorithms page), Miner name = the name the binary expects for %ALGO% (defaults to the algorithm), Devices = optional subset of the device types above (e.g. NVIDIA,AMD).</div>
+
+            <h5 class="mt-4">Preview</h5>
+            <pre id="cm-preview" class="border rounded p-2 small mb-3" style="white-space:pre-wrap"></pre>
+
+            <div class="d-flex flex-wrap gap-2">
+                <button type="submit" class="btn btn-primary" id="cm-save">Save</button>
+                <button type="button" class="btn btn-secondary" id="cm-cancel">Cancel</button>
+                <button type="button" class="btn btn-outline-secondary" id="cm-export-current"><i class="bi bi-box-arrow-up"></i> Export flight sheet</button>
+                <button type="button" class="btn btn-outline-danger ms-auto" id="cm-delete" style="display:none">Delete</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Import modal -->
+<div class="modal fade" id="cm-import-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Import a HiveOS flight sheet</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="small text-muted">Paste the flight sheet JSON (the "custom miner" block that many coin projects publish). The miner part fills the form, the pool part can become an entry in userpools.config.txt.</p>
+                <textarea class="form-control font-monospace" id="cm-imp-text" rows="10" placeholder='{ "name": "...", "items": [ { "coin": "...", "miner": "custom", "miner_config": { ... } } ] }'></textarea>
+                <div id="cm-imp-error" class="text-danger small mt-1"></div>
+                <div id="cm-imp-tokens" class="mt-2"></div>
+                <div class="form-check mt-3">
+                    <input class="form-check-input" type="checkbox" id="cm-imp-userpool" checked>
+                    <label class="form-check-label" for="cm-imp-userpool">Also create or update the pool as a userpool named <input type="text" class="form-control form-control-sm d-inline-block w-auto" id="cm-imp-poolname" pattern="[A-Za-z0-9_]+"></label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="cm-imp-userconfig" checked>
+                    <label class="form-check-label" for="cm-imp-userconfig">Append the sheet's extra config arguments (user_config) to the arguments</label>
+                </div>
+                <div class="alert alert-info small mt-3 mb-0">
+                    A flight sheet knows only the Linux package of HiveOS. After the import, enter the Windows download URL and executable (or the plain Linux binary) and check the command line before saving.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="cm-imp-go">Import into form</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export modal -->
+<div class="modal fade" id="cm-export-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Export as HiveOS flight sheet</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <label for="cm-exp-pool" class="col-sm-3 col-form-label">Pool from userpools</label>
+                    <div class="col-sm-9"><select class="form-select" id="cm-exp-pool"><option value="">(none)</option></select></div>
+                </div>
+                <textarea class="form-control font-monospace" id="cm-exp-text" rows="14" readonly></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="cm-exp-copy"><i class="bi bi-clipboard"></i> Copy</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- End of page scripts -->
+<script type="text/javascript">
+(function () {
+    "use strict";
+
+    const VENDORS = ["NVIDIA", "AMD", "INTEL", "CPU"];
+    const state = { editing: null, userpool: null, userpools: [], managed: false, locked: false, exportDef: null };
+
+    const $ = (id) => document.getElementById(id);
+    const val = (id) => { const el = $(id); return el ? String(el.value).trim() : ""; };
+    const setVal = (id, v) => { const el = $(id); if (el) el.value = (v === undefined || v === null) ? "" : String(v); };
+
+    // ---------------------------------------------------------------- table
+
+    window.formatCustomMiners = function (data) {
+        for (const item of data) {
+            item.tEnable = String(item.Enable) === "1";
+            item.tAPI = (item.HashRateRegex && String(item.HashRateRegex).trim() !== "") ? "Wrapper (regex)" : (item.API || "Wrapper");
+            const cmds = Array.isArray(item.Commands) ? item.Commands : (item.Commands ? [item.Commands] : []);
+            item.tAlgorithms = cmds.map(c => c && c.MainAlgorithm ? c.MainAlgorithm : "").filter(Boolean).join(", ");
+            item.tStats = item.Status ? item.Status.StatCount : 0;
+            item.tStatus = item.Status || {};
+            item.tActions = item.Name;
+        }
+        return data;
+    };
+
+    window.formatCmName = function (value, item) {
+        const name = esc(value);
+        if (item.ManualUri && String(item.ManualUri).trim() !== "") {
+            return '<a href="' + esc(item.ManualUri) + '" target="_blank" title="Miner homepage">' + name + '</a>';
+        }
+        return name;
+    };
+
+    window.formatCmEnable = function (value) {
+        return value ? '<i class="bi bi-check-circle-fill text-success"></i>' : '<i class="bi bi-dash-circle text-muted"></i>';
+    };
+
+    window.formatCmStatus = function (value, item) {
+        const s = item.Status || {};
+        const badges = [];
+        if (s.Valid === false) badges.push('<span class="badge bg-danger">invalid name</span>');
+        if (!s.HasBinaryForOS) badges.push('<span class="badge bg-secondary">no binary for this OS</span>');
+        else if (s.Installed && s.UriMatch) badges.push('<span class="badge bg-success">installed</span>');
+        else if (s.Installed) badges.push('<span class="badge bg-warning text-dark">URL changed, download pending</span>');
+        else badges.push('<span class="badge bg-info text-dark">not downloaded yet</span>');
+        return badges.join(' ');
+    };
+
+    window.formatCmActions = function (value, item) {
+        const n = esc(item.Name);
+        return '<div class="btn-group btn-group-sm">' +
+            '<button type="button" class="btn btn-outline-primary cm-act-edit" data-name="' + n + '" title="Edit"><i class="bi bi-pencil"></i></button>' +
+            '<button type="button" class="btn btn-outline-secondary cm-act-export" data-name="' + n + '" title="Export flight sheet"><i class="bi bi-box-arrow-up"></i></button>' +
+            '</div>';
+    };
+
+    function reloadTable() {
+        const table = RbmTables.getTable('#customminers');
+        if (table) table.replaceData();
+    }
+
+    // ---------------------------------------------------------------- helpers
+
+    function expandTemplate(tpl, values) {
+        return String(tpl || "").replace(/%MPORT%/g, "$mport").replace(/%([A-Z_]+)%/g, (m, k) => (k in values) ? String(values[k]) : m).trim();
+    }
+
+    function sanitizeName(s) {
+        return String(s || "").replace(/[^A-Za-z0-9_]/g, "_").replace(/^_+|_+$/g, "");
+    }
+
+    function splitHostPort(url) {
+        let u = String(url || "").trim().replace(/^[a-z0-9+]+:\/\//i, "");
+        let ssl = /^(stratum\+ssl|ssl|stratums|stratum\+tls|tls)/i.test(String(url || "").trim());
+        u = u.replace(/\/.*$/, "");
+        const m = u.match(/^(.*):(\d+)$/);
+        if (m) return { host: m[1], port: m[2], ssl: ssl };
+        return { host: u, port: "", ssl: ssl };
+    }
+
+    function selectedVendors() {
+        return VENDORS.filter(v => $("cm--Vendor--" + v).checked);
+    }
+
+    // ---------------------------------------------------------------- commands rows
+
+    function addCommandRow(cmd) {
+        cmd = cmd || {};
+        const tbody = $("cm-commands").querySelector("tbody");
+        const tr = document.createElement("tr");
+        tr.innerHTML =
+            '<td><input type="text" class="form-control form-control-sm cmd-MainAlgorithm" list="cm-algolist" required value="' + esc(cmd.MainAlgorithm) + '"></td>' +
+            '<td><input type="text" class="form-control form-control-sm cmd-Algo" value="' + esc(cmd.Algo) + '" placeholder="= algorithm"></td>' +
+            '<td><input type="text" class="form-control form-control-sm font-monospace cmd-Params" value="' + esc(cmd.Params) + '"></td>' +
+            '<td><input type="text" class="form-control form-control-sm cmd-Fee" value="' + esc(cmd.Fee) + '" inputmode="decimal"></td>' +
+            '<td><input type="text" class="form-control form-control-sm cmd-MinMemGB" value="' + esc(cmd.MinMemGB) + '" inputmode="decimal"></td>' +
+            '<td class="text-center"><input type="checkbox" class="form-check-input cmd-DAG"' + (String(cmd.DAG) === "1" ? " checked" : "") + '></td>' +
+            '<td><input type="text" class="form-control form-control-sm cmd-ExtendInterval" value="' + esc(cmd.ExtendInterval) + '" inputmode="numeric"></td>' +
+            '<td><input type="text" class="form-control form-control-sm cmd-Vendors" value="' + esc(cmd.Vendors) + '" placeholder="all"></td>' +
+            '<td><button type="button" class="btn btn-sm btn-outline-danger cmd-remove" title="Remove"><i class="bi bi-x-lg"></i></button></td>';
+        tbody.appendChild(tr);
+    }
+
+    function readCommands() {
+        const rows = [];
+        for (const tr of $("cm-commands").querySelectorAll("tbody tr")) {
+            const g = (cls) => { const el = tr.querySelector("." + cls); return el ? String(el.value).trim() : ""; };
+            const main = g("cmd-MainAlgorithm");
+            if (!main) continue;
+            rows.push({
+                MainAlgorithm: main,
+                Algo: g("cmd-Algo"),
+                Params: g("cmd-Params"),
+                Fee: g("cmd-Fee"),
+                ExtendInterval: g("cmd-ExtendInterval"),
+                MinMemGB: g("cmd-MinMemGB"),
+                DAG: tr.querySelector(".cmd-DAG").checked ? "1" : "0",
+                Vendors: g("cmd-Vendors").toUpperCase()
+            });
+        }
+        return rows;
+    }
+
+    // ---------------------------------------------------------------- form <-> definition
+
+    function emptyDefinition() {
+        return {
+            Enable: "1", Comment: "", ManualUri: "", Version: "1.0", Vendors: "",
+            Windows: { Uri: "", Path: "" }, Linux: { Uri: "", Path: "" },
+            API: "Wrapper", HashRateRegex: "", Port: "4028", DevFee: "0",
+            Arguments: "", SSLArguments: "", EnableSSL: "1",
+            DeviceIndexProperty: "Type_Vendor_Index", DeviceIndexHex: "0", DeviceSeparator: ",",
+            EnvVars: "", ExcludePoolName: "", ShowMinerWindow: "0", ExtendInterval: "2",
+            Commands: []
+        };
+    }
+
+    function fillForm(name, def) {
+        def = Object.assign(emptyDefinition(), def || {});
+        def.Windows = Object.assign({ Uri: "", Path: "" }, def.Windows || {});
+        def.Linux = Object.assign({ Uri: "", Path: "" }, def.Linux || {});
+        setVal("cm--OldName", name || "");
+        setVal("cm--Name", name || "");
+        $("cm--Name").readOnly = false;
+        for (const key of ["Enable", "Version", "ManualUri", "Comment", "API", "HashRateRegex", "Port", "DevFee", "ExtendInterval", "Arguments", "SSLArguments", "EnableSSL", "EnvVars", "ExcludePoolName", "ShowMinerWindow", "DeviceIndexProperty", "DeviceIndexHex", "DeviceSeparator"]) {
+            setVal("cm--" + key, def[key]);
+        }
+        if (!$("cm--API").value) $("cm--API").value = "Wrapper";
+        setVal("cm--Windows--Uri", def.Windows.Uri);
+        setVal("cm--Windows--Path", def.Windows.Path);
+        setVal("cm--Linux--Uri", def.Linux.Uri);
+        setVal("cm--Linux--Path", def.Linux.Path);
+        const vendors = String(def.Vendors || "").toUpperCase().split(/[,;]/).map(s => s.trim());
+        for (const v of VENDORS) $("cm--Vendor--" + v).checked = vendors.includes(v);
+        $("cm-commands").querySelector("tbody").replaceChildren();
+        const cmds = Array.isArray(def.Commands) ? def.Commands : (def.Commands ? [def.Commands] : []);
+        for (const c of cmds) addCommandRow(c);
+        if (!cmds.length) addCommandRow();
+        updatePreview();
+    }
+
+    function readForm() {
+        const def = {
+            Enable: val("cm--Enable"),
+            Comment: val("cm--Comment"),
+            ManualUri: val("cm--ManualUri"),
+            Version: val("cm--Version") || "1.0",
+            Vendors: selectedVendors().join(","),
+            Windows: { Uri: val("cm--Windows--Uri"), Path: val("cm--Windows--Path") },
+            Linux: { Uri: val("cm--Linux--Uri"), Path: val("cm--Linux--Path") },
+            API: val("cm--API") || "Wrapper",
+            HashRateRegex: val("cm--HashRateRegex"),
+            Port: val("cm--Port"),
+            DevFee: val("cm--DevFee") || "0",
+            Arguments: val("cm--Arguments"),
+            SSLArguments: val("cm--SSLArguments"),
+            EnableSSL: val("cm--EnableSSL"),
+            DeviceIndexProperty: val("cm--DeviceIndexProperty"),
+            DeviceIndexHex: val("cm--DeviceIndexHex"),
+            DeviceSeparator: $("cm--DeviceSeparator").value || ",",
+            EnvVars: val("cm--EnvVars"),
+            ExcludePoolName: val("cm--ExcludePoolName"),
+            ShowMinerWindow: val("cm--ShowMinerWindow"),
+            ExtendInterval: val("cm--ExtendInterval") || "2",
+            Commands: readCommands()
+        };
+        return def;
+    }
+
+    function updatePreview() {
+        const def = readForm();
+        const cmd = def.Commands[0] || { MainAlgorithm: "algo", Algo: "", Params: "" };
+        const values = {
+            ALGO: cmd.Algo || cmd.MainAlgorithm, URL: "pool.example.com:3333", HOST: "pool.example.com", PORT: "3333", PROTOCOL: "stratum+tcp",
+            WAL: "WALLETADDRESS.rig01", USER: "WALLETADDRESS.rig01", WALLET: "WALLETADDRESS", PASS: "x", WORKER_NAME: "rig01", COIN: "COIN", ETHMODE: "",
+            DEVICES: def.DeviceIndexHex === "1" ? "0" + def.DeviceSeparator + "1" : "0" + def.DeviceSeparator + "1", DEVCOUNT: "2",
+            THREADS: "8", AFFINITY: "0xff", AFFINITY_LIST: "0,1,2,3,4,5,6,7"
+        };
+        const exe = (def.Windows.Path || def.Linux.Path || "<executable>");
+        const line = expandTemplate(def.Arguments + " " + (cmd.Params || ""), values).replace(/\$mport/g, def.Port || "4028");
+        $("cm-preview").textContent = "Bin\\Custom-" + (val("cm--Name") || "<Name>") + "\\" + exe + " " + line;
+    }
+
+    // ---------------------------------------------------------------- editor open/close
+
+    function openEditor(name, def, isNew) {
+        state.editing = isNew ? null : name;
+        $("cm-editor-title").textContent = isNew ? "New custom miner" : "Edit custom miner " + name;
+        $("cm-delete").style.display = isNew ? "none" : "";
+        $("cm-delete").textContent = "Delete";
+        $("cm-delete").dataset.armed = "";
+        fillForm(isNew ? (name || "") : name, def);
+        $("cm-editor").style.display = "";
+        $("cm-editor").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function closeEditor() {
+        $("cm-editor").style.display = "none";
+        state.editing = null;
+        state.userpool = null;
+    }
+
+    function rowDataByName(name) {
+        const table = RbmTables.getTable('#customminers');
+        if (!table) return null;
+        const row = table.getRows().find(r => r.getData().Name === name);
+        return row ? row.getData() : null;
+    }
+
+    // ---------------------------------------------------------------- save / delete
+
+    async function postSave(params) {
+        const response = await fetch("/savecustomminer", {
+            method: "POST",
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+            body: new URLSearchParams(params).toString()
+        });
+        return await response.json();
+    }
+
+    function guardWrite() {
+        if (state.locked) {
+            rbmShowModal('To be able to save, manually set parameter "APIlockConfig" to "0" in config.txt', 'Warning: config lock is enabled');
+            return false;
+        }
+        if (state.managed) {
+            rbmShowModal('This rig receives customminers.config.txt from the server. Edit the custom miners on the server instead.', 'Managed by the server');
+            return false;
+        }
+        return true;
+    }
+
+    async function saveForm(event) {
+        event.preventDefault();
+        if (!guardWrite()) return;
+        const name = val("cm--Name");
+        const def = readForm();
+        if (!/^[A-Za-z0-9_]+$/.test(name)) { rbmShowModal('The name may contain letters, digits and underscore only.', 'Check the name'); return; }
+        if (!def.Vendors) { rbmShowModal('Select at least one device type.', 'Check the devices'); return; }
+        if (!def.Commands.length) { rbmShowModal('Add at least one algorithm.', 'Check the algorithms'); return; }
+        if (!((def.Windows.Uri && def.Windows.Path) || (def.Linux.Uri && def.Linux.Path))) { rbmShowModal('Enter a download URL and the executable for Windows and/or Linux.', 'Check the download'); return; }
+        const params = {
+            Action: state.editing ? "update" : "add",
+            Name: name,
+            OldName: state.editing || "",
+            Data: JSON.stringify(def)
+        };
+        if (state.userpool) params.Userpool = JSON.stringify(state.userpool);
+        try {
+            const res = await postSave(params);
+            if (res.Success) {
+                let msg = 'RainbowMiner will pick up the new custom miner after the current round has ended. The binary is downloaded automatically.';
+                if (state.userpool) msg += ' The userpool "' + state.userpool.Name + '" was written to userpools.config.txt: enter your wallet on the Setup Pools page and add the pool name to "PoolName" in the Setup, if you use a pool selection.';
+                rbmShowModal(msg, 'Custom miner saved');
+                closeEditor();
+                reloadTable();
+            } else {
+                rbmShowModal(res.Error || 'Something went wrong', 'Custom miner NOT saved');
+            }
+        } catch (error) {
+            console.error("savecustomminer:", error);
+            rbmShowModal('The request failed: ' + error, 'Custom miner NOT saved');
+        }
+    }
+
+    async function deleteCurrent() {
+        if (!state.editing || !guardWrite()) return;
+        const btn = $("cm-delete");
+        if (btn.dataset.armed !== "1") {
+            btn.dataset.armed = "1";
+            btn.textContent = "Really delete " + state.editing + "?";
+            return;
+        }
+        try {
+            const res = await postSave({ Action: "delete", Name: state.editing });
+            if (res.Success) {
+                rbmShowModal('The custom miner was removed from customminers.config.txt. The folder Bin\\Custom-' + state.editing + ' and the benchmark files are kept, delete them by hand if you do not need them any more.', 'Custom miner deleted');
+                closeEditor();
+                reloadTable();
+            } else {
+                rbmShowModal(res.Error || 'Something went wrong', 'Custom miner NOT deleted');
+            }
+        } catch (error) {
+            console.error("savecustomminer:", error);
+        }
+    }
+
+    // ---------------------------------------------------------------- flight sheet import
+
+    function parseFlightSheet(text) {
+        const fs = JSON.parse(text);
+        const item = (fs.items && fs.items.length) ? fs.items[0] : fs;
+        const mc = item.miner_config || fs.miner_config || {};
+        const url = mc.url || (item.pool_urls && item.pool_urls[0]) || "";
+        const hp = splitHostPort(url);
+        const ssl = !!item.pool_ssl || hp.ssl;
+        return {
+            sheetName: fs.name || "",
+            coin: String(item.coin || "").toUpperCase(),
+            minerName: sanitizeName(mc.miner || item.miner_alt || fs.name || "custom"),
+            algo: String(mc.algo || "").trim(),
+            template: String(mc.template || "%WAL%").trim(),
+            pass: String(mc.pass || "x"),
+            installUrl: String(mc.install_url || "").trim(),
+            userConfig: String(mc.user_config || "").trim(),
+            host: hp.host, port: hp.port, ssl: ssl
+        };
+    }
+
+    function extraTokens(template) {
+        const tokens = [];
+        String(template || "").replace(/%([A-Z_]+)%/g, (m, k) => { if (k !== "WAL" && k !== "WORKER_NAME" && !tokens.includes(k)) tokens.push(k); return m; });
+        return tokens;
+    }
+
+    function renderImportTokens() {
+        const box = $("cm-imp-tokens");
+        const err = $("cm-imp-error");
+        box.replaceChildren();
+        err.textContent = "";
+        const text = $("cm-imp-text").value.trim();
+        if (!text) return;
+        let sheet;
+        try { sheet = parseFlightSheet(text); } catch (e) { err.textContent = "This is not valid JSON: " + e.message; return; }
+        if (!$("cm-imp-poolname").value) $("cm-imp-poolname").value = sanitizeName((sheet.coin || sheet.minerName) + "Pool");
+        const tokens = extraTokens(sheet.template);
+        if (tokens.length) {
+            const html = ['<div class="small">The wallet template "' + esc(sheet.template) + '" contains placeholders that RainbowMiner cannot fill automatically. Enter the values to use:</div>'];
+            for (const t of tokens) {
+                html.push('<div class="input-group input-group-sm mt-1"><span class="input-group-text">%' + esc(t) + '%</span><input type="text" class="form-control cm-imp-token" data-token="' + esc(t) + '"></div>');
+            }
+            box.innerHTML = html.join('');
+        }
+    }
+
+    function importFlightSheet() {
+        const text = $("cm-imp-text").value.trim();
+        let sheet;
+        try { sheet = parseFlightSheet(text); } catch (e) { $("cm-imp-error").textContent = "This is not valid JSON: " + e.message; return; }
+        const def = emptyDefinition();
+        def.Linux.Uri = sheet.installUrl;
+        def.Linux.Path = sheet.minerName.toLowerCase().replace(/_custom$|_hiveos$/i, "");
+        def.Comment = sheet.sheetName ? "Imported from flight sheet " + sheet.sheetName : "Imported from a HiveOS flight sheet";
+        def.Arguments = "-a %ALGO% -o %URL% -u %WAL% -p %PASS%" + (($("cm-imp-userconfig").checked && sheet.userConfig) ? " " + sheet.userConfig : "");
+        def.Commands = [{ MainAlgorithm: sheet.algo, Algo: sheet.algo, Params: "", Fee: "", ExtendInterval: "", MinMemGB: "", DAG: "0", Vendors: "" }];
+        def.Vendors = "NVIDIA,AMD";
+
+        state.userpool = null;
+        if ($("cm-imp-userpool").checked && sheet.host) {
+            let user = sheet.template.replace(/%WAL%/g, "$Wallet").replace(/%WORKER_NAME%/g, "$WorkerName");
+            for (const inp of document.querySelectorAll(".cm-imp-token")) {
+                user = user.split("%" + inp.dataset.token + "%").join(inp.value.trim());
+            }
+            const poolName = sanitizeName($("cm-imp-poolname").value) || sanitizeName((sheet.coin || sheet.minerName) + "Pool");
+            state.userpool = {
+                Name: poolName, Enable: "1", PoolFee: "0",
+                Algorithm: sheet.algo, CoinName: sheet.coin, CoinSymbol: sheet.coin, Currency: sheet.coin,
+                Protocol: sheet.ssl ? "stratum+ssl" : "stratum+tcp", Host: sheet.host, Port: sheet.port,
+                User: user, Pass: sheet.pass, Region: "US", SSL: sheet.ssl ? "1" : "0", Worker: "$WorkerName"
+            };
+        }
+        bootstrap.Modal.getOrCreateInstance($("cm-import-modal")).hide();
+        openEditor(sheet.minerName, def, true);
+        $("cm--Windows--Uri").focus();
+    }
+
+    // ---------------------------------------------------------------- flight sheet export
+
+    async function loadUserpools() {
+        try {
+            const response = await fetch('/loadconfig?' + new URLSearchParams({ ConfigName: "Userpools" }));
+            const result = await response.json();
+            state.userpools = Array.isArray(result) ? result.filter(p => p && p.Name) : (result && result.Name ? [result] : []);
+        } catch (error) {
+            state.userpools = [];
+        }
+        const sel = $("cm-exp-pool");
+        sel.replaceChildren(new Option("(none)", ""));
+        for (const p of state.userpools) sel.appendChild(new Option(p.Name + (p.Algorithm ? " (" + p.Algorithm + ")" : ""), p.Name));
+    }
+
+    function buildFlightSheet(name, def) {
+        const pool = state.userpools.find(p => p.Name === $("cm-exp-pool").value);
+        const cmd = (Array.isArray(def.Commands) ? def.Commands : [def.Commands]).filter(Boolean)[0] || {};
+        const url = pool ? (pool.Host + (pool.Port ? ":" + pool.Port : "")) : "";
+        const ssl = pool ? (String(pool.SSL) === "1" || /ssl/i.test(String(pool.Protocol || ""))) : false;
+        let template = pool ? String(pool.User || "$Wallet.$WorkerName") : "%WAL%.%WORKER_NAME%";
+        template = template.replace(/\$Wallet/g, "%WAL%").replace(/\$WorkerName/g, "%WORKER_NAME%");
+        return {
+            name: (pool && pool.CoinSymbol ? pool.CoinSymbol + "_" : "") + name.toUpperCase() + "_CUSTOM",
+            isFavorite: false,
+            items: [{
+                coin: pool ? String(pool.CoinSymbol || "") : "",
+                pool_ssl: ssl,
+                pool_urls: url ? [url] : [],
+                dpool_ssl: false,
+                miner: "custom",
+                miner_alt: name.toLowerCase(),
+                miner_config: {
+                    url: url,
+                    algo: cmd.Algo || cmd.MainAlgorithm || "",
+                    pass: pool ? String(pool.Pass || "x") : "x",
+                    miner: name,
+                    template: template,
+                    install_url: (def.Linux && def.Linux.Uri) ? def.Linux.Uri : "",
+                    user_config: ""
+                },
+                pool_geo: []
+            }]
+        };
+    }
+
+    function renderExport() {
+        if (!state.exportDef) return;
+        $("cm-exp-text").value = JSON.stringify(buildFlightSheet(state.exportDef.name, state.exportDef.def), null, 2);
+    }
+
+    async function openExport(name, def) {
+        state.exportDef = { name: name, def: def };
+        await loadUserpools();
+        const cmd = (Array.isArray(def.Commands) ? def.Commands : [def.Commands]).filter(Boolean)[0] || {};
+        const norm = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+        const match = state.userpools.find(p => p.Algorithm && [cmd.MainAlgorithm, cmd.Algo].some(a => a && norm(a) === norm(p.Algorithm)));
+        if (match) $("cm-exp-pool").value = match.Name;
+        renderExport();
+        bootstrap.Modal.getOrCreateInstance($("cm-export-modal")).show();
+    }
+
+    // ---------------------------------------------------------------- init
+
+    async function loadLists() {
+        try {
+            const response = await fetch('/minerapis');
+            const apis = await response.json();
+            const sel = $("cm--API");
+            const current = sel.value;
+            sel.replaceChildren();
+            for (const a of (Array.isArray(apis) ? apis : [])) sel.appendChild(new Option(a, a));
+            if (current) sel.value = current;
+        } catch (error) {
+            console.error("minerapis:", error);
+        }
+        try {
+            const response = await fetch('/algorithms');
+            const algos = await response.json();
+            const dl = $("cm-algolist");
+            dl.replaceChildren();
+            for (const a of (Array.isArray(algos) ? algos : [])) { const o = document.createElement("option"); o.value = a; dl.appendChild(o); }
+        } catch (error) {
+            console.error("algorithms:", error);
+        }
+    }
+
+    async function loadManagedState() {
+        try {
+            const response = await fetch('/config');
+            const cfg = await response.json();
+            const names = String(cfg.ServerConfigName || "").split(/[,;]/).map(s => s.trim().toLowerCase());
+            const enableServer = cfg.EnableServerConfig === true || String(cfg.EnableServerConfig) === "1" || String(cfg.EnableServerConfig).toLowerCase() === "true";
+            state.managed = String(cfg.RunMode || "").toLowerCase() === "client" && enableServer && !!cfg.ServerName && names.includes("customminers");
+            if (state.managed) {
+                $("cm-managed").textContent = 'This rig is a client of the server "' + cfg.ServerName + '" and receives customminers.config.txt from there. The list below is read-only, edit the custom miners on the server.';
+                $("cm-managed").style.display = "";
+                $("cm-new").disabled = true;
+                $("cm-import").disabled = true;
+            }
+        } catch (error) {
+            console.error("config:", error);
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        ConfigLoader.whenReady().then(async function (cfg) {
+            state.locked = !!cfg.IsLocked;
+            await loadLists();
+            await loadManagedState();
+
+            $("cm-new").addEventListener("click", () => { state.userpool = null; openEditor("", emptyDefinition(), true); });
+            $("cm-import").addEventListener("click", () => {
+                $("cm-imp-text").value = "";
+                $("cm-imp-poolname").value = "";
+                $("cm-imp-tokens").replaceChildren();
+                $("cm-imp-error").textContent = "";
+                bootstrap.Modal.getOrCreateInstance($("cm-import-modal")).show();
+            });
+            $("cm-imp-text").addEventListener("input", renderImportTokens);
+            $("cm-imp-go").addEventListener("click", importFlightSheet);
+            $("cm-form").addEventListener("submit", saveForm);
+            $("cm-form").addEventListener("input", updatePreview);
+            $("cm-cancel").addEventListener("click", closeEditor);
+            $("cm-cancel-x").addEventListener("click", closeEditor);
+            $("cm-delete").addEventListener("click", deleteCurrent);
+            $("cm-addcmd").addEventListener("click", () => { addCommandRow(); updatePreview(); });
+            $("cm-commands").addEventListener("click", (event) => {
+                const btn = event.target.closest(".cmd-remove");
+                if (!btn) return;
+                btn.closest("tr").remove();
+                updatePreview();
+            });
+            $("cm-export-current").addEventListener("click", () => openExport(val("cm--Name") || "MyMiner", readForm()));
+            $("cm-exp-pool").addEventListener("change", renderExport);
+            $("cm-exp-copy").addEventListener("click", () => copyToClipboard($("cm-exp-text").value));
+
+            RbmTables.whenReady('#customminers').then((table) => {
+                document.getElementById('customminers').addEventListener("click", (event) => {
+                    const btn = event.target.closest("button[data-name]");
+                    if (!btn) return;
+                    const row = RbmTables.rowFromElement(table, btn);
+                    const item = row ? row.getData() : rowDataByName(btn.dataset.name);
+                    if (!item) return;
+                    if (btn.classList.contains("cm-act-edit")) {
+                        state.userpool = null;
+                        openEditor(item.Name, item, false);
+                        if (state.managed) $("cm-save").disabled = true;
+                    } else if (btn.classList.contains("cm-act-export")) {
+                        openExport(item.Name, item);
+                    }
+                });
+            });
+        });
+    });
+})();
+</script>
+<!--#include file="/parts/foot.html" -->

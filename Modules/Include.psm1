@@ -2296,6 +2296,153 @@ function Get-MinerInstPath {
     }
 }
 
+#
+# Custom miners (Config\customminers.config.txt)
+#
+# The definitions are user data: a JSON object keyed by miner name. These helpers
+# live in Include.psm1 on purpose - the miner enumeration runspace
+# (Get-MinersContentRS) and the API threads import Include but not ConfigLib.
+#
+
+# names that were already reported as invalid (warn once per session)
+$Script:CustomMinerWarned = @{}
+
+function Test-CustomMinerName {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $False)]
+        [String]$Name = ""
+    )
+    # letters, digits and underscore only, and the name must not shadow a built-in miner module
+    ($Name -match "^[A-Za-z0-9_]+$") -and -not (Test-Path ".\Miners\$($Name).ps1")
+}
+
+function ConvertTo-CustomMinerNumber {
+    # "1,5" / "1.5" / "" -> [double] or $Default (used for the string-typed config values)
+    param($Value, $Default = $null)
+    $v = "$Value".Trim() -replace ",","." -replace "[^0-9\.]"
+    if ($v -match "^\d*\.?\d+$") {[double]$v} else {$Default}
+}
+
+function Get-CustomMinerDefinitions {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $False)]
+        [Switch]$UpdateLastWriteTime,
+        [Parameter(Mandatory = $False)]
+        [Switch]$FromFile
+    )
+
+    # per-round cheap path: Core stores the normalized array in $Session.Config.CustomMiners
+    if (-not $UpdateLastWriteTime -and -not $FromFile -and $Session.Config -and [bool]$Session.Config.PSObject.Properties["CustomMiners"]) {
+        return @($Session.Config.CustomMiners | Select-Object)
+    }
+
+    $PathToFile = $Session.ConfigFiles["CustomMiners"].Path
+    if (-not $PathToFile -or -not (Test-Path $PathToFile)) {return @()}
+
+    $Data = $null
+    try {
+        if ($UpdateLastWriteTime) {
+            $Session.ConfigFiles["CustomMiners"].LastWriteTime = (Get-ChildItem $PathToFile).LastWriteTimeUtc
+        }
+        $Data = Get-ContentByStreamReader $PathToFile | ConvertFrom-Json -ErrorAction Stop
+        $Session.ConfigFiles["CustomMiners"].Healthy = $true
+    } catch {
+        Write-Log -Level Warn "Your $(([IO.FileInfo]$PathToFile).Name) seems to be corrupt. Check for correct JSON format or delete it."
+        $Session.ConfigFiles["CustomMiners"].Healthy = $false
+        return @()
+    }
+
+    if ($Data -eq $null -or $Data -is [string] -or $Data -is [array]) {return @()}
+
+    $Vendors_All = @("AMD","CPU","INTEL","NVIDIA")
+    $DevIdProps  = @("Type_Vendor_Index","Type_PlatformId_Index","Type_Index","Type_Mineable_Index","Index","BusId","PCIBusId","Vendor_Index")
+
+    @(foreach ($p in $Data.PSObject.Properties) {
+        $Name = "$($p.Name)".Trim()
+        $Def  = $p.Value
+
+        if (-not (Test-CustomMinerName $Name)) {
+            if (-not $Script:CustomMinerWarned.ContainsKey($Name)) {
+                $Script:CustomMinerWarned[$Name] = $true
+                Write-Log -Level Warn "Custom miner ""$($Name)"" skipped: the name may contain letters, digits and underscore only and must not equal a built-in miner name"
+            }
+            continue
+        }
+        if ($Def -eq $null -or $Def -is [string] -or $Def -is [array]) {continue}
+
+        $Vendors = @(Get-ConfigArray "$($Def.Vendors)" | Foreach-Object {"$_".Trim().ToUpper()} | Where-Object {$_ -in $Vendors_All} | Select-Object -Unique)
+
+        $Commands = @(foreach ($c in @($Def.Commands)) {
+            if ($c -eq $null -or $c -is [string] -or "$($c.MainAlgorithm)".Trim() -eq "") {continue}
+            $MainAlgorithm_Raw = "$($c.MainAlgorithm)".Trim()
+            [PSCustomObject]@{
+                MainAlgorithm  = Get-Algorithm $MainAlgorithm_Raw
+                Algo           = if ("$($c.Algo)".Trim() -ne "") {"$($c.Algo)".Trim()} else {$MainAlgorithm_Raw}
+                Params         = "$($c.Params)".Trim()
+                Fee            = ConvertTo-CustomMinerNumber $c.Fee
+                ExtendInterval = if ("$($c.ExtendInterval)" -match "^\s*(\d+)\s*$") {[int]$Matches[1]} else {$null}
+                MinMemGB       = ConvertTo-CustomMinerNumber $c.MinMemGB 0
+                DAG            = Get-Yes $c.DAG
+                Vendors        = @(Get-ConfigArray "$($c.Vendors)" | Foreach-Object {"$_".Trim().ToUpper()} | Where-Object {$_ -in $Vendors} | Select-Object -Unique)
+            }
+        })
+
+        $DevIdProp = "$($Def.DeviceIndexProperty)".Trim()
+        if ($DevIdProp -notin $DevIdProps) {$DevIdProp = "Type_Vendor_Index"}
+
+        $DevSep = "$($Def.DeviceSeparator)"
+        if ($DevSep -eq "") {$DevSep = ","}
+
+        [PSCustomObject]@{
+            Name                = $Name
+            Enable              = Get-Yes $Def.Enable
+            Comment             = "$($Def.Comment)".Trim()
+            ManualUri           = "$($Def.ManualUri)".Trim()
+            Version             = if ("$($Def.Version)".Trim() -ne "") {"$($Def.Version)".Trim()} else {"1.0"}
+            Vendors             = $Vendors
+            Windows             = [PSCustomObject]@{Uri = "$($Def.Windows.Uri)".Trim(); Path = ("$($Def.Windows.Path)".Trim() -replace "^[\\/]+" -replace "/","\")}
+            Linux               = [PSCustomObject]@{Uri = "$($Def.Linux.Uri)".Trim();   Path = ("$($Def.Linux.Path)".Trim() -replace "^[\\/]+" -replace "/","\")}
+            API                 = if ("$($Def.API)".Trim() -ne "") {"$($Def.API)".Trim()} else {"Wrapper"}
+            HashRateRegex       = "$($Def.HashRateRegex)".Trim()
+            Port                = if ("$($Def.Port)" -match "^\s*(\d+)\s*$") {[int]$Matches[1]} else {4000}
+            DevFee              = ConvertTo-CustomMinerNumber $Def.DevFee 0
+            Arguments           = "$($Def.Arguments)".Trim()
+            SSLArguments        = "$($Def.SSLArguments)".Trim()
+            EnableSSL           = if ($Def.PSObject.Properties["EnableSSL"]) {Get-Yes $Def.EnableSSL} else {$true}
+            DeviceIndexProperty = $DevIdProp
+            DeviceIndexHex      = Get-Yes $Def.DeviceIndexHex
+            DeviceSeparator     = $DevSep
+            EnvVars             = @(Get-ConfigArray "$($Def.EnvVars)" | Where-Object {$_ -match "="} | Select-Object)
+            ExcludePoolName     = "$($Def.ExcludePoolName)".Trim()
+            ShowMinerWindow     = Get-Yes $Def.ShowMinerWindow
+            ExtendInterval      = if ("$($Def.ExtendInterval)" -match "^\s*(\d+)\s*$") {[int]$Matches[1]} else {1}
+            Commands            = $Commands
+        }
+    })
+}
+
+function Expand-CustomMinerArguments {
+    # Substitutes the %TOKEN% placeholders of a custom miner argument template.
+    # Unknown tokens stay literal; $mport / $memsizegb are left for Miner.GetArguments()
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $False)]
+        [String]$Template = "",
+        [Parameter(Mandatory = $False)]
+        [Hashtable]$Values = @{}
+    )
+    if ($Template -eq "") {return ""}
+    $Template = $Template -replace "%MPORT%","`$mport"
+    $Result = [regex]::Replace($Template,"%([A-Z_]+)%",[System.Text.RegularExpressions.MatchEvaluator]{
+        param($match)
+        $k = $match.Groups[1].Value
+        if ($Values.ContainsKey($k)) {"$($Values[$k])"} else {$match.Value}
+    })
+    $Result.Trim()
+}
+
 function Get-LastSatPrice {
     [CmdletBinding()]
     param (

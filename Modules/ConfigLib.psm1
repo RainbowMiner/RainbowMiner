@@ -773,6 +773,20 @@ function Set-ConfigDefault {
         "Pools"         {Set-PoolsConfigDefault -Folder $Folder -Force:$Force;Break}
         "Scheduler"     {Set-SchedulerConfigDefault -Folder $Folder -Force:$Force;Break}
         "Userpools"     {Set-UserpoolsConfigDefault -Folder $Folder -Force:$Force;Break}
+        "CustomMiners"  {
+            # user data, an empty object is the only default
+            $ConfigName = "$(if ($Folder) {"$Folder/"})$($ConfigName)"
+            if (Test-Config $ConfigName) {
+                $PathToFile = $Session.ConfigFiles[$ConfigName].Path
+                if (-not (Test-Path $PathToFile)) {
+                    Set-ContentJson -PathToFile $PathToFile -Data ([PSCustomObject]@{}) > $null
+                    $Session.ConfigFiles[$ConfigName].Healthy = $true
+                    $Session.ConfigFiles[$ConfigName].LastWriteTime = 0
+                }
+                Test-Config $ConfigName -Exists
+            }
+            Break
+        }
         default {
             $ConfigName = "$(if ($Folder) {"$Folder/"})$($ConfigName)"
             $PathToFile = $Session.ConfigFiles[$ConfigName].Path

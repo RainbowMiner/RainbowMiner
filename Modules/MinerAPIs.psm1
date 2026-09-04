@@ -106,6 +106,7 @@ class Miner {
     $EthPillJob
     $WrapperJob
     $MinerInfo
+    [String]$HashRateRegex = ""
 
     hidden $Data = $null
 
@@ -3388,6 +3389,80 @@ class TTminerWrapper : Miner {
 
 
 class Wrapper : Miner {
+}
+
+
+class CustomWrapper : Miner {
+    # Generic stdout wrapper for user-defined miners (Config\customminers.config.txt)
+    # with a HashRateRegex: value = named group "hashrate" or "value", else group 1;
+    # unit = named group "unit", else group 2 (k/M/G/T/P prefix, "h/s" optional);
+    # optional named groups "accepted" / "rejected" feed the share counters.
+    # An invalid regex is reported once and the base parser takes over.
+
+    hidden [Bool]$RegexFailed = $false
+    hidden $Regex = $null
+
+    [Void]UpdateMinerData () {
+        if ($this.HashRateRegex -eq "" -or $this.RegexFailed) {
+            ([Miner]$this).UpdateMinerData()
+            return
+        }
+
+        if ($this.Regex -eq $null -or $this.Regex.ToString() -cne $this.HashRateRegex) {
+            try {
+                $this.Regex = [regex]::new($this.HashRateRegex, [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
+            } catch {
+                Write-Log -Level Warn "Custom miner $($this.BaseName): invalid HashRateRegex ($($_.Exception.Message)), using the generic wrapper parser instead"
+                $this.RegexFailed = $true
+                ([Miner]$this).UpdateMinerData()
+                return
+            }
+        }
+
+        $MJob = if ($Global:IsLinux) {$this.WrapperJob} else {$this.Job.XJob}
+        if ($MJob.HasMoreData) {
+            $Rx = $this.Regex
+
+            Read-MinerJobOutput $MJob | ForEach-Object {
+                $Line = $_ -replace "`n|`r", ""
+                $Line_Simple = $Line -replace "\x1B\[[0-?]*[ -/]*[@-~]", ""
+                if ($Line_Simple) {
+                    $m = $Rx.Match($Line_Simple)
+                    if ($m.Success) {
+                        $HashRate = 0.0
+                        $g = $m.Groups["hashrate"]
+                        if (-not $g.Success) {$g = $m.Groups["value"]}
+                        if (-not $g.Success) {$g = $m.Groups[1]}
+                        if ($g.Success) {$HashRate = ($g.Value -replace ",","." -as [Decimal])}
+
+                        $gu = $m.Groups["unit"]
+                        if (-not $gu.Success) {$gu = $m.Groups[2]}
+                        $HashRate_Unit = if ($gu.Success) {$gu.Value.Trim()} else {""}
+
+                        switch -regex ($HashRate_Unit) {
+                            "^k" {$HashRate *= 1E+3;Break}
+                            "^m" {$HashRate *= 1E+6;Break}
+                            "^g" {$HashRate *= 1E+9;Break}
+                            "^t" {$HashRate *= 1E+12;Break}
+                            "^p" {$HashRate *= 1E+15;Break}
+                        }
+
+                        $ga = $m.Groups["accepted"]
+                        $gr = $m.Groups["rejected"]
+                        if ($ga.Success -and $gr.Success -and $ga.Value -match "^\d+$" -and $gr.Value -match "^\d+$" -and $this.Stratum -and $this.Stratum.Count -gt 0) {
+                            $this.UpdateShares(0,[Double]$ga.Value,[Double]$gr.Value)
+                        }
+
+                        if ($HashRate -gt 0) {
+                            $this.AddMinerData($Line_Simple,[PSCustomObject]@{[String]$this.Algorithm[0] = $HashRate})
+                        }
+                    }
+                }
+            }
+        }
+        $MJob = $null
+        $this.CleanupMinerData()
+    }
 }
 
 

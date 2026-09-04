@@ -932,7 +932,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             Break
         }
         "/setup.json" {
-            $Data = ConvertTo-Json ([PSCustomObject]@{Autostart=[PSCustomObject]@{Enable="0";ConfigName="All";DeviceName="GPU";WorkerName=""};Exclude=$Session.Config.ExcludeServerConfigVars;Config=(Get-ConfigContent "config");Pools=(Get-ConfigContent "pools");Coins=(Get-ConfigContent "coins");OCProfiles=(Get-ConfigContent "ocprofiles");Scheduler=(Get-ConfigContent "scheduler");Userpools=(Get-ConfigContent "userpools")}) -Depth 10
+            $Data = ConvertTo-Json ([PSCustomObject]@{Autostart=[PSCustomObject]@{Enable="0";ConfigName="All";DeviceName="GPU";WorkerName=""};Exclude=$Session.Config.ExcludeServerConfigVars;Config=(Get-ConfigContent "config");Pools=(Get-ConfigContent "pools");Coins=(Get-ConfigContent "coins");OCProfiles=(Get-ConfigContent "ocprofiles");Scheduler=(Get-ConfigContent "scheduler");Userpools=(Get-ConfigContent "userpools");CustomMiners=(Get-ConfigContent "customminers")}) -Depth 10
             $ContentFileName = "setup.json"
             Break
         }
@@ -1954,6 +1954,138 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             } catch {}
             $Data = if ($Data) {ConvertTo-Json $Data -Depth 10} else {"[]"}
             break
+        }
+        "/minerapis" {
+            # class names of Modules\MinerAPIs.psm1 for the custom miner form (Wrapper first); cached per file version
+            $APIsFile = ".\Modules\MinerAPIs.psm1"
+            $APIsLwt  = (Get-ChildItem $APIsFile).LastWriteTimeUtc
+            $CacheTime = (Get-Date).ToUniversalTime()
+            if (-not $APICacheDB.ContainsKey("minerapis") -or $APICacheDB["minerapis"].LastWrite -ne $APIsLwt) {
+                $APIsList = @([regex]::Matches((Get-ContentByStreamReader $APIsFile),"(?m)^class\s+(\w+)\s*:\s*Miner\b") | Foreach-Object {$_.Groups[1].Value} | Where-Object {$_ -notin @("Wrapper","CustomWrapper")} | Sort-Object -Unique)
+                $APICacheDB["minerapis"] = [PSCustomObject]@{LastWrite = $APIsLwt; LastAccess = $CacheTime; Data = @(@("Wrapper") + $APIsList)}
+            }
+            $APICacheDB["minerapis"].LastAccess = $CacheTime
+            $Data = ConvertTo-Json @($APICacheDB["minerapis"].Data) -Depth 10
+            $APIsFile = $APIsLwt = $APIsList = $CacheTime = $null
+            Break
+        }
+        "/customminers" {
+            # raw definitions of customminers.config.txt (the form edits the raw strings) plus a per-miner status block
+            $CmConfig = Get-ConfigContent "CustomMiners"
+            $Data = if ($CmConfig -and $CmConfig -isnot [string] -and $CmConfig -isnot [array]) {
+                ConvertTo-Json @($CmConfig.PSObject.Properties | Foreach-Object {
+                    $CmName = $_.Name
+                    $CmDef  = $_.Value
+                    $CmOS   = if ($IsLinux) {$CmDef.Linux} else {$CmDef.Windows}
+                    $CmUri  = "$($CmOS.Uri)".Trim()
+                    $CmExe  = "$($CmOS.Path)".Trim() -replace "^[\\/]+" -replace "/","\"
+                    $CmBin  = if ($CmExe) {".\Bin\Custom-$($CmName)\$($CmExe)"} else {""}
+                    $CmUriMatch = $false
+                    if ($CmUri -and (Test-Path ".\Bin\Custom-$($CmName)\_uri.json")) {
+                        try {$CmUriMatch = (Get-ContentByStreamReader ".\Bin\Custom-$($CmName)\_uri.json" | ConvertFrom-Json -ErrorAction Stop).URI -eq $CmUri} catch {}
+                    }
+                    $CmOut = [PSCustomObject]@{Name = $CmName}
+                    $CmDef.PSObject.Properties | Where-Object {$_.Name -ne "Name"} | Foreach-Object {$CmOut | Add-Member $_.Name $_.Value -Force}
+                    $CmOut | Add-Member Status ([PSCustomObject]@{
+                        Valid          = Test-CustomMinerName $CmName
+                        HasBinaryForOS = [bool]($CmUri -and $CmExe)
+                        Installed      = [bool]($CmBin -and (Test-Path $CmBin))
+                        UriMatch       = $CmUriMatch
+                        StatCount      = (Get-ChildItem ".\Stats\Miners" -File -Filter "*-$($CmName)-*_Hashrate.txt" -ErrorAction Ignore | Measure-Object).Count
+                    }) -Force
+                    $CmOut
+                }) -Depth 10
+            } else {"[]"}
+            $CmConfig = $CmName = $CmDef = $CmOS = $CmUri = $CmExe = $CmBin = $CmUriMatch = $CmOut = $null
+            Break
+        }
+        "/savecustomminer" {
+            # POST Action=add|update|delete, Name, [OldName], Data=<definition json>, [Userpool=<userpool json>]
+            $Success = $false
+            $ErrMsg  = ""
+            if ($API.LockConfig) {
+                $ErrMsg = "The configuration is locked (APIlockConfig in config.txt)"
+            } elseif ($Session.Config.RunMode -eq "Client" -and (Get-Yes $Session.Config.EnableServerConfig) -and "$($Session.Config.ServerName)" -ne "" -and (@(Get-ConfigArray "$($Session.Config.ServerConfigName)") -icontains "customminers")) {
+                $ErrMsg = "customminers.config.txt is managed by the server $($Session.Config.ServerName)"
+            } else {
+                try {
+                    $CmAction = "$($Parameters.Action)".Trim().ToLower()
+                    $CmName   = "$($Parameters.Name)".Trim()
+                    $CmOld    = "$($Parameters.OldName)".Trim()
+                    if ($CmAction -notin @("add","update","delete")) {throw "Unknown action"}
+                    if (-not (Test-CustomMinerName $CmName)) {throw "Invalid name: use letters, digits and underscore only, and not the name of a built-in miner"}
+
+                    $ConfigActual = Get-ConfigContent "CustomMiners"
+                    if ($ConfigActual -eq $null -or $ConfigActual -is [string] -or $ConfigActual -is [array]) {$ConfigActual = [PSCustomObject]@{}}
+                    $ChangeTag = Get-ContentDataMD5hash($ConfigActual)
+
+                    if ($CmAction -eq "delete") {
+                        if ($ConfigActual.PSObject.Properties[$CmName]) {[void]$ConfigActual.PSObject.Properties.Remove($CmName)}
+                    } else {
+                        if ("$($Parameters.Data)" -eq "") {throw "No data received"}
+                        $CmData = $Parameters.Data | ConvertFrom-Json -ErrorAction Stop
+
+                        $CmVendors = @(Get-ConfigArray "$($CmData.Vendors)" | Foreach-Object {"$_".Trim().ToUpper()} | Where-Object {$_ -in @("AMD","CPU","INTEL","NVIDIA")} | Select-Object -Unique)
+                        if (-not $CmVendors.Count) {throw "Select at least one device type (AMD, CPU, INTEL, NVIDIA)"}
+                        if ("$($CmData.Port)".Trim() -notmatch "^\d+$" -or [int]"$($CmData.Port)".Trim() -lt 1024 -or [int]"$($CmData.Port)".Trim() -gt 65000) {throw "The API port must be a number between 1024 and 65000"}
+                        if (-not (("$($CmData.Windows.Uri)".Trim() -and "$($CmData.Windows.Path)".Trim()) -or ("$($CmData.Linux.Uri)".Trim() -and "$($CmData.Linux.Path)".Trim()))) {throw "Enter a download URL and the executable for Windows and/or Linux"}
+                        if ("$($CmData.HashRateRegex)".Trim() -ne "") {
+                            try {[void][regex]::new("$($CmData.HashRateRegex)".Trim())} catch {throw "Invalid hashrate regex: $($_.Exception.Message)"}
+                        } elseif ("$($CmData.API)".Trim() -ne "" -and "$($CmData.API)".Trim() -ne "Wrapper" -and (Get-ContentByStreamReader ".\Modules\MinerAPIs.psm1") -notmatch "(?m)^class\s+$([regex]::Escape("$($CmData.API)".Trim()))\s*:\s*Miner\b") {
+                            throw "Unknown API class $($CmData.API)"
+                        }
+                        $CmCommands = @(@($CmData.Commands) | Where-Object {$_ -ne $null -and $_ -isnot [string] -and "$($_.MainAlgorithm)".Trim() -ne ""} | Foreach-Object {
+                            $_.MainAlgorithm = Get-Algorithm "$($_.MainAlgorithm)".Trim()
+                            $_
+                        })
+                        if (-not $CmCommands.Count) {throw "Add at least one algorithm"}
+                        $CmData | Add-Member Commands $CmCommands -Force
+                        $CmData | Add-Member Vendors ($CmVendors -join ",") -Force
+                        if ("$($CmData.Version)".Trim() -eq "") {$CmData | Add-Member Version "1.0" -Force}
+                        if ($CmData.PSObject.Properties["Name"]) {[void]$CmData.PSObject.Properties.Remove("Name")}
+                        if ($CmData.PSObject.Properties["Status"]) {[void]$CmData.PSObject.Properties.Remove("Status")}
+
+                        if ($CmAction -eq "add" -and $ConfigActual.PSObject.Properties[$CmName]) {throw "A custom miner named $($CmName) exists already"}
+                        if ($CmAction -eq "update" -and $CmOld -ne "" -and $CmOld -ne $CmName) {
+                            if ($ConfigActual.PSObject.Properties[$CmName]) {throw "A custom miner named $($CmName) exists already"}
+                            if ($ConfigActual.PSObject.Properties[$CmOld]) {[void]$ConfigActual.PSObject.Properties.Remove($CmOld)}
+                        }
+                        $ConfigActual | Add-Member $CmName $CmData -Force
+                    }
+
+                    $Sorted = [PSCustomObject]@{}
+                    $ConfigActual.PSObject.Properties.Name | Sort-Object | Foreach-Object {$Sorted | Add-Member $_ $ConfigActual.$_ -Force}
+                    $Success = Set-ContentJson -PathToFile $Session.ConfigFiles["CustomMiners"].Path -Data $Sorted -MD5hash $ChangeTag
+                    if (-not $Success) {throw "Could not write customminers.config.txt"}
+
+                    # optional: create or update the userpool that came with a flight sheet
+                    if ("$($Parameters.Userpool)" -ne "" -and (Test-Config "Userpools" -Exists)) {
+                        $UpData = $Parameters.Userpool | ConvertFrom-Json -ErrorAction Stop
+                        $UpName = "$($UpData.Name)".Trim()
+                        if ($UpName -ne "" -and $UpName -match "^[A-Za-z0-9_]+$") {
+                            $UpDefault = Get-ChildItemContent ".\Data\UserpoolsConfigDefault.ps1"
+                            $UpNew = [PSCustomObject]@{}
+                            $UpDefault.PSObject.Properties | Foreach-Object {
+                                $UpNew | Add-Member $_.Name $(if ($UpData.PSObject.Properties[$_.Name]) {"$($UpData."$($_.Name)")".Trim()} else {$_.Value}) -Force
+                            }
+                            $UpNew.Name = $UpName
+                            if ("$($UpNew.Algorithm)".Trim() -ne "") {$UpNew.Algorithm = Get-Algorithm "$($UpNew.Algorithm)".Trim()}
+                            $UpActual = @(Get-ConfigContent "Userpools" | Where-Object {$_ -ne $null -and $_ -isnot [string]} | Select-Object)
+                            $UpFound = $false
+                            $UpActual = @($UpActual | Foreach-Object {if ("$($_.Name)" -eq $UpName) {$UpFound = $true; $UpNew} else {$_}})
+                            if (-not $UpFound) {$UpActual += $UpNew}
+                            Set-ContentJson -PathToFile $Session.ConfigFiles["Userpools"].Path -Data $UpActual > $null
+                        }
+                    }
+                } catch {
+                    $Success = $false
+                    $ErrMsg = "$($_.Exception.Message)"
+                    Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "[$ThreadID] Error saving custom miner: $($_.Exception.Message)" -Append -Timestamp
+                }
+            }
+            $Data = ConvertTo-Json ([PSCustomObject]@{Success=$Success;Error=$ErrMsg}) -Depth 10
+            $CmAction = $CmName = $CmOld = $CmData = $CmVendors = $CmCommands = $ConfigActual = $ChangeTag = $Sorted = $UpData = $UpName = $UpDefault = $UpNew = $UpActual = $UpFound = $Success = $ErrMsg = $null
+            Break
         }
         default {
             # Set index page

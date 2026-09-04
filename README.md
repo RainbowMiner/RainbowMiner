@@ -26,6 +26,7 @@ Features: easy setup wizard with ad-hoc working default (no editing of files nee
 - **Profit auto-switch between mining programs and [algorithm](https://rbminer.net/algorithms/) for GPUs & CPUs (optimized one for each vendor vs. one for each possible device combination)**
 - **Profit auto-switch between pools (2Miners, Abelpool, AccPool, Acepool, Aionpool, BaikalMine, Binance, C3pool, CpuPool, Crazypool, DeepMinerZ, EpicMine, Ethwmine, F2pool, FlockPool, Gtpool, Hashcryptos, Hashpool, HashVault, Hellominer, [HeroMiners](https://herominers.com), Icemining, [K1Pool](https://k1pool.com/invite/016079e6c5), [Kryptex](https://pool.kryptex.com/?ref=15aa84c0), LeafPool, LuckPool, LuckyPool, Luxor, MinerRocks, Mining4people, MiningDutch, [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069), Mintpond, Molepool, MoneroOcean, Nanopool, Neuropool, [Nicehash](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1), Pearlhash, Poolin, RaptoreumZone, Ravenminer, RPlant, SeroPool, SoloPool, Sunpool, SupportXmr, SuprNova, [unMineable](https://unmineable.com/?ref=U-TEMDPF), UUpool, ViaBTC, Vipor, WoolyPooly, XdagOrg, YadaMiners and Zpool)**
 - **Integrate own and custom pools**
+- **Integrate your own miner programs as custom miners, compatible with HiveOS flight sheets (see [Doc/CUSTOMMINERS.md](Doc/CUSTOMMINERS.md))**
 - **Profit calculation, including real cost of electricity per miner**
 - **Uses the top actual available miner programs (Bminer, Ccminer, Claymore, CryptoDredge, Dstm, EnemyZ, Ewbf, Gminer, NBminer, Sgminer, SrbMiner, T-Rex, Xmrig and many more)**
 - **Easy setup wizard with ad-hoc working default - click Start.bat and off you go (RainbowMiner will ask for your credentials, no hassle with editing configuration files)**
@@ -453,6 +454,7 @@ For your convenience, you can monitor and setup RainbowMiner using your web brow
 - Miners: lists all miners vs. all algorithms
 - Active Miners: lists the best possible miners for each algorithm
 - Benchmarks: monitor and reset benchmarks of failed and updated miners, reset all benchmarks
+- Custom Miners: define, import (HiveOS flight sheets) and manage your own miner programs
 
 ## CLIENT/SERVER NETWORKING
 
@@ -508,7 +510,7 @@ These are the client-fields to fill in the config.txt (or use the initscripts or
     "EnableServerExcludeList": "0",
     "ExcludeServerConfigVars": "WorkerName,DeviceName,ExcludeDeviceName,Proxy,APIPort,APIUser,APIPassword,APIAuth,MSIApath,NVSMIpath,CPUMiningThreads,CPUMiningAffinity,GPUMiningAffinity,ServerName,ServerPort,ServerUser,ServerPassword,EnableServerConfig,ServerConfigName,ExcludeServerConfigVars,RunMode,StartPaused",
 
-If "EnableServerConfig" is set to "1", the client will try to download the config files specified with "ServerConfigName" from the server. If you want to provide the individual rig with specific config files, put them into a subdirectory `.\Config\<workername>` (linux: `./Config/<workername>`) . Use lowercase letters for the subdirectory `<workername>`.
+If "EnableServerConfig" is set to "1", the client will try to download the config files specified with "ServerConfigName" from the server (config, coins, pools, algorithms, scheduler, mrralgorithms, userpools, customminers, miners, ocprofiles). If you want to provide the individual rig with specific config files, put them into a subdirectory `.\Config\<workername>` (linux: `./Config/<workername>`) . Use lowercase letters for the subdirectory `<workername>`.
 Setting the field "EnableServerExcludeList" to "1" lets your client use the server's "ExcludeServerConfigVars" field, instead of the local one in config.txt.
 All variables defined in "ExcludeServerConfig" will not be overwritten by the server's values.
 
@@ -603,6 +605,10 @@ The miner can be setup to mine any coin or currency, that is listed at the respe
 - The miner Excavator mines on NiceHash pool, only
 - Miners Excavator & Excavator1.4.4 run in their own miner window, even if you select to hide miner windows.
 - Each miner's algorithm can be fine tuned for each device in your mining rig
+
+### Custom miners
+
+A miner that RainbowMiner does not ship can be added as a custom miner: open **Config > Custom Miners** in the web interface at [localhost:4000](http://localhost:4000), enter where to download the program, how to start it and how the hashrate can be read, list its algorithms and save. RainbowMiner downloads the binary into `Bin\Custom-<Name>`, benchmarks it and includes it in the profit switching like any built-in miner. HiveOS custom miner flight sheets can be pasted into the import dialog, the pool of the sheet becomes a userpool. The definitions live in `Config\customminers.config.txt`. Everything about the fields, the command line placeholders and the hashrate parsing is explained in [Doc/CUSTOMMINERS.md](Doc/CUSTOMMINERS.md).
 
 ### Special finetuning
 
@@ -1486,6 +1492,29 @@ Remark: the following variables will be automatically replaced in parameters **U
 - `$Currency` will be replaced with the Currency from userpools.config.txt
 - `$Password` will be replaced with Password from pools.config.txt
 - `$Params` will be replaced with "Params-<Currency>" from pools.config.txt
+
+### Config\customminers.config.txt
+
+Your own miner programs, one entry per miner, keyed by the name. The file is maintained by the **Custom Miners** page of the web interface (Config > Custom Miners), which also imports and exports HiveOS flight sheets. A minimal entry:
+
+
+    {
+      "MyMiner": {
+        "Enable": "1",
+        "Version": "1.0",
+        "Vendors": "NVIDIA,AMD",
+        "Windows": { "Uri": "https://example.com/myminer_windows.zip", "Path": "myminer.exe" },
+        "Linux":   { "Uri": "https://example.com/myminer_linux.tar.gz", "Path": "myminer" },
+        "API": "Wrapper",
+        "Port": "4028",
+        "Arguments": "-a %ALGO% -o %PROTOCOL%://%URL% -u %WAL% -p %PASS% -d %DEVICES% --api-port $mport",
+        "Commands": [
+          { "MainAlgorithm": "KawPOW", "Algo": "kawpow", "Params": "", "Fee": "1", "MinMemGB": "3", "DAG": "1" }
+        ]
+      }
+    }
+
+The full field reference, the list of placeholders (`%ALGO%`, `%URL%`, `%WAL%`, `%PASS%`, `%DEVICES%`, `$mport`, ...) and the ways to read the hashrate (generic output wrapper, a regular expression, or one of the built-in miner APIs) are documented in [Doc/CUSTOMMINERS.md](Doc/CUSTOMMINERS.md). Params, OC profiles and penalties per device model are configured in `miners.config.txt`, like for every other miner.
 
 ### Config\miners.config.txt
 

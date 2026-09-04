@@ -52,6 +52,18 @@
         <a href="/saveconfig">/saveconfig</a>
         <p>Save values into a specific config file. Send the data as POST request. Parameter ConfigFile needs to contain the nameprefix of the config file.</p>
 
+        <h3>Custom Miners</h3>
+        <a href="/customminers">/customminers</a>
+        <p>Returns the definitions of .\Config\customminers.config.txt as an array, each with a Status block (Valid, HasBinaryForOS, Installed, UriMatch, StatCount)</p>
+
+        <h3>Miner APIs</h3>
+        <a href="/minerapis">/minerapis</a>
+        <p>Returns the names of the miner API classes that a custom miner can use to read its hashrate (Wrapper first)</p>
+
+        <h3>Save Custom Miner</h3>
+        <a href="/savecustomminer">/savecustomminer</a>
+        <p>Add, update or delete one custom miner. Send as POST request with the parameters Action (add, update or delete), Name, OldName (rename), Data (the definition as JSON) and optionally Userpool (a userpools.config.txt entry as JSON). Returns Success and Error.</p>
+
         <h3>setup.json</h3>
         <a href="/setup.json">/setup.json</a>
         <p>Download a setup.json - put this file into the RainbowMiner root folder, before first start.</p>

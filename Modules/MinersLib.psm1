@@ -314,6 +314,145 @@ function Invoke-MinerFamily {
     }
 }
 
+function Invoke-CustomMiner {
+    # Emission body for the user-defined miners of Config\customminers.config.txt
+    # (one definition, normalized by Get-CustomMinerDefinitions). Mirrors the object
+    # shape of Invoke-MinerFamily; the argument line comes from the definition's
+    # %TOKEN% template (see Expand-CustomMinerArguments in Include.psm1).
+    param(
+        [String]$Name,
+        [PSCustomObject]$Pools,
+        [Bool]$InfoOnly,
+        [PSCustomObject]$Definition
+    )
+
+    $Def  = $Definition
+    $OS   = if ($IsLinux) {$Def.Linux} else {$Def.Windows}
+    $Path = if ($OS.Path) {".\Bin\Custom-$($Name)\$($OS.Path)"} else {""}
+    $Uri  = "$($OS.Uri)"
+
+    if ($InfoOnly) {
+        [PSCustomObject]@{
+            Type      = $Def.Vendors
+            Name      = $Name
+            Path      = $Path
+            Port      = $null
+            Uri       = $Uri
+            DevFee    = $Def.DevFee
+            ManualUri = $Def.ManualUri
+            Commands  = $Def.Commands
+        }
+        return
+    }
+
+    # no binary for this OS or nothing to mine
+    if (-not $Path -or -not $Uri -or -not $Def.Commands.Count) {return}
+
+    $API       = if ($Def.HashRateRegex) {"CustomWrapper"} else {$Def.API}
+    $DevIdProp = $Def.DeviceIndexProperty
+    $DevIdJoin = $Def.DeviceSeparator
+    $ExcludePoolName = $Def.ExcludePoolName
+
+    foreach ($Vendor in $Def.Vendors) {
+        $IsGPU = $Vendor -ne "CPU"
+
+        $Global:DeviceCache.DevicesByTypes."$Vendor" | Select-Object Vendor, Model -Unique | ForEach-Object {
+            $Miner_Model = $_.Model
+            # CPU devices carry the silicon vendor in .Vendor - $Vendor is the type key
+            $Miner_Device_All = $Global:DeviceCache.DevicesByTypes."$Vendor" | Where-Object {$_.Model -eq $Miner_Model}
+
+            $Def.Commands | Where-Object {-not $_.Vendors.Count -or $_.Vendors -icontains $Vendor} | ForEach-Object {
+                $Cmd   = $_
+                $First = $true
+                $Algorithm_Norm_0 = $Cmd.MainAlgorithm
+
+                $CPUThreads = $null
+                $CPUAffinity = $null
+                if (-not $IsGPU) {
+                    $CPUThreads = if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads)  {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads}  elseif ($Session.Config.Miners."$Name-CPU".Threads)  {$Session.Config.Miners."$Name-CPU".Threads}  elseif ($Session.Config.CPUMiningThreads)  {$Session.Config.CPUMiningThreads}
+                    $CPUAffinity= if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity) {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity} elseif ($Session.Config.Miners."$Name-CPU".Affinity) {$Session.Config.Miners."$Name-CPU".Affinity} elseif ($Session.Config.CPUMiningAffinity) {$Session.Config.CPUMiningAffinity}
+                }
+
+                foreach ($Algorithm_Norm in @(Get-PoolAlgorithmKeys -Pools $Pools -Algorithm $Algorithm_Norm_0 -Model $Miner_Model -NoGPU:(-not $IsGPU) -ExcludePoolName $ExcludePoolName)) {
+                    $Pool = $Pools.$Algorithm_Norm
+                    if (-not $Pool.Host) {continue}
+                    if ($ExcludePoolName -and $Pool.Host -match $ExcludePoolName) {continue}
+                    if ($Pool.SSL -and -not $Def.EnableSSL) {continue}
+
+                    if ($IsGPU) {
+                        $MinMemGB = if ($Cmd.DAG) {if ($Pool.DagSizeMax) {$Pool.DagSizeMax} else {Get-EthDAGSize -CoinSymbol $Pool.CoinSymbol -Algorithm $Algorithm_Norm_0 -Minimum $Cmd.MinMemGB}} else {$Cmd.MinMemGB}
+                        $Miner_Device = $Miner_Device_All | Where-Object {Test-VRAM $_ $MinMemGB}
+                    } else {
+                        $Miner_Device = $Miner_Device_All
+                    }
+                    if (-not $Miner_Device) {continue}
+
+                    if ($First) {
+                        $Miner_Port  = $Def.Port + ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
+                        $Miner_Name  = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+                        $DeviceIDsAll = if ($Def.DeviceIndexHex) {($Miner_Device | ForEach-Object {'{0:x}' -f $_."$DevIdProp"}) -join $DevIdJoin} else {@($Miner_Device."$DevIdProp") -join $DevIdJoin}
+                        $DeviceCount = ($Miner_Device | Measure-Object).Count
+                        $First = $false
+                    }
+
+                    $Pool_Port = if ($IsGPU) {if ($Pool.Ports -ne $null -and $Pool.Ports.GPU) {$Pool.Ports.GPU} else {$Pool.Port}}
+                                 else       {if ($Pool.Ports -ne $null -and $Pool.Ports.CPU) {$Pool.Ports.CPU} else {$Pool.Port}}
+                    $Pool_Protocol = if ($Pool.Protocol) {$Pool.Protocol} else {"stratum+$(if ($Pool.SSL) {"ssl"} else {"tcp"})"}
+
+                    $Values = @{
+                        ALGO          = $Cmd.Algo
+                        URL           = "$($Pool.Host)$(if ($Pool_Port -and $Pool.Host -notmatch "/") {":$($Pool_Port)"})"
+                        HOST          = $Pool.Host
+                        PORT          = $Pool_Port
+                        PROTOCOL      = $Pool_Protocol
+                        WAL           = $Pool.User
+                        USER          = $Pool.User
+                        WALLET        = $Pool.Wallet
+                        PASS          = $Pool.Pass
+                        WORKER_NAME   = if ($Pool.Worker) {$Pool.Worker} else {$Session.Config.WorkerName}
+                        COIN          = $Pool.CoinSymbol
+                        ETHMODE       = $Pool.EthMode
+                        DEVICES       = $DeviceIDsAll
+                        DEVCOUNT      = $DeviceCount
+                        THREADS       = $CPUThreads
+                        AFFINITY      = $CPUAffinity
+                        AFFINITY_LIST = if ($CPUAffinity) {(ConvertFrom-CPUAffinity $CPUAffinity) -join ","} else {""}
+                    }
+
+                    $Template = "$($Def.Arguments) $($Cmd.Params)$(if ($Pool.SSL -and $Def.SSLArguments) {" $($Def.SSLArguments)"})"
+
+                    [PSCustomObject]@{
+                        Name            = $Miner_Name
+                        DeviceName      = $Miner_Device.Name
+                        DeviceModel     = $Miner_Model
+                        Path            = $Path
+                        Arguments       = Expand-CustomMinerArguments -Template $Template -Values $Values
+                        HashRates       = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
+                        API             = $API
+                        Port            = $Miner_Port
+                        Uri             = $Uri
+                        FaultTolerance  = $null
+                        ExtendInterval  = if ($Cmd.ExtendInterval -ne $null) {$Cmd.ExtendInterval} else {$Def.ExtendInterval}
+                        Penalty         = 0
+                        DevFee          = if ($Cmd.Fee -ne $null) {$Cmd.Fee} else {$Def.DevFee}
+                        ManualUri       = $Def.ManualUri
+                        EnvVars         = if ($Def.EnvVars.Count) {$Def.EnvVars} else {$null}
+                        Version         = $Def.Version
+                        PowerDraw       = 0
+                        BaseName        = $Name
+                        BaseAlgorithm   = $Algorithm_Norm_0
+                        Benchmarked     = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Benchmarked
+                        LogFile         = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".LogFile
+                        ExcludePoolName = if ($ExcludePoolName) {$ExcludePoolName} else {$null}
+                        ShowMinerWindow = $Def.ShowMinerWindow
+                        HashRateRegex   = $Def.HashRateRegex
+                    }
+                }
+            }
+        }
+    }
+}
+
 function Get-MinerScriptBlock {
     # Returns a cached, compiled ScriptBlock for a miner file (or the file path as
     # fallback when the file cannot be read - both are invocable via &). Reusing the
@@ -405,6 +544,35 @@ function Get-MinersContent {
                 $_
             } else {
                 Write-Log -Level Warn "Miner module $($scriptName) returned invalid object. Please open an issue at https://github.com/rainbowminer/RainbowMiner/issues"
+            }
+        }
+
+        if ($Timer -ne $null) {$Timer[$scriptName] = [Math]::Round($StopWatch.Elapsed.TotalSeconds, 3)}
+    }
+
+    # user-defined miners (Config\customminers.config.txt): same gates and post-processing as the modules
+    foreach ($Def in @(Get-CustomMinerDefinitions)) {
+        $scriptName = $Def.Name
+        if ($scriptName -notlike $MinerName) {continue}
+        # a disabled definition still answers InfoOnly (MinerInfo, miners.config.txt) but never mines
+        if (-not $Parameters.InfoOnly -and (-not $Def.Enable -or -not (
+            (Test-Intersect $possibleDevices @($Global:MinerInfo.$scriptName)) -and
+            ($Session.Config.MinerName.Count -eq 0 -or (Test-Intersect $Session.Config.MinerName $scriptName)) -and
+            ($Session.Config.ExcludeMinerName.Count -eq 0 -or -not (Test-Intersect $Session.Config.ExcludeMinerName $scriptName))
+        ))) {continue}
+
+        $StopWatch.Restart()
+
+        Invoke-CustomMiner -Name $scriptName -Pools $Parameters.Pools -InfoOnly $Parameters.InfoOnly -Definition $Def | Foreach-Object {
+            if ($Parameters.InfoOnly) {
+                $_ | Add-Member -NotePropertyMembers @{
+                    Name     = if ($_.Name) {$_.Name} else {$scriptName}
+                    BaseName = $scriptName
+                } -Force -PassThru
+            } elseif ($_.PowerDraw -eq 0) {
+                $_.PowerDraw = $Global:StatsCache."$($_.Name)_$($_.BaseAlgorithm -replace '\-.*$')_HashRate".PowerDraw_Average
+                if ($_.DeviceModel -and $FullComboLookup.ContainsKey($_.DeviceModel)) {$_.DeviceModel = $FullComboLookup[$_.DeviceModel]}
+                $_
             }
         }
 
