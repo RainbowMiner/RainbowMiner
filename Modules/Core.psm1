@@ -3979,11 +3979,16 @@ function Invoke-Core {
     # pipe, so the join is unambiguous there), but Arguments is free text - the short in-bucket
     # scan re-checks the scalar fields, so even a crafted "|" in Arguments cannot alias two
     # different miners onto one key. buckets keep insertion order = list order, so the first
-    # bucket hit is the same miner the full scan found
+    # bucket hit is the same miner the full scan found.
+    # the -@<Pool> suffix of a pool alternate key is stripped from the algorithm part: a miner
+    # restricted to one pool is emitted as "PearlHash" while that pool wins the algorithm and as
+    # "PearlHash-@Pearlhash" while another pool does, on the identical command line. Keyed
+    # verbatim, the two spellings were two miner objects, and every change of the winning pool
+    # stopped and restarted the very same process (and reset a running benchmark)
     $ActiveMiners_Index = @{}
     $m = $null
     foreach ($m in $Global:ActiveMiners) {
-        $ActiveMiner_Key = "$($m.Name)|$($m.Path)|$($m.Arguments)|$($m.API)|$(@($m.Algorithm | Sort-Object) -join '|')"
+        $ActiveMiner_Key = "$($m.Name)|$($m.Path)|$($m.Arguments)|$($m.API)|$(@($m.Algorithm -replace '\-@.*$' | Sort-Object) -join '|')"
         if (-not $ActiveMiners_Index.ContainsKey($ActiveMiner_Key)) {$ActiveMiners_Index[$ActiveMiner_Key] = [System.Collections.Generic.List[Object]]::new()}
         [void]$ActiveMiners_Index[$ActiveMiner_Key].Add($m)
     }
@@ -3991,7 +3996,7 @@ function Invoke-Core {
     $Miner = $null
     foreach ($Miner in $Miners) {
 
-        $ActiveMiner_Key = "$($Miner.Name)|$($Miner.Path)|$($Miner.Arguments)|$($Miner.API)|$(@($Miner.HashRates.PSObject.Properties.Name | Sort-Object) -join '|')"
+        $ActiveMiner_Key = "$($Miner.Name)|$($Miner.Path)|$($Miner.Arguments)|$($Miner.API)|$(@($Miner.HashRates.PSObject.Properties.Name -replace '\-@.*$' | Sort-Object) -join '|')"
         $ActiveMiner = $m = $null
         if ($ActiveMiner_Bucket = $ActiveMiners_Index[$ActiveMiner_Key]) {
             foreach ($m in $ActiveMiner_Bucket) {
@@ -4152,7 +4157,7 @@ function Invoke-Core {
                 }
                 if ($ActiveMiner) {
                     [void]$Global:ActiveMiners.Add($ActiveMiner)
-                    $ActiveMiner_Key = "$($ActiveMiner.Name)|$($ActiveMiner.Path)|$($ActiveMiner.Arguments)|$($ActiveMiner.API)|$(@($ActiveMiner.Algorithm | Sort-Object) -join '|')"
+                    $ActiveMiner_Key = "$($ActiveMiner.Name)|$($ActiveMiner.Path)|$($ActiveMiner.Arguments)|$($ActiveMiner.API)|$(@($ActiveMiner.Algorithm -replace '\-@.*$' | Sort-Object) -join '|')"
                     if (-not $ActiveMiners_Index.ContainsKey($ActiveMiner_Key)) {$ActiveMiners_Index[$ActiveMiner_Key] = [System.Collections.Generic.List[Object]]::new()}
                     [void]$ActiveMiners_Index[$ActiveMiner_Key].Add($ActiveMiner)
                 }
