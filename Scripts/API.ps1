@@ -1,6 +1,4 @@
-﻿using module .\Modules\MinerAPIs.psm1
-
-param([int]$ThreadID,$APIHttpListener,$CurrentPwd)
+﻿param([int]$ThreadID,$APIHttpListener,$CurrentPwd)
 
 Set-Location $CurrentPwd
 
