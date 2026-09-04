@@ -25,7 +25,7 @@ Features: easy setup wizard with ad-hoc working default (no editing of files nee
 - **Optional watchdog start scripts, that restart RainbowMiner automatically after a crash (StartWD.bat / startwd.sh)**
 - **Profit auto-switch between mining programs and [algorithm](https://rbminer.net/algorithms/) for GPUs & CPUs (optimized one for each vendor vs. one for each possible device combination)**
 - **Profit auto-switch between pools (2Miners, Abelpool, AccPool, Acepool, Aionpool, BaikalMine, Binance, C3pool, CpuPool, Crazypool, DeepMinerZ, EpicMine, Ethwmine, F2pool, FlockPool, Gtpool, Hashcryptos, Hashpool, HashVault, Hellominer, [HeroMiners](https://herominers.com), Icemining, [K1Pool](https://k1pool.com/invite/016079e6c5), [Kryptex](https://pool.kryptex.com/?ref=15aa84c0), LeafPool, LuckPool, LuckyPool, Luxor, MinerRocks, Mining4people, MiningDutch, [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069), Mintpond, Molepool, MoneroOcean, Nanopool, Neuropool, [Nicehash](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1), Pearlhash, Poolin, RaptoreumZone, Ravenminer, RPlant, SeroPool, SoloPool, Sunpool, SupportXmr, SuprNova, [unMineable](https://unmineable.com/?ref=U-TEMDPF), UUpool, ViaBTC, Vipor, WoolyPooly, XdagOrg, YadaMiners and Zpool)**
-- **Integrate own and custom pools**
+- **Integrate own and custom pools as user pools, maintained on the User Pools page of the web interface (see [Doc/USERPOOLS.md](Doc/USERPOOLS.md))**
 - **Integrate your own miner programs as custom miners, compatible with HiveOS flight sheets (see [Doc/CUSTOMMINERS.md](Doc/CUSTOMMINERS.md))**
 - **Profit calculation, including real cost of electricity per miner**
 - **Uses the top actual available miner programs (Bminer, Ccminer, Claymore, CryptoDredge, Dstm, EnemyZ, Ewbf, Gminer, NBminer, Sgminer, SrbMiner, T-Rex, Xmrig and many more)**
@@ -598,6 +598,10 @@ Payout via Bitcoin-Lightning channel is possible. If you want to see balance det
   
 The miner can be setup to mine any coin or currency, that is listed at the respective pool. The pool will then payout to the given non-BTC wallet address. Take into account, that non-BTC payouts depend heavily on that coin being mined. If the pool has not mined or is not mining that currency, the payouts will be delayed until the pool has mined the blocks. Read the pools websites, about the mineability and reliability of a currency. It's recommended to use BTC as any other coin could be removed at anytime and payouts will not occur. The pools MinerRocks and Ravenminer do not have auto-exchange to BTC. Please be careful, what you choose to mine.
 </details>
+
+### User pools
+
+A pool that RainbowMiner does not ship can be added as a user pool: open **Config > User Pools** in the web interface at [localhost:4000](http://localhost:4000), enter the stratum host and port, the coin and your wallet and save. The pool then takes part in the profit switching like every built-in pool. Entries with the same name (other coins, algorithms or regions of the same pool) form one pool, the **Duplicate** button creates them quickly. If `PoolName` restricts the pools, the page offers to add the new name. The entries live in `Config\userpools.config.txt`, the wallet in `pools.config.txt`. The fields, the placeholders and how to read profit and statistics from a pool API are explained in [Doc/USERPOOLS.md](Doc/USERPOOLS.md).
 
 ## MINERS
 
@@ -1376,122 +1380,26 @@ In this example, only the US stratum will be used for Nicehash. Make sure, that 
 
 ### Config\userpools.config.txt
 
-Integrate your own pool or other pools of choice via `.\Config\userpools.config.txt`.
-
-Notes:
-- Each Currency/Coin/Algorithm/Region combination needs an own entry
-- Every unique pool name will automatically get an config entry in pools.config.txt
-- Price and profit calculations will be done either via WhatToMine or if you provide an API url and description
-- Hashrate/Workers/Blocktimes/Difficulty are supported if you provide an API url and description
-- Don't forget to add your custom pool's name to `"PoolName"` in config.txt!
-
-#### Example for xvg-pool.com:
-
-add in userpools.config.txt
+Your own pools or other pools of choice, one entry per coin (or algorithm) and region; all entries with the same name form one pool. The file is maintained by the **User Pools** page of the web interface (Config > User Pools), which also stores the wallet in `pools.config.txt` and adds the pool to `PoolName`. A minimal entry:
 
 
-    {
-      "Enable": "1",
-      "Name": "XvgPool",
-      "PoolFee": "api1.x17.fees",
-      "Algorithm": "X17",
-      "CoinName": "Verge",
-      "CoinSymbol": "XVG",
-      "Currency": "XVG",
-      "Protocol": "stratum+tcp",
-      "Host": "mining.xvg-pool.com",
-      "Port": "6851",
-      "User": "$Wallet.$WorkerName",
-      "Pass": "c=XVG5",
-      "Region": "US",
-      "SSL": "0",
-      "Worker": "$WorkerName",
-      "EthMode": "",
-      "APIUrl1": "https://xvg-pool.com/api/status",
-      "APIUrl2": "https://xvg-pool.com/api/currencies",
-      "APIUrl3": "",
-      "Profit": "api1.x17.estimate_current",
-      "ProfitFactor": "api1.x17.mbtc_mh_factor",
-      "ProfitCurrency": "BTC",
-      "Hashrate": "api1.x17.hashrate",
-      "Workers": "api1.x17.workers",
-      "TimeSinceLast": "api2.XVG5.timesincelast",
-      "Blocks24h": "api2.XVG5.24h_blocks",
-      "Difficulty": "api2.XVG5.difficulty",
-      "SoloMining": "0"
-    }
+    [
+      {
+        "Enable": "1",
+        "Name": "MyPool",
+        "CoinSymbol": "RVN",
+        "Currency": "RVN",
+        "Algorithm": "KawPOW",
+        "Host": "stratum.mypool.com",
+        "Port": "3333",
+        "User": "$Wallet.$WorkerName",
+        "Pass": "x",
+        "Region": "US",
+        "SSL": "0"
+      }
+    ]
 
-
-in config.txt, add the XvgPool to the "PoolName" list:
-
-    "PoolName": "Nicehash,Zpool,XvgPool",
-
-#### Mandatory parameters:
-
-- **Enable** = set to "1", to enable your new entry [default=0]
-- **Name** = name of the pool, every unique name will automatically get an own entry in pools.config.txt
-- **Currency** = coin, that will be paid, determines the wallet address. Each currency will have an entry in pools.config.txt
-- **Host** = stratum server address, without `stratum+tcp://`, just my.server.name
-- **Port** = stratum server port
-
-Remark: if CoinSymbol is set and Currency is empty, Currency will be set to CoinSymbol
-
-#### Optional parameters:
-
-- **User** = exact syntax for the user parameter for the miners, variables possible, see remarks below [default=$Wallet.$WorkerName]
-- **Pass** = specific pool password, variables possible, see remarks below [default=x]
-- **CoinSymbol** = coin, that will be mined
-- **Algorithm** = if CoinSymbol is not set or is not in our database, explicitly setup the algorithm here.
-- **CoinName** = if CoinSymbol is not in our database, explicitly setup the coin's name here.
-- **Protocol** = setup your own protocol, if it differs from the default [default=stratum+tcp / stratum+ssl]
-- **PoolFee** = pool fee in percent (e.g. 1 for one percent) [default=0] --> API!
-- **SSL** = set to "1" if the stratum wants SSL [default=0]
-- **SoloMining** = set to "1" if this is a solo mining pool [default=0]
-- **Region** = setup the stratum server's home region [default=US]
-- **EthMode** = setup the stratum/proxy mining mode for Ethash, Kawpow, Progpow pools [default=ethproxy for Ethash, stratum for KawPow]
-  - "ethproxy"
-  - "ethstratumnh"
-  - "qtminer"
-  - "minerproxy"
-  - "stratum"
-- **Profit** = value for **Currency** per **Hashrate** per **Day** (total_profit_per_day = Profit * Hashrate / ProfitFactor) --> API!
-- **ProfitFactor** = divisor to for profit calculation [default=1] --> API!
-- **ProfitCurrency** = set the **Profit**'s currency, if it differs from **Currency** --> API!
-- **Hashrate** = current hashrate on the pool --> API!
-- **Workers** = number of workers on the pool --> API!
-- **TimeSinceLast** = time since last block found in seconds --> API!
-- **Blocks24h** = number of blocks found in the past 24 hours  --> API!
-- **Difficulty** = current difficulty for that algorithm (needed for SoloMining) --> API!
-
-
-#### API (can be used for all parameters marked with **--> API!**)
-
-- **APIUrl1** = set to a valid API url
-- **APIUrl2** = set to a valid API url
-- **APIUrl3** = set to a valid API url
-
-Instead of setting a static value (number) for the API parameters, you can address the request results of one of the API urls. To declare which of the API urls contains a value, start the path with "api1", "api2" or "api3". If you omit this, "api1" will be used automatically.
-The APIs need to return valid JSON (with one exception, see below). To describe the path to the values, the following syntax need to be used:
-- apiN.name1.name2. ... until you reach the value
-- if there are arrays inside the JSON, you can select the next path step with brackets:
-  - apiN.name1[M].name2. ... to select the object number M in the array name1
-  - apiN.name1[name2=value2].name3. ... to select the object in array name1, that has parameter name2 set to "value2"
-
-For **Profit** there is an exception: in case one of the API urls directly returns a number for profit, set Profit to
-- "#" or "#1" for the direct value of API url 1
-- "#2" for the direct value of API url 2
-- "#3" for the direct value of API url 3
-
-For **ProfitFactor** there is a special case: if the ProfitFactor path contains "mbtc_mh_factor", the ProfitFactor will be multiplied by 1e6 (=1000000)
-
-Remark: the following variables will be automatically replaced in parameters **User**, **Pass** and all **--> API!**
-
-- `$Wallet` will be replaced with your currency's wallet (as defined in pools.config.txt)
-- `$WorkerName` will be replaced with your rig's workername (or the value in pools.config.txt)
-- `$CoinSymbol` will be replaced with the CoinSymbol from userpools.config.txt
-- `$Currency` will be replaced with the Currency from userpools.config.txt
-- `$Password` will be replaced with Password from pools.config.txt
-- `$Params` will be replaced with "Params-<Currency>" from pools.config.txt
+Every unique pool name gets its own section in `pools.config.txt` (wallet per currency, params, penalty, region and SSL filter), like a built-in pool. If you restrict the pools with `PoolName`, add the name there. The full field reference, the placeholders (`$Wallet`, `$WorkerName`, `$CoinSymbol`, `$Currency`, `$Password`, `$Params`) and how to read profit and statistics from a pool API are documented in [Doc/USERPOOLS.md](Doc/USERPOOLS.md).
 
 ### Config\customminers.config.txt
 

@@ -571,7 +571,7 @@
             const res = await postSave(params);
             if (res.Success) {
                 let msg = 'RainbowMiner will pick up the new custom miner after the current round has ended. The binary is downloaded automatically.';
-                if (state.userpool) msg += ' The userpool "' + state.userpool.Name + '" was written to userpools.config.txt: enter your wallet on the Setup Pools page and add the pool name to "PoolName" in the Setup, if you use a pool selection.';
+                if (state.userpool) msg += res.Warning ? ' ' + res.Warning : ' The userpool "' + state.userpool.Name + '" was written to userpools.config.txt: open Config > User Pools to enter the wallet and, if you restrict pools with PoolName, to add the pool there.';
                 rbmShowModal(msg, 'Custom miner saved');
                 closeEditor();
                 reloadTable();

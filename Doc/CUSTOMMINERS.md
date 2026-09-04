@@ -79,10 +79,11 @@ Click **Import flight sheet**, paste the JSON and click **Import into form**:
 - The miner name, the algorithm, the HiveOS install URL (as Linux download) and the
   extra arguments (`user_config`) are copied into the form.
 - The pool part (`url`, `pass`, `template`, `coin`) becomes an entry in
-  `userpools.config.txt` when you keep the checkbox **Also create or update the pool as a
-  userpool** ticked. `%WAL%` and `%WORKER_NAME%` in the wallet template are translated
-  to RainbowMiner's `$Wallet` and `$WorkerName`; other placeholders (for example
-  `%EMAIL%`) are asked from you during the import.
+  `userpools.config.txt` (a user pool, see [USERPOOLS.md](USERPOOLS.md)) when you keep
+  the checkbox **Also create or update the pool as a userpool** ticked. `%WAL%` and
+  `%WORKER_NAME%` in the wallet template are translated to RainbowMiner's `$Wallet` and
+  `$WorkerName`; other placeholders (for example `%EMAIL%`) are asked from you during the
+  import.
 
 A flight sheet does not know anything about Windows. After the import:
 
@@ -93,9 +94,9 @@ A flight sheet does not know anything about Windows. After the import:
    `-a %ALGO% -o %URL% -u %WAL% -p %PASS%`, which fits many miners, but every program has
    its own switches - look at the miner's help output.
 3. Choose the **API** or leave `Wrapper`.
-4. Save. Then open **Config > Setup Pools**, select the new userpool and enter the
-   wallet for the coin. If you restrict pools with `PoolName` in the setup, add the new
-   pool name there.
+4. Save. Then open **Config > User Pools**: the imported pool is listed there, enter the
+   wallet for the coin and, if you restrict pools with `PoolName`, use the hint on that
+   page to add the pool name (see [USERPOOLS.md](USERPOOLS.md)).
 
 **Export** works the other way around: the export button of a custom miner builds a
 flight sheet from the definition and, optionally, one of your userpools.

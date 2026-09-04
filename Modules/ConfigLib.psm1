@@ -724,6 +724,223 @@ function Set-UserpoolsConfigDefault {
     Test-Config $ConfigName -Exists
 }
 
+#
+# Userpools helpers (Config\userpools.config.txt)
+#
+# The file is a JSON array; several entries may share one Name (one entry per coin,
+# algorithm and region). The User Pools page addresses entries by their array index
+# plus a per-entry hash, the flight sheet import of the Custom Miners page matches
+# by Name and Currency. Placeholders like $Wallet stay literal in the raw entries.
+#
+
+function Test-ConfigManagedByServer {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $True)]
+        [String]$ConfigName
+    )
+    # a client that pulls this config file from its server must not edit it locally
+    [bool]($Session.Config.RunMode -eq "Client" -and (Get-Yes $Session.Config.EnableServerConfig) -and "$($Session.Config.ServerName)" -ne "" -and $Session.Config.ServerConfigName -and (@(Get-ConfigArray $Session.Config.ServerConfigName) -icontains $ConfigName))
+}
+
+function Test-UserpoolName {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $False)]
+        [String]$Name = ""
+    )
+    # letters, digits and underscore only, and the name must not shadow a built-in pool module
+    if ($Name -notmatch "^[A-Za-z0-9_]+$") {return $false}
+    if (-not $Script:UserpoolBuiltinNames) {
+        $Script:UserpoolBuiltinNames = @(Get-ChildItem ".\Pools\*.ps1" -File -ErrorAction Ignore | Select-Object -ExpandProperty BaseName)
+    }
+    $Script:UserpoolBuiltinNames -inotcontains $Name
+}
+
+function Get-UserpoolEntries {
+    [CmdletBinding()]
+    param()
+    # the raw entries of userpools.config.txt (blank seed entries included); throws instead of returning an empty list for a corrupt file
+    if (-not (Test-Config "Userpools" -Exists)) {return @()}
+    $Entries = @(Get-ConfigContent "Userpools" | Where-Object {$_ -ne $null -and $_ -isnot [string]} | Select-Object)
+    if (-not (Test-Config "Userpools" -Health)) {throw "userpools.config.txt is corrupt, check the JSON format or delete the file"}
+    if ($Entries.Count -eq 1 -and -not $Entries[0].PSObject.Properties["Name"] -and $Entries[0].PSObject.Properties["value"]) {
+        $Entries = @($Entries[0].value | Where-Object {$_ -ne $null -and $_ -isnot [string]} | Select-Object)
+    }
+    $Entries
+}
+
+function ConvertTo-UserpoolEntry {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $False)]
+        $Data = $null,
+        [Parameter(Mandatory = $False)]
+        $Entries = $null
+    )
+    # project raw form data onto the template field set of Data\UserpoolsConfigDefault.ps1, then normalize and validate
+    if ($Data -eq $null -or $Data -is [string]) {throw "No data received"}
+
+    $Default = Get-ChildItemContent ".\Data\UserpoolsConfigDefault.ps1"
+    $Entry = [PSCustomObject]@{}
+    foreach ($p in $Default.PSObject.Properties) {
+        $Entry | Add-Member $p.Name $(if ($Data.PSObject.Properties[$p.Name]) {"$($Data."$($p.Name)")".Trim()} else {"$($p.Value)"}) -Force
+    }
+
+    if (-not (Test-UserpoolName $Entry.Name)) {throw "Invalid name: use letters, digits and underscore only, and not the name of a built-in pool"}
+    if ($Entries -ne $null) {
+        # keep the spelling of an existing pool of the same name (one section in pools.config.txt)
+        $Existing = @($Entries | Where-Object {"$($_.Name)" -ne "" -and "$($_.Name)" -ieq $Entry.Name} | Select-Object -First 1)
+        if ($Existing.Count) {$Entry.Name = "$($Existing[0].Name)"}
+    }
+
+    # host: accept a pasted stratum url and split off scheme, path and port
+    $PoolHost = "$($Entry.Host)" -replace "^[a-z0-9+\-]+://","" -replace "/.*$",""
+    if ($PoolHost -match "^(.+):(\d+)$") {
+        $PoolPort = $Matches[2]
+        $PoolHost = $Matches[1]
+        if ("$($Entry.Port)" -eq "") {$Entry.Port = $PoolPort}
+    }
+    $Entry.Host = $PoolHost.Trim()
+    if ($Entry.Host -eq "" -or $Entry.Host -match "\s") {throw "Enter the stratum host of the pool, without protocol and port"}
+    if ("$($Entry.Port)" -notmatch "^\d+$" -or [int]$Entry.Port -lt 1 -or [int]$Entry.Port -gt 65535) {throw "The port must be a number between 1 and 65535"}
+
+    $Entry.CoinSymbol     = "$($Entry.CoinSymbol)".ToUpper()
+    $Entry.ProfitCurrency = "$($Entry.ProfitCurrency)".ToUpper()
+    $Entry.Currency       = "$($Entry.Currency)".ToUpper()
+    if ($Entry.Currency -eq "") {$Entry.Currency = $Entry.CoinSymbol}
+    if ($Entry.Currency -eq "") {throw "Enter the currency the pool pays out, or a coin symbol"}
+    if ($Entry.Currency -notmatch "^[A-Z0-9\-]+$") {throw "The currency may contain letters, digits and minus only"}
+
+    $Coin = if ($Entry.CoinSymbol -ne "") {Get-Coin $Entry.CoinSymbol} else {$null}
+    if ("$($Entry.Algorithm)" -ne "") {
+        $Entry.Algorithm = Get-Algorithm "$($Entry.Algorithm)"
+    } elseif ($Coin -eq $null) {
+        throw "Enter the algorithm, or a coin symbol that RainbowMiner knows"
+    }
+
+    $Entry.Region = $(if ("$($Entry.Region)" -ne "") {"$(Get-Region "$($Entry.Region)")"} else {"US"})
+    foreach ($q in @("Enable","SSL","SoloMining")) {$Entry.$q = "$([int](Get-Yes $Entry.$q))"}
+    $Entry.Protocol = "$($Entry.Protocol)".ToLower()
+    if ($Entry.Protocol -ne "" -and $Entry.Protocol -notmatch "^[a-z0-9+]+$") {throw "The protocol may contain letters, digits and plus only, e.g. stratum+tcp"}
+    $Entry.EthMode = "$($Entry.EthMode)".ToLower()
+    if ($Entry.EthMode -ne "" -and $Entry.EthMode -notin @("ethproxy","ethstratumnh","qtminer","minerproxy","stratum")) {throw "Unknown EthMode $($Entry.EthMode)"}
+    foreach ($q in @("APIUrl1","APIUrl2","APIUrl3")) {
+        if ("$($Entry.$q)" -ne "" -and $Entry.$q -notmatch "^https?://") {throw "$($q) must start with http:// or https://"}
+    }
+    $Entry
+}
+
+function Set-UserpoolEntry {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $True)]
+        [ValidateSet("add","update","delete")]
+        [String]$Action,
+        [Parameter(Mandatory = $False)]
+        $Entry = $null,
+        [Parameter(Mandatory = $False)]
+        [int]$Index = -1,
+        [Parameter(Mandatory = $False)]
+        [String]$Tag = "",
+        [Parameter(Mandatory = $False)]
+        [Switch]$MatchExisting
+    )
+    # add, replace or remove one entry of userpools.config.txt and return the index of the written entry (-1 after a delete).
+    # update/delete verify the Tag (hash of the entry the caller has seen); -MatchExisting replaces the first entry with the same Name and Currency, else appends.
+    if (-not (Test-Config "Userpools")) {throw "userpools.config.txt is not configured"}
+    $Entries = [System.Collections.Generic.List[object]]::new()
+    foreach ($e in @(Get-UserpoolEntries)) {[void]$Entries.Add($e)}
+
+    if ($Action -ne "delete" -and $Entry -eq $null) {throw "No data received"}
+
+    if ($MatchExisting -and $Action -ne "delete") {
+        $Index = -1
+        for ($i = 0; $i -lt $Entries.Count; $i++) {
+            if ("$($Entries[$i].Name)" -ieq "$($Entry.Name)" -and "$($Entries[$i].Currency)".ToUpper() -eq "$($Entry.Currency)".ToUpper()) {$Index = $i; break}
+        }
+    } elseif ($Action -eq "add") {
+        $Index = -1
+    } else {
+        if ($Index -lt 0 -or $Index -ge $Entries.Count) {throw "This entry does not exist any more, reload the page"}
+        if ($Tag -ne "" -and $Tag -ne (Get-ContentDataMD5hash $Entries[$Index])) {throw "This entry was changed meanwhile, reload the page"}
+    }
+
+    if ($Action -eq "delete") {
+        $Entries.RemoveAt($Index)
+        $Index = -1
+    } elseif ($Index -ge 0) {
+        $Entries[$Index] = $Entry
+    } else {
+        [void]$Entries.Add($Entry)
+        $Index = $Entries.Count - 1
+    }
+
+    if (-not (Set-ContentJson -PathToFile $Session.ConfigFiles["Userpools"].Path -Data @($Entries.ToArray()))) {throw "Could not write userpools.config.txt"}
+    $Index
+}
+
+function Set-UserpoolWallet {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $True)]
+        [String]$Name,
+        [Parameter(Mandatory = $True)]
+        [String]$Currency,
+        [Parameter(Mandatory = $False)]
+        [String]$Wallet = ""
+    )
+    # write the wallet of a userpool into pools.config.txt (section <Name>, field <Currency>); the section is created if missing
+    if (-not (Test-Config "Pools")) {throw "pools.config.txt is not configured"}
+    Set-PoolsConfigDefault -Force > $null
+    $PoolsActual = Get-ConfigContent "Pools"
+    if (-not (Test-Config "Pools" -Health) -or $PoolsActual -eq $null -or $PoolsActual -is [string]) {throw "pools.config.txt could not be read"}
+    if (-not $PoolsActual.PSObject.Properties[$Name]) {throw "pools.config.txt has no section for $($Name)"}
+    $ChangeTag = Get-ContentDataMD5hash($PoolsActual)
+    $Section = $PoolsActual.$Name
+    if (-not $Section.PSObject.Properties[$Currency]) {$Section | Add-Member $Currency "" -Force}
+    if (-not $Section.PSObject.Properties["$($Currency)-Params"]) {$Section | Add-Member "$($Currency)-Params" "" -Force}
+    $Section.$Currency = $Wallet
+    if (-not (Set-ContentJson -PathToFile $Session.ConfigFiles["Pools"].Path -Data $PoolsActual -MD5hash $ChangeTag)) {throw "Could not write pools.config.txt"}
+}
+
+function Get-ConfigPoolNames {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $False)]
+        $ConfigActual = $null,
+        [Parameter(Mandatory = $False)]
+        [String]$Field = "PoolName"
+    )
+    # the PoolName (or ExcludePoolName) list of config.txt, with the $Var placeholder resolved to its default
+    if ($ConfigActual -eq $null -and (Test-Config "Config" -Exists)) {$ConfigActual = Get-ConfigContent "Config"}
+    if ($ConfigActual -eq $null -or $ConfigActual -is [string]) {return @()}
+    $Value = $ConfigActual.$Field
+    if ($Value -is [string] -and $Value.Trim() -eq "`$$($Field)") {
+        $Value = (Get-ChildItemContent ".\Data\ConfigDefault.ps1").$Field
+    }
+    if ($Value -eq $null) {return @()}
+    @(Get-ConfigArray $Value | Foreach-Object {"$_".Trim()} | Where-Object {$_} | Select-Object)
+}
+
+function Add-ConfigPoolName {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $True)]
+        [String]$Name
+    )
+    # append a pool name to PoolName in config.txt; returns $true when the file was changed, $false when PoolName is empty (all pools allowed) or already contains the name
+    if (-not (Test-Config "Config")) {throw "config.txt is not configured"}
+    $ConfigActual = Get-ConfigContent "Config"
+    if (-not (Test-Config "Config" -Health) -or $ConfigActual -eq $null -or $ConfigActual -is [string]) {throw "config.txt could not be read"}
+    $PoolNames = @(Get-ConfigPoolNames $ConfigActual)
+    if (-not $PoolNames.Count -or $PoolNames -icontains $Name) {return $false}
+    $ChangeTag = Get-ContentDataMD5hash($ConfigActual)
+    $ConfigActual | Add-Member PoolName ((@($PoolNames) + $Name) -join ",") -Force
+    if (-not (Set-ContentJson -PathToFile $Session.ConfigFiles["Config"].Path -Data $ConfigActual -MD5hash $ChangeTag)) {throw "Could not write config.txt"}
+    $true
+}
+
 function Test-Config {
     [CmdletBinding()]
     param(

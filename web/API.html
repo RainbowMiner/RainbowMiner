@@ -64,6 +64,18 @@
         <a href="/savecustomminer">/savecustomminer</a>
         <p>Add, update or delete one custom miner. Send as POST request with the parameters Action (add, update or delete), Name, OldName (rename), Data (the definition as JSON) and optionally Userpool (a userpools.config.txt entry as JSON). Returns Success and Error.</p>
 
+        <h3>User Pools</h3>
+        <a href="/userpools">/userpools</a>
+        <p>Returns the entries of .\Config\userpools.config.txt as an array, each with its array Index, a change Tag and a Status block (Valid, Enabled, Complete, Currency, CoinKnown, CoinName, Algorithm, Region, HasSection, Wallet, HasWallet, Selected, Excluded)</p>
+
+        <h3>User Pool Info</h3>
+        <a href="/userpoolinfo">/userpoolinfo</a>
+        <p>Returns the lookups for the User Pools page: Algorithms, Coins (symbol to Algo and Name), Regions, EthModes, BuiltinPools, plus the current PoolName and ExcludePoolName lists of config.txt, PoolNameIsDefault, Managed (Userpools, Pools, Config), ServerName, WorkerName and HasDefaultWallet</p>
+
+        <h3>Save User Pool</h3>
+        <a href="/saveuserpool">/saveuserpool</a>
+        <p>Add, update or delete one entry of userpools.config.txt, or add a pool to PoolName. Send as POST request with the parameters Action (add, update, delete or poolname), Index and Tag (update, delete), Data (the entry as JSON), optionally SetWallet=1 with Wallet (written to pools.config.txt under the pool name and currency), AddToPoolName=1 and Name (poolname). Returns Success, Error, Index, Name, Currency and Warnings.</p>
+
         <h3>setup.json</h3>
         <a href="/setup.json">/setup.json</a>
         <p>Download a setup.json - put this file into the RainbowMiner root folder, before first start.</p>

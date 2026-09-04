@@ -12,7 +12,8 @@ param(
     [Bool]$AllowZero = $false,
     [String]$StatAverage = "Minute_10",
     [String]$StatAverageStable = "Week",
-    [String]$Password = ""
+    [String]$Password = "",
+    [String]$Email = ""
 )
 
 $Pool_ProfitData = @{}
@@ -24,6 +25,8 @@ $map = @{
 }
 
 $Session.Config.Userpools | Where-Object {$_.Name -eq $Name -and $_.Enable -and ($Wallets."$($_.Currency)" -or $InfoOnly)} | ForEach-Object {
+
+    $Pool_Coin = $null
 
     $Pool_Params = [ordered]@{
         Wallet     = $Wallets."$($_.Currency)"

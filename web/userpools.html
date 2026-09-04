@@ -1,0 +1,727 @@
+﻿<!--#include file="/parts/head.html" -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 id="title" data-navbaractive="navuserpools" class="h2">User Pools</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <button type="button" id="up-new" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg"></i> New user pool</button>
+    </div>
+</div>
+
+<div id="up-managed" class="alert alert-warning" style="display:none"></div>
+<div id="up-poolname-hint" class="alert alert-info" style="display:none"></div>
+
+<p class="text-muted small">
+    Add your own pool or any pool that RainbowMiner does not ship. Every entry describes one stratum (one coin or algorithm at one region),
+    all entries with the same name form one pool that takes part in the profit switching like the built-in pools.
+    The wallet is stored in pools.config.txt under the pool name, exactly like for every other pool. The full field reference is in
+    <a href="https://github.com/RainbowMiner/RainbowMiner/blob/master/Doc/USERPOOLS.md" target="_blank">Doc/USERPOOLS.md</a>.
+</p>
+
+<table id="userpools" class="rbm-table-init table"
+       data-url="/userpools"
+       data-response-handler="formatUserpools"
+       data-cache="false"
+       data-sort-name="Name"
+       data-sort-order="asc">
+    <thead>
+        <tr>
+            <th data-field="Name" data-sortable="true" data-formatter="formatUpName">Name</th>
+            <th data-field="tEnable" data-align="center" data-sortable="true" data-formatter="formatUpEnable">Enabled</th>
+            <th data-field="tCoin" data-sortable="true" data-formatter="formatUpCoin">Coin</th>
+            <th data-field="tAlgorithm" data-sortable="true" data-formatter="formatUpAlgorithm">Algorithm</th>
+            <th data-field="tStratum" data-sortable="true" data-formatter="formatUpStratum">Stratum</th>
+            <th data-field="tRegion" data-sortable="true">Region</th>
+            <th data-field="tWallet" data-align="center" data-sortable="true" data-formatter="formatUpWallet">Wallet</th>
+            <th data-field="tStatus" data-formatter="formatUpStatus">Status</th>
+            <th data-field="tActions" data-align="right" data-formatter="formatUpActions">Actions</th>
+        </tr>
+    </thead>
+</table>
+
+<!-- Editor -->
+<div id="up-editor" class="card mt-3" style="display:none">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span id="up-editor-title">New user pool</span>
+        <button type="button" class="btn-close" id="up-cancel-x" aria-label="Close"></button>
+    </div>
+    <div class="card-body">
+        <form id="up-form" autocomplete="off">
+            <input type="hidden" id="up--Index" value="">
+            <input type="hidden" id="up--Tag" value="">
+
+            <h5 class="mt-1">General</h5>
+            <div class="row mb-3">
+                <label for="up--Name" class="col-sm-2 col-form-label">Name</label>
+                <div class="col-sm-6">
+                    <input type="text" class="form-control" id="up--Name" list="up-namelist" pattern="[A-Za-z0-9_]+" required placeholder="MyPool">
+                    <div class="form-text">Letters, digits and underscore only. All entries with the same name form one pool: the name is the section in pools.config.txt, the entry for PoolName and the name on the Pools page. Use the same name again for another coin, algorithm or region of the same pool.</div>
+                </div>
+                <label for="up--Enable" class="col-sm-1 col-form-label">Enable</label>
+                <div class="col-sm-3">
+                    <select class="form-select" id="up--Enable"><option value="1">Enable</option><option value="0">Disable</option></select>
+                </div>
+            </div>
+
+            <h5 class="mt-4">Pool connection</h5>
+            <div class="row mb-3">
+                <label for="up--Host" class="col-sm-2 col-form-label">Host</label>
+                <div class="col-sm-6">
+                    <input type="text" class="form-control" id="up--Host" required placeholder="stratum.mypool.com">
+                    <div class="form-text">The stratum server, without protocol and port. A pasted stratum+tcp://host:port is split automatically.</div>
+                </div>
+                <label for="up--Port" class="col-sm-1 col-form-label">Port</label>
+                <div class="col-sm-3"><input type="text" class="form-control" id="up--Port" required inputmode="numeric" placeholder="3333"></div>
+            </div>
+            <div class="row mb-3">
+                <label for="up--Protocol" class="col-sm-2 col-form-label">Protocol</label>
+                <div class="col-sm-4">
+                    <input type="text" class="form-control" id="up--Protocol" list="up-protolist" placeholder="stratum+tcp">
+                    <div class="form-text">Empty = stratum+tcp, or stratum+ssl when SSL is set.</div>
+                </div>
+                <label for="up--SSL" class="col-sm-2 col-form-label">SSL</label>
+                <div class="col-sm-4">
+                    <select class="form-select" id="up--SSL"><option value="0">No</option><option value="1">Yes, the stratum wants SSL/TLS</option></select>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label for="up--Region" class="col-sm-2 col-form-label">Region</label>
+                <div class="col-sm-4">
+                    <input type="text" class="form-control" id="up--Region" list="up-regionlist" placeholder="US">
+                    <div class="form-text">Home region of the stratum server, used for the Region filter of pools.config.txt.</div>
+                </div>
+                <label for="up--EthMode" class="col-sm-2 col-form-label">EthMode</label>
+                <div class="col-sm-4">
+                    <select class="form-select" id="up--EthMode"><option value="">(automatic)</option></select>
+                    <div class="form-text">Stratum mode for Ethash, KawPOW and ProgPow pools. Automatic = ethproxy for Ethash, stratum for KawPOW.</div>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label for="up--SoloMining" class="col-sm-2 col-form-label">Solo mining</label>
+                <div class="col-sm-4">
+                    <select class="form-select" id="up--SoloMining"><option value="0">No</option><option value="1">Yes, this is a solo pool</option></select>
+                </div>
+            </div>
+
+            <h5 class="mt-4">Coin</h5>
+            <div class="row mb-3">
+                <label for="up--CoinSymbol" class="col-sm-2 col-form-label">Coin symbol</label>
+                <div class="col-sm-4">
+                    <input type="text" class="form-control" id="up--CoinSymbol" list="up-coinlist" placeholder="RVN">
+                    <div class="form-text">The coin that is mined. A coin RainbowMiner knows fills in the algorithm and the coin name.</div>
+                </div>
+                <label for="up--Currency" class="col-sm-2 col-form-label">Currency</label>
+                <div class="col-sm-4">
+                    <input type="text" class="form-control" id="up--Currency" placeholder="= coin symbol">
+                    <div class="form-text">The currency the pool pays out, decides which wallet is used. Empty = coin symbol.</div>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label for="up--Algorithm" class="col-sm-2 col-form-label">Algorithm</label>
+                <div class="col-sm-4">
+                    <input type="text" class="form-control" id="up--Algorithm" list="up-algolist" placeholder="KawPOW">
+                    <div class="form-text">Required when the coin symbol is empty or unknown to RainbowMiner.</div>
+                </div>
+                <label for="up--CoinName" class="col-sm-2 col-form-label">Coin name</label>
+                <div class="col-sm-4"><input type="text" class="form-control" id="up--CoinName" placeholder="Ravencoin"></div>
+            </div>
+
+            <h5 class="mt-4">Credentials</h5>
+            <div class="row mb-3">
+                <label for="up--User" class="col-sm-2 col-form-label">User</label>
+                <div class="col-sm-4">
+                    <input type="text" class="form-control font-monospace" id="up--User" placeholder="$Wallet.$WorkerName">
+                    <div class="form-text">Placeholders: <code>$Wallet</code>, <code>$WorkerName</code>, <code>$CoinSymbol</code>, <code>$Currency</code>, <code>$Password</code>, <code>$Params</code>.</div>
+                </div>
+                <label for="up--Pass" class="col-sm-2 col-form-label">Password</label>
+                <div class="col-sm-4">
+                    <input type="text" class="form-control font-monospace" id="up--Pass" placeholder="x">
+                    <div class="form-text">Same placeholders as for the user.</div>
+                </div>
+            </div>
+            <div class="row mb-3" id="up-wallet-row">
+                <label for="up--Wallet" class="col-sm-2 col-form-label" id="up-wallet-label">Wallet</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control font-monospace" id="up--Wallet" placeholder="wallet address for the currency">
+                    <div class="form-text" id="up-wallet-help">Stored in pools.config.txt under the pool name and shared by all entries of this pool with the same currency.</div>
+                </div>
+            </div>
+
+            <h5 class="mt-4">
+                <button class="btn btn-link p-0 text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#up-advanced" aria-expanded="false" aria-controls="up-advanced">
+                    <i class="bi bi-chevron-down"></i> Pool API, fee and statistics (optional)
+                </button>
+            </h5>
+            <div class="collapse" id="up-advanced">
+                <div class="form-text mb-3">
+                    Without these values RainbowMiner takes the profit from WhatToMine (or from the coin's difficulty for solo pools).
+                    Enter a number, or a path into the JSON answer of one of the API urls: <code>api1.name.subname</code>, <code>api2.list[0].value</code>,
+                    <code>api1.coins[symbol=RVN].profit</code>. For Profit, <code>#</code>, <code>#2</code> or <code>#3</code> takes the API answer itself as number.
+                </div>
+                <div class="row mb-3">
+                    <label for="up--PoolFee" class="col-sm-2 col-form-label">Pool fee %</label>
+                    <div class="col-sm-4"><input type="text" class="form-control" id="up--PoolFee" placeholder="0"></div>
+                </div>
+                <div class="row mb-3">
+                    <label for="up--APIUrl1" class="col-sm-2 col-form-label">API url 1</label>
+                    <div class="col-sm-10"><input type="text" class="form-control font-monospace" id="up--APIUrl1" placeholder="https://mypool.com/api/status"></div>
+                </div>
+                <div class="row mb-3">
+                    <label for="up--APIUrl2" class="col-sm-2 col-form-label">API url 2</label>
+                    <div class="col-sm-10"><input type="text" class="form-control font-monospace" id="up--APIUrl2"></div>
+                </div>
+                <div class="row mb-3">
+                    <label for="up--APIUrl3" class="col-sm-2 col-form-label">API url 3</label>
+                    <div class="col-sm-10"><input type="text" class="form-control font-monospace" id="up--APIUrl3"></div>
+                </div>
+                <div class="row mb-3">
+                    <label for="up--Profit" class="col-sm-2 col-form-label">Profit</label>
+                    <div class="col-sm-4">
+                        <input type="text" class="form-control font-monospace" id="up--Profit" placeholder="api1.x17.estimate_current">
+                        <div class="form-text">Currency per hashrate and day; profit per day = Profit x hashrate / ProfitFactor.</div>
+                    </div>
+                    <label for="up--ProfitFactor" class="col-sm-2 col-form-label">Profit factor</label>
+                    <div class="col-sm-4">
+                        <input type="text" class="form-control font-monospace" id="up--ProfitFactor" placeholder="1">
+                        <div class="form-text">Divisor, a path containing mbtc_mh_factor is multiplied by 1e6.</div>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <label for="up--ProfitCurrency" class="col-sm-2 col-form-label">Profit currency</label>
+                    <div class="col-sm-4">
+                        <input type="text" class="form-control" id="up--ProfitCurrency" placeholder="= currency">
+                        <div class="form-text">Only if the profit is quoted in another currency, e.g. BTC.</div>
+                    </div>
+                    <label for="up--Hashrate" class="col-sm-2 col-form-label">Hashrate</label>
+                    <div class="col-sm-4"><input type="text" class="form-control font-monospace" id="up--Hashrate" placeholder="api1.x17.hashrate"></div>
+                </div>
+                <div class="row mb-3">
+                    <label for="up--Workers" class="col-sm-2 col-form-label">Workers</label>
+                    <div class="col-sm-4"><input type="text" class="form-control font-monospace" id="up--Workers"></div>
+                    <label for="up--TimeSinceLast" class="col-sm-2 col-form-label">Time since last block</label>
+                    <div class="col-sm-4"><input type="text" class="form-control font-monospace" id="up--TimeSinceLast" placeholder="seconds"></div>
+                </div>
+                <div class="row mb-3">
+                    <label for="up--Blocks24h" class="col-sm-2 col-form-label">Blocks 24h</label>
+                    <div class="col-sm-4"><input type="text" class="form-control font-monospace" id="up--Blocks24h"></div>
+                    <label for="up--Difficulty" class="col-sm-2 col-form-label">Difficulty</label>
+                    <div class="col-sm-4">
+                        <input type="text" class="form-control font-monospace" id="up--Difficulty">
+                        <div class="form-text">Needed for solo mining pools.</div>
+                    </div>
+                </div>
+            </div>
+
+            <h5 class="mt-4">Preview</h5>
+            <pre id="up-preview" class="border rounded p-2 small mb-3" style="white-space:pre-wrap"></pre>
+
+            <div class="form-check mb-3" id="up-poolname-row" style="display:none">
+                <input class="form-check-input" type="checkbox" id="up-addpoolname" checked>
+                <label class="form-check-label" for="up-addpoolname" id="up-poolname-text"></label>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2">
+                <button type="submit" class="btn btn-primary" id="up-save">Save</button>
+                <button type="button" class="btn btn-secondary" id="up-cancel">Cancel</button>
+                <button type="button" class="btn btn-outline-danger ms-auto" id="up-delete" style="display:none">Delete</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<datalist id="up-namelist"></datalist>
+<datalist id="up-protolist"><option value="stratum+tcp"></option><option value="stratum+ssl"></option></datalist>
+<datalist id="up-regionlist"></datalist>
+<datalist id="up-coinlist"></datalist>
+<datalist id="up-algolist"></datalist>
+
+<!-- End of page scripts -->
+<script type="text/javascript">
+(function () {
+    "use strict";
+
+    const FIELDS = ["Enable", "Name", "PoolFee", "Algorithm", "CoinName", "CoinSymbol", "Currency", "Protocol", "Host", "Port", "User", "Pass", "Region", "SSL", "EthMode",
+        "APIUrl1", "APIUrl2", "APIUrl3", "Profit", "ProfitFactor", "ProfitCurrency", "Hashrate", "Workers", "TimeSinceLast", "Blocks24h", "Difficulty", "SoloMining"];
+    const state = { info: null, rows: [], editing: null, tag: "", locked: false, managed: false, managedPools: false, managedConfig: false, walletDirty: false, walletOriginal: "", autoAlgo: "", lastCoin: "" };
+
+    const $ = (id) => document.getElementById(id);
+    const val = (id) => { const el = $(id); return el ? String(el.value).trim() : ""; };
+    const setVal = (id, v) => { const el = $(id); if (el) el.value = (v === undefined || v === null) ? "" : String(v); };
+    const sameName = (a, b) => String(a || "").toLowerCase() === String(b || "").toLowerCase();
+    const info = () => state.info || { Algorithms: [], Coins: {}, Regions: [], EthModes: [], BuiltinPools: [], PoolName: [], ExcludePoolName: [], Managed: {}, WorkerName: "", HasDefaultWallet: false };
+
+    // ---------------------------------------------------------------- table
+
+    window.formatUserpools = function (data) {
+        data = Array.isArray(data) ? data : [];
+        for (const item of data) {
+            const s = item.Status || {};
+            item.tEnable = String(item.Enable) === "1";
+            item.tCoin = s.Currency || "";
+            item.tAlgorithm = s.Algorithm || item.Algorithm || "";
+            item.tStratum = String(item.Host || "") + (item.Port ? ":" + item.Port : "");
+            item.tRegion = s.Region || item.Region || "";
+            item.tWallet = s.HasWallet ? 1 : 0;
+            item.tStatus = s;
+            item.tActions = item.Index;
+        }
+        data.sort((a, b) => String(a.Name).localeCompare(String(b.Name), undefined, { sensitivity: "base" }) || (a.Index - b.Index));
+        state.rows = data;
+        fillNameList();
+        renderPoolNameHint();
+        return data;
+    };
+
+    window.formatUpName = function (value, item) {
+        return '<strong>' + esc(value) + '</strong>';
+    };
+
+    window.formatUpEnable = function (value) {
+        return value ? '<i class="bi bi-check-circle-fill text-success"></i>' : '<i class="bi bi-dash-circle text-muted"></i>';
+    };
+
+    window.formatUpCoin = function (value, item) {
+        const s = item.Status || {};
+        let html = esc(value || "");
+        if (item.CoinSymbol && String(item.CoinSymbol).toUpperCase() !== String(value || "").toUpperCase()) html += ' <small class="text-muted">(' + esc(item.CoinSymbol) + ')</small>';
+        if (s.CoinName) html += '<br><small class="text-muted">' + esc(s.CoinName) + '</small>';
+        return html;
+    };
+
+    window.formatUpAlgorithm = function (value, item) {
+        const s = item.Status || {};
+        let html = esc(value || "");
+        if (s.CoinKnown && !String(item.Algorithm || "").trim()) html += ' <small class="text-muted">from coin</small>';
+        return html;
+    };
+
+    window.formatUpStratum = function (value, item) {
+        const ssl = String(item.SSL) === "1" || /ssl|tls/i.test(String(item.Protocol || ""));
+        return (ssl ? '<i class="bi bi-lock-fill text-muted" title="SSL"></i> ' : '') + esc(value || "");
+    };
+
+    window.formatUpWallet = function (value, item) {
+        const s = item.Status || {};
+        if (s.HasWallet) return '<span class="badge bg-success" title="' + esc(s.Wallet) + '">wallet set</span>';
+        return '<span class="badge bg-danger">no wallet</span>';
+    };
+
+    window.formatUpStatus = function (value, item) {
+        const s = item.Status || {};
+        const badges = [];
+        if (s.Valid === false) badges.push('<span class="badge bg-danger">invalid name</span>');
+        if (s.Complete === false) badges.push('<span class="badge bg-warning text-dark">incomplete</span>');
+        if (s.Enabled === false) badges.push('<span class="badge bg-secondary">disabled</span>');
+        if (item.CoinSymbol && s.CoinKnown === false && !String(item.Algorithm || "").trim()) badges.push('<span class="badge bg-warning text-dark">unknown coin, no algorithm</span>');
+        if (s.Selected === false) badges.push('<span class="badge bg-warning text-dark">not in PoolName</span>');
+        if (s.Excluded) badges.push('<span class="badge bg-danger">excluded</span>');
+        if (!badges.length) badges.push('<span class="badge bg-success">ready</span>');
+        return badges.join(' ');
+    };
+
+    window.formatUpActions = function (value, item) {
+        const i = esc(item.Index);
+        return '<div class="btn-group btn-group-sm">' +
+            '<button type="button" class="btn btn-outline-primary up-act-edit" data-index="' + i + '" title="Edit"><i class="bi bi-pencil"></i></button>' +
+            '<button type="button" class="btn btn-outline-secondary up-act-copy" data-index="' + i + '" title="Duplicate (another coin, algorithm or region of this pool)"><i class="bi bi-files"></i></button>' +
+            '<button type="button" class="btn btn-outline-danger up-act-delete" data-index="' + i + '" title="Delete"><i class="bi bi-trash"></i></button>' +
+            '</div>';
+    };
+
+    function reloadTable() {
+        const table = RbmTables.getTable('#userpools');
+        if (table) table.replaceData();
+    }
+
+    function rowByIndex(index) {
+        return state.rows.find(r => Number(r.Index) === Number(index)) || null;
+    }
+
+    // ---------------------------------------------------------------- lookups
+
+    function fillNameList() {
+        const dl = $("up-namelist");
+        dl.replaceChildren();
+        const seen = [];
+        for (const r of state.rows) {
+            if (!r.Name || seen.includes(r.Name)) continue;
+            seen.push(r.Name);
+            const o = document.createElement("option"); o.value = r.Name; dl.appendChild(o);
+        }
+    }
+
+    function fillLookups() {
+        const inf = info();
+        const fill = (id, values, labelFn) => {
+            const dl = $(id);
+            dl.replaceChildren();
+            for (const v of values) { const o = document.createElement("option"); o.value = v; if (labelFn) o.label = labelFn(v); dl.appendChild(o); }
+        };
+        fill("up-algolist", Array.isArray(inf.Algorithms) ? inf.Algorithms : []);
+        fill("up-regionlist", Array.isArray(inf.Regions) ? inf.Regions : []);
+        const coins = inf.Coins || {};
+        fill("up-coinlist", Object.keys(coins), (sym) => (coins[sym].Name || sym) + (coins[sym].Algo ? " (" + coins[sym].Algo + ")" : ""));
+        const sel = $("up--EthMode");
+        const current = sel.value;
+        sel.replaceChildren();
+        for (const m of (Array.isArray(inf.EthModes) && inf.EthModes.length ? inf.EthModes : [""])) sel.appendChild(new Option(m === "" ? "(automatic)" : m, m));
+        sel.value = current;
+    }
+
+    function coinInfo(symbol) {
+        const coins = info().Coins || {};
+        const key = Object.keys(coins).find(k => k.toUpperCase() === String(symbol || "").toUpperCase());
+        return key ? coins[key] : null;
+    }
+
+    function poolNameRestricted() {
+        const list = info().PoolName;
+        return Array.isArray(list) && list.length > 0;
+    }
+
+    function inPoolName(name) {
+        return !poolNameRestricted() || info().PoolName.some(p => sameName(p, name));
+    }
+
+    async function loadInfo() {
+        try {
+            const response = await fetch('/userpoolinfo');
+            state.info = await response.json();
+        } catch (error) {
+            console.error("userpoolinfo:", error);
+        }
+        const inf = info();
+        const managed = inf.Managed || {};
+        state.managed = !!managed.Userpools;
+        state.managedPools = !!managed.Pools;
+        state.managedConfig = !!managed.Config;
+        fillLookups();
+        if (state.managed) {
+            $("up-managed").textContent = 'This rig is a client of the server "' + inf.ServerName + '" and receives userpools.config.txt from there. The list below is read-only, edit the user pools on the server.';
+            $("up-managed").style.display = "";
+            $("up-new").disabled = true;
+        } else {
+            $("up-managed").style.display = "none";
+            $("up-new").disabled = false;
+        }
+        if (state.managedPools) {
+            $("up-wallet-help").textContent = 'pools.config.txt is managed by the server "' + inf.ServerName + '", the wallet has to be entered there.';
+            $("up--Wallet").disabled = true;
+        }
+        renderPoolNameHint();
+    }
+
+    function renderPoolNameHint() {
+        const box = $("up-poolname-hint");
+        if (!state.info || !poolNameRestricted()) { box.style.display = "none"; return; }
+        const names = [];
+        for (const r of state.rows) { if (r.Name && !names.includes(r.Name)) names.push(r.Name); }
+        const missing = names.filter(n => !inPoolName(n));
+        if (!missing.length) { box.style.display = "none"; return; }
+        let html = 'PoolName in config.txt restricts mining to <code>' + esc(info().PoolName.join(", ")) + '</code>. ' +
+            (missing.length === 1 ? 'The user pool <strong>' + esc(missing[0]) + '</strong> is not listed and will not be used.' : 'These user pools are not listed and will not be used: <strong>' + esc(missing.join(", ")) + '</strong>.');
+        if (state.managedConfig) {
+            html += ' config.txt is managed by the server, add the pool to PoolName there.';
+        } else if (!state.locked) {
+            html += '<div class="mt-2">' + missing.map(n => '<button type="button" class="btn btn-sm btn-outline-primary me-2 mb-1 up-poolname-add" data-name="' + esc(n) + '"><i class="bi bi-plus-lg"></i> Add ' + esc(n) + ' to PoolName</button>').join('') + '</div>';
+        }
+        box.innerHTML = html;
+        box.style.display = "";
+    }
+
+    // ---------------------------------------------------------------- form <-> entry
+
+    function emptyEntry() {
+        return {
+            Enable: "1", Name: "", PoolFee: "0", Algorithm: "", CoinName: "", CoinSymbol: "", Currency: "",
+            Protocol: "stratum+tcp", Host: "", Port: "", User: "$Wallet.$WorkerName", Pass: "x", Region: "US", SSL: "0", EthMode: "",
+            APIUrl1: "", APIUrl2: "", APIUrl3: "", Profit: "", ProfitFactor: "", ProfitCurrency: "",
+            Hashrate: "", Workers: "", TimeSinceLast: "", Blocks24h: "", Difficulty: "", SoloMining: "0"
+        };
+    }
+
+    function fillForm(entry) {
+        const e = Object.assign(emptyEntry(), entry || {});
+        for (const f of FIELDS) setVal("up--" + f, e[f]);
+        for (const f of ["Enable", "SSL", "SoloMining"]) setVal("up--" + f, String(e[f]) === "1" ? "1" : "0");
+        setVal("up--EthMode", String(e.EthMode || "").toLowerCase());
+        if ($("up--EthMode").value !== String(e.EthMode || "").toLowerCase()) setVal("up--EthMode", "");
+        const advanced = ["PoolFee", "APIUrl1", "APIUrl2", "APIUrl3", "Profit", "ProfitFactor", "ProfitCurrency", "Hashrate", "Workers", "TimeSinceLast", "Blocks24h", "Difficulty"]
+            .some(f => String(e[f] || "").trim() !== "" && !(f === "PoolFee" && String(e[f]).trim() === "0"));
+        const coll = bootstrap.Collapse.getOrCreateInstance($("up-advanced"), { toggle: false });
+        if (advanced) coll.show(); else coll.hide();
+    }
+
+    function readForm() {
+        const e = {};
+        for (const f of FIELDS) e[f] = val("up--" + f);
+        return e;
+    }
+
+    function effectiveCurrency(e) {
+        return (e.Currency || e.CoinSymbol || "").toUpperCase();
+    }
+
+    function knownWallet(name, currency) {
+        // the wallet another entry of the same pool and currency already has
+        const row = state.rows.find(r => sameName(r.Name, name) && r.Status && String(r.Status.Currency || "").toUpperCase() === currency);
+        return row ? String(row.Status.Wallet || "") : "";
+    }
+
+    function updateWalletField() {
+        const e = readForm();
+        const cur = effectiveCurrency(e);
+        $("up-wallet-label").textContent = cur ? "Wallet " + cur : "Wallet";
+        if (!state.walletDirty && !state.managedPools) {
+            const w = e.Name ? knownWallet(e.Name, cur) : "";
+            if (w !== "" || state.editing === null) { setVal("up--Wallet", w); state.walletOriginal = w; }
+        }
+        if (!state.managedPools) {
+            $("up-wallet-help").textContent = 'Wallet for ' + (cur || "the currency") + ' at pool ' + (e.Name || "<Name>") +
+                ', stored in pools.config.txt and shared by all entries of this pool with this currency.' +
+                (String($("up--Wallet").value).trim() === "" ? ' Without a wallet the pool is not used.' : '');
+        }
+    }
+
+    function updatePoolNameRow() {
+        const name = val("up--Name");
+        const show = name !== "" && poolNameRestricted() && !inPoolName(name) && !state.managedConfig;
+        $("up-poolname-row").style.display = show ? "" : "none";
+        if (show) $("up-poolname-text").textContent = 'Add ' + name + ' to PoolName in config.txt when saving (currently: ' + info().PoolName.join(", ") + '). Without it the pool is not used.';
+    }
+
+    function updatePreview() {
+        const e = readForm();
+        const cur = effectiveCurrency(e);
+        const coin = e.CoinSymbol ? coinInfo(e.CoinSymbol) : null;
+        const protocol = e.Protocol || (e.SSL === "1" ? "stratum+ssl" : "stratum+tcp");
+        const wallet = String($("up--Wallet").value).trim();
+        const values = { Wallet: wallet || "<wallet>", WorkerName: info().WorkerName || "rig01", CoinSymbol: e.CoinSymbol, Currency: cur, Password: "<password>", Params: "" };
+        const subst = (s) => String(s).replace(/\$(Wallet|WorkerName|CoinSymbol|Currency|Password|Params)/g, (m, k) => values[k]);
+        const lines = [];
+        lines.push(protocol + "://" + (e.Host || "<host>") + ":" + (e.Port || "<port>") + (e.Region ? "   region " + e.Region : ""));
+        lines.push("user: " + subst(e.User || "$Wallet.$WorkerName"));
+        lines.push("pass: " + subst(e.Pass || "x"));
+        if (coin) lines.push("coin: " + e.CoinSymbol.toUpperCase() + " " + (coin.Name || "") + ", algorithm " + (e.Algorithm || coin.Algo || "") + (e.Algorithm ? "" : " (from the coin database)"));
+        else if (e.CoinSymbol && !e.Algorithm) lines.push("coin: " + e.CoinSymbol.toUpperCase() + " is unknown to RainbowMiner, enter the algorithm");
+        else lines.push("algorithm: " + (e.Algorithm || "<algorithm>") + (e.CoinSymbol ? ", coin " + e.CoinSymbol.toUpperCase() : ""));
+        lines.push("paid in " + (cur || "<currency>") + (wallet ? " to " + wallet : ", no wallet set yet"));
+        if (e.SoloMining === "1") lines.push("solo mining");
+        $("up-preview").textContent = lines.join("\n");
+    }
+
+    function onHostChange() {
+        // a pasted stratum url: drop scheme and path, move the port into its own field (the server does the same)
+        const raw = val("up--Host");
+        const bare = raw.replace(/^[a-z0-9+\-]+:\/\//i, "").replace(/\/.*$/, "");
+        const m = bare.match(/^(.+):(\d+)$/);
+        if (m) {
+            setVal("up--Host", m[1]);
+            if (val("up--Port") === "") setVal("up--Port", m[2]);
+        } else if (bare !== raw) {
+            setVal("up--Host", bare);
+        }
+        updatePreview();
+    }
+
+    function onCoinChange() {
+        // a known coin brings algorithm and name; values that came from the previous coin are replaced, hand-entered ones are kept
+        const sym = val("up--CoinSymbol");
+        const coin = sym ? coinInfo(sym) : null;
+        const prev = state.lastCoin ? coinInfo(state.lastCoin) : null;
+        if (coin) {
+            const algo = val("up--Algorithm");
+            if (algo === "" || algo === state.autoAlgo || (prev && algo === prev.Algo)) { setVal("up--Algorithm", coin.Algo || ""); state.autoAlgo = coin.Algo || ""; }
+            const name = val("up--CoinName");
+            if (name === "" || (prev && name === prev.Name)) setVal("up--CoinName", coin.Name || "");
+        }
+        state.lastCoin = sym;
+        updateWalletField();
+        updatePreview();
+    }
+
+    // ---------------------------------------------------------------- editor open/close
+
+    function openEditor(mode, item) {
+        const isEdit = mode === "edit";
+        state.editing = isEdit ? Number(item.Index) : null;
+        state.tag = isEdit ? String(item.Tag || "") : "";
+        state.walletDirty = false;
+        state.autoAlgo = "";
+        state.lastCoin = (mode === "new" || !item) ? "" : String(item.CoinSymbol || "");
+        setVal("up--Index", isEdit ? item.Index : "");
+        setVal("up--Tag", state.tag);
+        $("up-editor-title").textContent = mode === "new" ? "New user pool" : (isEdit ? "Edit user pool " + item.Name : "New user pool (copy of " + item.Name + ")");
+        $("up-delete").style.display = isEdit ? "" : "none";
+        $("up-delete").textContent = "Delete";
+        $("up-delete").dataset.armed = "";
+        $("up-save").disabled = state.managed;
+        fillForm(mode === "new" ? emptyEntry() : item);
+        const w = (item && item.Status) ? String(item.Status.Wallet || "") : "";
+        setVal("up--Wallet", w);
+        state.walletOriginal = w;
+        updateWalletField();
+        updatePoolNameRow();
+        updatePreview();
+        $("up-editor").style.display = "";
+        $("up-editor").scrollIntoView({ behavior: "smooth", block: "start" });
+        if (mode === "new") $("up--Name").focus();
+    }
+
+    function closeEditor() {
+        $("up-editor").style.display = "none";
+        state.editing = null;
+        state.tag = "";
+    }
+
+    // ---------------------------------------------------------------- save / delete
+
+    async function postSave(params) {
+        const response = await fetch("/saveuserpool", {
+            method: "POST",
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+            body: new URLSearchParams(params).toString()
+        });
+        return await response.json();
+    }
+
+    function guardWrite() {
+        if (state.locked) {
+            rbmShowModal('To be able to save, manually set parameter "APIlockConfig" to "0" in config.txt', 'Warning: config lock is enabled');
+            return false;
+        }
+        if (state.managed) {
+            rbmShowModal('This rig receives userpools.config.txt from the server. Edit the user pools on the server instead.', 'Managed by the server');
+            return false;
+        }
+        return true;
+    }
+
+    async function saveForm(event) {
+        event.preventDefault();
+        if (!guardWrite()) return;
+        const e = readForm();
+        const cur = effectiveCurrency(e);
+        if (!/^[A-Za-z0-9_]+$/.test(e.Name)) { rbmShowModal('The name may contain letters, digits and underscore only.', 'Check the name'); return; }
+        if ((info().BuiltinPools || []).some(p => sameName(p, e.Name))) { rbmShowModal('"' + e.Name + '" is the name of a built-in pool, choose another name.', 'Check the name'); return; }
+        if (e.Host === "") { rbmShowModal('Enter the stratum host of the pool.', 'Check the connection'); return; }
+        if (!/^\d+$/.test(e.Port) && !/:\d+$/.test(e.Host)) { rbmShowModal('Enter the stratum port.', 'Check the connection'); return; }
+        if (cur === "") { rbmShowModal('Enter the currency the pool pays out, or a coin symbol.', 'Check the coin'); return; }
+        if (e.Algorithm === "" && !coinInfo(e.CoinSymbol)) { rbmShowModal('Enter the algorithm: the coin symbol is empty or unknown to RainbowMiner.', 'Check the coin'); return; }
+        const params = { Action: state.editing === null ? "add" : "update", Data: JSON.stringify(e) };
+        if (state.editing !== null) { params.Index = state.editing; params.Tag = state.tag; }
+        const wallet = String($("up--Wallet").value).trim();
+        if (!state.managedPools && state.walletDirty && wallet !== state.walletOriginal) { params.SetWallet = "1"; params.Wallet = wallet; }
+        const addPool = $("up-poolname-row").style.display !== "none" && $("up-addpoolname").checked;
+        if (addPool) params.AddToPoolName = "1";
+        try {
+            const res = await postSave(params);
+            if (res.Success) {
+                let msg = 'The user pool "' + res.Name + '" was written to userpools.config.txt. RainbowMiner picks up the change after the current round has ended.';
+                if (params.SetWallet) msg += wallet !== "" ? ' The wallet for ' + res.Currency + ' was stored in pools.config.txt.' : ' The wallet for ' + res.Currency + ' was cleared in pools.config.txt.';
+                else if (wallet === "" && !state.managedPools) msg += ' No wallet is set for ' + res.Currency + ' yet: enter it here or on the Setup Pools page, without it the pool is not used.';
+                if (addPool) msg += ' ' + res.Name + ' was added to PoolName in config.txt.';
+                if (Array.isArray(res.Warnings) && res.Warnings.length) msg += ' ' + res.Warnings.join(' ');
+                rbmShowModal(msg, 'User pool saved');
+                closeEditor();
+                await loadInfo();
+                reloadTable();
+            } else {
+                rbmShowModal(res.Error || 'Something went wrong', 'User pool NOT saved');
+            }
+        } catch (error) {
+            console.error("saveuserpool:", error);
+            rbmShowModal('The request failed: ' + error, 'User pool NOT saved');
+        }
+    }
+
+    async function deleteEntry(index, tag, name, btn, armText) {
+        if (!guardWrite()) return;
+        if (btn.dataset.armed !== "1") {
+            btn.dataset.armed = "1";
+            btn.dataset.text = btn.innerHTML;
+            btn.innerHTML = armText;
+            setTimeout(() => { if (btn.dataset.armed === "1") { btn.dataset.armed = ""; btn.innerHTML = btn.dataset.text; } }, 5000);
+            return;
+        }
+        try {
+            const res = await postSave({ Action: "delete", Index: index, Tag: tag || "" });
+            if (res.Success) {
+                rbmShowModal('The entry of "' + name + '" was removed from userpools.config.txt. The section of the pool in pools.config.txt (wallet, params) is kept.', 'User pool deleted');
+                closeEditor();
+                reloadTable();
+                loadInfo();
+            } else {
+                rbmShowModal(res.Error || 'Something went wrong', 'User pool NOT deleted');
+            }
+        } catch (error) {
+            console.error("saveuserpool:", error);
+        }
+    }
+
+    async function addToPoolName(name) {
+        if (!guardWrite()) return;
+        try {
+            const res = await postSave({ Action: "poolname", Name: name, AddToPoolName: "1" });
+            if (res.Success) {
+                const warn = (Array.isArray(res.Warnings) && res.Warnings.length) ? ' ' + res.Warnings.join(' ') : '';
+                rbmShowModal(name + ' was added to PoolName in config.txt. RainbowMiner picks up the change after the current round has ended.' + warn, 'PoolName updated');
+                await loadInfo();
+                reloadTable();
+            } else {
+                rbmShowModal(res.Error || 'Something went wrong', 'PoolName NOT updated');
+            }
+        } catch (error) {
+            console.error("saveuserpool:", error);
+        }
+    }
+
+    // ---------------------------------------------------------------- init
+
+    document.addEventListener("DOMContentLoaded", () => {
+        ConfigLoader.whenReady().then(async function (cfg) {
+            state.locked = !!cfg.IsLocked;
+            await loadInfo();
+
+            $("up-new").addEventListener("click", () => openEditor("new", null));
+            $("up-form").addEventListener("submit", saveForm);
+            $("up-form").addEventListener("input", (event) => {
+                const id = event.target && event.target.id;
+                if (id === "up--Wallet") state.walletDirty = true;
+                if (id === "up--Name" || id === "up--Currency" || id === "up--CoinSymbol") updateWalletField();
+                if (id === "up--Name") updatePoolNameRow();
+                updatePreview();
+            });
+            $("up--CoinSymbol").addEventListener("change", onCoinChange);
+            $("up--Host").addEventListener("change", onHostChange);
+            $("up-cancel").addEventListener("click", closeEditor);
+            $("up-cancel-x").addEventListener("click", closeEditor);
+            $("up-delete").addEventListener("click", () => {
+                if (state.editing === null) return;
+                deleteEntry(state.editing, state.tag, val("up--Name"), $("up-delete"), "Really delete this entry?");
+            });
+            $("up-poolname-hint").addEventListener("click", (event) => {
+                const btn = event.target.closest("button.up-poolname-add");
+                if (btn) addToPoolName(btn.dataset.name);
+            });
+
+            RbmTables.whenReady('#userpools').then((table) => {
+                document.getElementById('userpools').addEventListener("click", (event) => {
+                    const btn = event.target.closest("button[data-index]");
+                    if (!btn) return;
+                    const row = RbmTables.rowFromElement(table, btn);
+                    const item = row ? row.getData() : rowByIndex(btn.dataset.index);
+                    if (!item) return;
+                    if (btn.classList.contains("up-act-edit")) {
+                        openEditor("edit", item);
+                    } else if (btn.classList.contains("up-act-copy")) {
+                        if (!guardWrite()) return;
+                        openEditor("duplicate", item);
+                    } else if (btn.classList.contains("up-act-delete")) {
+                        deleteEntry(item.Index, item.Tag, item.Name, btn, "Sure?");
+                    }
+                });
+            });
+        });
+    });
+})();
+</script>
+<!--#include file="/parts/foot.html" -->

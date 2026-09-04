@@ -2003,9 +2003,10 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             # POST Action=add|update|delete, Name, [OldName], Data=<definition json>, [Userpool=<userpool json>]
             $Success = $false
             $ErrMsg  = ""
+            $UpWarning = ""
             if ($API.LockConfig) {
                 $ErrMsg = "The configuration is locked (APIlockConfig in config.txt)"
-            } elseif ($Session.Config.RunMode -eq "Client" -and (Get-Yes $Session.Config.EnableServerConfig) -and "$($Session.Config.ServerName)" -ne "" -and (@(Get-ConfigArray "$($Session.Config.ServerConfigName)") -icontains "customminers")) {
+            } elseif (Test-ConfigManagedByServer "customminers") {
                 $ErrMsg = "customminers.config.txt is managed by the server $($Session.Config.ServerName)"
             } else {
                 try {
@@ -2058,23 +2059,18 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                     $Success = Set-ContentJson -PathToFile $Session.ConfigFiles["CustomMiners"].Path -Data $Sorted -MD5hash $ChangeTag
                     if (-not $Success) {throw "Could not write customminers.config.txt"}
 
-                    # optional: create or update the userpool that came with a flight sheet
+                    # optional: create or update the userpool that came with a flight sheet (matched by name and currency)
                     if ("$($Parameters.Userpool)" -ne "" -and (Test-Config "Userpools" -Exists)) {
-                        $UpData = $Parameters.Userpool | ConvertFrom-Json -ErrorAction Stop
-                        $UpName = "$($UpData.Name)".Trim()
-                        if ($UpName -ne "" -and $UpName -match "^[A-Za-z0-9_]+$") {
-                            $UpDefault = Get-ChildItemContent ".\Data\UserpoolsConfigDefault.ps1"
-                            $UpNew = [PSCustomObject]@{}
-                            $UpDefault.PSObject.Properties | Foreach-Object {
-                                $UpNew | Add-Member $_.Name $(if ($UpData.PSObject.Properties[$_.Name]) {"$($UpData."$($_.Name)")".Trim()} else {$_.Value}) -Force
+                        if (Test-ConfigManagedByServer "userpools") {
+                            $UpWarning = "userpools.config.txt is managed by the server $($Session.Config.ServerName), the pool was not saved"
+                        } else {
+                            try {
+                                $UpEntry = ConvertTo-UserpoolEntry -Data ($Parameters.Userpool | ConvertFrom-Json -ErrorAction Stop) -Entries @(Get-UserpoolEntries)
+                                [void](Set-UserpoolEntry -Action add -Entry $UpEntry -MatchExisting)
+                                Set-PoolsConfigDefault -Force > $null
+                            } catch {
+                                $UpWarning = "The userpool was not saved: $($_.Exception.Message)"
                             }
-                            $UpNew.Name = $UpName
-                            if ("$($UpNew.Algorithm)".Trim() -ne "") {$UpNew.Algorithm = Get-Algorithm "$($UpNew.Algorithm)".Trim()}
-                            $UpActual = @(Get-ConfigContent "Userpools" | Where-Object {$_ -ne $null -and $_ -isnot [string]} | Select-Object)
-                            $UpFound = $false
-                            $UpActual = @($UpActual | Foreach-Object {if ("$($_.Name)" -eq $UpName) {$UpFound = $true; $UpNew} else {$_}})
-                            if (-not $UpFound) {$UpActual += $UpNew}
-                            Set-ContentJson -PathToFile $Session.ConfigFiles["Userpools"].Path -Data $UpActual > $null
                         }
                     }
                 } catch {
@@ -2083,8 +2079,154 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                     Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "[$ThreadID] Error saving custom miner: $($_.Exception.Message)" -Append -Timestamp
                 }
             }
-            $Data = ConvertTo-Json ([PSCustomObject]@{Success=$Success;Error=$ErrMsg}) -Depth 10
-            $CmAction = $CmName = $CmOld = $CmData = $CmVendors = $CmCommands = $ConfigActual = $ChangeTag = $Sorted = $UpData = $UpName = $UpDefault = $UpNew = $UpActual = $UpFound = $Success = $ErrMsg = $null
+            $Data = ConvertTo-Json ([PSCustomObject]@{Success=$Success;Error=$ErrMsg;Warning="$UpWarning"}) -Depth 10
+            $CmAction = $CmName = $CmOld = $CmData = $CmVendors = $CmCommands = $ConfigActual = $ChangeTag = $Sorted = $UpEntry = $UpWarning = $Success = $ErrMsg = $null
+            Break
+        }
+        "/userpools" {
+            # raw entries of userpools.config.txt (the form edits the raw strings, placeholders like $Wallet stay literal) with the array index, a change tag and a status block
+            $UpList = @()
+            try {
+                $UpEntries  = @(Get-UserpoolEntries)
+                $UpPools    = if (Test-Config "Pools" -Exists) {Get-ConfigContent "Pools"} else {$null}
+                $UpConfig   = if (Test-Config "Config" -Exists) {Get-ConfigContent "Config"} else {$null}
+                $UpSelected = @(Get-ConfigPoolNames $UpConfig)
+                $UpExcluded = @(Get-ConfigPoolNames $UpConfig -Field "ExcludePoolName")
+                $UpHasDefaultWallet = "$($Session.Config.Wallet)" -ne ""
+                for ($UpIx = 0; $UpIx -lt $UpEntries.Count; $UpIx++) {
+                    $UpEntry = $UpEntries[$UpIx]
+                    $UpName  = "$($UpEntry.Name)".Trim()
+                    if ($UpName -eq "") {continue}
+                    $UpCur   = $(if ("$($UpEntry.Currency)".Trim() -ne "") {"$($UpEntry.Currency)"} else {"$($UpEntry.CoinSymbol)"}).Trim().ToUpper()
+                    $UpSym   = "$($UpEntry.CoinSymbol)".Trim().ToUpper()
+                    $UpCoin  = if ($UpSym -ne "") {Get-Coin $UpSym} else {$null}
+                    $UpAlgo  = if ($UpCoin -ne $null) {"$($UpCoin.Algo)"} elseif ("$($UpEntry.Algorithm)".Trim() -ne "") {Get-Algorithm "$($UpEntry.Algorithm)".Trim()} else {""}
+                    $UpSection = if ($UpPools -ne $null -and $UpPools -isnot [string] -and $UpPools.PSObject.Properties[$UpName]) {$UpPools.$UpName} else {$null}
+                    $UpWallet  = if ($UpSection -ne $null -and $UpCur -ne "" -and $UpSection.PSObject.Properties[$UpCur]) {"$($UpSection.$UpCur)".Trim()} else {""}
+                    $UpOut = [PSCustomObject]@{Index = $UpIx; Tag = Get-ContentDataMD5hash($UpEntry)}
+                    $UpEntry.PSObject.Properties | Foreach-Object {$UpOut | Add-Member $_.Name $_.Value -Force}
+                    $UpOut | Add-Member Status ([PSCustomObject]@{
+                        Valid      = Test-UserpoolName $UpName
+                        Enabled    = Get-Yes $UpEntry.Enable
+                        Complete   = ($UpCur -ne "" -and "$($UpEntry.Host)".Trim() -ne "")
+                        Currency   = $UpCur
+                        CoinKnown  = ($UpCoin -ne $null)
+                        CoinName   = "$(if ($UpCoin -ne $null) {$UpCoin.Name} else {$UpEntry.CoinName})"
+                        Algorithm  = "$UpAlgo"
+                        Region     = $(if ("$($UpEntry.Region)".Trim() -ne "") {"$(Get-Region "$($UpEntry.Region)".Trim())"} else {"US"})
+                        HasSection = ($UpSection -ne $null)
+                        Wallet     = $UpWallet
+                        HasWallet  = ($UpWallet -ne "" -and (-not $UpWallet.StartsWith('$') -or $UpHasDefaultWallet))
+                        Selected   = (-not $UpSelected.Count -or $UpSelected -icontains $UpName)
+                        Excluded   = [bool]($UpExcluded -icontains $UpName)
+                    }) -Force
+                    $UpList += $UpOut
+                }
+            } catch {
+                Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "[$ThreadID] Error reading userpools: $($_.Exception.Message)" -Append -Timestamp
+            }
+            $Data = ConvertTo-Json @($UpList) -Depth 10
+            $UpList = $UpEntries = $UpPools = $UpConfig = $UpSelected = $UpExcluded = $UpHasDefaultWallet = $UpIx = $UpEntry = $UpName = $UpCur = $UpSym = $UpCoin = $UpAlgo = $UpSection = $UpWallet = $UpOut = $null
+            Break
+        }
+        "/userpoolinfo" {
+            # lookups for the User Pools form (full algorithm list, coin database, regions, built-in pool names; cached per data file version)
+            # plus the live state of config.txt (PoolName, ExcludePoolName, server-managed files), which is read fresh on every call
+            $UpCacheTime = (Get-Date).ToUniversalTime()
+            $UpLwt = @(@("coinsdb","algorithms","regions") | Foreach-Object {(Get-ChildItem ".\Data\$($_).json" -ErrorAction Ignore).LastWriteTimeUtc.Ticks}) -join "-"
+            if (-not $APICacheDB.ContainsKey("userpoolinfo") -or $APICacheDB["userpoolinfo"].LastWrite -ne $UpLwt) {
+                Get-CoinsDB -Silent
+                $UpCoins = [ordered]@{}
+                foreach ($UpSym in @($Session.GlobalCoinsDB.Keys | Sort-Object)) {
+                    $UpCoins[$UpSym] = [ordered]@{Algo = "$($Session.GlobalCoinsDB[$UpSym].Algo)"; Name = "$($Session.GlobalCoinsDB[$UpSym].Name)"}
+                }
+                $UpStatic = [ordered]@{
+                    Algorithms   = @(Get-Algorithms -Values)
+                    Coins        = $UpCoins
+                    Regions      = @((Get-Regions -AsHash).Values | Sort-Object -Unique)
+                    EthModes     = @("","ethproxy","ethstratumnh","qtminer","minerproxy","stratum")
+                    BuiltinPools = @(Get-ChildItem ".\Pools\*.ps1" -File -ErrorAction Ignore | Select-Object -ExpandProperty BaseName | Sort-Object)
+                }
+                $APICacheDB["userpoolinfo"] = [PSCustomObject]@{LastWrite = $UpLwt; LastAccess = $UpCacheTime; Data = (ConvertTo-Json $UpStatic -Depth 10 -Compress)}
+            }
+            $APICacheDB["userpoolinfo"].LastAccess = $UpCacheTime
+            $UpConfig = if (Test-Config "Config" -Exists) {Get-ConfigContent "Config"} else {$null}
+            $UpLive = [ordered]@{
+                PoolName          = @(Get-ConfigPoolNames $UpConfig)
+                PoolNameIsDefault = ("$($UpConfig.PoolName)".Trim() -eq "`$PoolName")
+                ExcludePoolName   = @(Get-ConfigPoolNames $UpConfig -Field "ExcludePoolName")
+                Managed           = [ordered]@{Userpools = (Test-ConfigManagedByServer "userpools"); Pools = (Test-ConfigManagedByServer "pools"); Config = (Test-ConfigManagedByServer "config")}
+                ServerName        = "$($Session.Config.ServerName)"
+                WorkerName        = "$($Session.Config.WorkerName)"
+                HasDefaultWallet  = ("$($Session.Config.Wallet)" -ne "")
+            }
+            # splice the live block into the cached static json object
+            $Data = $APICacheDB["userpoolinfo"].Data
+            $Data = $Data.Substring(0, $Data.Length - 1) + "," + (ConvertTo-Json $UpLive -Depth 10 -Compress).Substring(1)
+            $UpCacheTime = $UpLwt = $UpCoins = $UpSym = $UpStatic = $UpConfig = $UpLive = $null
+            Break
+        }
+        "/saveuserpool" {
+            # POST Action=add|update|delete|poolname, [Index], [Tag], [Data=<entry json>], [SetWallet=1, Wallet=<wallet>], [AddToPoolName=1], [Name (poolname only)]
+            $Success = $false
+            $ErrMsg  = ""
+            $UpWarn  = @()
+            $UpIndex = -1
+            $UpName  = ""
+            $UpCur   = ""
+            if ($API.LockConfig) {
+                $ErrMsg = "The configuration is locked (APIlockConfig in config.txt)"
+            } elseif (Test-ConfigManagedByServer "userpools") {
+                $ErrMsg = "userpools.config.txt is managed by the server $($Session.Config.ServerName)"
+            } else {
+                try {
+                    $UpAction = "$($Parameters.Action)".Trim().ToLower()
+                    if ($UpAction -notin @("add","update","delete","poolname")) {throw "Unknown action"}
+                    if ($UpAction -eq "poolname") {
+                        $UpName = "$($Parameters.Name)".Trim()
+                        if (-not (Test-UserpoolName $UpName)) {throw "Invalid pool name"}
+                    } elseif ($UpAction -eq "delete") {
+                        if ("$($Parameters.Index)" -notmatch "^\d+$") {throw "No entry selected"}
+                        $UpIndex = Set-UserpoolEntry -Action delete -Index ([int]"$($Parameters.Index)") -Tag "$($Parameters.Tag)"
+                    } else {
+                        if ("$($Parameters.Data)" -eq "") {throw "No data received"}
+                        $UpEntry = ConvertTo-UserpoolEntry -Data ($Parameters.Data | ConvertFrom-Json -ErrorAction Stop) -Entries @(Get-UserpoolEntries)
+                        $UpName  = $UpEntry.Name
+                        $UpCur   = $UpEntry.Currency
+                        if ($UpAction -eq "update") {
+                            if ("$($Parameters.Index)" -notmatch "^\d+$") {throw "No entry selected"}
+                            $UpIndex = Set-UserpoolEntry -Action update -Entry $UpEntry -Index ([int]"$($Parameters.Index)") -Tag "$($Parameters.Tag)"
+                        } else {
+                            $UpIndex = Set-UserpoolEntry -Action add -Entry $UpEntry
+                        }
+                        # the pools.config.txt section of the pool is created right away (Core would do it after the next round), the wallet only on request
+                        if (Test-ConfigManagedByServer "pools") {
+                            if (Get-Yes $Parameters.SetWallet) {$UpWarn += "pools.config.txt is managed by the server $($Session.Config.ServerName), the wallet was not written"}
+                        } elseif (Get-Yes $Parameters.SetWallet) {
+                            Set-UserpoolWallet -Name $UpName -Currency $UpCur -Wallet "$($Parameters.Wallet)".Trim()
+                        } else {
+                            Set-PoolsConfigDefault -Force > $null
+                        }
+                    }
+                    if ($UpAction -ne "delete") {
+                        if (Get-Yes $Parameters.AddToPoolName) {
+                            if (Test-ConfigManagedByServer "config") {
+                                $UpWarn += "config.txt is managed by the server $($Session.Config.ServerName), PoolName was not changed"
+                            } else {
+                                Add-ConfigPoolName -Name $UpName > $null
+                            }
+                        }
+                        if (@(Get-ConfigPoolNames -Field "ExcludePoolName") -icontains $UpName) {$UpWarn += "$($UpName) is listed in ExcludePoolName, the pool will not be used"}
+                    }
+                    $Success = $true
+                } catch {
+                    $Success = $false
+                    $ErrMsg = "$($_.Exception.Message)"
+                    Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "[$ThreadID] Error saving userpool: $($_.Exception.Message)" -Append -Timestamp
+                }
+            }
+            $Data = ConvertTo-Json ([PSCustomObject]@{Success=$Success;Error=$ErrMsg;Index=$UpIndex;Name=$UpName;Currency=$UpCur;Warnings=@($UpWarn)}) -Depth 10
+            $Success = $ErrMsg = $UpWarn = $UpIndex = $UpName = $UpCur = $UpAction = $UpEntry = $null
             Break
         }
         default {
