@@ -74,7 +74,7 @@
 
         <h3>Save User Pool</h3>
         <a href="/saveuserpool">/saveuserpool</a>
-        <p>Add, update or delete one entry of userpools.config.txt, or add a pool to PoolName. Send as POST request with the parameters Action (add, update, delete or poolname), Index and Tag (update, delete), Data (the entry as JSON), optionally SetWallet=1 with Wallet (written to pools.config.txt under the pool name and currency), AddToPoolName=1 and Name (poolname). Returns Success, Error, Index, Name, Currency and Warnings.</p>
+        <p>Add, update or delete one entry of userpools.config.txt, add a pool to PoolName, or store a wallet. Send as POST request with the parameters Action (add, update, delete, poolname or wallet), Index and Tag (update, delete), Data (the entry as JSON), optionally SetWallet=1 with Wallet (written to pools.config.txt under the pool name and currency), AddToPoolName=1, and Name plus Currency (poolname, wallet). On a client that receives userpools.config.txt from its server only poolname and wallet are allowed, and only while config.txt and pools.config.txt are local. Returns Success, Error, Index, Name, Currency and Warnings.</p>
 
         <h3>setup.json</h3>
         <a href="/setup.json">/setup.json</a>

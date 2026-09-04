@@ -68,9 +68,11 @@ the **JSON Editor** page or a text editor.
   profit, hashrate, workers and block statistics are read, see
   [below](#reading-profit-and-statistics-from-a-pool-api).
 - **Client/Server.** `userpools` is one of the config files a client can pull from its
-  server (`ServerConfigName`). On such a client the User Pools page is read-only. The same
-  holds for the wallet when `pools` is pulled from the server, and for the PoolName button
-  when `config` is.
+  server (`ServerConfigName`). On such a client the entries are read-only on the User
+  Pools page. The wallet is still entered there (open the entry, the button reads **Save
+  wallet**) as long as `pools` is not pulled from the server, and the PoolName hint works
+  as long as `config` is not. When those files come from the server too, enter the wallet
+  and the pool name on the server.
 
 ## The User Pools page
 
@@ -275,8 +277,10 @@ and, when the pools are restricted, `config.txt` reads `"PoolName": "Nicehash,Zp
   `MaxMarginOfError` are set in the pool section of `pools.config.txt` (Config > Setup
   Pools), like for every other pool.
 - **Client/Server.** `userpools` is synced to clients through `ServerConfigName`; on such
-  a client the page is read-only. A per-worker file `Config\<workername>\userpools.config.txt`
-  on the server overrides the shared one.
+  a client the entries are read-only, but the wallet (when `pools` is local) and the
+  PoolName button (when `config` is local) keep working, because every rig needs its own
+  wallet in its own `pools.config.txt`. A per-worker file
+  `Config\<workername>\userpools.config.txt` on the server overrides the shared one.
 - **Custom miners.** The flight sheet import of the Custom Miners page creates the pool of
   the sheet as a user pool; enter its wallet on this page. See
   [CUSTOMMINERS.md](CUSTOMMINERS.md).

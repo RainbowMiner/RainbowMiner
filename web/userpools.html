@@ -32,7 +32,7 @@
             <th data-field="tRegion" data-sortable="true">Region</th>
             <th data-field="tWallet" data-align="center" data-sortable="true" data-formatter="formatUpWallet">Wallet</th>
             <th data-field="tStatus" data-formatter="formatUpStatus">Status</th>
-            <th data-field="tActions" data-align="right" data-formatter="formatUpActions">Actions</th>
+            <th data-field="tActions" data-align="right" data-min-width="130" data-formatter="formatUpActions">Actions</th>
         </tr>
     </thead>
 </table>
@@ -320,9 +320,10 @@
     window.formatUpActions = function (value, item) {
         const i = esc(item.Index);
         return '<div class="btn-group btn-group-sm">' +
-            '<button type="button" class="btn btn-outline-primary up-act-edit" data-index="' + i + '" title="Edit"><i class="bi bi-pencil"></i></button>' +
+            '<button type="button" class="btn btn-outline-primary up-act-edit" data-index="' + i + '" title="' + (state.managed ? "View, enter the wallet" : "Edit") + '"><i class="bi bi-pencil"></i></button>' +
+            (state.managed ? '' :
             '<button type="button" class="btn btn-outline-secondary up-act-copy" data-index="' + i + '" title="Duplicate (another coin, algorithm or region of this pool)"><i class="bi bi-files"></i></button>' +
-            '<button type="button" class="btn btn-outline-danger up-act-delete" data-index="' + i + '" title="Delete"><i class="bi bi-trash"></i></button>' +
+            '<button type="button" class="btn btn-outline-danger up-act-delete" data-index="' + i + '" title="Delete"><i class="bi bi-trash"></i></button>') +
             '</div>';
     };
 
@@ -395,7 +396,9 @@
         state.managedConfig = !!managed.Config;
         fillLookups();
         if (state.managed) {
-            $("up-managed").textContent = 'This rig is a client of the server "' + inf.ServerName + '" and receives userpools.config.txt from there. The list below is read-only, edit the user pools on the server.';
+            $("up-managed").textContent = 'This rig is a client of the server "' + inf.ServerName + '" and receives userpools.config.txt from there. The entries are read-only, edit them on the server.' +
+                (state.managedPools ? ' The wallets come from the server as well.' : ' The wallet for each currency is stored in the pools.config.txt of this rig and can be entered here (open an entry).') +
+                (state.managedConfig ? '' : ' PoolName of this rig is local, see the hint below when a pool is missing in it.');
             $("up-managed").style.display = "";
             $("up-new").disabled = true;
         } else {
@@ -407,6 +410,8 @@
             $("up--Wallet").disabled = true;
         }
         renderPoolNameHint();
+        const table = RbmTables.getTable('#userpools');
+        if (table) table.redraw(true);
     }
 
     function renderPoolNameHint() {
@@ -483,7 +488,7 @@
 
     function updatePoolNameRow() {
         const name = val("up--Name");
-        const show = name !== "" && poolNameRestricted() && !inPoolName(name) && !state.managedConfig;
+        const show = name !== "" && poolNameRestricted() && !inPoolName(name) && !state.managedConfig && !state.managed;
         $("up-poolname-row").style.display = show ? "" : "none";
         if (show) $("up-poolname-text").textContent = 'Add ' + name + ' to PoolName in config.txt when saving (currently: ' + info().PoolName.join(", ") + '). Without it the pool is not used.';
     }
@@ -553,8 +558,16 @@
         $("up-delete").style.display = isEdit ? "" : "none";
         $("up-delete").textContent = "Delete";
         $("up-delete").dataset.armed = "";
-        $("up-save").disabled = state.managed;
         fillForm(mode === "new" ? emptyEntry() : item);
+        // managed client: the entry fields are read-only, the wallet of this rig may still be saved when pools.config.txt is local
+        for (const f of FIELDS) { const el = $("up--" + f); if (el) el.disabled = state.managed; }
+        $("up--Wallet").disabled = state.managedPools;
+        $("up-save").textContent = state.managed ? "Save wallet" : "Save";
+        $("up-save").disabled = state.managed && (state.managedPools || !isEdit);
+        if (state.managed) {
+            $("up-editor-title").textContent = (isEdit ? "User pool " + item.Name : "User pool") + " (entries managed by the server)";
+            $("up-delete").style.display = "none";
+        }
         const w = (item && item.Status) ? String(item.Status.Wallet || "") : "";
         setVal("up--Wallet", w);
         state.walletOriginal = w;
@@ -583,10 +596,19 @@
         return await response.json();
     }
 
-    function guardWrite() {
+    function guardWrite(kind) {
+        // kind: undefined = the entries (userpools.config.txt), "wallet" = pools.config.txt, "poolname" = config.txt
         if (state.locked) {
             rbmShowModal('To be able to save, manually set parameter "APIlockConfig" to "0" in config.txt', 'Warning: config lock is enabled');
             return false;
+        }
+        if (kind === "wallet") {
+            if (state.managedPools) { rbmShowModal('This rig receives pools.config.txt from the server. Enter the wallet on the server instead.', 'Managed by the server'); return false; }
+            return true;
+        }
+        if (kind === "poolname") {
+            if (state.managedConfig) { rbmShowModal('This rig receives config.txt from the server. Add the pool to PoolName on the server instead.', 'Managed by the server'); return false; }
+            return true;
         }
         if (state.managed) {
             rbmShowModal('This rig receives userpools.config.txt from the server. Edit the user pools on the server instead.', 'Managed by the server');
@@ -595,8 +617,33 @@
         return true;
     }
 
+    async function saveWalletOnly() {
+        // managed client: the entries come from the server, only the wallet of this rig is written
+        if (state.editing === null || !guardWrite("wallet")) return;
+        const e = readForm();
+        const cur = effectiveCurrency(e);
+        const wallet = String($("up--Wallet").value).trim();
+        try {
+            const res = await postSave({ Action: "wallet", Name: e.Name, Currency: cur, Wallet: wallet });
+            if (res.Success) {
+                let msg = 'The wallet for ' + res.Currency + ' at ' + res.Name + ' was ' + (wallet !== "" ? 'stored in' : 'cleared in') + ' pools.config.txt. RainbowMiner picks up the change after the current round has ended.';
+                if (Array.isArray(res.Warnings) && res.Warnings.length) msg += ' ' + res.Warnings.join(' ');
+                rbmShowModal(msg, 'Wallet saved');
+                closeEditor();
+                await loadInfo();
+                reloadTable();
+            } else {
+                rbmShowModal(res.Error || 'Something went wrong', 'Wallet NOT saved');
+            }
+        } catch (error) {
+            console.error("saveuserpool:", error);
+            rbmShowModal('The request failed: ' + error, 'Wallet NOT saved');
+        }
+    }
+
     async function saveForm(event) {
         event.preventDefault();
+        if (state.managed) { await saveWalletOnly(); return; }
         if (!guardWrite()) return;
         const e = readForm();
         const cur = effectiveCurrency(e);
@@ -658,7 +705,7 @@
     }
 
     async function addToPoolName(name) {
-        if (!guardWrite()) return;
+        if (!guardWrite("poolname")) return;
         try {
             const res = await postSave({ Action: "poolname", Name: name, AddToPoolName: "1" });
             if (res.Success) {

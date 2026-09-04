@@ -2167,7 +2167,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             Break
         }
         "/saveuserpool" {
-            # POST Action=add|update|delete|poolname, [Index], [Tag], [Data=<entry json>], [SetWallet=1, Wallet=<wallet>], [AddToPoolName=1], [Name (poolname only)]
+            # POST Action=add|update|delete|poolname|wallet, [Index], [Tag], [Data=<entry json>], [SetWallet=1, Wallet=<wallet>], [AddToPoolName=1], [Name, Currency (poolname and wallet only)]
             $Success = $false
             $ErrMsg  = ""
             $UpWarn  = @()
@@ -2176,15 +2176,26 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             $UpCur   = ""
             if ($API.LockConfig) {
                 $ErrMsg = "The configuration is locked (APIlockConfig in config.txt)"
-            } elseif (Test-ConfigManagedByServer "userpools") {
-                $ErrMsg = "userpools.config.txt is managed by the server $($Session.Config.ServerName)"
             } else {
                 try {
                     $UpAction = "$($Parameters.Action)".Trim().ToLower()
-                    if ($UpAction -notin @("add","update","delete","poolname")) {throw "Unknown action"}
+                    if ($UpAction -notin @("add","update","delete","poolname","wallet")) {throw "Unknown action"}
+                    # the entries may come from the server while pools.config.txt and config.txt are still local: wallet and poolname stay possible then
+                    if ($UpAction -in @("add","update","delete") -and (Test-ConfigManagedByServer "userpools")) {throw "userpools.config.txt is managed by the server $($Session.Config.ServerName)"}
+                    if ($UpAction -eq "poolname" -and (Test-ConfigManagedByServer "config")) {throw "config.txt is managed by the server $($Session.Config.ServerName)"}
+                    if ($UpAction -eq "wallet" -and (Test-ConfigManagedByServer "pools")) {throw "pools.config.txt is managed by the server $($Session.Config.ServerName)"}
                     if ($UpAction -eq "poolname") {
                         $UpName = "$($Parameters.Name)".Trim()
                         if (-not (Test-UserpoolName $UpName)) {throw "Invalid pool name"}
+                    } elseif ($UpAction -eq "wallet") {
+                        $UpName = "$($Parameters.Name)".Trim()
+                        $UpCur  = "$($Parameters.Currency)".Trim().ToUpper()
+                        if (-not (Test-UserpoolName $UpName)) {throw "Invalid pool name"}
+                        if ($UpCur -notmatch "^[A-Z0-9\-]+$") {throw "Invalid currency"}
+                        $UpMatch = @(Get-UserpoolEntries | Where-Object {"$($_.Name)" -ieq $UpName} | Select-Object -First 1)
+                        if (-not $UpMatch.Count) {throw "There is no user pool named $($UpName)"}
+                        $UpName = "$($UpMatch[0].Name)"
+                        Set-UserpoolWallet -Name $UpName -Currency $UpCur -Wallet "$($Parameters.Wallet)".Trim()
                     } elseif ($UpAction -eq "delete") {
                         if ("$($Parameters.Index)" -notmatch "^\d+$") {throw "No entry selected"}
                         $UpIndex = Set-UserpoolEntry -Action delete -Index ([int]"$($Parameters.Index)") -Tag "$($Parameters.Tag)"
@@ -2226,7 +2237,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 }
             }
             $Data = ConvertTo-Json ([PSCustomObject]@{Success=$Success;Error=$ErrMsg;Index=$UpIndex;Name=$UpName;Currency=$UpCur;Warnings=@($UpWarn)}) -Depth 10
-            $Success = $ErrMsg = $UpWarn = $UpIndex = $UpName = $UpCur = $UpAction = $UpEntry = $null
+            $Success = $ErrMsg = $UpWarn = $UpIndex = $UpName = $UpCur = $UpAction = $UpEntry = $UpMatch = $null
             Break
         }
         default {

@@ -134,6 +134,10 @@ const RbmTables = (function () {
 
         if (d.align) col.hozAlign = d.align;
         if (d.titleTooltip) col.headerTooltip = d.titleTooltip;
+        // explicit widths: fitDataStretch squeezes the last column down to the
+        // global minWidth when the table overflows, which clips wide action cells
+        if (d.width) col.width = parseInt(d.width, 10);
+        if (d.minWidth) col.minWidth = parseInt(d.minWidth, 10);
 
         // formatter adapter: bootstrap-table signature (value, row, index) -> html/string
         const fmt = resolveFn(d.formatter);
