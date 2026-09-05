@@ -31,8 +31,8 @@ Contents
      `Bin\Custom-MyMiner`, the key in `miners.config.txt` and the prefix of the
      benchmark files.
    - **Download**: the URL of the Windows archive and the name of the executable inside
-     it, and/or the same for Linux. Only the fields for the operating system of the rig
-     have to be filled.
+     it, and/or the same for Linux, and/or the same for Linux on ARM. Only the fields for
+     the platform of the rig have to be filled.
    - **Devices**: the device types the miner can use (NVIDIA, AMD, INTEL, CPU).
    - **Hashrate and API**: how RainbowMiner reads the speed. `Wrapper` works for most
      miners, it reads values like `12.3 MH/s` from the miner output.
@@ -89,7 +89,8 @@ A flight sheet does not know anything about Windows. After the import:
 
 1. Enter the **Windows URL** and the **Windows executable** (the HiveOS package is a
    Linux archive with HiveOS helper scripts; on a plain Linux rig the miner's normal Linux
-   release is usually the better choice, so check the **Linux URL** as well).
+   release is usually the better choice, so check the **Linux URL** as well). For ARM rigs
+   enter the miner's aarch64 build as **Linux ARM URL** and **Linux ARM executable**.
 2. Check the **Arguments**. The import proposes
    `-a %ALGO% -o %URL% -u %WAL% -p %PASS%`, which fits many miners, but every program has
    its own switches - look at the miner's help output.
@@ -113,7 +114,8 @@ All values are strings in the JSON file, switches are `"1"` / `"0"`.
 | `Version` | version of the binary, e.g. `1.2.3`. Changing it resets the benchmarks of this miner (the new build may be faster or slower). Changing only the download URL re-downloads and keeps the benchmarks |
 | `Vendors` | comma separated device types: `NVIDIA`, `AMD`, `INTEL`, `CPU` |
 | `Windows.Uri` / `Windows.Path` | download URL of the Windows build and the executable inside the archive (subfolders allowed, e.g. `bin\miner.exe`). A single top level folder in the archive is removed automatically. The URL may also point directly to an `.exe` |
-| `Linux.Uri` / `Linux.Path` | the same for Linux (`.tar.gz`, `.tgz`, `.zip` or a single binary) |
+| `Linux.Uri` / `Linux.Path` | the same for Linux on x64 (`.tar.gz`, `.tgz`, `.zip` or a single binary) |
+| `LinuxArm.Uri` / `LinuxArm.Path` | the same for Linux on ARM (aarch64: Raspberry Pi, Ampere, Apple Silicon, ...). An ARM rig uses this block only, an x64 build is never started there. Leave empty if the miner has no ARM build |
 | `API` | the miner API class RainbowMiner uses to read the hashrate, see [Reading the hashrate](#reading-the-hashrate). Default `Wrapper` |
 | `HashRateRegex` | optional regular expression for the miner output, overrides `API` |
 | `Port` | base port for the miner API. The port of the running miner is this value plus the index of its first device, use `$mport` in the arguments. Every custom miner needs its own base |
@@ -233,6 +235,7 @@ RainbowMiner already speaks. As a custom miner it looks like this in
     "Vendors": "NVIDIA,AMD,CPU",
     "Windows": { "Uri": "https://github.com/bzminer/bzminer/releases/download/v100.11/bzminer_v100.11_windows.zip", "Path": "bzminer.exe" },
     "Linux":   { "Uri": "https://github.com/bzminer/bzminer/releases/download/v100.11/bzminer_v100.11_linux.tar.gz", "Path": "bzminer" },
+    "LinuxArm": { "Uri": "", "Path": "" },
     "API": "BzMiner",
     "HashRateRegex": "",
     "Port": "4014",
@@ -271,9 +274,14 @@ JSON shown in the import section above.
 
 - **The miner does not appear on the Miners page.** Check `Enable`, the device types
   (a CPU-only rig needs `CPU` in `Vendors`), and that the download fields for the rig's
-  operating system are filled. A name that equals a built-in miner (`Trex`, `BzMiner`)
+  platform are filled. A name that equals a built-in miner (`Trex`, `BzMiner`)
   or contains other characters than letters, digits and underscore is skipped with a
   warning in the log.
+- **The miner does not appear on an ARM rig.** ARM rigs (Raspberry Pi, Ampere, Apple
+  Silicon under Linux) use the `LinuxArm` download only; a Linux x64 archive is never
+  started there. Fill in **Linux ARM URL** and **Linux ARM executable** with the miner's
+  aarch64 build. Some CPU miners ship several ARM binaries (for example a `-crypto` build
+  for CPUs with the AES and SHA extensions), enter the one that matches your board.
 - **"not downloaded yet" never changes.** Look at the log for download errors. The URL
   has to be reachable without login and has to be an archive or a single executable.
 - **The benchmark never finishes.** The hashrate is not read. Try the regex, check the

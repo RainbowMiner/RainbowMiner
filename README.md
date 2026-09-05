@@ -1422,7 +1422,7 @@ Your own miner programs, one entry per miner, keyed by the name. The file is mai
       }
     }
 
-The full field reference, the list of placeholders (`%ALGO%`, `%URL%`, `%WAL%`, `%PASS%`, `%DEVICES%`, `$mport`, ...) and the ways to read the hashrate (generic output wrapper, a regular expression, or one of the built-in miner APIs) are documented in [Doc/CUSTOMMINERS.md](Doc/CUSTOMMINERS.md). Params, OC profiles and penalties per device model are configured in `miners.config.txt`, like for every other miner.
+ARM rigs (Raspberry Pi, Ampere, Apple Silicon under Linux) take their download from a third block `"LinuxArm": { "Uri": ..., "Path": ... }` and never start a Linux x64 build. The full field reference, the list of placeholders (`%ALGO%`, `%URL%`, `%WAL%`, `%PASS%`, `%DEVICES%`, `$mport`, ...) and the ways to read the hashrate (generic output wrapper, a regular expression, or one of the built-in miner APIs) are documented in [Doc/CUSTOMMINERS.md](Doc/CUSTOMMINERS.md). Params, OC profiles and penalties per device model are configured in `miners.config.txt`, like for every other miner.
 
 ### Config\miners.config.txt
 

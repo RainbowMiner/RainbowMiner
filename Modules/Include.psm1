@@ -2324,6 +2324,15 @@ function ConvertTo-CustomMinerNumber {
     if ($v -match "^\d*\.?\d+$") {[double]$v} else {$Default}
 }
 
+function Get-CustomMinerPlatform {
+    # Name of the download block of a definition that applies to this rig:
+    # Windows, Linux (x64) or LinuxArm. An x64 Linux build never runs on an ARM
+    # rig, so ARM rigs use the LinuxArm block only. $Session.IsARM is set by
+    # Start-Core; the CPU info fallback serves the miner runspace and harnesses.
+    if (-not $IsLinux) {return "Windows"}
+    if ($Session.IsARM -or $Global:GlobalCPUInfo.Vendor -eq "ARM" -or $Global:GlobalCPUInfo.Features.ARM) {"LinuxArm"} else {"Linux"}
+}
+
 function Get-CustomMinerDefinitions {
     [CmdletBinding()]
     param(
@@ -2404,6 +2413,7 @@ function Get-CustomMinerDefinitions {
             Vendors             = $Vendors
             Windows             = [PSCustomObject]@{Uri = "$($Def.Windows.Uri)".Trim(); Path = ("$($Def.Windows.Path)".Trim() -replace "^[\\/]+" -replace "/","\")}
             Linux               = [PSCustomObject]@{Uri = "$($Def.Linux.Uri)".Trim();   Path = ("$($Def.Linux.Path)".Trim() -replace "^[\\/]+" -replace "/","\")}
+            LinuxArm            = [PSCustomObject]@{Uri = "$($Def.LinuxArm.Uri)".Trim(); Path = ("$($Def.LinuxArm.Path)".Trim() -replace "^[\\/]+" -replace "/","\")}
             API                 = if ("$($Def.API)".Trim() -ne "") {"$($Def.API)".Trim()} else {"Wrapper"}
             HashRateRegex       = "$($Def.HashRateRegex)".Trim()
             Port                = if ("$($Def.Port)" -match "^\s*(\d+)\s*$") {[int]$Matches[1]} else {4000}

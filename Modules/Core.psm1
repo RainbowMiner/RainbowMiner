@@ -1714,7 +1714,12 @@ function Invoke-Core {
     if (Set-ConfigDefault "CustomMiners") {
         if ($CheckConfig -or -not [bool]$Session.Config.PSObject.Properties["CustomMiners"] -or (Test-Config "CustomMiners" -LastWriteTime)) {
             if ($Session.RoundCounter -ne 0) {Write-Log "Updating custom miners config data"}
+            $CmNames = @(if ([bool]$Session.Config.PSObject.Properties["CustomMiners"]) {$Session.Config.CustomMiners | Select-Object -ExpandProperty Name})
             $Session.Config | Add-Member CustomMiners @(Get-CustomMinerDefinitions -UpdateLastWriteTime) -Force
+            # an edited definition may change its device types (Vendors, an added ARM build):
+            # drop the cached MinerInfo entries, the MinerInfo update below re-reads them
+            foreach ($CmName in @(@($CmNames) + @($Session.Config.CustomMiners | Select-Object -ExpandProperty Name) | Select-Object -Unique)) {[void]$Global:MinerInfo.Remove($CmName)}
+            $CmNames = $CmName = $null
         }
         # user-defined miners join the module list every round (MinerInfo, stats housekeeping, setup validation, API)
         if ($Session.Config.CustomMiners.Count) {

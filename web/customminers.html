@@ -96,6 +96,17 @@
                 <label for="cm--Linux--Path" class="col-sm-2 col-form-label">Linux executable</label>
                 <div class="col-sm-10"><input type="text" class="form-control" id="cm--Linux--Path" placeholder="miner (path inside the archive)"></div>
             </div>
+            <div class="row mb-3">
+                <label for="cm--LinuxArm--Uri" class="col-sm-2 col-form-label">Linux ARM URL</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="cm--LinuxArm--Uri" placeholder="https://.../miner_linux_arm64.tar.gz">
+                    <div class="form-text">Build for ARM rigs (Raspberry Pi, Ampere, Apple Silicon and other aarch64 boards under Linux). ARM rigs use only these two fields; leave them empty if the miner has no ARM build.</div>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label for="cm--LinuxArm--Path" class="col-sm-2 col-form-label">Linux ARM executable</label>
+                <div class="col-sm-10"><input type="text" class="form-control" id="cm--LinuxArm--Path" placeholder="miner (path inside the archive)"></div>
+            </div>
 
             <h5 class="mt-4">Devices</h5>
             <div class="row mb-3">
@@ -263,7 +274,7 @@
                     <label class="form-check-label" for="cm-imp-userconfig">Append the sheet's extra config arguments (user_config) to the arguments</label>
                 </div>
                 <div class="alert alert-info small mt-3 mb-0">
-                    A flight sheet knows only the Linux package of HiveOS. After the import, enter the Windows download URL and executable (or the plain Linux binary) and check the command line before saving.
+                    A flight sheet knows only the Linux package of HiveOS. After the import, enter the Windows download URL and executable (or the plain Linux binary, and the Linux ARM build for ARM rigs) and check the command line before saving.
                 </div>
             </div>
             <div class="modal-footer">
@@ -340,7 +351,7 @@
         const s = item.Status || {};
         const badges = [];
         if (s.Valid === false) badges.push('<span class="badge bg-danger">invalid name</span>');
-        if (!s.HasBinaryForOS) badges.push('<span class="badge bg-secondary">no binary for this OS</span>');
+        if (!s.HasBinaryForOS) badges.push('<span class="badge bg-secondary">no binary for this platform</span>');
         else if (s.Installed && s.UriMatch) badges.push('<span class="badge bg-success">installed</span>');
         else if (s.Installed) badges.push('<span class="badge bg-warning text-dark">URL changed, download pending</span>');
         else badges.push('<span class="badge bg-info text-dark">not downloaded yet</span>');
@@ -427,7 +438,7 @@
     function emptyDefinition() {
         return {
             Enable: "1", Comment: "", ManualUri: "", Version: "1.0", Vendors: "",
-            Windows: { Uri: "", Path: "" }, Linux: { Uri: "", Path: "" },
+            Windows: { Uri: "", Path: "" }, Linux: { Uri: "", Path: "" }, LinuxArm: { Uri: "", Path: "" },
             API: "Wrapper", HashRateRegex: "", Port: "4028", DevFee: "0",
             Arguments: "", SSLArguments: "", EnableSSL: "1",
             DeviceIndexProperty: "Type_Vendor_Index", DeviceIndexHex: "0", DeviceSeparator: ",",
@@ -440,6 +451,7 @@
         def = Object.assign(emptyDefinition(), def || {});
         def.Windows = Object.assign({ Uri: "", Path: "" }, def.Windows || {});
         def.Linux = Object.assign({ Uri: "", Path: "" }, def.Linux || {});
+        def.LinuxArm = Object.assign({ Uri: "", Path: "" }, def.LinuxArm || {});
         setVal("cm--OldName", name || "");
         setVal("cm--Name", name || "");
         $("cm--Name").readOnly = false;
@@ -451,6 +463,8 @@
         setVal("cm--Windows--Path", def.Windows.Path);
         setVal("cm--Linux--Uri", def.Linux.Uri);
         setVal("cm--Linux--Path", def.Linux.Path);
+        setVal("cm--LinuxArm--Uri", def.LinuxArm.Uri);
+        setVal("cm--LinuxArm--Path", def.LinuxArm.Path);
         const vendors = String(def.Vendors || "").toUpperCase().split(/[,;]/).map(s => s.trim());
         for (const v of VENDORS) $("cm--Vendor--" + v).checked = vendors.includes(v);
         $("cm-commands").querySelector("tbody").replaceChildren();
@@ -469,6 +483,7 @@
             Vendors: selectedVendors().join(","),
             Windows: { Uri: val("cm--Windows--Uri"), Path: val("cm--Windows--Path") },
             Linux: { Uri: val("cm--Linux--Uri"), Path: val("cm--Linux--Path") },
+            LinuxArm: { Uri: val("cm--LinuxArm--Uri"), Path: val("cm--LinuxArm--Path") },
             API: val("cm--API") || "Wrapper",
             HashRateRegex: val("cm--HashRateRegex"),
             Port: val("cm--Port"),
@@ -497,7 +512,7 @@
             DEVICES: def.DeviceIndexHex === "1" ? "0" + def.DeviceSeparator + "1" : "0" + def.DeviceSeparator + "1", DEVCOUNT: "2",
             THREADS: "8", AFFINITY: "0xff", AFFINITY_LIST: "0,1,2,3,4,5,6,7"
         };
-        const exe = (def.Windows.Path || def.Linux.Path || "<executable>");
+        const exe = (def.Windows.Path || def.Linux.Path || def.LinuxArm.Path || "<executable>");
         const line = expandTemplate(def.Arguments + " " + (cmd.Params || ""), values).replace(/\$mport/g, def.Port || "4028");
         $("cm-preview").textContent = "Bin\\Custom-" + (val("cm--Name") || "<Name>") + "\\" + exe + " " + line;
     }
@@ -559,7 +574,7 @@
         if (!/^[A-Za-z0-9_]+$/.test(name)) { rbmShowModal('The name may contain letters, digits and underscore only.', 'Check the name'); return; }
         if (!def.Vendors) { rbmShowModal('Select at least one device type.', 'Check the devices'); return; }
         if (!def.Commands.length) { rbmShowModal('Add at least one algorithm.', 'Check the algorithms'); return; }
-        if (!((def.Windows.Uri && def.Windows.Path) || (def.Linux.Uri && def.Linux.Path))) { rbmShowModal('Enter a download URL and the executable for Windows and/or Linux.', 'Check the download'); return; }
+        if (!((def.Windows.Uri && def.Windows.Path) || (def.Linux.Uri && def.Linux.Path) || (def.LinuxArm.Uri && def.LinuxArm.Path))) { rbmShowModal('Enter a download URL and the executable for at least one platform (Windows, Linux or Linux ARM).', 'Check the download'); return; }
         const params = {
             Action: state.editing ? "update" : "add",
             Name: name,

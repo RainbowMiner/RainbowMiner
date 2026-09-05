@@ -1976,7 +1976,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 ConvertTo-Json @($CmConfig.PSObject.Properties | Foreach-Object {
                     $CmName = $_.Name
                     $CmDef  = $_.Value
-                    $CmOS   = if ($IsLinux) {$CmDef.Linux} else {$CmDef.Windows}
+                    $CmOS   = $CmDef."$(Get-CustomMinerPlatform)"
                     $CmUri  = "$($CmOS.Uri)".Trim()
                     $CmExe  = "$($CmOS.Path)".Trim() -replace "^[\\/]+" -replace "/","\"
                     $CmBin  = if ($CmExe) {".\Bin\Custom-$($CmName)\$($CmExe)"} else {""}
@@ -2029,7 +2029,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         $CmVendors = @(Get-ConfigArray "$($CmData.Vendors)" | Foreach-Object {"$_".Trim().ToUpper()} | Where-Object {$_ -in @("AMD","CPU","INTEL","NVIDIA")} | Select-Object -Unique)
                         if (-not $CmVendors.Count) {throw "Select at least one device type (AMD, CPU, INTEL, NVIDIA)"}
                         if ("$($CmData.Port)".Trim() -notmatch "^\d+$" -or [int]"$($CmData.Port)".Trim() -lt 1024 -or [int]"$($CmData.Port)".Trim() -gt 65000) {throw "The API port must be a number between 1024 and 65000"}
-                        if (-not (("$($CmData.Windows.Uri)".Trim() -and "$($CmData.Windows.Path)".Trim()) -or ("$($CmData.Linux.Uri)".Trim() -and "$($CmData.Linux.Path)".Trim()))) {throw "Enter a download URL and the executable for Windows and/or Linux"}
+                        if (-not (("$($CmData.Windows.Uri)".Trim() -and "$($CmData.Windows.Path)".Trim()) -or ("$($CmData.Linux.Uri)".Trim() -and "$($CmData.Linux.Path)".Trim()) -or ("$($CmData.LinuxArm.Uri)".Trim() -and "$($CmData.LinuxArm.Path)".Trim()))) {throw "Enter a download URL and the executable for at least one platform (Windows, Linux or Linux ARM)"}
                         if ("$($CmData.HashRateRegex)".Trim() -ne "") {
                             try {[void][regex]::new("$($CmData.HashRateRegex)".Trim())} catch {throw "Invalid hashrate regex: $($_.Exception.Message)"}
                         } elseif ("$($CmData.API)".Trim() -ne "" -and "$($CmData.API)".Trim() -ne "Wrapper" -and (Get-ContentByStreamReader ".\Modules\MinerAPIs.psm1") -notmatch "(?m)^class\s+$([regex]::Escape("$($CmData.API)".Trim()))\s*:\s*Miner\b") {

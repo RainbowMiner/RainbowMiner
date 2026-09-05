@@ -327,13 +327,17 @@ function Invoke-CustomMiner {
     )
 
     $Def  = $Definition
-    $OS   = if ($IsLinux) {$Def.Linux} else {$Def.Windows}
+    $OS   = $Def."$(Get-CustomMinerPlatform)"
     $Path = if ($OS.Path) {".\Bin\Custom-$($Name)\$($OS.Path)"} else {""}
     $Uri  = "$($OS.Uri)"
 
     if ($InfoOnly) {
+        # Get-MinersContent gates ARM rigs on ARM-prefixed device types (ARMCPU, ARMNVIDIA, ..):
+        # a definition with an ARM build declares them, like the InfoTypes of the built-in modules
+        $Types = @($Def.Vendors)
+        if ($Def.LinuxArm.Uri -and $Def.LinuxArm.Path) {$Types += @($Def.Vendors | Foreach-Object {"ARM$($_)"})}
         [PSCustomObject]@{
-            Type      = $Def.Vendors
+            Type      = $Types
             Name      = $Name
             Path      = $Path
             Port      = $null
