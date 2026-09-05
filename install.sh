@@ -22,8 +22,8 @@ is_user_root() { [ "$(id -u)" -eq 0 ]; }
 
 # Powershell version
 pwsh_major_version="7"
-pwsh_minor_version="2"
-pwsh_build_version="24"
+pwsh_minor_version="6"
+pwsh_build_version="5"
 
 pwsh_version="${pwsh_major_version}.${pwsh_minor_version}.${pwsh_build_version}"
 
@@ -34,6 +34,7 @@ fi
 
 # Flags
 pwsh_update=false
+pwsh_version_wanted=""
 install_as_root=false
 install_as_user=false
 install_nv=false
@@ -53,6 +54,7 @@ Options:
   -r, --root          Force install as root
   -pv, --pwsh_version Show installed PowerShell version
   -pu, --pwsh_update  Update PowerShell to version ${pwsh_version}
+  -pu=<version>       Install a specific PowerShell version, e.g. -pu=7.2.24 (downgrades, too)
   -nv                 Install/update NVIDIA CUDA
   -x, --uninstall     Uninstall RainbowMiner and leave PowerShell untouched
   -xx, --uninstallall Uninstall RainbowMiner and PowerShell
@@ -65,6 +67,9 @@ EOF
     -u|--user) install_as_user=true ;;
     -r|--root) install_as_root=true ;;
     -pu|--pwsh_update) pwsh_update=true ;;
+    -pu=*|--pwsh_update=*)
+      pwsh_update=true
+      pwsh_version_wanted="${arg#*=}" ;;
     -nv) install_nv=true ;;
     -x|--uninstall) uninstall_rbm=true ;;
     -xx|--uninstallall)
@@ -72,6 +77,17 @@ EOF
       uninstall_pwsh=true ;;
   esac
 done
+
+# A specific version wins over the default, e.g. to go back: sudo ./install.sh -pu=7.2.24
+if [ -n "$pwsh_version_wanted" ]; then
+  case "$pwsh_version_wanted" in
+    *[!0-9.]*|.*|*.|*..*)
+      echo "Error: invalid PowerShell version '$pwsh_version_wanted', expected e.g. 7.6.5"
+      exit 1 ;;
+  esac
+  pwsh_version="$pwsh_version_wanted"
+  pwsh_major_version="${pwsh_version%%.*}"
+fi
 
 # Uninstall first
 if [ "$uninstall_rbm" = true ]; then
@@ -176,13 +192,12 @@ fi
 
 INSTALL_PATH="$INSTALL_PATH/microsoft/powershell/$pwsh_major_version"
 
+pwsh_install=false
 if [ "$pwsh_update" = true ]; then
   if [ -n "$pwsh_version_current" ]; then
-    if [ "$(version "$pwsh_version_current")" -lt "$(version "$pwsh_version")" ]; then
-      if [ -L "$BINARY_PATH" ]; then
-        $SUDO rm -f "$BINARY_PATH"
-      fi
+    if [ "$(version "$pwsh_version_current")" -lt "$(version "$pwsh_version")" ] || { [ -n "$pwsh_version_wanted" ] && [ "$pwsh_version_current" != "$pwsh_version" ]; }; then
       printf "\nPowershell will be updated from %s -> %s\n\n" "$pwsh_version_current" "$pwsh_version"
+      pwsh_install=true
     else
       printf "\nPowershell %s already up to date\n\n" "$pwsh_version_current"
     fi
@@ -192,19 +207,45 @@ if [ "$pwsh_update" = true ]; then
 fi
 
 if ! command -v pwsh >/dev/null 2>&1; then
+  pwsh_install=true
+fi
+
+if [ "$pwsh_install" = true ]; then
   if pgrep pwsh >/dev/null 2>&1; then
     printf "Alas! RainbowMiner or another pwsh process is still running. Cannot update.\n\n"
+    if [ "$pwsh_update" = true ]; then
+      exit 1
+    fi
   else
-    if [ -L "$BINARY_PATH" ]; then
-      $SUDO rm -f "$BINARY_PATH"
+    # PowerShell 7.4+ (.NET 8+) needs glibc 2.27 on x64/arm64 and glibc 2.35 on arm32
+    glibc_version="$(getconf GNU_LIBC_VERSION 2>/dev/null | awk '{print $2}')"
+    if [ -n "$glibc_version" ] && [ "$(version "$pwsh_version")" -ge "$(version "7.4.0")" ]; then
+      glibc_needed="2.27"
+      [ "$architecture" = "arm" ] && glibc_needed="2.35"
+      if [ "$(version "$glibc_version")" -lt "$(version "$glibc_needed")" ]; then
+        printf "\nAlas! PowerShell %s needs glibc %s or newer, this system has glibc %s. Cannot install.\n" "$pwsh_version" "$glibc_needed" "$glibc_version"
+        printf "Use a newer OS or stay with PowerShell 7.2: sudo ./install.sh -pu=7.2.24\n\n"
+        exit 1
+      fi
     fi
 
     case "$architecture" in
-      arm64) wget "https://github.com/PowerShell/PowerShell/releases/download/v${pwsh_version}/powershell-${pwsh_version}-linux-arm64.tar.gz" -O "$PWD/powershell.tar.gz" ;;
-      arm) wget "https://github.com/PowerShell/PowerShell/releases/download/v${pwsh_version}/powershell-${pwsh_version}-linux-arm32.tar.gz" -O "$PWD/powershell.tar.gz" ;;
-      *) wget "https://github.com/PowerShell/PowerShell/releases/download/v${pwsh_version}/powershell-${pwsh_version}-linux-x64.tar.gz" -O "$PWD/powershell.tar.gz" ;;
+      arm64) pwsh_tar="powershell-${pwsh_version}-linux-arm64.tar.gz" ;;
+      arm) pwsh_tar="powershell-${pwsh_version}-linux-arm32.tar.gz" ;;
+      *) pwsh_tar="powershell-${pwsh_version}-linux-x64.tar.gz" ;;
     esac
 
+    # download and verify first, the installed PowerShell stays untouched until the new one is known to be good
+    $SUDO rm -f "$PWD/powershell.tar.gz"
+    if ! wget "https://github.com/PowerShell/PowerShell/releases/download/v${pwsh_version}/${pwsh_tar}" -O "$PWD/powershell.tar.gz" || ! tar tzf "$PWD/powershell.tar.gz" >/dev/null 2>&1; then
+      $SUDO rm -f "$PWD/powershell.tar.gz"
+      printf "\nAlas! Download of PowerShell %s failed, the installed PowerShell is left untouched.\n\n" "$pwsh_version"
+      exit 1
+    fi
+
+    if [ -L "$BINARY_PATH" ]; then
+      $SUDO rm -f "$BINARY_PATH"
+    fi
     [ -d "$INSTALL_PATH" ] && $SUDO rm -rf "$INSTALL_PATH"
     $SUDO mkdir -p "$INSTALL_PATH"
     $SUDO tar zxf "$PWD/powershell.tar.gz" -C "$INSTALL_PATH" --overwrite
