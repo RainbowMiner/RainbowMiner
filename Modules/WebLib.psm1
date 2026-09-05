@@ -577,7 +577,12 @@ Param(
                         } catch {}
                     }
                     if ("$Data" -ne "") {
-                        try {$Data = ConvertFrom-Json $Data -ErrorAction Stop} catch { $method = "WEB"}
+                        # a body ConvertFrom-Json rejects is handed on as a string for the caller to
+                        # deal with. Keys that differ only in case (xrpscan's ownerCount/OwnerCount)
+                        # are an API quirk the callers handle, so that one record is dropped from
+                        # $Error to keep it out of the errors_*.txt flush; every other decode failure
+                        # (truncated body, HTML error page) stays visible there
+                        try {$Data = ConvertFrom-Json $Data -ErrorAction Stop} catch { $method = "WEB"; if ($_.FullyQualifiedErrorId -match "^(KeysWithDifferentCasing|DuplicateKeys)InJsonString" -and $Global:Error.Count) {$Global:Error.RemoveAt(0)} }
                     } else { $method = "WEB" }
                 }
                 if ($Data -and $Data.unlocked -ne $null) {[void]$Data.PSObject.Properties.Remove("unlocked")}
@@ -737,7 +742,7 @@ Param(
                                 } catch {}
                             }
                             if ("$($Result.Data)" -ne "") {
-                                try {$Result.Data = ConvertFrom-Json $Result.Data -ErrorAction Stop} catch {}
+                                try {$Result.Data = ConvertFrom-Json $Result.Data -ErrorAction Stop} catch { if ($_.FullyQualifiedErrorId -match "^(KeysWithDifferentCasing|DuplicateKeys)InJsonString" -and $Global:Error.Count) {$Global:Error.RemoveAt(0)} }
                             }
                         }
                         if ($Result.Data -and $Result.Data.unlocked -ne $null) {[void]$Result.Data.PSObject.Properties.Remove("unlocked")}
@@ -826,7 +831,7 @@ Param(
                                 } catch {}
                             }
                             if ("$($Result.Data)" -ne "") {
-                                try {$Result.Data = ConvertFrom-Json $Result.Data -ErrorAction Stop} catch {}
+                                try {$Result.Data = ConvertFrom-Json $Result.Data -ErrorAction Stop} catch { if ($_.FullyQualifiedErrorId -match "^(KeysWithDifferentCasing|DuplicateKeys)InJsonString" -and $Global:Error.Count) {$Global:Error.RemoveAt(0)} }
                             }
                         }
                         if ($Result.Data -and $Result.Data.unlocked -ne $null) {[void]$Result.Data.PSObject.Properties.Remove("unlocked")}
