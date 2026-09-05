@@ -463,7 +463,7 @@ function Get-UnprofitableCpuAlgos {
 
     if ($Request -and $Request.Count -gt 10) {
         Set-ContentJson -PathToFile ".\Data\unprofitable-cpu.json" -Data $Request -MD5hash $Global:GlobalUnprofitableCpuAlgosHash > $null
-    } elseif (Test-Path ".\Data\unprofitable.json") {
+    } elseif (Test-Path ".\Data\unprofitable-cpu.json") {
         try{
             $Request = Get-ContentByStreamReader ".\Data\unprofitable-cpu.json" | ConvertFrom-Json -ErrorAction Ignore
         } catch {
@@ -1471,22 +1471,56 @@ function Get-EthDAGSizes {
 
     if (-not $Session.GlobalCoinsDB) {Get-CoinsDB -Silent}
 
-    $Request = [PSCustomObject]@{}
+    $Request = $null
 
     if ($EnableRemoteUpdate) {
         try {
             $Request = Invoke-GetUrlAsync "https://api.rbminer.net/data/ethdagsizes.json" -cycletime 3600 -Jobkey "ethdagsizes"
         }
         catch {
-            Write-Log -Level Warn "EthDAGsize API failed. "
+            Write-Log -Level Warn "EthDAGsize API failed: $($_.Exception.Message)"
+            $Request = $null
         }
     }
 
-    if ($Request -and $Request.PSObject.Properties.Name.Count -gt 10) {
-        Set-ContentJson -PathToFile ".\Data\ethdagsizes.json" -Data $Request -MD5hash (Get-ContentDataMD5hash $Session.GlobalEthDAGSizes) > $null
+    $RequestFields = if ($Request -eq $null) {0} else {($Request.PSObject.Properties.Name | Measure-Object).Count}
+
+    if ($RequestFields -gt 10) {
+        # the guard has to hash what is actually written: $Session.GlobalEthDAGSizes holds
+        # the GB-normalized values, so it could never match the raw byte values in $Request
+        # and the file was rewritten on every cycle
+        $RequestHash = Get-ContentDataMD5hash $Request
+        Set-ContentJson -PathToFile ".\Data\ethdagsizes.json" -Data $Request -MD5hash $Session.GlobalEthDAGSizesHash > $null
+        $Session.GlobalEthDAGSizesHash = $RequestHash
     } else {
-        $Request = Get-ContentByStreamReader ".\Data\ethdagsizes.json" | ConvertFrom-Json -ErrorAction Ignore
+        if ($EnableRemoteUpdate) {
+            # a response that failed ConvertFrom-Json comes back as a string and is cached
+            # re-encoded, so every later read returns a string, too - without this warning
+            # the database silently stays at whatever is on disk
+            $RequestInfo = if ($Request -eq $null) {"empty response"} else {"$($Request.GetType().Name) with $($RequestFields) field(s)"}
+            Write-Log -Level Warn "EthDAGsize API returned no usable data ($($RequestInfo)), keeping the local database. "
+        }
+        $Request = $null
+        try {
+            $Request = Get-ContentByStreamReader ".\Data\ethdagsizes.json" | ConvertFrom-Json -ErrorAction Stop
+        } catch {
+            Write-Log -Level Warn "EthDAGsize database is corrupt. "
+            $Request = $null
+        }
+        $RequestFields = if ($Request -eq $null) {0} else {($Request.PSObject.Properties.Name | Measure-Object).Count}
+        $Session.GlobalEthDAGSizesHash = ""
     }
+
+    if ($RequestFields -le 10) {
+        # neither source delivered: keep the sizes that are already in memory instead of
+        # dropping every DAG size for the rest of the session
+        if (-not $Session.GlobalEthDAGSizes) {$Session.GlobalEthDAGSizes = [hashtable]@{}}
+        if (-not $Session.GlobalAlgorithms2EthDagSizes) {$Session.GlobalAlgorithms2EthDagSizes = [hashtable]@{}}
+        if (-not $Session.GlobalEthDAGSizes.Count) {Write-Log -Level Warn "EthDAGsize database is empty. "}
+        if (-not $Silent) {$Session.GlobalEthDAGSizes}
+        return
+    }
+
     $Session.GlobalEthDAGSizes = @{}
     $Session.GlobalAlgorithms2EthDagSizes = @{}
 
