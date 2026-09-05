@@ -17,21 +17,38 @@ $ManualUri = "https://github.com/bzminer/bzminer/releases"
 $Port = "332{0:d2}"
 $DevFee = 0.5
 $Cuda = "11.2"
-$Version = "100.11"
+$Version = "100.13"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-BzMiner\bzminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v100.11-bzminer/bzminer_v100.11_linux.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v100.13-bzminer/bzminer_v100.13_linux.tar.gz"
 } else {
     $Path = ".\Bin\GPU-BzMiner\bzminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v100.11-bzminer/bzminer_v100.11_windows.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v100.13-bzminer/bzminer_v100.13_windows.zip"
 }
 
 $ExcludePoolName = "prohashing|miningrigrentals"
 
 # v100.10 is a complete rewrite: dual mining and most of the v24 algorithms are gone,
 # the remaining ones are exactly what "bzminer --list-algos" reports for this build.
+# v100.13 brought the CryptoNight family back (cn/gpu for Conceal and Ryo plus the
+# classic variants); same names as in Xmrig, so the stats keys line up.
 $Commands = [PSCustomObject[]]@(
+    [PSCustomObject]@{MainAlgorithm = "cn-heavy/0";   MinMemGb = 3.3; Params = ""; Vendor = @("AMD","CPU","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0} #CryptoNightHeavy
+    [PSCustomObject]@{MainAlgorithm = "cn-heavy/xhv"; MinMemGb = 3.3; Params = ""; Vendor = @("AMD","CPU","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0} #CryptoNightHeavyXhv/XHV
+    [PSCustomObject]@{MainAlgorithm = "cn-lite/1";    MinMemGb = 1;   Params = ""; Vendor = @("AMD","CPU","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0} #CryptoNightLiteV7
+    [PSCustomObject]@{MainAlgorithm = "cn-pico";      MinMemGb = 1;   Params = ""; Vendor = @("AMD","CPU","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0} #CryptoNightTurtle
+    [PSCustomObject]@{MainAlgorithm = "cn-pico/tlo";  MinMemGb = 1;   Params = ""; Vendor = @("AMD","CPU","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0} #CryptoNightUltraV2/TLO
+    [PSCustomObject]@{MainAlgorithm = "cn/ccx";       MinMemGb = 1.5; Params = ""; Vendor = @("AMD","CPU","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0} #CryptoNightConceal
+    [PSCustomObject]@{MainAlgorithm = "cn/double";    MinMemGb = 1.5; Params = ""; Vendor = @("AMD","CPU","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0} #CryptoNightHeavyX
+    [PSCustomObject]@{MainAlgorithm = "cn/fast";      MinMemGb = 1.5; Params = ""; Vendor = @("AMD","CPU","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0} #CryptoNightFast
+    [PSCustomObject]@{MainAlgorithm = "cn/gpu";       MinMemGb = 3.3; Params = ""; Vendor = @("AMD","CPU","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0} #CryptoNightGPU/CCX,RYO
+    [PSCustomObject]@{MainAlgorithm = "cn/half";      MinMemGb = 1.5; Params = ""; Vendor = @("AMD","CPU","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0} #CryptoNightFast2
+    [PSCustomObject]@{MainAlgorithm = "cn/rto";       MinMemGb = 1.5; Params = ""; Vendor = @("AMD","CPU","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0} #CryptoNightRto
+    [PSCustomObject]@{MainAlgorithm = "cn/rwz";       MinMemGb = 1.5; Params = ""; Vendor = @("AMD","CPU","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0} #CryptoNightReverseWaltz
+    [PSCustomObject]@{MainAlgorithm = "cn/upx2";      MinMemGb = 1.5; Params = ""; Vendor = @("AMD","CPU","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0} #CryptoNightLiteUpx2/UPX
+    [PSCustomObject]@{MainAlgorithm = "cn/xao";       MinMemGb = 1.5; Params = ""; Vendor = @("AMD","CPU","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0} #CryptoNightXao
+    [PSCustomObject]@{MainAlgorithm = "cn/zls";       MinMemGb = 1.5; Params = ""; Vendor = @("AMD","CPU","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0} #CryptonightZelerius
     [PSCustomObject]@{MainAlgorithm = "ergo";    DAG = $true; MinMemGb = 2; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0} #Autolykos2/ERG
     [PSCustomObject]@{MainAlgorithm = "etchash"; DAG = $true; MinMemGb = 3; Params = ""; Vendor = @("AMD","NVIDIA");         ExtendInterval = 2; Fee = 0.5} #Etchash/ETC
     [PSCustomObject]@{MainAlgorithm = "ethash";  DAG = $true; MinMemGb = 3; Params = ""; Vendor = @("AMD","NVIDIA");         ExtendInterval = 2; Fee = 0.5} #Ethash/ETHW
@@ -62,7 +79,8 @@ if ($InfoOnly) {
 
 if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name}
 
-$CommonParams =  "--config config_`$mport.txt --http_address 127.0.0.1 --http_port `$mport --no-watchdog --output log --no-color --logfile bzminer_`$mport.log --logfile-mode overwrite"
+# --disable_udp: since v100.13 every instance announces itself on UDP 4014 for the web UI farm view, not wanted for a managed miner
+$CommonParams =  "--config config_`$mport.txt --http_address 127.0.0.1 --http_port `$mport --no-watchdog --output log --no-color --logfile bzminer_`$mport.log --logfile-mode overwrite --disable_udp"
 
 foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
 
