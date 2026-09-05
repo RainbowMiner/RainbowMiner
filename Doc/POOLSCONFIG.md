@@ -56,11 +56,11 @@ Or like this, if you setup a global wallet address in coins.config.txt
     }
 
 
-For non-autoexchange pools, you may define multiple wallets. The wallets define, which coins may be mined at a pool. In the following example, Rainbowminer will mine RVN and SUQA on Icemining, hereby using the default RVN wallet in the coins.config.txt.
+For non-autoexchange pools, you may define multiple wallets. The wallets define, which coins may be mined at a pool. In the following example, Rainbowminer will mine RVN and VTC on SuprNova, hereby using the default RVN wallet in the coins.config.txt.
 
-    "Icemining": {
+    "SuprNova": {
         "RVN": "$RVN",
-        "SUQA": "<YOUR_SUQA_ADDRESS>",
+        "VTC": "<YOUR_VTC_ADDRESS>",
         "Worker": "$WorkerName",
         "Penalty": "0"
     }
@@ -68,7 +68,7 @@ For non-autoexchange pools, you may define multiple wallets. The wallets define,
 Alternatively you may instruct RainbowMiner to automatically use every currency defined in coins.config.txt (which is enabled by adding a wallet address and setting parameter "EnableAutoPool" to "1") for a certain pool. To do so, set parameter "EnableAutoCoin" to "1".
 Example:
 
-    "Icemining": {
+    "SuprNova": {
         "Worker": "$WorkerName",
         "Penalty": 0,
         "EnableAutoCoin": "1"

@@ -27,9 +27,6 @@
         "Acepool" = [PSCustomObject]@{
             Currencies=@("BEAM","XGM")
         }
-        "Aionpool" = [PSCustomObject]@{
-            Currencies=@("AION")
-        }
         "BaikalMine" = [PSCustomObject]@{
             Currencies=@("REOSC")
         }
@@ -114,9 +111,6 @@
         }
         "HeroMiners" = [PSCustomObject]@{
             Currencies=@("DNX","ETC","QUAI","RVN","ERG")
-        }
-        "Icemining" = [PSCustomObject]@{
-            Currencies=@("NIM","GRAM")
         }
         "K1Pool" = [PSCustomObject]@{
             Currencies=@("NEXA","XEL","ZIL")
@@ -354,9 +348,6 @@
         }
         "RPlantSolo" = [PSCustomObject]@{
             Currencies=@("BTX","NEXA","VKAX")
-        }
-        "SeroPool" = [PSCustomObject]@{
-            Currencies=@("SERO")
         }
         "SoloPool" = [PSCustomObject]@{
             Currencies=@("ERG","RVN","FIRO")
