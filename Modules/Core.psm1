@@ -6459,6 +6459,8 @@ function Invoke-ReportMinerStatus {
                             interval       = $ReportInterval
                             uptime         = "$((Get-Uptime).TotalSeconds)"
                             sysuptime      = "$((Get-Uptime -System).TotalSeconds)"
+                            memusage       = "$([int64]$Global:last_memory_usage_byte)"
+                            psversion      = "$($PSVersionTable.PSVersion)"
                             maxtemp        = "$($Session.Config.MinerStatusMaxTemp)"
                             tempalert      = $TempAlert
                             maxcrashes     = "$($Session.Config.MinerStatusMaxCrashesPerHour)"
