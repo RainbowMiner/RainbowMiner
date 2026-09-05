@@ -10,7 +10,6 @@ param(
 $Pools_Data = @(
     [PSCustomObject]@{symbol = "ALP";   port = 4260; fee = 0.9; rpc = "alp";        user = "{wallet}.{worker}";        pass="x"}
     [PSCustomObject]@{symbol = "BTXCHAIN"; port = 8665; fee = 0.9; rpc = "btx";     user = "{wallet}";                 pass="x"}
-    [PSCustomObject]@{symbol = "CRB";   port = 8560; fee = 0.9; rpc = "cereblix";   user = "{wallet}.{worker}";        pass="LP01"}
     [PSCustomObject]@{symbol = "XCB";   port = 3118; fee = 0.9; rpc = "corecoin";   user = "{wallet}{=diff}.{worker}"; pass="x"}
     [PSCustomObject]@{symbol = "CSD";   port = 8760; fee = 0.9; rpc = "csd";        user = "{wallet}.{worker}";        pass="x"}
     [PSCustomObject]@{symbol = "EXFER"; port = 3335; fee = 0.9; rpc = "exfer";      user = "{wallet}.{worker}";        pass="LP01"}
