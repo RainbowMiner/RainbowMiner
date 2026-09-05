@@ -2,6 +2,7 @@
     "0DYNC" = [PSCustomObject]@{Algo = "Argon2d1000"; Name = "0 Dyncash"; Symbol = "0DYNC"}
     "405" = [PSCustomObject]@{Algo = "Take2"; Name = "405Coin"; Symbol = "405"}
     "ABEL" = [PSCustomObject]@{Algo = "Abelian"; Name = "Abelian"; Symbol = "ABEL"}
+    "ABRS" = [PSCustomObject]@{Algo = "KawPOW"; Name = "Auroraborealis"; Symbol = "ABRS"}
     "ABS" = [PSCustomObject]@{Algo = "Lyra2RE2"; Name = "Absolute"; Symbol = "ABS"}
     "ABY" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Artbyte"; Symbol = "ABY"}
     "ACG" = [PSCustomObject]@{Algo = "SHA256d"; Name = "Aurum"; Symbol = "ACG"}
@@ -593,6 +594,7 @@
     "NMC" = [PSCustomObject]@{Algo = "SHA256d"; Name = "Namecoin"; Symbol = "NMC"}
     "NMS" = [PSCustomObject]@{Algo = "Dedal"; Name = "Numus"; Symbol = "NMS"}
     "NOBL" = [PSCustomObject]@{Algo = "m7m"; Name = "NobleCoin"; Symbol = "NOBL"}
+    "NOID" = [PSCustomObject]@{Algo = "Poseidon2b"; Name = "Parano1d"; Symbol = "NOID"}
     "NOON" = [PSCustomObject]@{Algo = "YescryptR16"; Name = "Nooncoin"; Symbol = "NOON"}
     "NOVD" = [PSCustomObject]@{Algo = "SHA256dt"; Name = "Novo"; Symbol = "NOVD"}
     "NOVO" = [PSCustomObject]@{Algo = "SHA256dt"; Name = "Novo"; Symbol = "NOVO"}
@@ -629,6 +631,7 @@
     "PARS" = [PSCustomObject]@{Algo = "CryptoNightV7"; Name = "ParsiCoin"; Symbol = "PARS"}
     "PAS" = [PSCustomObject]@{Algo = "RandomX"; Name = "Pastella"; Symbol = "PAS"}
     "PASC" = [PSCustomObject]@{Algo = "RandomHash2"; Name = "Pascalcoin"; Symbol = "PASC"}
+    "PBC" = [PSCustomObject]@{Algo = "RandomPBC"; Name = "Privacybank"; Symbol = "PBC"}
     "PBTC" = [PSCustomObject]@{Algo = "HeavyHash"; Name = "PhotonicBitcoin"; Symbol = "PBTC"}
     "PCN" = [PSCustomObject]@{Algo = "RandomPCN"; Name = "Pcoin"; Symbol = "PCN"}
     "PCOIN" = [PSCustomObject]@{Algo = "X11"; Name = "Pioneercoin"; Symbol = "PCOIN"}
