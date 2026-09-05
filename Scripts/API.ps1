@@ -1651,6 +1651,13 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
 
                         $pbody_in = $null
                         Remove-Variable -Name pbody_in -ErrorAction Ignore
+                    } elseif ($Parameters.body -match '^".*"$') {
+                        # the client serializes the body with ConvertTo-Json, so a string body (a
+                        # JSON-RPC payload such as the ZIL wallet balance) arrives as a quoted JSON
+                        # string. Decoding it once gives the raw string back; dropping it made the
+                        # job a bare GET and, through the shared jobkey, also stripped the body from
+                        # this server's own copy of the job
+                        $pbody = $Parameters.body | ConvertFrom-Json -ErrorAction Ignore
                     }
                     $pheaders = $null
                     if ($Parameters.headers -match "^{.+}$") {
