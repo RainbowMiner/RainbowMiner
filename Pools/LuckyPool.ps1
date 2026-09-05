@@ -22,6 +22,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "XCB";   port = 3118; fee = 0.9; rpc = "corecoin";   user = "{wallet}{=diff}.{worker}"; pass="x"}
     [PSCustomObject]@{symbol = "CSD";   port = 8760; fee = 0.9; rpc = "csd";        user = "{wallet}.{worker}";        pass="x"}
     [PSCustomObject]@{symbol = "EXFER"; port = 3335; fee = 0.9; rpc = "exfer";      user = "{wallet}.{worker}";        pass="LP01"}
+    [PSCustomObject]@{symbol = "MDS";   port = 8960; fee = 1.0; rpc = "midstate";   user = "{wallet}.{worker}";        pass="x"}
     [PSCustomObject]@{symbol = "MCM";   port = 3338; fee = 0.9; rpc = "mochimo";    user = "{wallet}{=diff}.{worker}"; pass="x"}
     [PSCustomObject]@{symbol = "OGG";   port = 8360; fee = 0.9; rpc = "ogg";        user = "{wallet}{=diff}.{worker}"; pass="x"}
     [PSCustomObject]@{symbol = "PRL";   port = 3360; fee = 0.9; rpc = "pearl";      user = "{wallet}";                 pass="x"}
@@ -29,6 +30,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "XTM";   port = 3110; fee = 0.9; rpc = "taric29";    user = "{wallet}{=diff}.{worker}"; pass="x"; algorithm = "Cuckaroo29"}
     [PSCustomObject]@{symbol = "XTM";   port = 9118; fee = 0.9; rpc = "tarirx";     user = "{wallet}{=diff}.{worker}"; pass="x"; algorithm = "RandomX"}
     [PSCustomObject]@{symbol = "XTM";   port = 6118; fee = 0.9; rpc = "tari";       user = "{wallet}{=diff}.{worker}"; pass="x"; algorithm = "SHA3x"}
+    [PSCustomObject]@{symbol = "TSC";   port = 4160; fee = 3.0; rpc = "tensorcash"; user = "{wallet}.{worker}";        pass="x"}
     [PSCustomObject]@{symbol = "ZANO";  port = 8877; fee = 0.9; rpc = "zano";       user = "{wallet}.{worker}";        pass="x{diff}"}
 
     #[PSCustomObject]@{symbol = "ALPHA"; port = 2100; fee = 0.9; rpc = "unicity";    user = "{wallet}{=diff}.{worker}"; pass="x"}
