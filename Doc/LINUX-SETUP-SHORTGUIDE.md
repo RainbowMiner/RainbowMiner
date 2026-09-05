@@ -1,4 +1,4 @@
-﻿## Short Guide to Running RBM on Linux with Nvidia GPUs
+## Short Guide to Running RBM on Linux with Nvidia GPUs
 
 ### Stage 1: Prepping the OS
 
@@ -19,7 +19,7 @@ sudo apt-get update
 sudo apt-get install git
 git clone https://github.com/rainbowminer/RainbowMiner
 cd RainbowMiner
-chmod +x \*.sh
+chmod +x *.sh
 sudo ./install.sh
 ```
 
@@ -81,3 +81,44 @@ Insert the rainbowminer command
 ![alt text](https://github.com/RainbowMiner/miner-binaries/raw/master/short-guide-linux-nvidia-setup-4.png "Insert the Rainbowminer start command")
 
 (Written by @acos0874 - Thank you very much!)
+
+### Start RainbowMiner as a systemd service
+
+The alternative to crontab or `rc.local`: a service unit lets you start, stop and enable
+RainbowMiner with the usual systemd commands, and it can run RainbowMiner as a normal user or
+as root. As root, create `/etc/systemd/system/rainbowminer.service` (adapt the user name and
+the path):
+
+```
+[Unit]
+Description=starts RainbowMiner as a service
+Wants=network.target
+
+[Service]
+Type=simple
+
+User=USERNAME             ## your username here, or comment it out to run as root
+ExecStart=/YOURPATH/RainbowMiner/start-nohup.sh
+
+KillMode=none
+TimeoutStopSec=15
+ExecStop=/YOURPATH/RainbowMiner/stopp.sh
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Then:
+
+```
+systemctl daemon-reload                     # once, so systemd learns about the new unit
+systemctl enable rainbowminer.service       # once, to start it at boot
+systemctl start rainbowminer.service        # bring it up now
+systemctl stop rainbowminer.service         # clean shutdown via stopp.sh
+```
+
+`KillMode=none` and `TimeoutStopSec` are what let `stopp.sh` end the miners in an orderly
+fashion instead of systemd killing the process group.
+
+Thanks to @timvis for this unit file
+([issue #2602](https://github.com/RainbowMiner/RainbowMiner/issues/2602)).

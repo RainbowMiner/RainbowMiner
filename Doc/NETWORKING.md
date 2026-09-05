@@ -1,4 +1,4 @@
-﻿### Hints for Networking
+### Hints for Networking
 
 Choose one PC to be the Server (it may be a dusty old notebook). No need to let it mine, just let RainbowMiner start in paused mode. Select all other Rigs to act as Clients. All pool API communication will then be managed by the server: no more being blocked by the pools due to excessive use of their API
 
@@ -52,3 +52,27 @@ If "EnableServerConfig" is set to "1" (like in the above example), the Client wi
 
 If "EnableServerPools" is set to "1", the client will download the server's pool and balance statistics and mine to exactly those pools (except for MiningRigRentals, which will always be handled locally)
 
+### Connecting a client over the internet
+
+Client and server do not have to sit in the same network - the client only needs to reach the
+server's API port.
+
+- if the server sits behind a router, forward its API port in the router's admin (e.g.
+  external port 4000 to `192.168.1.100:4000`) and use the router's external IP as
+  `ServerName`. On a connection with a changing IP address, register the router with a DDNS
+  service and use that host name instead
+- if the server is connected to the internet directly, its own IP address plus the port is
+  enough
+
+```
+  "RunMode": "client",
+  "ServerName": "123.45.67.89",
+  "ServerPort": "4000",
+```
+
+**Always enable the authentication in this case** - an open API port on the internet lets
+anyone read and change the configuration of your rigs:
+
+- on the server: `"APIauth": "1"`, `"APIuser"`, `"APIpassword"`, and restrict the callers
+  with `"APIallowIPs"`
+- on the client: `"ServerUser"` and `"ServerPassword"` with the same values
