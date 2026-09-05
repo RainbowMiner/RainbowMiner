@@ -44,6 +44,8 @@ $Pool_Regions = @("eu","us-west","us-east","asia")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
+    [PSCustomObject]@{symbol = "BC3"    ; port = @(7701,7704)                                   ; regions = @("eu")}
+    [PSCustomObject]@{symbol = "BLOZ"   ; port = @(7304)                                        ; regions = @("eu")}
     [PSCustomObject]@{symbol = "C64"    ; port = @(6464,6469)                                   ; regions = @("eu","us-east","asia")}
     [PSCustomObject]@{symbol = "DCR"    ; port = @(9332,9336)                                   ; regions = @("eu","us-east","asia")}
     [PSCustomObject]@{symbol = "DGB";   ; port = @(8531)                                        ; regions = @("eu")}
@@ -51,7 +53,9 @@ $Pools_Data = @(
 	[PSCustomObject]@{symbol = "GAP"    ; port = @(2433)                                        ; regions = @("eu")}
 	[PSCustomObject]@{symbol = "GRS"    ; port = @(5544)                                        ; regions = @("eu","us-east")}
     [PSCustomObject]@{symbol = "JUNO"   ; port = @(8383)                                        ; regions = @("eu","us-east")}
+    [PSCustomObject]@{symbol = "KRX"    ; port = @([PSCustomObject]@{CPU=@(4401);GPU=@(4404)})  ; regions = @("eu")}
     [PSCustomObject]@{symbol = "LPEPE"  ; port = @(3633,3634)                                   ; regions = @("eu","asia")}
+    [PSCustomObject]@{symbol = "NOID"   ; port = @(3337)                                        ; regions = @("eu")}
     [PSCustomObject]@{symbol = "NPT"    ; port = @([PSCustomObject]@{CPU=@(3832);GPU=@(3833)})  ; regions = @("eu")}
     [PSCustomObject]@{symbol = "OBTC"   ; port = @([PSCustomObject]@{CPU=@(4074);GPU=@(4075)})  ; regions = @("eu")}
     [PSCustomObject]@{symbol = "PXC"    ; port = @(2026,2027)                                   ; regions = @("eu")}
@@ -60,6 +64,7 @@ $Pools_Data = @(
 	[PSCustomObject]@{symbol = "RIC"    ; port = @(5000)                                        ; regions = @("eu")}
     [PSCustomObject]@{symbol = "RTM"    ; port = @(6273)                                        ; regions = @("eu")}
     [PSCustomObject]@{symbol = "RVN"    ; port = @(8888,8889)                                   ; regions = @("eu")}
+    [PSCustomObject]@{symbol = "TSC"    ; port = @(3309)                                        ; regions = @("eu")}
     [PSCustomObject]@{symbol = "VTC"    ; port = @(1777,1780)                                   ; regions = @("eu")}
     [PSCustomObject]@{symbol = "XEL"    ; port = @(3333)                                        ; regions = @("eu","us-east","asia")}
     [PSCustomObject]@{symbol = "XNT"    ; port = @([PSCustomObject]@{CPU=@(3832);GPU=@(3833)})  ; regions = @("eu")}
