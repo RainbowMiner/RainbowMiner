@@ -516,9 +516,16 @@ function Start-Core {
                             try {$Cleanup_Job | Stop-Job -PassThru | Receive-Job > $null} catch {}
                         } else {
                             try {
-                                $Cleanup_Result = Receive-Job -Job $Cleanup_Job
-                                if ($Cleanup_Result) {
-                                    $Cleanup_Result | Foreach-Object {
+                                # read the child job streams directly: Receive-Job forwards warnings and errors
+                                # to the host only, so they never reached the log
+                                foreach ($Cleanup_ChildJob in $Cleanup_Job.ChildJobs) {
+                                    $Cleanup_ChildJob.Warning | Foreach-Object {
+                                        Write-Log -Level Warn "Cleanup: $($_.Message)"
+                                    }
+                                    $Cleanup_ChildJob.Error | Foreach-Object {
+                                        Write-Log -Level Warn "Cleanup error: $($_.Exception.Message)"
+                                    }
+                                    $Cleanup_ChildJob.Output | Foreach-Object {
                                         if ($_ -match "^WARNING:\s*(.+)$") {
                                             Write-Log -Level Warn $Matches[1]
                                         } elseif ($_ -match "^SUCCESS:\s*(.+)$") {

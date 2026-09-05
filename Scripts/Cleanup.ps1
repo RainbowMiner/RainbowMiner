@@ -21,6 +21,9 @@ if ($IsLinux -and (Test-Path ".\DotNet\Bin")) {
 
 Initialize-Session -NoDLLs
 
+# the job process runs without Start-Core: Get-MinersContent (custom miners) reads $Session.ConfigFiles
+$Session.ConfigFiles = $ConfigFiles
+
 $DownloadsCleanup = $true
 $MinersConfigCleanup = $true
 $PoolsConfigCleanup = $true

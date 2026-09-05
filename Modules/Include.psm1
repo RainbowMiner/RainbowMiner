@@ -2381,6 +2381,9 @@ function Get-CustomMinerDefinitions {
         return @($Session.Config.CustomMiners | Select-Object)
     }
 
+    # indexing a null hashtable with a string key throws on 5.1 and 7 alike
+    if (-not $Session.ConfigFiles -or -not $Session.ConfigFiles.ContainsKey("CustomMiners")) {return @()}
+
     $PathToFile = $Session.ConfigFiles["CustomMiners"].Path
     if (-not $PathToFile -or -not (Test-Path $PathToFile)) {return @()}
 
