@@ -45,6 +45,7 @@ try {
                                 Vendor           = $_.Vendor
                                 GlobalMemSize    = $_.GlobalMemSize
                                 GlobalMemSizeGB  = [int]($_.GlobalMemSize/1GB)
+                                MaxMemAllocSize  = $(try {$_.MaxMemAllocSize} catch {$null})
                                 MaxComputeUnits  = $_.MaxComputeUnits
                                 PlatformVersion  = $_.Platform.Version
                                 DriverVersion    = $_.DriverVersion

@@ -416,6 +416,7 @@ Update-DeviceInformationDebug @(Get-DeviceDebug @("cpu","gpu") | Select-Object -
                                 @{Name="Driver";    Expression={$_.OpenCL.DriverVersion};                                                                                  Alignment="Right"},
                                 @{Name="CL/CUDA";   Expression={if ($_.OpenCL.Platform.Version -match "CUDA") {$_.OpenCL.Platform.Version -replace "^.*CUDA\s+"}else{$_.OpenCL.Platform.Version -replace "^.*OpenCL\s+"}}; Alignment="Right"},
                                 @{Name="Mem";       Expression={$(if ($_.OpenCL.GlobalMemSize -ne $null) {"$([Math]::Round($_.OpenCL.GlobalMemSize/1gb,3))GB"}else{"-"})}; Alignment="Right"},
+                                @{Name="MaxAlloc";  Expression={$(if ($_.OpenCL.MaxMemAllocSize) {"$([Math]::Round($_.OpenCL.MaxMemAllocSize/1gb,3))GB"}else{"-"})}; Alignment="Right"},
                                 @{Name="PS";        Expression={$(if ($_.Data.Pstate -ne $null) {$_.Data.Pstate}else{"-"})};                                               Alignment="Right"},
                                 @{Name="Gpu Clock"; Expression={$(if ($_.Data.Clock -ne $null) {"$([Math]::Round($_.Data.Clock/1000,3))GHz"}else{"-"})};                   Alignment="Right"},
                                 @{Name="Mem Clock"; Expression={$(if ($_.Data.ClockMem -ne $null) {"$([Math]::Round($_.Data.ClockMem/1000,3))GHz"}else{"-"})};             Alignment="Right"},
