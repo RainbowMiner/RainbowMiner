@@ -23,6 +23,12 @@ function Initialize-MinerRunspacePool {
         # would mirror every Write-Host of the process into the pipelines'
         # information buffers (see Clear-APIServerStreams in API.psm1)
         $Script:MinerRSPool = [RunspaceFactory]::CreateRunspacePool(1, $MaxRS)
+        # idle runspaces above the minimum are closed after 15 minutes by
+        # default; the replacement opened by the next miner start leaves the
+        # old TypeTable behind, pinned by the binder call-site rule caches
+        # (memdump I, 2026-09-08). Keep them: an idle default runspace costs
+        # about 1 MB, the timer accepts at most 49 days
+        $Script:MinerRSPool.CleanupInterval = [TimeSpan]::FromDays(30)
         $Script:MinerRSPool.Open()
         Write-Log "Created miner runspace pool with max $($MaxRS) runspaces"
     }
