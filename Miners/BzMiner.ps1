@@ -17,14 +17,14 @@ $ManualUri = "https://github.com/bzminer/bzminer/releases"
 $Port = "332{0:d2}"
 $DevFee = 0.5
 $Cuda = "11.2"
-$Version = "100.13"
+$Version = "100.16"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-BzMiner\bzminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v100.13-bzminer/bzminer_v100.13_linux.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v100.16-bzminer/bzminer_v100.16_linux.tar.gz"
 } else {
     $Path = ".\Bin\GPU-BzMiner\bzminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v100.13-bzminer/bzminer_v100.13_windows.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v100.16-bzminer/bzminer_v100.16_windows.zip"
 }
 
 $ExcludePoolName = "prohashing|miningrigrentals"
@@ -33,6 +33,9 @@ $ExcludePoolName = "prohashing|miningrigrentals"
 # the remaining ones are exactly what "bzminer --list-algos" reports for this build.
 # v100.13 brought the CryptoNight family back (cn/gpu for Conceal and Ryo plus the
 # classic variants); same names as in Xmrig, so the stats keys line up.
+# v100.16 adds cuda/opencl backends to randomx (and its rx/0, xmr, zeph, sal
+# aliases), but upstream calls that experimental and the shipped readme still says
+# RandomX cannot use a GPU - it stays CPU-only here until it has been benchmarked.
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cn-heavy/0";   MinMemGb = 3.3; Params = ""; Vendor = @("AMD","CPU","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0} #CryptoNightHeavy
     [PSCustomObject]@{MainAlgorithm = "cn-heavy/xhv"; MinMemGb = 3.3; Params = ""; Vendor = @("AMD","CPU","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0} #CryptoNightHeavyXhv/XHV
