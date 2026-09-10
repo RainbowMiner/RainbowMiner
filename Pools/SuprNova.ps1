@@ -60,6 +60,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "OBTC"   ; port = @([PSCustomObject]@{CPU=@(4074);GPU=@(4075)})  ; regions = @("eu")}
     [PSCustomObject]@{symbol = "PXC"    ; port = @(2026,2027)                                   ; regions = @("eu")}
     [PSCustomObject]@{symbol = "QTC"    ; port = @(5555,5557)                                   ; regions = @("eu","us-east","asia")}
+    [PSCustomObject]@{symbol = "QUAN"   ; port = @(7072,7074)                                   ; regions = @("eu")}
     [PSCustomObject]@{symbol = "PRL"    ; port = @(3373,3374)                                   ; regions = @("eu","us-east","asia")}
 	[PSCustomObject]@{symbol = "RIC"    ; port = @(5000)                                        ; regions = @("eu")}
     [PSCustomObject]@{symbol = "RTM"    ; port = @(6273)                                        ; regions = @("eu")}
@@ -72,11 +73,21 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "XMR"    ; port = @(6665,6666)                                   ; regions = @("eu","us-east")}
 )
 
-$Pool_Request.pools | Where-Object {-not $_.coming_soon} | Where-Object {$Wallets."$($_.coin.symbol)" -or $InfoOnly} | ForEach-Object {
+# The api reports Qubitcoin and Quantus both with symbol QTC, so the symbol alone
+# cannot identify the coin. Translate the unique pool id into our own symbol.
+[hashtable]$Pools_Xlat = @{
+    "quantus" = "QUAN"
+}
+
+$Pool_Request.pools | Where-Object {-not $_.coming_soon} | ForEach-Object {
+    $Pool_Symbol = if ($_.id -and $Pools_Xlat[$_.id]) {$Pools_Xlat[$_.id]} else {$_.coin.symbol}
+
+    if (-not $Wallets."$($Pool_Symbol)" -and -not $InfoOnly) {return}
+
     $Pool_Fee  = if ($_.mining.pool_fee_percent -eq $null) {$Pool_Fee_Percent} else {[double]$_.mining.pool_fee_percent}
 
-    if (-not ($Pool_Coin = Get-Coin $_.coin.symbol -Algorithm $_.coin.algorithm)) {
-        Write-Log -Level Warn "Pool $($Name): missing coin $($_.coin.symbol) in db"
+    if (-not ($Pool_Coin = Get-Coin $Pool_Symbol -Algorithm $_.coin.algorithm)) {
+        Write-Log -Level Warn "Pool $($Name): missing coin $($Pool_Symbol) in db"
         return
     }
 
