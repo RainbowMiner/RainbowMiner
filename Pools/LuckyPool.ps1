@@ -27,6 +27,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "OGG";   port = 8360; fee = 0.9; rpc = "ogg";        user = "{wallet}{=diff}.{worker}"; pass="x"}
     [PSCustomObject]@{symbol = "PRL";   port = 3360; fee = 0.9; rpc = "pearl";      user = "{wallet}";                 pass="x"}
     [PSCustomObject]@{symbol = "QTC";   port = 8610; fee = 0.9; rpc = "qtc";        user = "{wallet}{=diff}.{worker}"; pass="x"}
+    [PSCustomObject]@{symbol = "QUAN";  port = 5660; fee = 1.0; rpc = "quantus";    user = "{wallet}.{worker}";        pass="x"}
     [PSCustomObject]@{symbol = "XTM";   port = 3110; fee = 0.9; rpc = "taric29";    user = "{wallet}{=diff}.{worker}"; pass="x"; algorithm = "Cuckaroo29"}
     [PSCustomObject]@{symbol = "XTM";   port = 9118; fee = 0.9; rpc = "tarirx";     user = "{wallet}{=diff}.{worker}"; pass="x"; algorithm = "RandomX"}
     [PSCustomObject]@{symbol = "XTM";   port = 6118; fee = 0.9; rpc = "tari";       user = "{wallet}{=diff}.{worker}"; pass="x"; algorithm = "SHA3x"}
