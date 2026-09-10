@@ -1241,6 +1241,52 @@ Rebuilding the repository fixes it. Open a command prompt **as administrator** a
 
 The first loop takes a minute or two. Restart RainbowMiner afterwards.
 
+### "No pools available" and a pool API "returned nothing"
+
+If RainbowMiner keeps saying
+
+    WARNING: Pool API (Zpool) returned nothing.
+    WARNING: No pools available: check your configuration
+
+then either no wallet is configured for that pool, or the pool's API cannot be reached from
+your rig. Both look the same in the main window, so check them in this order.
+
+**1. Is a wallet configured?** A pool only delivers algorithms for currencies you have a
+wallet for. If the log also says `Cannot get balance on pool (...) - no wallet address
+specified.`, that is the whole story - enter your address and the pools appear. Note that
+the `Wallet` in config.txt is the BTC address; every other currency is set at the pool
+itself, see [Doc/POOLSCONFIG.md](Doc/POOLSCONFIG.md).
+
+**2. Can the pool's API be reached?** Look into `Logs\errors_<date>.asyncloader.txt`. Lines
+like
+
+    Error job ... with https://www.zpool.ca/api/status using REST: 403 Forbidden (Client Error)
+
+mean the request never got an answer from the pool. Test it outside of RainbowMiner, with the
+cURL that ships with RainbowMiner (run this in the RainbowMiner folder):
+
+    .\Includes\curl\x64\curl.exe -sS -D - -o nul "https://www.zpool.ca/api/status"
+
+- `HTTP/2 200` - the pool is reachable and the problem is elsewhere
+- `HTTP/2 403` together with `server: cloudflare` and `cf-mitigated: challenge` - Cloudflare
+  is showing a bot challenge page instead of the API answer. A browser can solve such a
+  challenge, no program can
+- a timeout or a DNS error - the host is not resolving or not answering at all
+
+If the API is blocked, it is your connection, not RainbowMiner - and the fastest proof is to
+run the rig on a different line for a minute, for example on a mobile hotspot. If it works
+there, the blockade is between your router and the pool. Router or provider DNS is the usual
+cause; a different DNS server or a VPN gets around it. Local antivirus and security suites
+with HTTPS scanning can do the same thing.
+
+Two things worth knowing while you test:
+
+- a miner running fine against the same pool proves nothing. Miners talk to the stratum port
+  over plain TCP, which is usually not filtered - RainbowMiner needs the pool's HTTPS API to
+  learn algorithms and prices
+- if, and only if, the block depends on the user agent, `UserAgent` in config.txt sets a
+  different one, see [Doc/CONFIG.md](Doc/CONFIG.md#internet-and-network)
+
 ### How do I add RainbowMiner's Start.bat to the windows task scheduler for autostart?
 
 Press windows key and type `schedule`, click on `Task Scheduler`

@@ -317,6 +317,15 @@ of it at once. How the comparison price is calculated in detail, is explained in
 - **SSL** = configure ssl usage: 0=prefer non-SSL over SSL pools, 1=prefer SSL over non-SSL pools, 2=use SSL pools only [default=0]
 - **Proxy** = set your proxy address here, if you are using one
 - **EnableCurl** = set to 1 to use cURL instead of the build-in web requests (enable this, if you get frequent "Asyncloader is crashed" warnings) [default=0]
+- **UserAgent** = set a custom user agent for all web requests, leave empty for the built-in one [default=]
+
+  RainbowMiner identifies itself as a current browser. Only change this if a pool or your
+  provider blocks exactly that - a pool API answering `403 Forbidden` while the same URL
+  opens fine in your browser is the symptom, see the
+  [FAQ](../README.md#no-pools-available-and-a-pool-api-returned-nothing) for how to test it.
+  Requests to rbminer.net always use the built-in user agent, whatever is set here. An empty
+  value falls back to the built-in one.
+
 - **UseTimeSync** = set to 1, if RainbowMiner should adjust the windows clock by rtp [default=1]
 - **WebsitesForOnlineCheck** = list of websites, that RainbowMiner pings for testing the internet connection [default=www.google.com,www.amazon.com,www.baidu.com,www.coinbase.com,rbminer.net]
 - **ExcludeCurrencyRateFromCoinbase** = Coinbase is the main currency provider, only if a symbol is not delivered from this API it will get called from api.rbminer.net. Sometimes there are false values due to ident symbols. Please leave as-is, since the RainbowMiner will update the defaults asap in case of false rates.
