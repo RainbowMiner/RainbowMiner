@@ -474,6 +474,7 @@
     "KMD" = [PSCustomObject]@{Algo = "Equihash"; Name = "Komodo"; Symbol = "KMD"}
     "KMDCL" = [PSCustomObject]@{Algo = "Equihash"; Name = "Komodo Classic"; Symbol = "KMDCL"}
     "KOTO" = [PSCustomObject]@{Algo = "YescryptR8g"; Name = "koto"; Symbol = "KOTO"}
+    "KPOW" = [PSCustomObject]@{Algo = "Ethash"; Name = "KpowBIT"; Symbol = "KPOW"}
     "KRB" = [PSCustomObject]@{Algo = "CryptoNight"; Name = "Karbo"; Symbol = "KRB"}
     "KREDS" = [PSCustomObject]@{Algo = "Lyra2RE2"; Name = "Kreds"; Symbol = "KREDS"}
     "KRGN-Equihash" = [PSCustomObject]@{Algo = "Equihash"; Name = "Kerrigan"; Symbol = "KRGN"; Multi = $true}
