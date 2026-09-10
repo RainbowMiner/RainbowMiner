@@ -12,21 +12,22 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.De
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-OneZero\onezerominer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.7.4-onezerominer/onezerominer-linux-1.7.4.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.7.5-onezerominer/onezerominer-linux-1.7.5.tar.gz"
 } else {
     $Path = ".\Bin\GPU-OneZero\onezerominer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.7.4-onezerominer/onezerominer-win64-1.7.4.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.7.5-onezerominer/onezerominer-win64-1.7.5.zip"
 }
 
 $ManualUri = "https://github.com/OneZeroMiner/onezerominer/releases"
 $Port = "370{0:d2}"
 $DevFee = 3.0
 $Cuda = "11.8"
-$Version = "1.7.4"
+$Version = "1.7.5"
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptix"; Params = ""; ExtendInterval = 3; Fee = @{NVIDIA=2.0}; Vendor = @("NVIDIA")} #CryptixOX8/CPAY
     [PSCustomObject]@{MainAlgorithm = "dynex"; Params = ""; ExtendInterval = 5; Fee = @{NVIDIA=2.0}; Vendor = @("NVIDIA")} #DynexSolve/DNX
+    [PSCustomObject]@{MainAlgorithm = "pearlhash"; Params = ""; Fee = @{NVIDIA=1.0}; Vendor = @("NVIDIA"); ExcludeCompute = @("Pascal","Volta","Hopper","Blackwell")} #PearlHash/PRL, initial support is 20xx/30xx/40xx only
     [PSCustomObject]@{MainAlgorithm = "qhash"; Params = ""; ExtendInterval = 2; Fee = @{NVIDIA=3.0}; Vendor = @("NVIDIA"); FaultTolerance = 0.4} #Qhash/QBC
     [PSCustomObject]@{MainAlgorithm = "xelis"; Params = ""; ExtendInterval = 3; Fee = @{NVIDIA=2.0;AMD=2.0}; Vendor = @("AMD","NVIDIA")} #XelisHashV3/XEL
 
@@ -54,12 +55,15 @@ if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVers
 foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 	$Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object Type -eq "GPU" | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
         $Miner_Model = $_.Model
-        $Miner_Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)" | Where-Object {$_.Model -eq $Miner_Model}
+        $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)" | Where-Object {$_.Model -eq $Miner_Model}
 
         $DisableCommand = if ($Miner_Vendor -eq "NVIDIA") {"--disable-amd"} else {"--disable-nvidia"}
 
         $Commands | Where-Object {$Miner_Vendor -in $_.Vendor} | ForEach-Object {
             $First = $true
+
+            $ExcludeCompute = $_.ExcludeCompute
+            $Miner_Device = $Device | Where-Object {-not $ExcludeCompute -or $_.OpenCL.Architecture -notin $ExcludeCompute}
 
             $MainAlgorithm_0 = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
             $MainAlgorithm_Norm_0 = Get-Algorithm $MainAlgorithm_0
