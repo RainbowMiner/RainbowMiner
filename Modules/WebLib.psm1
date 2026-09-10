@@ -484,6 +484,9 @@ Param(
     if ($RequestUrl -match "^https?://(?:[\w-]+\.)*rbminer\.net(?::\d+)?(?:/|$)") {
         if (-not $headers_local.ContainsKey("X-RBM-Client")) {$headers_local["X-RBM-Client"] = "v$($Session.Version)"}
         if (-not $headers_local.ContainsKey("X-RBM-Auth")) {$headers_local["X-RBM-Auth"] = Get-RBMDataAuth}
+    } else {
+        $UserAgentConfig = "$(if ($Session.IsDonationRun) {$Session.UserConfig.UserAgent} else {$Session.Config.UserAgent})".Trim()
+        if ($UserAgentConfig) {$useragent = $UserAgentConfig}
     }
 
     $ErrorMessage = ''

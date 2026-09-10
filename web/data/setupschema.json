@@ -2287,6 +2287,24 @@
         },
         {
           "kind": "field",
+          "key": "UserAgent",
+          "id": "inputUserAgent",
+          "label": {
+            "html": "User agent",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "Custom user agent for all web requests. Leave empty to use the built-in one and only change it, if a pool or your provider blocks the default. Requests to rbminer.net always use the built-in user agent."
+          },
+          "control": "text",
+          "attrs": {
+            "placeholder": "Leave empty to use the built-in user agent"
+          }
+        },
+        {
+          "kind": "field",
           "key": "Watchdog",
           "id": "inputWatchdog",
           "label": {
