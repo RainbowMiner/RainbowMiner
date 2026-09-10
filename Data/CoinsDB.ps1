@@ -681,6 +681,7 @@
     "QSF" = [PSCustomObject]@{Algo = "RandomX"; Name = "Qsf"; Symbol = "QSF"}
     "QTC" = [PSCustomObject]@{Algo = "Qhash"; Name = "Qubitcoin"; Symbol = "QTC"}
     "QUAI" = [PSCustomObject]@{Algo = "KawPOW"; Name = "Quai"; Symbol = "QUAI"}
+    "QUAN" = [PSCustomObject]@{Algo = "Quantus"; Name = "Quantus"; Symbol = "QUAN"}
     "QWC" = [PSCustomObject]@{Algo = "CryptoNight"; Name = "QwertyCoin"; Symbol = "QWC"}
     "R5" = [PSCustomObject]@{Algo = "EthashR5"; Name = "R5Coin"; Symbol = "R5"}
     "RACE" = [PSCustomObject]@{Algo = "Lyra2RE2"; Name = "Race"; Symbol = "RACE"}
