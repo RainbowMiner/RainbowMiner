@@ -13,15 +13,15 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.De
 $ManualUri = "https://bitcointalk.org/index.php?topic=5190081.0"
 $Port = "349{0:d2}"
 $DevFee = 0.85
-$Version = "3.6.6"
+$Version = "3.6.7"
 $Cuda = "11.7"
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.6.6-srbminermulti/SRBMiner-Multi-3-6-6-Linux.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.6.7-srbminermulti/SRBMiner-Multi-3-6-7-Linux.tar.gz"
 } else {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.6.6-srbminermulti/SRBMiner-Multi-3-6-6-win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.6.7-srbminermulti/SRBMiner-Multi-3-6-7-win64.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -110,7 +110,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "oggpow"           ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","INTEL","NVIDIA"); ExcludeCompute = @("Volta")} #OggPoW/OGG
     [PSCustomObject]@{MainAlgorithm = "pearlhash"        ;              Params = ""; Fee = 2.00;               Vendor = @("AMD","NVIDIA"); ExcludePoolName = "84.32.220.219|129.226.55.135"; ExcludeCompute = @("Volta","Pascal","GCN51","GCN50","8.0","10.3"); NoAutoTune = $true} #PearlHash/PRL
     [PSCustomObject]@{MainAlgorithm = "phihash"          ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","NVIDIA"); ExcludeCompute = @("Volta")} #PhilHashV2/PHI (from 01/30/2025)
-    [PSCustomObject]@{MainAlgorithm = "poseidon2b"       ;              Params = ""; Fee = 3.00;               Vendor = @("AMD","NVIDIA"); Algorithm = "noid"; ExcludePoolName = "RPlant"; ExcludeCompute = @("Volta","Pascal","Turing","RDNA1","GCN51","GCN50")} #Noid/NOID, needs a CUDA13 capable NVIDIA driver (580+). RPlant excluded: their stratum sends a truncated 8-byte job_id, SRBMiner refuses the job
+    [PSCustomObject]@{MainAlgorithm = "poseidon2b"       ;              Params = ""; Fee = 2.00;               Vendor = @("AMD","NVIDIA"); Algorithm = "noid"; ExcludePoolName = "RPlant"; ExcludeCompute = @("Volta","Pascal","Turing","RDNA1","GCN51","GCN50")} #Noid/NOID, needs a CUDA13 capable NVIDIA driver (580+). RPlant excluded: their stratum sends a truncated 8-byte job_id, SRBMiner refuses the job
     [PSCustomObject]@{MainAlgorithm = "progpow_epic"     ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","INTEL","NVIDIA"); ExcludeCompute = $null} #ProgPowEPIC/EPIC
     #[PSCustomObject]@{MainAlgorithm = "progpow_quai"     ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","INTEL","NVIDIA"); ExcludeCompute = @("Volta")} #ProgPowQuai/QUAI
     #[PSCustomObject]@{MainAlgorithm = "progpow_sero"     ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","NVIDIA"); ExcludeCompute = $null} #ProgPowSERO/SERO
@@ -118,7 +118,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "progpow_veil"     ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","NVIDIA"); ExcludeCompute = @("Volta")} #ProgPowVEIL/VEIL
     [PSCustomObject]@{MainAlgorithm = "progpow_zano"     ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","INTEL","NVIDIA"); ExcludeCompute = $null} #ProgPowZANO/ZANO
     [PSCustomObject]@{MainAlgorithm = "qhash"            ;              Params = ""; Fee = 1.50;               Vendor = @("AMD","INTEL","NVIDIA"); ExcludeCompute = @("Volta")} #Qhash/QTC
-    [PSCustomObject]@{MainAlgorithm = "quantus"          ;              Params = ""; Fee = 2.50;               Vendor = @("AMD","NVIDIA"); ExcludeCompute = @("GCN51","GCN50")} #Quantus, AMD RDNA only, every NVIDIA incl. Volta (SM70 improved with v3.6.6), LuckyPool stratum (the QUIC pool protocol is not supported)
+    [PSCustomObject]@{MainAlgorithm = "quantus"          ;              Params = ""; Fee = 2.00;               Vendor = @("AMD","NVIDIA"); ExcludeCompute = @("GCN51","GCN50")} #Quantus, AMD RDNA only, every NVIDIA incl. Volta (SM70 improved with v3.6.6, RTX 2000-5000 with v3.6.7), LuckyPool stratum (the QUIC pool protocol is not supported)
     [PSCustomObject]@{MainAlgorithm = "sccpow"           ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 3; Vendor = @("AMD","INTEL","NVIDIA"); Algorithm = "firopow"; ExcludeCompute = @("Volta")} #SCCPow/SCC
     [PSCustomObject]@{MainAlgorithm = "sha256d_csd"      ;              Params = ""; Fee = 1.00; MinMemGb = 2; Vendor = @("AMD","INTEL","NVIDIA"); ExcludeCompute = @("Volta","GCN51","GCN50")} #SHA256csd/CSD
     #[PSCustomObject]@{MainAlgorithm = "sha256dt"         ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","INTEL","NVIDIA"); ExcludeCompute = @("Volta")} #SHA256dt/NOVO
