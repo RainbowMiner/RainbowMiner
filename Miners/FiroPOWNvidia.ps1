@@ -13,22 +13,22 @@ if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return}
 $Port = "367{0:d2}"
 $ManualURI = "https://github.com/firoorg/firominer/releases"
 $DevFee = 0.0
-$Version = "1.2.0"
+$Version = "1.4.0"
 
 if ($IsLinux) {
     $UriCuda = @(
         [PSCustomObject]@{
             Path = ".\Bin\NVIDIA-FiroPOW\bin\firominer"
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.0-firominer/firominer-linux-x86_64-cuda11.8-opencl.tar.gz"
-            Cuda = "11.8"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.4.0-firominer/firominer-linux-x86_64-cuda12.9-opencl-1.4.0.tar.gz"
+            Cuda = "12.9"
         }
     )
 } else {
     $UriCuda = @(
         [PSCustomObject]@{
             Path = ".\Bin\NVIDIA-FiroPOW\bin\firominer.exe"
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.0-firominer/firominer-windows-x86_64-cuda11.8-opencl.zip"
-            Cuda = "11.8"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.4.0-firominer/firominer-windows-x86_64-cuda12.9-opencl-1.4.0.zip"
+            Cuda = "12.9"
         }
     )
 }
