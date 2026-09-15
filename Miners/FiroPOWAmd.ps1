@@ -13,14 +13,14 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # 
 $Port = "418{0:d2}"
 $ManualURI = "https://github.com/firoorg/firominer/releases"
 $DevFee = 0.0
-$Version = "1.2.0"
+$Version = "1.4.0"
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-FiroPOW\bin\firominer"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.0-firominer/firominer-linux-x86_64-opencl.tar.gz"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.4.0-firominer/firominer-linux-x86_64-opencl-1.4.0.tar.gz"
 } else {
     $Path = ".\Bin\AMD-FiroPOW\bin\firominer.exe"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.0-firominer/firominer-windows-x86_64-opencl.zip"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.4.0-firominer/firominer-windows-x86_64-opencl-1.4.0.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
