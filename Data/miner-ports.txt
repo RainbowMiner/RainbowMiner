@@ -45,6 +45,7 @@
 144	CcminerZP
 145	CcminerXaja
 146	CcminerCool
+147	CcminerTpfuemp
 
 200	CpuminerJayddee
 201	CpuminerRplantPW
