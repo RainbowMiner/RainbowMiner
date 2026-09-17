@@ -17,14 +17,14 @@ $ManualUri = "https://github.com/bzminer/bzminer/releases"
 $Port = "332{0:d2}"
 $DevFee = 0.5
 $Cuda = "11.2"
-$Version = "100.21"
+$Version = "100.23"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-BzMiner\bzminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v100.21-bzminer/bzminer_v100.21_linux.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v100.23-bzminer/bzminer_v100.23_linux.tar.gz"
 } else {
     $Path = ".\Bin\GPU-BzMiner\bzminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v100.21-bzminer/bzminer_v100.21_windows.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v100.23-bzminer/bzminer_v100.23_windows.zip"
 }
 
 $ExcludePoolName = "prohashing|miningrigrentals"
@@ -40,6 +40,9 @@ $ExcludePoolName = "prohashing|miningrigrentals"
 # nexa on CPU and NVIDIA, and c29 - Tari's original Cuckaroo29. Careful with that one:
 # "c29" resolves to Cuckaroom29 in algorithms.json, so it mines as "cuckaroo29" here
 # and hands the miner its own name through Algorithm.
+# v100.23 raises the pearl dev fee to 2%, and AMD cards no longer need the HIP
+# drivers. Its auto-update option defaults to off, so the binary stays the one
+# RainbowMiner downloaded.
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cn-heavy/0";   MinMemGb = 3.3; Params = ""; Vendor = @("AMD","CPU","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0} #CryptoNightHeavy
     [PSCustomObject]@{MainAlgorithm = "cn-heavy/xhv"; MinMemGb = 3.3; Params = ""; Vendor = @("AMD","CPU","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0} #CryptoNightHeavyXhv/XHV
@@ -62,7 +65,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethash";  DAG = $true; MinMemGb = 3; Params = ""; Vendor = @("AMD","NVIDIA");         ExtendInterval = 2; Fee = 0.5} #Ethash/ETHW
     [PSCustomObject]@{MainAlgorithm = "kawpow";  DAG = $true; MinMemGb = 3; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0} #KawPow
     [PSCustomObject]@{MainAlgorithm = "nexa";    DAG = $true; MinMemGb = 2; Params = ""; Vendor = @("CPU","NVIDIA");         ExtendInterval = 2; Fee = 2.0} #NexaPoW/NEXA
-    [PSCustomObject]@{MainAlgorithm = "pearl";                MinMemGb = 2; Params = ""; Vendor = @("AMD","CPU","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0; ExcludePoolName = "84.32.220.219|129.226.55.135"} #PearlHash/PRL
+    [PSCustomObject]@{MainAlgorithm = "pearl";                MinMemGb = 2; Params = ""; Vendor = @("AMD","CPU","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 2.0; ExcludePoolName = "84.32.220.219|129.226.55.135"} #PearlHash/PRL
     [PSCustomObject]@{MainAlgorithm = "quantus";              MinMemGb = 2; Params = ""; Vendor = @("AMD","CPU","NVIDIA");   ExtendInterval = 2; Fee = 2.0} #Quantus/QUAN
     [PSCustomObject]@{MainAlgorithm = "randomx";              MinMemGb = 2; Params = ""; Vendor = @("CPU");                  ExtendInterval = 2; Fee = 1.0} #RandomX/XMR
     [PSCustomObject]@{MainAlgorithm = "verus";                MinMemGb = 1; Params = ""; Vendor = @("CPU");                  ExtendInterval = 2; Fee = 1.0} #VerusHash/VRSC
