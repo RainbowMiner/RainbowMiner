@@ -51,9 +51,8 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "yescryptr16"; Params = "-a yescryptr16"; ExtendInterval = 2} #YescryptR16/GOLD
     [PSCustomObject]@{MainAlgorithm = "yescryptr32"; Params = "-a yescryptr32"; ExtendInterval = 2} #YescryptR32/LBTC
     [PSCustomObject]@{MainAlgorithm = "yespower"; Params = "-a yespower"; ExtendInterval = 2} #Yespower/BELL
-    [PSCustomObject]@{MainAlgorithm = "yespoweradvc"; Params = "-a yespoweradvc"; ExtendInterval = 2} #YespowerADVC/ADVC
+    [PSCustomObject]@{MainAlgorithm = "yespoweradvc"; Params = "-a yespower --yespower-param 2048,32 --yespower-key `"Let the quest begin`""; ExtendInterval = 2} #YespowerADVC/ADVC
     [PSCustomObject]@{MainAlgorithm = "yespowerarwn"; Params = "-a yespowerarwn"; ExtendInterval = 2} #YespowerARWN/ARWN
-    [PSCustomObject]@{MainAlgorithm = "yespowereqpay"; Params = "-a yespowereqpay"; ExtendInterval = 2} #YespowerEQPAY/EQPAY
     [PSCustomObject]@{MainAlgorithm = "yespoweric"; Params = "-a yespoweric"; ExtendInterval = 2} #YespowerIC/ISO
     [PSCustomObject]@{MainAlgorithm = "yespoweriots"; Params = "-a yespoweriots"; ExtendInterval = 2} #YespowerIOTS/IOTS
     [PSCustomObject]@{MainAlgorithm = "yespowerlitb"; Params = "-a yespowerlitb"; ExtendInterval = 2} #YespowerLITB/LITB
