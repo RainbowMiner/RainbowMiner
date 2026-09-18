@@ -17,10 +17,10 @@ $Version = "1.5.0"
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-FiroPOW\bin\firominer"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5.0-firominer/firominer-linux-x86_64-opencl.tar.gz"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5.0-firominer/firominer-linux-x86_64-opencl-1.5.0.tar.gz"
 } else {
     $Path = ".\Bin\AMD-FiroPOW\bin\firominer.exe"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5.0-firominer/firominer-windows-x86_64-opencl.zip"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5.0-firominer/firominer-windows-x86_64-opencl-1.5.0.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
