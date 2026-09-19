@@ -167,7 +167,9 @@ param(
                     $DeviceNameMatch = "($(("$($Miner.DeviceName -join "|")" -replace "[^A-Z0-9\|]").ToLower()))"
 
                     if ($CommandTool -eq "tmux") {
-                        Invoke-Exe "tmux" -ArgumentList "list-sessions -F '#{session_name}' 2>/dev/null" -ExpandLines | Where-Object { $_ -match "$($WorkerName)_oc_[a-z0-9_-]+" } | ForEach-Object {
+                        # tmux is started directly, without a shell: the format string must
+                        # not be quoted and a "2>/dev/null" would arrive as an argument
+                        Invoke-Exe "tmux" -ArgumentList "list-sessions -F #{session_name}" -ExpandLines | Where-Object { $_ -match "$($WorkerName)_oc_[a-z0-9_-]+" } | ForEach-Object {
                             $Name = $_
                             if ($Name -match $DeviceNameMatch) {
                                 Invoke-Exe "tmux" -ArgumentList "send-keys -t $Name C-c" > $null
@@ -189,7 +191,7 @@ param(
                     }
                 } else {
                     if ($CommandTool -eq "tmux") {
-                        Invoke-Exe "tmux" -ArgumentList "list-sessions -F '#{session_name}' 2>/dev/null" -ExpandLines | Where-Object { $_ -match "$ScreenName" } | ForEach-Object {
+                        Invoke-Exe "tmux" -ArgumentList "list-sessions -F #{session_name}" -ExpandLines | Where-Object { $_ -match "$ScreenName" } | ForEach-Object {
                             $Name = $_
                             Invoke-Exe "tmux" -ArgumentList "send-keys -t $Name C-c" > $null
                             Start-Sleep -Milliseconds 250

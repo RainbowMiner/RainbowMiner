@@ -1182,14 +1182,17 @@ function Stop-SubProcess {
                     }
                 }
             } elseif ($Job.ScreenCmd -eq "tmux") {
-                $ArgumentList = "kill-session -t $($Job.ScreenName) >/dev/null 2>&1"
+                # no shell here: the argument string goes straight to tmux, so a
+                # ">/dev/null 2>&1" would arrive as extra arguments and tmux would bail
+                # out with "too many arguments" instead of killing the session. Invoke-Exe
+                # captures and drops stderr, which keeps a gone session quiet
+                $ArgumentList = "kill-session -t $($Job.ScreenName)"
                 if ($Session.Config.EnableMinersAsRoot -and (Test-OCDaemon)) {
-                    $Cmd = "tmux $ArgumentList"
+                    $Cmd = "tmux $ArgumentList >/dev/null 2>&1"
                     $Msg = Invoke-OCDaemon -Cmd $Cmd
                     if ($Msg) {Write-Log "OCDaemon for `"$Cmd`" reports: $Msg"}
                 } else {
-                    $Screen_Process = Start-Process "tmux" -ArgumentList $ArgumentList -PassThru
-                    $Screen_Process.WaitForExit(5000) > $null
+                    Invoke-Exe "tmux" -ArgumentList $ArgumentList > $null
                 }
             }
         } catch {
