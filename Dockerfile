@@ -44,4 +44,4 @@ RUN apt-get update && chmod +x *.sh && ./install.sh
 EXPOSE 4000
 
 # กำหนดคำสั่งเริ่มต้น
-CMD ["./start.sh"]
+CMD ["./start-tmux.sh"]
