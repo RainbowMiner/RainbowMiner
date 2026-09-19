@@ -217,11 +217,14 @@ param(
                     if ($CommandTool -eq "tmux") {
                         Invoke-Exe "tmux" -ArgumentList "new-session -d -s $ScreenName" > $null
                         Start-Sleep -Milliseconds 500
-                        Invoke-Exe "tmux" -ArgumentList "send-keys -t $ScreenName $FilePath C-m" > $null
+                        # quote the path: without a shell the argument string is split on
+                        # spaces, so an install directory containing one would be sent as two
+                        # fragments with the space lost
+                        Invoke-Exe "tmux" -ArgumentList "send-keys -t $ScreenName `"$FilePath`" C-m" > $null
                     } else {
                         Invoke-Exe "screen" -ArgumentList "-S $ScreenName -d -m" > $null
                         Start-Sleep -Milliseconds 500
-                        Invoke-Exe "screen" -ArgumentList "-S $ScreenName -X stuff $FilePath`n" > $null
+                        Invoke-Exe "screen" -ArgumentList "-S $ScreenName -X stuff `"$FilePath`n`"" > $null
                     }
 
                     if ($IsTemporaryPath) {Remove-Item $FilePath -Force -ErrorAction Ignore}
