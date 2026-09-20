@@ -5678,7 +5678,10 @@ function Stop-Core {
                 Invoke-OCDaemon -Cmd $Cmd > $null
             }
 
-            Invoke-Exe "tmux" -ArgumentList "list-sessions -F '#{session_name}' 2>/dev/null" -ExpandLines | Where-Object { $_ -match "($($WorkerName)_[a-z0-9_-]+)" } | ForEach-Object {
+            # Invoke-Exe starts tmux directly (no shell): neither a "2>/dev/null" nor
+            # the quotes around the format string would be interpreted - tmux would
+            # see them as arguments and fail. Its stderr is captured and dropped anyway
+            Invoke-Exe "tmux" -ArgumentList "list-sessions -F #{session_name}" -ExpandLines | Where-Object { $_ -match "($($WorkerName)_[a-z0-9_-]+)" } | ForEach-Object {
                 $SessionName = $Matches[1]       
                 Invoke-Exe "tmux" -ArgumentList "send-keys -t $SessionName C-c" > $null
                 Start-Sleep -Milliseconds 250

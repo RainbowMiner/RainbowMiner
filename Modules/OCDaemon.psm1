@@ -167,7 +167,9 @@ param(
                     $DeviceNameMatch = "($(("$($Miner.DeviceName -join "|")" -replace "[^A-Z0-9\|]").ToLower()))"
 
                     if ($CommandTool -eq "tmux") {
-                        Invoke-Exe "tmux" -ArgumentList "list-sessions -F '#{session_name}' 2>/dev/null" -ExpandLines | Where-Object { $_ -match "$($WorkerName)_oc_[a-z0-9_-]+" } | ForEach-Object {
+                        # tmux is started directly, without a shell: the format string must
+                        # not be quoted and a "2>/dev/null" would arrive as an argument
+                        Invoke-Exe "tmux" -ArgumentList "list-sessions -F #{session_name}" -ExpandLines | Where-Object { $_ -match "$($WorkerName)_oc_[a-z0-9_-]+" } | ForEach-Object {
                             $Name = $_
                             if ($Name -match $DeviceNameMatch) {
                                 Invoke-Exe "tmux" -ArgumentList "send-keys -t $Name C-c" > $null
@@ -189,7 +191,7 @@ param(
                     }
                 } else {
                     if ($CommandTool -eq "tmux") {
-                        Invoke-Exe "tmux" -ArgumentList "list-sessions -F '#{session_name}' 2>/dev/null" -ExpandLines | Where-Object { $_ -match "$ScreenName" } | ForEach-Object {
+                        Invoke-Exe "tmux" -ArgumentList "list-sessions -F #{session_name}" -ExpandLines | Where-Object { $_ -match "$ScreenName" } | ForEach-Object {
                             $Name = $_
                             Invoke-Exe "tmux" -ArgumentList "send-keys -t $Name C-c" > $null
                             Start-Sleep -Milliseconds 250
@@ -215,11 +217,14 @@ param(
                     if ($CommandTool -eq "tmux") {
                         Invoke-Exe "tmux" -ArgumentList "new-session -d -s $ScreenName" > $null
                         Start-Sleep -Milliseconds 500
-                        Invoke-Exe "tmux" -ArgumentList "send-keys -t $ScreenName $FilePath C-m" > $null
+                        # quote the path: without a shell the argument string is split on
+                        # spaces, so an install directory containing one would be sent as two
+                        # fragments with the space lost
+                        Invoke-Exe "tmux" -ArgumentList "send-keys -t $ScreenName `"$FilePath`" C-m" > $null
                     } else {
                         Invoke-Exe "screen" -ArgumentList "-S $ScreenName -d -m" > $null
                         Start-Sleep -Milliseconds 500
-                        Invoke-Exe "screen" -ArgumentList "-S $ScreenName -X stuff $FilePath`n" > $null
+                        Invoke-Exe "screen" -ArgumentList "-S $ScreenName -X stuff `"$FilePath`n`"" > $null
                     }
 
                     if ($IsTemporaryPath) {Remove-Item $FilePath -Force -ErrorAction Ignore}
