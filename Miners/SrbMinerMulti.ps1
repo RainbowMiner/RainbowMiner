@@ -13,15 +13,15 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.De
 $ManualUri = "https://bitcointalk.org/index.php?topic=5190081.0"
 $Port = "349{0:d2}"
 $DevFee = 0.85
-$Version = "3.6.7"
+$Version = "3.6.8"
 $Cuda = "11.7"
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.6.7-srbminermulti/SRBMiner-Multi-3-6-7-Linux.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.6.8-srbminermulti/SRBMiner-Multi-3-6-8-Linux.tar.gz"
 } else {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.6.7-srbminermulti/SRBMiner-Multi-3-6-7-win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.6.8-srbminermulti/SRBMiner-Multi-3-6-8-win64.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -118,7 +118,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "progpow_veil"     ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","NVIDIA"); ExcludeCompute = @("Volta")} #ProgPowVEIL/VEIL
     [PSCustomObject]@{MainAlgorithm = "progpow_zano"     ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","INTEL","NVIDIA"); ExcludeCompute = $null} #ProgPowZANO/ZANO
     [PSCustomObject]@{MainAlgorithm = "qhash"            ;              Params = ""; Fee = 1.50;               Vendor = @("AMD","INTEL","NVIDIA"); ExcludeCompute = @("Volta")} #Qhash/QTC
-    [PSCustomObject]@{MainAlgorithm = "quantus"          ;              Params = ""; Fee = 2.00;               Vendor = @("AMD","NVIDIA"); ExcludeCompute = @("GCN51","GCN50")} #Quantus, AMD RDNA only, every NVIDIA incl. Volta (SM70 improved with v3.6.6, RTX 2000-5000 with v3.6.7), LuckyPool stratum (the QUIC pool protocol is not supported)
+    [PSCustomObject]@{MainAlgorithm = "quantus"          ;              Params = ""; Fee = 2.00;               Vendor = @("AMD","NVIDIA"); ExcludeCompute = @("GCN51","GCN50"); IncludeCompute = @("GCN4")} #Quantus, AMD RDNA plus GCN4/Ellesmere (RX4xx/RX5xx, added with v3.6.8), every NVIDIA incl. Volta (SM70 improved with v3.6.6, RTX 2000-5000 with v3.6.7), LuckyPool stratum (the QUIC pool protocol is not supported)
     [PSCustomObject]@{MainAlgorithm = "sccpow"           ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 3; Vendor = @("AMD","INTEL","NVIDIA"); Algorithm = "firopow"; ExcludeCompute = @("Volta")} #SCCPow/SCC
     [PSCustomObject]@{MainAlgorithm = "sha256d_csd"      ;              Params = ""; Fee = 1.00; MinMemGb = 2; Vendor = @("AMD","INTEL","NVIDIA"); ExcludeCompute = @("Volta","GCN51","GCN50")} #SHA256csd/CSD
     #[PSCustomObject]@{MainAlgorithm = "sha256dt"         ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","INTEL","NVIDIA"); ExcludeCompute = @("Volta")} #SHA256dt/NOVO
@@ -250,6 +250,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
             $SecondAlgorithm_Norm_0 = if ($_.SecondaryAlgorithm) {Get-Algorithm $_.SecondaryAlgorithm} else {$null}
 
             $ExcludeCompute = $_.ExcludeCompute
+            $IncludeCompute = $_.IncludeCompute
             $CpuFeatures = $_.CpuFeatures
 
             $Compute = $null
@@ -269,7 +270,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                 }
                 "AMD" {
                     $DeviceParams = " --disable-cpu --disable-gpu-nvidia --disable-gpu-intel"
-                    $Compute = $ValidCompute_AMD | Where-Object {-not $ExcludeCompute -or $_ -notin $ExcludeCompute}
+                    $Compute = @($ValidCompute_AMD) + @($IncludeCompute) | Where-Object {$_ -and (-not $ExcludeCompute -or $_ -notin $ExcludeCompute)}
                     $Compute_Param = "DeviceCapability"
                 }
                 "INTEL" {
