@@ -33,7 +33,12 @@ if (-not $Pool_Request.crypto) {
     return
 }
 
-$Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$Config.Pools.$Pool_Name.Wallets.$_ -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $_)} | Foreach-Object {
+# Kryptex reports Quantus Network as QTC (see Pools/Kryptex.ps1), the wallet is configured as QUAN
+[hashtable]$Pool_Xlat = @{
+    "QTC" = "QUAN"
+}
+
+$Pool_Request.crypto.PSObject.Properties.Name | Foreach-Object {if ($Pool_Xlat[$_]) {$Pool_Xlat[$_]} else {$_}} | Where-Object {$Config.Pools.$Pool_Name.Wallets.$_ -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $_)} | Foreach-Object {
 
     $Pool_Currency = $_
     $Pool_Wallet   = $Config.Pools.$Pool_Name.Wallets.$Pool_Currency

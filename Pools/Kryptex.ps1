@@ -38,12 +38,22 @@ if (-not ($Pool_Request | Measure-Object).Count) {
 $Pool_Regions = @("eu","ru","sg","us")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
-$Pool_Request | Where-Object {$Wallets."$($_.symbol)" -or $Email -ne "" -or $MiningUsername -ne "" -or $InfoOnly} | ForEach-Object {
+# Kryptex lists Quantus Network as QTC, colliding with Qubitcoin (Qhash) in CoinsDB, and
+# calls its algorithm "Poseidon2"; translate by the unique rpc id to our QUAN/Quantus
+[hashtable]$Pool_Xlat = @{
+    "qtc" = [PSCustomObject]@{symbol = "QUAN"; algo = "Quantus"}
+}
+
+$Pool_Request | ForEach-Object {
 
     $Pool_Rpc  = $_.rpc
+    $Pool_Xl   = if ($Pool_Rpc) {$Pool_Xlat[$Pool_Rpc]} else {$null}
 
-    $Pool_Currency = $_.symbol
-    $Pool_Algorithm_Norm = Get-Algorithm $_.algo
+    $Pool_Currency = if ($Pool_Xl) {$Pool_Xl.symbol} else {$_.symbol}
+
+    if (-not $Wallets.$Pool_Currency -and $Email -eq "" -and $MiningUsername -eq "" -and -not $InfoOnly) {return}
+
+    $Pool_Algorithm_Norm = Get-Algorithm $(if ($Pool_Xl) {$Pool_Xl.algo} else {$_.algo})
 
     $Pool_PoolFee = [Double]$_.fee_pps
     $Pool_DirectMining = $_.directMining
