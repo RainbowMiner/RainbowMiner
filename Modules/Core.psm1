@@ -1184,6 +1184,8 @@ function Invoke-Core {
         $API.LockMiners = $false
         $API.RemoteAPI = $true
         $API.ApplyOC = $false
+        $API.SetDevices = $false
+        $API.DeviceSelection = $null
         $API.IsVirtual = $true
         $API.APIport = $Session.Config.APIport
         $API.APIAuth = $Session.Config.APIAuth
@@ -2130,9 +2132,32 @@ function Invoke-Core {
         Remove-Variable -Name AllPools -Scope Global
     }
 
+    #remember the device selection of config.txt, so that a runtime override can be reverted.
+    #the config normalization above only runs when config.txt changed, so the snapshot has to be
+    #taken there, while the override below has to be applied in every round
+    if ($CheckConfig -or $Session.DeviceNameBase -eq $null) {
+        $Session.DeviceNameBase        = @($Session.Config.DeviceName)
+        $Session.ExcludeDeviceNameBase = @($Session.Config.ExcludeDeviceName)
+    }
+
+    #apply the runtime device override, set via the API command /setdevices. it lives in $Session
+    #(not $API, which is recreated on an API server restart) and is never written to config.txt,
+    #so a restart of RainbowMiner always returns to the configured selection. copy it once: the
+    #API thread may replace it while this round runs
+    $DeviceOverride = $Session.DeviceOverride
+    if ($DeviceOverride) {
+        $Session.Config.DeviceName        = @($DeviceOverride.DeviceName)
+        $Session.Config.ExcludeDeviceName = @($DeviceOverride.ExcludeDeviceName)
+    } else {
+        $Session.Config.DeviceName        = @($Session.DeviceNameBase)
+        $Session.Config.ExcludeDeviceName = @($Session.ExcludeDeviceNameBase)
+    }
+    $DeviceSelectionRefresh = $false
+
     #load device(s) information and device combos
     if ($CheckConfig -or $CheckCombos -or $ConfigBackup.MiningMode -ne $Session.Config.MiningMode -or (Compare-Object $Session.Config.DeviceName $ConfigBackup.DeviceName) -or (Compare-Object $Session.Config.ExcludeDeviceName $ConfigBackup.ExcludeDeviceName)) {
         if ($Session.RoundCounter -ne 0) {Write-Log "Device configuration changed. Refreshing now."}
+        $DeviceSelectionRefresh = $true
 
         #Load information about the devices
         $Global:DeviceCache.Devices = @()
@@ -2221,6 +2246,27 @@ function Invoke-Core {
         #Update device information for the first time
         Update-DeviceInformation $Global:DeviceCache.DevicesNames -UseAfterburner (-not $Session.Config.DisableMSIAmonitor) -DeviceConfig $Session.Config.Devices
     }
+
+    #publish the configured selection for the /getdevices and /setdevices commands, also after an
+    #API server restart wiped it. the selector is built from the device itself, because
+    #Data\devices.json matches "gpu#nn" against Index, "cpu#nn" against Type_Index and "nvidia#nn"
+    #against Type_Vendor_Index, while the device's own Name is always Type plus Type_Index - the
+    #API threads must not guess this. an empty DeviceName in config.txt selects nothing, and
+    #Get-Device without a name would return every device, so the list stays empty in that case
+    if ($DeviceSelectionRefresh -or -not $API.DeviceSelection) {
+        $API.DeviceSelection = [PSCustomObject]@{
+            Available = @(if ($Session.DeviceNameBase.Count) {Get-Device $Session.DeviceNameBase $Session.ExcludeDeviceNameBase | Sort-Object @{Expression={if ($_.Type -eq "CPU") {1} else {0}}},Index | Foreach-Object {
+                [PSCustomObject]@{
+                    Name       = $_.Name
+                    Selector   = if ($_.Type -eq "CPU") {"CPU#{0:d2}" -f $_.Type_Index} else {"GPU#{0:d2}" -f $_.Index}
+                    Type       = $_.Type
+                    Model      = $_.Model
+                    Model_Name = $_.Model_Name
+                }
+            }})
+            Active   = @($Global:DeviceCache.Devices.Name | Sort-Object)
+        }
+    }
     
     $ConfigBackup = $null
     Remove-Variable -Name ConfigBackup -ErrorAction Ignore
@@ -2232,9 +2278,17 @@ function Invoke-Core {
 
     $Global:DeviceCache.ConfigFullComboModelNames = @($Global:DeviceCache.DevicesByTypes.FullComboModels.PSObject.Properties.Name | Where-Object {$_})
 
-    if (-not $Global:DeviceCache.Devices) {
+    #an empty device list stops all mining. tell the two cases apart, so that a deliberate
+    #/setdevices command does not show up as an error
+    $Global:PauseMiners.Set([PauseStatus]::ByDevices,(-not $Global:DeviceCache.Devices -and $DeviceOverride -ne $null))
+    if (-not $Global:DeviceCache.Devices -and $DeviceOverride -eq $null) {
         $Global:PauseMiners.Set([PauseStatus]::ByError)
     }
+
+    #the pause mirror above was published before the devices were known, so refresh it here
+    $API.PauseMiners.Pause       = $Global:PauseMiners.Test()
+    $API.PauseMiners.PauseIA     = $Global:PauseMiners.TestIA()
+    $API.PauseMiners.PauseIAOnly = $Global:PauseMiners.TestIAOnly()
 
     #Check for miner config
     if (Set-ConfigDefault "Miners") {
@@ -3194,6 +3248,69 @@ function Invoke-Core {
         Write-Log -Level Info "End add missing combos"
         #ConvertTo-Json $AllMiners -Depth 10 | Set-Content ".\Cache\allminers.json"
     }
+
+    #Seed missing benchmarks from an already benchmarked device set of the same model. A miner
+    #instance is named after its devices, so a runtime device override (/setdevices) starts every
+    #new set without stats. All devices of one instance are the same model, so hashrate and power
+    #of a sibling set scale per device. The seed is written like a fastlane value: 10 s of duration,
+    #so the first accepted live sample replaces it, and IsFL, so three rejected samples reset it
+    $Seed_Candidates = @($AllMiners | Where-Object {$_.DeviceModel -ne "CPU" -and $_.DeviceModel -notmatch '-' -and $_.HashRates.PSObject.Properties.Name.Count -eq 1 -and $_.HashRates.PSObject.Properties.Value -contains $null})
+    if ($Seed_Candidates.Count -and $Global:StatsCache.Count -and (Test-Path Variable:Global:GlobalCachedDevices)) {
+        $Seed_Models = @{}
+        foreach ($Device in $Global:GlobalCachedDevices) {$Seed_Models[$Device.Name] = $Device.Model}
+
+        # index the cached miner stats by "<name without devices>|<algorithm>"
+        $Seed_Index = @{}
+        foreach ($Seed_Key in @($Global:StatsCache.Keys)) {
+            if ($Seed_Key -match '^(.+?)((?:-(?:GPU|CPU)#\d+)+)_([^_]+)_HashRate$') {
+                $Seed_Group = "$($Matches[1])|$($Matches[3])"
+                if (-not $Seed_Index.ContainsKey($Seed_Group)) {$Seed_Index[$Seed_Group] = [System.Collections.Generic.List[PSCustomObject]]::new()}
+                [void]$Seed_Index[$Seed_Group].Add([PSCustomObject]@{Key = $Seed_Key; Devices = @($Matches[2].TrimStart('-') -split '-')})
+            }
+        }
+
+        foreach ($Miner in $Seed_Candidates) {
+            $Miner_Algo    = "$($Miner.HashRates.PSObject.Properties.Name -replace '\-.*$')"
+            $Miner_Devices = @($Miner.DeviceName | Sort-Object)
+            $Seed_Group    = "$($Miner.Name -replace '(-(?:GPU|CPU)#\d+)+$')|$($Miner_Algo)"
+            if (-not $Seed_Index.ContainsKey($Seed_Group)) {continue}
+
+            # prefer a measured sibling over a seeded one, then the one with the most devices
+            $Seed_Source = $null
+            foreach ($Seed_Item in $Seed_Index[$Seed_Group]) {
+                $Seed_Stat = $Global:StatsCache[$Seed_Item.Key]
+                if ($Seed_Stat -eq $null -or -not ([double]$Seed_Stat.Week -gt 0)) {continue}
+                if (($Seed_Item.Devices -join '-') -eq ($Miner_Devices -join '-')) {continue}
+                if (@($Seed_Item.Devices | Where-Object {$Seed_Models[$_] -ne $Miner.DeviceModel}).Count) {continue}
+                $Seed_IsFL = [bool]$Seed_Stat.IsFL
+                if ($Seed_Source -eq $null -or ($Seed_Source.IsFL -and -not $Seed_IsFL) -or ($Seed_Source.IsFL -eq $Seed_IsFL -and $Seed_Item.Devices.Count -gt $Seed_Source.Count)) {
+                    $Seed_Source = [PSCustomObject]@{Key = $Seed_Item.Key; Count = $Seed_Item.Devices.Count; Week = [double]$Seed_Stat.Week; PowerDraw = [double]$Seed_Stat.PowerDraw_Average; Version = "$($Seed_Stat.Version)"; IsFL = $Seed_IsFL}
+                }
+            }
+
+            if ($Seed_Source) {
+                $Seed_Factor = $Miner_Devices.Count / $Seed_Source.Count
+                $Miner_HR    = $Seed_Source.Week * $Seed_Factor
+                $Miner.HashRates."$($Miner.HashRates.PSObject.Properties.Name)" = $Miner_HR
+                $Miner.PowerDraw = $Seed_Source.PowerDraw * $Seed_Factor
+                Set-Stat -Name "$($Miner.Name)_$($Miner_Algo)_HashRate" `
+                         -Value $Miner_HR `
+                         -Duration (New-TimeSpan -Seconds 10) `
+                         -FaultDetection $false `
+                         -PowerDraw $Miner.PowerDraw `
+                         -Sub $Global:DeviceCache.DevicesToVendors[$Miner.DeviceModel] `
+                         -Version $Seed_Source.Version `
+                         -IsFastlaneValue `
+                         -Quiet > $null
+                Write-Log "Seeded benchmark $($Miner.Name) $($Miner_Algo) with $($Miner_HR | ConvertTo-Hash) from $($Seed_Source.Key) (x$([Math]::Round($Seed_Factor,3)))"
+            }
+        }
+
+        $Seed_Models = $Seed_Index = $Seed_Source = $Seed_Stat = $Seed_Item = $Seed_Key = $Seed_Group = $Seed_Factor = $Seed_IsFL = $Miner_HR = $Miner_Algo = $Miner_Devices = $null
+        Remove-Variable -Name Seed_Models, Seed_Index, Seed_Source, Seed_Stat, Seed_Item, Seed_Key, Seed_Group, Seed_Factor, Seed_IsFL, Miner_HR, Miner_Algo, Miner_Devices -ErrorAction Ignore
+    }
+    $Seed_Candidates = $null
+    Remove-Variable -Name Seed_Candidates -ErrorAction Ignore
 
     #Handle fastlane benchmarks
     if (-not ($Session.RoundCounter % 50) -and $Session.Config.EnableFastlaneBenchmark) {
@@ -4851,6 +4968,11 @@ function Invoke-Core {
         Write-Host -NoNewLine "PAUSED BY BATTERY" -ForegroundColor Red
         Write-Host " (edit config.txt to change)"
         Write-Host " "
+    } elseif ($Global:PauseMiners.Test([PauseStatus]::ByDevices)) {
+        Write-Host -NoNewline "Status: "
+        Write-Host -NoNewLine "PAUSED BY DEVICE SELECTION" -ForegroundColor Red
+        Write-Host " (call /setdevices?reset=1 to resume)"
+        Write-Host " "
     } elseif ($Global:PauseMiners.Test()) {
         Write-Host -NoNewline "Status: "
         Write-Host -NoNewLine "PAUSED $($Global:PauseMiners.Status -join ",")" -ForegroundColor Red
@@ -5282,6 +5404,7 @@ function Invoke-Core {
                             elseif ($API.UpdateBalance) {"B"}
                             elseif ($API.WatchdogReset) {"W"}
                             elseif ($API.ClearCache) {"E"}
+                            elseif ($API.SetDevices) {"SD"}
                             elseif ($API.CmdKey -ne '') {$API.CmdKey}
                             elseif ($Session.Config.RestartRBMTimespan -gt 0 -and $Session.StartTimeCore.AddSeconds($Session.Config.RestartRBMTimespan) -le (Get-Date).ToUniversalTime()) {"RT"}
                             elseif ($Session.Config.RestartRBMMemory -gt 0 -and $Global:last_memory_usage_byte -and $Session.Config.RestartRBMMemory -lt $Global:last_memory_usage_byte) {"RM"}
@@ -5442,6 +5565,14 @@ function Invoke-Core {
                     Start-AsyncLoader -Interval $Session.Config.Interval -Quickstart $Session.Config.Quickstart
                     Write-Host -NoNewline "[E] pressed - cache cleared, Asyncloader restarted."
                     Write-Log "User requests to clear the cache: Asyncloader restarted."
+                    $keyPressed = $true
+                    Break
+                }
+                "SD" {
+                    $API.SetDevices = $false
+                    if ($CursorPosition -ne $null) {try {$host.UI.RawUI.CursorPosition = $CursorPosition} catch {}}
+                    Write-Log "Device selection changed via API. "
+                    Write-Host -NoNewline "Device selection changed via API - next run will start immediatly. "
                     $keyPressed = $true
                     Break
                 }

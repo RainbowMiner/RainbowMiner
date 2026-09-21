@@ -13,7 +13,7 @@ if (-not $Pool_Wallet -or ($Config.ExcludeCoinsymbolBalances.Count -and $Config.
 $Request = [PSCustomObject]@{}
 
 try {
-    $Request = Invoke-RestMethodAsync "https://pearlhash.xyz/api/account/$($Pool_Wallet)" -delay 100 -cycletime ($Config.BalanceUpdateMinutes*60)
+    $Request = Invoke-RestMethodAsync "https://pearlhash.xyz/api/account/$($Pool_Wallet)" -delay 100 -cycletime ($Config.BalanceUpdateMinutes*60) -fixbigint
     if (-not $Request.balance_transactions) {
         Write-Log -Level Info "Pool Balance API ($Name) for $($Pool_Currency) returned nothing. "
     } else {

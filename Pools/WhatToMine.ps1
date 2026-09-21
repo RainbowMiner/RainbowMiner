@@ -73,7 +73,7 @@ $ok = $false
 $Pool_Request = @()
 try {
     $Pool_Request = Invoke-RestMethodAsync "https://api.rbminer.net/data/minerstat.json" -tag $Name -cycletime 240
-    if ($Pool_Request -and ($Pool_Request | Measure-Object).Count -ge 10) {
+    if ($Pool_Request -and ($Pool_Request | Measure-Object).Count -ge 1) {
         $ok = $true
     } else {
         Write-Log -Level Warn "Pool API Minerstat ($Name) returned nothing. "

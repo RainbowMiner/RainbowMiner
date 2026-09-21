@@ -236,7 +236,7 @@ function Set-Stat {
                 if (-not $Quiet) {
                     if ($mode -eq "Miners") {
                         if ($StatResetValue -ne $null) {
-                            Write-Log -Level $LogLevel "Stat file ($Name) will be reset, because fastlane benchmark value $($StatResetValue | ConvertTo-Hash) is too far off of $($Value | ConvertTo-Hash). "
+                            Write-Log -Level $LogLevel "Stat file ($Name) will be reset, because the seeded value $($StatResetValue | ConvertTo-Hash) (fastlane or derived from another device set) is too far off of $($Value | ConvertTo-Hash). "
                         } else {
                             Write-Log -Level $LogLevel "Stat file ($Name) was not updated because the value $($Value | ConvertTo-Hash) is outside fault tolerance $($ToleranceMin | ConvertTo-Hash) to $($ToleranceMax | ConvertTo-Hash). "
                         }

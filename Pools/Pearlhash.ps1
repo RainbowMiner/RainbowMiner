@@ -40,7 +40,7 @@ if (-not $InfoOnly) {
     $Pool_Request    = [PSCustomObject]@{}
     $Network_Request = [PSCustomObject]@{}
     try {
-        $Pool_Request    = Invoke-RestMethodAsync "https://pearlhash.xyz/api/stats" -tag $Name -cycletime 120
+        $Pool_Request    = Invoke-RestMethodAsync "https://pearlhash.xyz/api/stats" -tag $Name -cycletime 120 -fixbigint
         $Network_Request = Invoke-RestMethodAsync "https://pearlhash.xyz/api/chain-info" -tag $Name -cycletime 120 -fixbigint
     }
     catch {

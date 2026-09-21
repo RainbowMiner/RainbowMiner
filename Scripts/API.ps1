@@ -954,17 +954,22 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
         }
         "/getdeviceconfig" {
             $Data = if ($API.AllDevices) {
+                # always report the selection of config.txt, never a runtime override set via
+                # /setdevices - the setup form writes its checkboxes back into config.txt, and a
+                # temporary override must not become permanent by pressing Save
+                $DeviceName_Config        = if ($Session.DeviceNameBase -ne $null) {$Session.DeviceNameBase} else {$Session.Config.DeviceName}
+                $ExcludeDeviceName_Config = if ($Session.ExcludeDeviceNameBase -ne $null) {$Session.ExcludeDeviceNameBase} else {$Session.Config.ExcludeDeviceName}
                 $GPUDevices = $API.AllDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -in @("AMD","INTEL","NVIDIA")}
                 $CPUDevice  = $API.AllDevices | Where-Object {$_.Type -eq "Cpu"} | Select-Object -First 1
                 ConvertTo-Json @(@("CPU") + @($GPUDevices.Vendor | Select-Object -Unique | Sort-Object) + @($GPUDevices.Model | Select-Object -Unique | Sort-Object) + @($GPUDevices.Name | Select-Object -Unique | Sort-Object) | Foreach-Object {
                     if ($_ -eq "CPU") {
-                        [PSCustomObject]@{Name=$_;Selected=$($_ -in $Session.Config.DeviceName);Excluded=$($_ -in $Session.Config.ExcludeDeviceName);Cores=$CPUDevice.Data.Cores;Threads=$CPUDevice.Data.Threads}
+                        [PSCustomObject]@{Name=$_;Selected=$($_ -in $DeviceName_Config);Excluded=$($_ -in $ExcludeDeviceName_Config);Cores=$CPUDevice.Data.Cores;Threads=$CPUDevice.Data.Threads}
                     } else {
-                        [PSCustomObject]@{Name=$_;Selected=$($_ -in $Session.Config.DeviceName);Excluded=$($_ -in $Session.Config.ExcludeDeviceName)}
+                        [PSCustomObject]@{Name=$_;Selected=$($_ -in $DeviceName_Config);Excluded=$($_ -in $ExcludeDeviceName_Config)}
                     }
                 }) -Depth 10
-                $GPUDevices = $CPUDevices = $null
-                Remove-Variable -Name GPUDevices, CPUDevice -ErrorAction Ignore
+                $GPUDevices = $CPUDevices = $DeviceName_Config = $ExcludeDeviceName_Config = $null
+                Remove-Variable -Name GPUDevices, CPUDevice, DeviceName_Config, ExcludeDeviceName_Config -ErrorAction Ignore
             } else {"[]"}
             Break
         }
@@ -1477,6 +1482,132 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 $API.Pause = $true
             }
             $Data = $API.Pause | ConvertTo-Json
+            Break
+        }
+        "/getdevices" {
+            # Available and Active are only republished when the device set actually changes, so
+            # read the override from $API directly - otherwise it would lag behind a /setdevices
+            # call that happens to resolve to the very same devices
+            $Data = if ($API.DeviceSelection) {
+                ConvertTo-Json ([PSCustomObject]@{
+                    Available = @($API.DeviceSelection.Available)
+                    Active    = @($API.DeviceSelection.Active)
+                    Override  = $Session.DeviceOverride
+                }) -Depth 10
+            } else {"{}"}
+            Break
+        }
+        "/setdevices" {
+            $Warnings = @()
+            $Error_Message = ""
+            $Override = $null
+
+            # never probe $Parameters.<name> directly: every object carries an intrinsic Count
+            # member, so $Parameters.count would answer 1 on PS7 (and nothing on 5.1) although no
+            # count was sent at all. Ask the property list instead
+            $Params_Sent = if ($Parameters) {@($Parameters.PSObject.Properties.Name)} else {@()}
+
+            if (-not $API.DeviceSelection) {
+                $Error_Message = "Device detection has not finished yet. Please try again in a moment."
+            } elseif ($Params_Sent -contains "reset" -and (Get-Yes $Parameters.reset)) {
+                $Override = $null
+            } elseif ($Params_Sent -contains "count") {
+                $Devices_Gpu  = @($API.DeviceSelection.Available | Where-Object {$_.Type -ne "CPU"})
+                $Devices_Cpu  = @($API.DeviceSelection.Available | Where-Object {$_.Type -eq "CPU"})
+                $Devices_Keep = @()
+                $Count_Param  = "$($Parameters.count)".Trim()
+                if ($Count_Param -match '^\d+$') {
+                    # count=N: the first N GPUs of the configured selection, whatever their model
+                    $Count_Wanted = [int]$Count_Param
+                    if ($Count_Wanted -gt $Devices_Gpu.Count) {
+                        $Warnings += "Only $($Devices_Gpu.Count) of $($Count_Wanted) requested GPUs are configured, using $($Devices_Gpu.Count)."
+                        $Count_Wanted = $Devices_Gpu.Count
+                    }
+                    $Devices_Keep = @($Devices_Gpu | Select-Object -First $Count_Wanted)
+                } elseif ($Count_Param -match '^[A-Za-z0-9_]+:\d+(\s*,\s*[A-Za-z0-9_]+:\d+)*$') {
+                    # count=<group>:<N>,..: per device group (the Model of /getdevices, incl. gpugroups
+                    # names), groups that are not named keep all their configured GPUs
+                    $Models_Avail = @($Devices_Gpu | Select-Object -ExpandProperty Model -Unique)
+                    $Count_Groups = [ordered]@{}
+                    foreach ($Count_Group in ($Count_Param -split '\s*,\s*')) {
+                        $Count_Model, $Count_Num = $Count_Group -split ':'
+                        $Count_Model = @($Models_Avail | Where-Object {$_ -eq $Count_Model} | Select-Object -First 1)
+                        if (-not $Count_Model.Count) {
+                            $Error_Message = "Unknown device group '$($Count_Group -replace ':.*$')'. Configured groups: $($Models_Avail -join ', ')"
+                            break
+                        }
+                        $Count_Groups[$Count_Model[0]] = [int]$Count_Num
+                    }
+                    if ($Error_Message -eq "") {
+                        $Count_Wanted = @()
+                        foreach ($Count_Model in $Models_Avail) {
+                            $Devices_Model = @($Devices_Gpu | Where-Object {$_.Model -eq $Count_Model})
+                            if ($Count_Groups.Contains($Count_Model)) {
+                                $Count_Num = $Count_Groups[$Count_Model]
+                                if ($Count_Num -gt $Devices_Model.Count) {
+                                    $Warnings += "Only $($Devices_Model.Count) of $($Count_Num) requested GPUs are configured in group $($Count_Model), using $($Devices_Model.Count)."
+                                    $Count_Num = $Devices_Model.Count
+                                }
+                                $Devices_Keep += @($Devices_Model | Select-Object -First $Count_Num)
+                                $Count_Wanted += "$($Count_Model):$($Count_Num)"
+                            } else {
+                                $Devices_Keep += $Devices_Model
+                            }
+                        }
+                        $Count_Wanted = $Count_Wanted -join ","
+                    }
+                } else {
+                    $Error_Message = "Parameter count must be a positive integer, or a list of <group>:<number> pairs like count=GTX1070:2,RTX3070:1"
+                }
+                if ($Error_Message -eq "") {
+                    $Override = [PSCustomObject]@{
+                        DeviceName        = @(@($Devices_Keep) + @($Devices_Cpu) | Select-Object -ExpandProperty Selector)
+                        ExcludeDeviceName = @($Session.ExcludeDeviceNameBase)
+                        Count             = $Count_Wanted
+                        Since             = "$((Get-Date).ToUniversalTime())"
+                        Source            = $RemoteIP
+                    }
+                }
+            } elseif ($Params_Sent -contains "devicename") {
+                $DeviceName_New        = @([regex]::split("$($Parameters.devicename)","\s*[,;]+\s*") | Where-Object {$_})
+                $ExcludeDeviceName_New = if ($Params_Sent -contains "excludedevicename") {@([regex]::split("$($Parameters.excludedevicename)","\s*[,;]+\s*") | Where-Object {$_})} else {@($Session.ExcludeDeviceNameBase)}
+                if (-not $DeviceName_New.Count) {
+                    $Error_Message = "Parameter devicename must not be empty. Use reset=1 to return to config.txt, or count=0 to stop mining."
+                } elseif (@($DeviceName_New + $ExcludeDeviceName_New | Where-Object {$_ -notmatch "^[A-Za-z0-9#\*\.\-_]+$"}).Count) {
+                    $Error_Message = "Parameters devicename and excludedevicename may only contain letters, digits and the characters # * . - _"
+                } else {
+                    $Override = [PSCustomObject]@{
+                        DeviceName        = $DeviceName_New
+                        ExcludeDeviceName = $ExcludeDeviceName_New
+                        Count             = $null
+                        Since             = "$((Get-Date).ToUniversalTime())"
+                        Source            = $RemoteIP
+                    }
+                }
+            } else {
+                $Error_Message = "Please call with one of the parameters count, devicename or reset."
+            }
+
+            if ($Error_Message -ne "") {
+                $Data = ConvertTo-Json ([PSCustomObject]@{Success=$false;Error=$Error_Message}) -Depth 10
+            } else {
+                $Session.DeviceOverride = $Override
+                $API.SetDevices     = $true
+                # wrap in @() - a bare if-expression unwraps a single-element array to a scalar and
+                # an empty one to $null, which would make the answer change shape
+                $Data = ConvertTo-Json ([PSCustomObject]@{
+                    Success           = $true
+                    DeviceName        = @(if ($Override) {$Override.DeviceName} else {$Session.DeviceNameBase})
+                    ExcludeDeviceName = @(if ($Override) {$Override.ExcludeDeviceName} else {$Session.ExcludeDeviceNameBase})
+                    Count             = if ($Override) {$Override.Count} else {$null}
+                    Available         = @($API.DeviceSelection.Available | Where-Object {$_.Type -ne "CPU"}).Count
+                    Pending           = $true
+                    Warnings          = @($Warnings)
+                }) -Depth 10
+            }
+
+            $Warnings = $Error_Message = $Override = $Params_Sent = $Devices_Gpu = $Devices_Cpu = $Devices_Keep = $Devices_Model = $Count_Param = $Count_Wanted = $Count_Groups = $Count_Group = $Count_Model = $Count_Num = $Models_Avail = $DeviceName_New = $ExcludeDeviceName_New = $null
+            Remove-Variable -Name Warnings, Error_Message, Override, Params_Sent, Devices_Gpu, Devices_Cpu, Devices_Keep, Devices_Model, Count_Param, Count_Wanted, Count_Groups, Count_Group, Count_Model, Count_Num, Models_Avail, DeviceName_New, ExcludeDeviceName_New -ErrorAction Ignore
             Break
         }
         "/lockminers" {

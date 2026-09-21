@@ -6,6 +6,7 @@ enum PauseStatus {
     ByActivity  = 4
     ByBattery   = 8
     ByError     = 16
+    ByDevices   = 32
 }
 
 class PauseMiners {
