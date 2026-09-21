@@ -33,6 +33,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "blake3decred"; Params = "-a decred"; ExtendInterval = 2} #Blake3Decred/DCR
     [PSCustomObject]@{MainAlgorithm = "curvehash"; Params = "-a curvehash"; ExtendInterval = 2} #CurveHash/CURVE
     [PSCustomObject]@{MainAlgorithm = "evohash"; Params = "-a evohash"; ExtendInterval = 2} #Evohash/EVOAI
+    [PSCustomObject]@{MainAlgorithm = "ghostrider"; Params = "-a ghostrider"; ExtendInterval = 2} #Ghostrider
     [PSCustomObject]@{MainAlgorithm = "hoohashpepew"; Params = "-a hoohash"; ExtendInterval = 2} #HoohashPepeW/PEPEW
     [PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = "-a lyra2v2"; ExtendInterval = 2} #Lyra2RE2/ABS
     [PSCustomObject]@{MainAlgorithm = "lyra2z330"; Params = "-a lyra2z330"; ExtendInterval = 2} #Lyra2z330/GXX
