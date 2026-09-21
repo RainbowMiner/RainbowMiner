@@ -17,6 +17,8 @@
     $API.ClearCache  = $false
     $API.ApplyOC     = $false
     $API.LockMiners  = $false
+    $API.SetDevices  = $false
+    $API.DeviceSelection = $null
     $API.IsVirtual   = $false
     $API.CmdMenu     = @()
     $API.CmdKey      = ''

@@ -27,6 +27,7 @@ Features: easy setup wizard with ad-hoc working default (no editing of files nee
 - **Profit auto-switch between pools (2Miners, Abelpool, AccPool, Acepool, BaikalMine, Binance, C3pool, CpuPool, Crazypool, DeepMinerZ, EpicMine, Ethwmine, F2pool, FlockPool, Gtpool, Hashcryptos, Hashpool, HashVault, Hellominer, [HeroMiners](https://herominers.com), [K1Pool](https://k1pool.com/invite/016079e6c5), [Kryptex](https://pool.kryptex.com/?ref=15aa84c0), LeafPool, LuckPool, LuckyPool, Luxor, MinerRocks, Mining4people, MiningDutch, [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069), Mintpond, Molepool, MoneroOcean, Nanopool, Neuropool, [Nicehash](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1), Pearlhash, Poolin, RaptoreumZone, Ravenminer, RPlant, SoloPool, Sunpool, SupportXmr, SuprNova, [unMineable](https://unmineable.com/?ref=U-TEMDPF), UUpool, ViaBTC, Vipor, WoolyPooly, XdagOrg, YadaMiners and Zpool)**
 - **Integrate own and custom pools as user pools, maintained on the User Pools page of the web interface (see [Doc/USERPOOLS.md](Doc/USERPOOLS.md))**
 - **Integrate your own miner programs as custom miners, compatible with HiveOS flight sheets (see [Doc/CUSTOMMINERS.md](Doc/CUSTOMMINERS.md))**
+- **Let your home automation switch GPUs on and off with one HTTP call, e.g. by room temperature (see [Doc/DEVICECONTROL.md](Doc/DEVICECONTROL.md))**
 - **Profit calculation, including real cost of electricity per miner**
 - **Uses the top actual available miner programs (Bminer, Ccminer, Claymore, CryptoDredge, Dstm, EnemyZ, Ewbf, Gminer, NBminer, Sgminer, SrbMiner, T-Rex, Xmrig and many more)**
 - **Easy setup wizard with ad-hoc working default - click Start.bat and off you go (RainbowMiner will ask for your credentials, no hassle with editing configuration files)**
@@ -62,6 +63,7 @@ The following documents are the source of truth and are kept up to date with eve
 | [Doc/POOLSCONFIG.md](Doc/POOLSCONFIG.md)                         | the per-pool settings in `Config\pools.config.txt`                                     |
 | [Doc/USERPOOLS.md](Doc/USERPOOLS.md)                             | add your own or other pools, that RainbowMiner does not ship                           |
 | [Doc/CUSTOMMINERS.md](Doc/CUSTOMMINERS.md)                       | add your own miner programs, incl. the import of HiveOS flight sheets                  |
+| [Doc/DEVICECONTROL.md](Doc/DEVICECONTROL.md)                     | switch GPUs on and off from home automation, without changing the config               |
 | [Doc/OVERCLOCKING.md](Doc/OVERCLOCKING.md)                       | the two overclocking options and the custom overclocking profiles                       |
 | [Doc/MININGRIGRENTALS.md](Doc/MININGRIGRENTALS.md)               | rent your rig out at MiningRigRentals.com                                               |
 | [Doc/NETWORKING.md](Doc/NETWORKING.md)                           | hints for the client/server setup of multiple rigs                                     |

@@ -201,6 +201,10 @@
         <a href="/devicecombos">/devicecombos</a>
         <p>Show a list of possible device combinations</p>
 
+        <h3>Device Selection</h3>
+        <a href="/getdevices">/getdevices</a>
+        <p>Show the device selection of config.txt (Available, each with the Selector to address it), the devices currently in use (Active) and the runtime override set by /setdevices, if any. See <a href="https://github.com/RainbowMiner/RainbowMiner/blob/master/Doc/DEVICECONTROL.md">Doc/DEVICECONTROL.md</a></p>
+
     </fieldset><fieldset>
         <legend>Algorithm Resources</legend>
 
@@ -225,6 +229,12 @@
         <h3>Pause</h3>
         <a href="/pause">/pause[?action=set|reset]</a>
         <p>Pause and restart mining. Without parameter "action", the Pause will be toggled. "action=set" will start Pause, "action=reset" will end Pause</p>
+
+        <h3>Set Devices</h3>
+        <a href="/setdevices">/setdevices?count=&lt;number of GPUs&gt;</a> |
+        <a href="/setdevices">/setdevices?devicename=&lt;list&gt;[&amp;excludedevicename=&lt;list&gt;]</a> |
+        <a href="/setdevices?reset=1">/setdevices?reset=1</a>
+        <p>Change the devices being mined on, without touching config.txt. "count" keeps the first n GPUs of the configured selection and leaves the CPU as configured, "devicename" takes a list of device descriptors (see /getdevices for the valid selectors), "reset=1" returns to the selection of config.txt. The change is applied at the start of the next round: about a second later while RainbowMiner is waiting, or when the current round ends if it is busy. The override is volatile: a restart of RainbowMiner returns to config.txt. Made for home automation - see <a href="https://github.com/RainbowMiner/RainbowMiner/blob/master/Doc/DEVICECONTROL.md">Doc/DEVICECONTROL.md</a></p>
 
         <h3>Status</h3>
         <a href="/status">/status</a>
