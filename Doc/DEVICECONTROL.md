@@ -126,9 +126,16 @@ parameters is used, checked in this order:
 
 - **reset=1** - drop the override and return to `config.txt`.
 - **count=N** - keep the first `N` GPUs of **Available**, in the order that `/getdevices`
-  lists them. The CPU part of your configured selection is left alone, so a rig that mines
-  on CPU and GPU keeps mining on the CPU. `N` larger than the number of configured GPUs is
-  clamped, and the clamp is reported in `Warnings`. `N=0` selects no GPU.
+  lists them, whatever their model. The CPU part of your configured selection is left
+  alone, so a rig that mines on CPU and GPU keeps mining on the CPU. `N` larger than the
+  number of configured GPUs is clamped, and the clamp is reported in `Warnings`. `N=0`
+  selects no GPU.
+- **count=GROUP:N,GROUP:N** - the same per device group, e.g. `count=GTX1070:2,RTX3070:1`
+  on a rig with four 1070s and two 3070s. A group is the `Model` that `/getdevices` shows;
+  a group name from `gpugroups.config.txt` such as `GTX1070A` works too, and case does not
+  matter. Groups you do not name keep all their configured GPUs, so `count=RTX3070:0`
+  parks the 3070s and leaves everything else running. An unknown name is rejected together
+  with the list of valid groups; `Count` in the answer echoes the applied list.
 - **devicename=LIST** - a comma or semicolon separated list of device selectors, used
   verbatim. Optionally combined with **excludedevicename=LIST**; when that is omitted, the
   excludes from `config.txt` are kept. Use this when *which* GPUs matters, e.g. to keep the

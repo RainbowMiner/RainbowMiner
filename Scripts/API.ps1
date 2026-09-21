@@ -1512,18 +1512,56 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             } elseif ($Params_Sent -contains "reset" -and (Get-Yes $Parameters.reset)) {
                 $Override = $null
             } elseif ($Params_Sent -contains "count") {
-                if ("$($Parameters.count)" -notmatch "^\d+$") {
-                    $Error_Message = "Parameter count must be a positive integer."
-                } else {
-                    $Devices_Gpu = @($API.DeviceSelection.Available | Where-Object {$_.Type -ne "CPU"})
-                    $Devices_Cpu = @($API.DeviceSelection.Available | Where-Object {$_.Type -eq "CPU"})
-                    $Count_Wanted = [int]$Parameters.count
+                $Devices_Gpu  = @($API.DeviceSelection.Available | Where-Object {$_.Type -ne "CPU"})
+                $Devices_Cpu  = @($API.DeviceSelection.Available | Where-Object {$_.Type -eq "CPU"})
+                $Devices_Keep = @()
+                $Count_Param  = "$($Parameters.count)".Trim()
+                if ($Count_Param -match '^\d+$') {
+                    # count=N: the first N GPUs of the configured selection, whatever their model
+                    $Count_Wanted = [int]$Count_Param
                     if ($Count_Wanted -gt $Devices_Gpu.Count) {
                         $Warnings += "Only $($Devices_Gpu.Count) of $($Count_Wanted) requested GPUs are configured, using $($Devices_Gpu.Count)."
                         $Count_Wanted = $Devices_Gpu.Count
                     }
+                    $Devices_Keep = @($Devices_Gpu | Select-Object -First $Count_Wanted)
+                } elseif ($Count_Param -match '^[A-Za-z0-9_]+:\d+(\s*,\s*[A-Za-z0-9_]+:\d+)*$') {
+                    # count=<group>:<N>,..: per device group (the Model of /getdevices, incl. gpugroups
+                    # names), groups that are not named keep all their configured GPUs
+                    $Models_Avail = @($Devices_Gpu | Select-Object -ExpandProperty Model -Unique)
+                    $Count_Groups = [ordered]@{}
+                    foreach ($Count_Group in ($Count_Param -split '\s*,\s*')) {
+                        $Count_Model, $Count_Num = $Count_Group -split ':'
+                        $Count_Model = @($Models_Avail | Where-Object {$_ -eq $Count_Model} | Select-Object -First 1)
+                        if (-not $Count_Model.Count) {
+                            $Error_Message = "Unknown device group '$($Count_Group -replace ':.*$')'. Configured groups: $($Models_Avail -join ', ')"
+                            break
+                        }
+                        $Count_Groups[$Count_Model[0]] = [int]$Count_Num
+                    }
+                    if ($Error_Message -eq "") {
+                        $Count_Wanted = @()
+                        foreach ($Count_Model in $Models_Avail) {
+                            $Devices_Model = @($Devices_Gpu | Where-Object {$_.Model -eq $Count_Model})
+                            if ($Count_Groups.Contains($Count_Model)) {
+                                $Count_Num = $Count_Groups[$Count_Model]
+                                if ($Count_Num -gt $Devices_Model.Count) {
+                                    $Warnings += "Only $($Devices_Model.Count) of $($Count_Num) requested GPUs are configured in group $($Count_Model), using $($Devices_Model.Count)."
+                                    $Count_Num = $Devices_Model.Count
+                                }
+                                $Devices_Keep += @($Devices_Model | Select-Object -First $Count_Num)
+                                $Count_Wanted += "$($Count_Model):$($Count_Num)"
+                            } else {
+                                $Devices_Keep += $Devices_Model
+                            }
+                        }
+                        $Count_Wanted = $Count_Wanted -join ","
+                    }
+                } else {
+                    $Error_Message = "Parameter count must be a positive integer, or a list of <group>:<number> pairs like count=GTX1070:2,RTX3070:1"
+                }
+                if ($Error_Message -eq "") {
                     $Override = [PSCustomObject]@{
-                        DeviceName        = @(@($Devices_Gpu | Select-Object -First $Count_Wanted) + @($Devices_Cpu) | Select-Object -ExpandProperty Selector)
+                        DeviceName        = @(@($Devices_Keep) + @($Devices_Cpu) | Select-Object -ExpandProperty Selector)
                         ExcludeDeviceName = @($Session.ExcludeDeviceNameBase)
                         Count             = $Count_Wanted
                         Since             = "$((Get-Date).ToUniversalTime())"
@@ -1568,8 +1606,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 }) -Depth 10
             }
 
-            $Warnings = $Error_Message = $Override = $Params_Sent = $Devices_Gpu = $Devices_Cpu = $Count_Wanted = $DeviceName_New = $ExcludeDeviceName_New = $null
-            Remove-Variable -Name Warnings, Error_Message, Override, Params_Sent, Devices_Gpu, Devices_Cpu, Count_Wanted, DeviceName_New, ExcludeDeviceName_New -ErrorAction Ignore
+            $Warnings = $Error_Message = $Override = $Params_Sent = $Devices_Gpu = $Devices_Cpu = $Devices_Keep = $Devices_Model = $Count_Param = $Count_Wanted = $Count_Groups = $Count_Group = $Count_Model = $Count_Num = $Models_Avail = $DeviceName_New = $ExcludeDeviceName_New = $null
+            Remove-Variable -Name Warnings, Error_Message, Override, Params_Sent, Devices_Gpu, Devices_Cpu, Devices_Keep, Devices_Model, Count_Param, Count_Wanted, Count_Groups, Count_Group, Count_Model, Count_Num, Models_Avail, DeviceName_New, ExcludeDeviceName_New -ErrorAction Ignore
             Break
         }
         "/lockminers" {

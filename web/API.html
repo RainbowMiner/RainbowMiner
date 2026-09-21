@@ -232,9 +232,10 @@
 
         <h3>Set Devices</h3>
         <a href="/setdevices">/setdevices?count=&lt;number of GPUs&gt;</a> |
+        <a href="/setdevices">/setdevices?count=&lt;group&gt;:&lt;number&gt;,...</a> |
         <a href="/setdevices">/setdevices?devicename=&lt;list&gt;[&amp;excludedevicename=&lt;list&gt;]</a> |
         <a href="/setdevices?reset=1">/setdevices?reset=1</a>
-        <p>Change the devices being mined on, without touching config.txt. "count" keeps the first n GPUs of the configured selection and leaves the CPU as configured, "devicename" takes a list of device descriptors (see /getdevices for the valid selectors), "reset=1" returns to the selection of config.txt. The change is applied at the start of the next round: about a second later while RainbowMiner is waiting, or when the current round ends if it is busy. The override is volatile: a restart of RainbowMiner returns to config.txt. Made for home automation - see <a href="https://github.com/RainbowMiner/RainbowMiner/blob/master/Doc/DEVICECONTROL.md">Doc/DEVICECONTROL.md</a></p>
+        <p>Change the devices being mined on, without touching config.txt. "count" keeps the first n GPUs of the configured selection and leaves the CPU as configured - or per device group, e.g. count=GTX1070:2,RTX3070:1, where groups not named keep all their GPUs - "devicename" takes a list of device descriptors (see /getdevices for the valid selectors), "reset=1" returns to the selection of config.txt. The change is applied at the start of the next round: about a second later while RainbowMiner is waiting, or when the current round ends if it is busy. The override is volatile: a restart of RainbowMiner returns to config.txt. Made for home automation - see <a href="https://github.com/RainbowMiner/RainbowMiner/blob/master/Doc/DEVICECONTROL.md">Doc/DEVICECONTROL.md</a></p>
 
         <h3>Status</h3>
         <a href="/status">/status</a>
