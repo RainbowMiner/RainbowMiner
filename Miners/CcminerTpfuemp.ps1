@@ -14,14 +14,14 @@ $ManualUri = "https://github.com/tpfuemp/ccminer-tpfuemp/releases"
 $Port = "147{0:d2}"
 $DevFee = 0.0
 $Cuda = "11.8"
-$Version = "2026.09"
+$Version = "2026.09.1"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CcminerTpfuemp\ccminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2026.09-ccminertpfuemp/ccminer-tpfuemp-2026.09-linux-x64.tar.gz"
+    $Uri = "https://github.com/tpfuemp/ccminer-tpfuemp/releases/download/v2026.09.1/ccminer-tpfuemp-2026.09.1-linux-x64.tar.gz"
 } else {
     $Path = ".\Bin\NVIDIA-CcminerTpfuemp\ccminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2026.09-ccminertpfuemp/ccminer-tpfuemp-2026.09-windows-x64.zip"
+    $Uri = "https://github.com/tpfuemp/ccminer-tpfuemp/releases/download/v2026.09.1/ccminer-tpfuemp-2026.09.1-windows-x64.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -32,11 +32,15 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "blake2s"; Params = "-a blake2s"; ExtendInterval = 2} #Blake2s/KDA
     [PSCustomObject]@{MainAlgorithm = "blake3decred"; Params = "-a decred"; ExtendInterval = 2} #Blake3Decred/DCR
     [PSCustomObject]@{MainAlgorithm = "curvehash"; Params = "-a curvehash"; ExtendInterval = 2} #CurveHash/CURVE
+    [PSCustomObject]@{MainAlgorithm = "equihash144"; Params = "-a equihash144"; ExtendInterval = 2} #Equihash144
+    [PSCustomObject]@{MainAlgorithm = "equihash192"; Params = "-a equihash192"; ExtendInterval = 2} #Equihash192
     [PSCustomObject]@{MainAlgorithm = "evohash"; Params = "-a evohash"; ExtendInterval = 2} #Evohash/EVOAI
+    [PSCustomObject]@{MainAlgorithm = "flex"; Params = "-a flex"; ExtendInterval = 2} #Flex
     [PSCustomObject]@{MainAlgorithm = "ghostrider"; Params = "-a ghostrider"; ExtendInterval = 2} #Ghostrider
     [PSCustomObject]@{MainAlgorithm = "hoohashpepew"; Params = "-a hoohash"; ExtendInterval = 2} #HoohashPepeW/PEPEW
     [PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = "-a lyra2v2"; ExtendInterval = 2} #Lyra2RE2/ABS
     [PSCustomObject]@{MainAlgorithm = "lyra2z330"; Params = "-a lyra2z330"; ExtendInterval = 2} #Lyra2z330/GXX
+    [PSCustomObject]@{MainAlgorithm = "mike"; Params = "-a mike"; ExtendInterval = 2} #Mike
     [PSCustomObject]@{MainAlgorithm = "neoscryptxaya"; Params = "-a neoscrypt-xaya"; ExtendInterval = 2} #NeoScryptXaya/CHI
     [PSCustomObject]@{MainAlgorithm = "odocrypt"; Params = "-a odocrypt"; ExtendInterval = 2} #Odocrypt/DGB
     [PSCustomObject]@{MainAlgorithm = "power2b"; Params = "-a power2b"; ExtendInterval = 2} #Yespower2b/MBC
@@ -52,8 +56,9 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "yescryptr16"; Params = "-a yescryptr16"; ExtendInterval = 2} #YescryptR16/GOLD
     [PSCustomObject]@{MainAlgorithm = "yescryptr32"; Params = "-a yescryptr32"; ExtendInterval = 2} #YescryptR32/LBTC
     [PSCustomObject]@{MainAlgorithm = "yespower"; Params = "-a yespower"; ExtendInterval = 2} #Yespower/BELL
-    [PSCustomObject]@{MainAlgorithm = "yespoweradvc"; Params = "-a yespower --yespower-param 2048,32 --yespower-key `"Let the quest begin`""; ExtendInterval = 2} #YespowerADVC/ADVC
+    [PSCustomObject]@{MainAlgorithm = "yespoweradvc"; Params = "-a yespoweradvc"; ExtendInterval = 2} #YespowerADVC/ADVC
     [PSCustomObject]@{MainAlgorithm = "yespowerarwn"; Params = "-a yespowerarwn"; ExtendInterval = 2} #YespowerARWN/ARWN
+    [PSCustomObject]@{MainAlgorithm = "yespowereqpay"; Params = "-a yespowereqpay"; ExtendInterval = 2} #YespowerEQPAY/EQPAY
     [PSCustomObject]@{MainAlgorithm = "yespoweric"; Params = "-a yespoweric"; ExtendInterval = 2} #YespowerIC/ISO
     [PSCustomObject]@{MainAlgorithm = "yespoweriots"; Params = "-a yespoweriots"; ExtendInterval = 2} #YespowerIOTS/IOTS
     [PSCustomObject]@{MainAlgorithm = "yespowerlitb"; Params = "-a yespowerlitb"; ExtendInterval = 2} #YespowerLITB/LITB
