@@ -99,7 +99,7 @@ function Set-Stat {
 
             $Stat = Switch ($Mode) {
                 "Miners" {
-                    [PSCustomObject]@{
+                    [RBMMinerStat]@{
                         Live = [Double]$Stat.Live
                         Minute = [Double]$Stat.Minute
                         Minute_Fluctuation = [Double]$Stat.Minute_Fluctuation
@@ -134,7 +134,7 @@ function Set-Stat {
                     Break
                 }
                 "Pools" {
-                    [PSCustomObject]@{
+                    [RBMPoolStat]@{
                         Live = [Double]$Stat.Live
                         Minute = [Double]$Stat.Minute
                         Minute_Fluctuation = [Double]$Stat.Minute_Fluctuation
@@ -256,7 +256,7 @@ function Set-Stat {
 
                 $Stat = Switch ($Mode) {
                     "Miners" {
-                        [PSCustomObject]@{
+                        [RBMMinerStat]@{
                             Live = $Value
                             Minute = $Stat.Minute + $Span_Minute * ($Value - $Stat.Minute)
                             Minute_Fluctuation = $Stat.Minute_Fluctuation + $Span_Minute * ([Math]::Abs($Value - $Stat.Minute) / [Math]::Max([Math]::Abs($Stat.Minute), $SmallestValue) - $Stat.Minute_Fluctuation)
@@ -291,7 +291,7 @@ function Set-Stat {
                         Break
                     }
                     "Pools" {
-                        [PSCustomObject]@{
+                        [RBMPoolStat]@{
                             Live = $Value
                             Minute = $Stat.Minute + $Span_Minute * ($Value - $Stat.Minute)
                             Minute_Fluctuation = $Stat.Minute_Fluctuation + $Span_Minute * ([Math]::Abs($Value - $Stat.Minute) / [Math]::Max([Math]::Abs($Stat.Minute), $SmallestValue) - $Stat.Minute_Fluctuation)
@@ -363,7 +363,7 @@ function Set-Stat {
     if (-not $Stat) {
         $Stat = Switch($Mode) {
             "Miners" {
-                [PSCustomObject]@{
+                [RBMMinerStat]@{
                     Live = $Value
                     Minute = $Value
                     Minute_Fluctuation = 0
@@ -398,7 +398,7 @@ function Set-Stat {
                 Break
             }
             "Pools" {
-                [PSCustomObject]@{
+                [RBMPoolStat]@{
                     Live = $Value
                     Minute = $Value
                     Minute_Fluctuation = 0
@@ -602,12 +602,19 @@ function Get-StatFromFile {
         try {
             $Stat = ConvertFrom-Json "$(Get-ContentByStreamReader $Path)" -ErrorAction Stop
             if ($Stat -ne $null -and $Stat.PSObject.BaseObject -is [System.Management.Automation.PSCustomObject]) {
-                # rebuild with interned property names: ConvertFrom-Json allocates fresh name strings per file, otherwise each cached stat keeps its own copy of the ~30 recurring field names
-                $StatInterned = [PSCustomObject]@{}
-                foreach ($StatProperty in $Stat.PSObject.Properties) {
-                    $StatInterned.PSObject.Properties.Add([System.Management.Automation.PSNoteProperty]::new([string]::Intern($StatProperty.Name), $StatProperty.Value))
+                if ($Cached -and $Name -match '_Hashrate$') {
+                    # cached stats are typed objects (RBMToolBox.cs): ~400 bytes instead of ~4 KB as PSCustomObject
+                    $Stat = [RBMMinerStat]::FromObject($Stat)
+                } elseif ($Cached -and $Name -match '_Profit$') {
+                    $Stat = [RBMPoolStat]::FromObject($Stat)
+                } else {
+                    # rebuild with interned property names: ConvertFrom-Json allocates fresh name strings per file, otherwise each stat keeps its own copy of the recurring field names
+                    $StatInterned = [PSCustomObject]@{}
+                    foreach ($StatProperty in $Stat.PSObject.Properties) {
+                        $StatInterned.PSObject.Properties.Add([System.Management.Automation.PSNoteProperty]::new([string]::Intern($StatProperty.Name), $StatProperty.Value))
+                    }
+                    $Stat = $StatInterned
                 }
-                $Stat = $StatInterned
             }
             if ($Cached) {
                 if ($Stat) {

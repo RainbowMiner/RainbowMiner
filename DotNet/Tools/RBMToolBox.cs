@@ -1216,3 +1216,120 @@ public static class RBMToolBox
     }
 
 }
+
+// Typed containers for the cached stats in $Global:StatsCache (_HashRate and _Profit): a PSCustomObject with ~27 note
+// properties costs ~4 KB per stat, these ~400 bytes. The types live once per process, so all runspaces share them.
+// Property order is the JSON order. Keep the property set fixed: Add-Member on an instance brings the per-object member table back.
+public class RBMMinerStat
+{
+    public double Live { get; set; }
+    public double Minute { get; set; }
+    public double Minute_Fluctuation { get; set; }
+    public double Minute_5 { get; set; }
+    public double Minute_5_Fluctuation { get; set; }
+    public double Minute_10 { get; set; }
+    public double Minute_10_Fluctuation { get; set; }
+    public double Hour { get; set; }
+    public double Hour_Fluctuation { get; set; }
+    public double Day { get; set; }
+    public double Day_Fluctuation { get; set; }
+    public double ThreeDay { get; set; }
+    public double ThreeDay_Fluctuation { get; set; }
+    public double Week { get; set; }
+    public double Week_Fluctuation { get; set; }
+    public TimeSpan Duration { get; set; }
+    public DateTime Updated { get; set; }
+    public int Failed { get; set; }
+
+    public double PowerDraw_Live { get; set; }
+    public double PowerDraw_Average { get; set; }
+    public double Diff_Live { get; set; }
+    public double Diff_Average { get; set; }
+    public double Ratio_Live { get; set; }
+    public DateTime? Benchmarked { get; set; }
+    public string Version { get; set; }
+    public string LogFile { get; set; }
+    public bool IsFL { get; set; }
+
+    private static readonly Dictionary<string, PropertyInfo> Props = RBMStatConverter.PropertyMap(typeof(RBMMinerStat));
+
+    public static RBMMinerStat FromObject(object source)
+    {
+        RBMMinerStat stat = new RBMMinerStat();
+        RBMStatConverter.Fill(stat, source, Props);
+        return stat;
+    }
+}
+
+public class RBMPoolStat
+{
+    public double Live { get; set; }
+    public double Minute { get; set; }
+    public double Minute_Fluctuation { get; set; }
+    public double Minute_5 { get; set; }
+    public double Minute_5_Fluctuation { get; set; }
+    public double Minute_10 { get; set; }
+    public double Minute_10_Fluctuation { get; set; }
+    public double Hour { get; set; }
+    public double Hour_Fluctuation { get; set; }
+    public double Day { get; set; }
+    public double Day_Fluctuation { get; set; }
+    public double ThreeDay { get; set; }
+    public double ThreeDay_Fluctuation { get; set; }
+    public double Week { get; set; }
+    public double Week_Fluctuation { get; set; }
+    public TimeSpan Duration { get; set; }
+    public DateTime Updated { get; set; }
+    public int Failed { get; set; }
+
+    public double HashRate_Live { get; set; }
+    public double HashRate_Average { get; set; }
+    public double BlockRate_Live { get; set; }
+    public double BlockRate_Average { get; set; }
+    public double Diff_Live { get; set; }
+    public double Diff_Average { get; set; }
+    public double Actual24h_Week { get; set; }
+    public double Estimate24h_Week { get; set; }
+    public double ErrorRatio { get; set; }
+
+    private static readonly Dictionary<string, PropertyInfo> Props = RBMStatConverter.PropertyMap(typeof(RBMPoolStat));
+
+    public static RBMPoolStat FromObject(object source)
+    {
+        RBMPoolStat stat = new RBMPoolStat();
+        RBMStatConverter.Fill(stat, source, Props);
+        return stat;
+    }
+}
+
+public static class RBMStatConverter
+{
+    public static Dictionary<string, PropertyInfo> PropertyMap(Type type)
+    {
+        Dictionary<string, PropertyInfo> map = new Dictionary<string, PropertyInfo>(StringComparer.OrdinalIgnoreCase);
+        foreach (PropertyInfo pi in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+        {
+            if (pi.CanWrite) map[pi.Name] = pi;
+        }
+        return map;
+    }
+
+    // copies the known properties of a ConvertFrom-Json object with PowerShell's own conversion rules (like a [Double]/[DateTime]/[TimeSpan] cast),
+    // unknown properties are skipped, missing or null ones keep the default. A value that does not convert throws: the stat file is corrupt.
+    public static void Fill(object target, object source, Dictionary<string, PropertyInfo> props)
+    {
+        if (source == null) return;
+        PSObject pso = source as PSObject;
+        if (pso == null) pso = PSObject.AsPSObject(source);
+        foreach (PSPropertyInfo p in pso.Properties)
+        {
+            PropertyInfo pi;
+            if (!props.TryGetValue(p.Name, out pi)) continue;
+            object value = p.Value;
+            PSObject valuePso = value as PSObject;
+            if (valuePso != null) value = valuePso.BaseObject;
+            if (value == null) continue;
+            pi.SetValue(target, LanguagePrimitives.ConvertTo(value, pi.PropertyType, CultureInfo.InvariantCulture), null);
+        }
+    }
+}
