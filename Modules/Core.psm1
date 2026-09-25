@@ -3274,12 +3274,15 @@ function Invoke-Core {
             $Miner_Devices = @($Miner.DeviceName | Sort-Object)
             $Seed_Group    = "$($Miner.Name -replace '(-(?:GPU|CPU)#\d+)+$')|$($Miner_Algo)"
             if (-not $Seed_Index.ContainsKey($Seed_Group)) {continue}
+            $Seed_Version  = "$(Get-MinerVersion $Miner.Version)"
 
             # prefer a measured sibling over a seeded one, then the one with the most devices
             $Seed_Source = $null
             foreach ($Seed_Item in $Seed_Index[$Seed_Group]) {
                 $Seed_Stat = $Global:StatsCache[$Seed_Item.Key]
                 if ($Seed_Stat -eq $null -or -not ([double]$Seed_Stat.Week -gt 0)) {continue}
+                # only a sibling of the current miner version: the version check further down removes an older seed again, which reseeds it every round
+                if ("$($Seed_Stat.Version)" -ne $Seed_Version) {continue}
                 if (($Seed_Item.Devices -join '-') -eq ($Miner_Devices -join '-')) {continue}
                 if (@($Seed_Item.Devices | Where-Object {$Seed_Models[$_] -ne $Miner.DeviceModel}).Count) {continue}
                 $Seed_IsFL = [bool]$Seed_Stat.IsFL
@@ -3306,8 +3309,8 @@ function Invoke-Core {
             }
         }
 
-        $Seed_Models = $Seed_Index = $Seed_Source = $Seed_Stat = $Seed_Item = $Seed_Key = $Seed_Group = $Seed_Factor = $Seed_IsFL = $Miner_HR = $Miner_Algo = $Miner_Devices = $null
-        Remove-Variable -Name Seed_Models, Seed_Index, Seed_Source, Seed_Stat, Seed_Item, Seed_Key, Seed_Group, Seed_Factor, Seed_IsFL, Miner_HR, Miner_Algo, Miner_Devices -ErrorAction Ignore
+        $Seed_Models = $Seed_Index = $Seed_Source = $Seed_Stat = $Seed_Item = $Seed_Key = $Seed_Group = $Seed_Factor = $Seed_IsFL = $Seed_Version = $Miner_HR = $Miner_Algo = $Miner_Devices = $null
+        Remove-Variable -Name Seed_Models, Seed_Index, Seed_Source, Seed_Stat, Seed_Item, Seed_Key, Seed_Group, Seed_Factor, Seed_IsFL, Seed_Version, Miner_HR, Miner_Algo, Miner_Devices -ErrorAction Ignore
     }
     $Seed_Candidates = $null
     Remove-Variable -Name Seed_Candidates -ErrorAction Ignore
