@@ -185,11 +185,8 @@ class Miner {
                                 } catch {}
                             }
                         } elseif ($Global:IsWindows) {
-                            if (Get-Command "Get-NetTCPConnection" -ErrorAction Ignore) {
-                                (Get-NetTCPConnection -ErrorAction Stop).LocalPort | Sort-Object -Unique
-                            } else {
-                                netstat -anp TCP | Foreach-Object {"$($_)".Trim() -split "\s+" | Select-Object -Index 1} | Where-Object {$_ -match ":(\d+)$"} | Foreach-Object {[int]$Matches[1]} | Sort-Object -Unique
-                            }
+                            # netstat instead of Get-NetTCPConnection: that would autoload the NetTCPIP CDXML module (~8 MB) into the process
+                            netstat -an | Foreach-Object {$l = "$($_)".Trim() -split "\s+"; if ($l[0] -like "TCP*") {$l[1]}} | Where-Object {$_ -match ":(\d+)$"} | Foreach-Object {[int]$Matches[1]} | Sort-Object -Unique
                         }
                     } catch {
                         Write-Log -Level Warn "Auto-Port failed for $($this.Name): $($_.Exception.Message)"

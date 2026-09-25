@@ -443,21 +443,8 @@ $Session.OpenCLPlatformSorting = @()
 #Add-Type -Path .\DotNet\OpenCL\*.cs
 #Add-Type -Path .\DotNet\Tools\RBMTools.cs
 
-if ($IsWindows) {
-    if ($Session.IsCore) {
-        Import-Module NetSecurity -ErrorAction Ignore -SkipEditionCheck
-        Import-Module Defender -ErrorAction Ignore -SkipEditionCheck
-        Import-Module NetTCPIP -ErrorAction Ignore -SkipEditionCheck
-        Import-Module "$env:Windir\System32\WindowsPowerShell\v1.0\Modules\NetSecurity\NetSecurity.psd1" -ErrorAction Ignore -SkipEditionCheck
-        Import-Module "$env:Windir\System32\WindowsPowerShell\v1.0\Modules\Defender\Defender.psd1" -ErrorAction Ignore -SkipEditionCheck
-        Import-Module "$env:Windir\System32\WindowsPowerShell\v1.0\Modules\NetTCPIP\NetTCPIP.psd1" -ErrorAction Ignore -SkipEditionCheck
-    } else {
-        Import-Module NetSecurity -ErrorAction Ignore
-        Import-Module Defender -ErrorAction Ignore
-        Import-Module "$env:Windir\System32\WindowsPowerShell\v1.0\Modules\NetSecurity\NetSecurity.psd1" -ErrorAction Ignore
-        Import-Module "$env:Windir\System32\WindowsPowerShell\v1.0\Modules\Defender\Defender.psd1" -ErrorAction Ignore
-    }
-}
+# NetSecurity, Defender and NetTCPIP are not imported in-process (~37 MB): Defender exclusions are read via CIM,
+# firewall rules via the registry, and the elevated helpers that change them import the module in their own process
 
 Import-Module .\Modules\API.psm1
 Import-Module .\Modules\Asyncloader.psm1
