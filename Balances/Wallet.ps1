@@ -196,6 +196,8 @@ if ($Config.Pools.Nicehash.EnableShowWallets -and $Config.Pools.Nicehash.API_Key
                 $Global:NHWallets[$Config.Pools.Nicehash.BTC] = $Request.externalAddress
             }
             catch {
+                # NiceHash answers 400 NOT_FOUND for an internal wallet: remember it, retry only on transient errors
+                if ("$($_.Exception.Message)" -match "400") {$Global:NHWallets[$Config.Pools.Nicehash.BTC] = $null}
             }
         }
         $ShowBTCWallet = $Global:NHWallets[$Config.Pools.Nicehash.BTC]
