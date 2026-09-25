@@ -1314,8 +1314,9 @@ public static class RBMStatConverter
         return map;
     }
 
-    // copies the known properties of a ConvertFrom-Json object with PowerShell's own conversion rules (like a [Double]/[DateTime]/[TimeSpan] cast),
-    // unknown properties are skipped, missing or null ones keep the default. A value that does not convert throws: the stat file is corrupt.
+    // copies the known properties of a ConvertFrom-Json object with PowerShell's own conversion rules (like a [Double]/[DateTime]/[TimeSpan] cast).
+    // Unknown properties are skipped, missing, null or unconvertible ones keep the default: a single bad field must never cost the whole stat,
+    // the PSCustomObject stats before tolerated them as well. Old version carry-overs wrote Duration as "@{Ticks=...}", that is repaired from Ticks.
     public static void Fill(object target, object source, Dictionary<string, PropertyInfo> props)
     {
         if (source == null) return;
@@ -1325,11 +1326,40 @@ public static class RBMStatConverter
         {
             PropertyInfo pi;
             if (!props.TryGetValue(p.Name, out pi)) continue;
-            object value = p.Value;
-            PSObject valuePso = value as PSObject;
+            object raw = p.Value;
+            object value = raw;
+            PSObject valuePso = raw as PSObject;
             if (valuePso != null) value = valuePso.BaseObject;
             if (value == null) continue;
-            pi.SetValue(target, LanguagePrimitives.ConvertTo(value, pi.PropertyType, CultureInfo.InvariantCulture), null);
+            object converted;
+            try
+            {
+                converted = LanguagePrimitives.ConvertTo(value, pi.PropertyType, CultureInfo.InvariantCulture);
+            }
+            catch
+            {
+                if (pi.PropertyType != typeof(TimeSpan) || !TryTicks(raw, out converted)) continue;
+            }
+            pi.SetValue(target, converted, null);
         }
+    }
+
+    private static bool TryTicks(object raw, out object result)
+    {
+        result = null;
+        long ticks;
+        PSObject pso = raw as PSObject;
+        if (pso != null && !(pso.BaseObject is string))
+        {
+            PSPropertyInfo tp = pso.Properties["Ticks"];
+            if (tp == null || tp.Value == null || !long.TryParse(Convert.ToString(tp.Value, CultureInfo.InvariantCulture), NumberStyles.Integer, CultureInfo.InvariantCulture, out ticks)) return false;
+        }
+        else
+        {
+            Match m = Regex.Match(Convert.ToString(pso != null ? pso.BaseObject : raw, CultureInfo.InvariantCulture) ?? "", @"Ticks=(-?\d+)");
+            if (!m.Success || !long.TryParse(m.Groups[1].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out ticks)) return false;
+        }
+        result = TimeSpan.FromTicks(ticks);
+        return true;
     }
 }
