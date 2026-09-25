@@ -227,7 +227,7 @@ function Set-Stat {
                     $Stat.Failed = 30
 
                     if ($mode -eq "Miners" -and $Stat.IsFL) {
-                        $StatResetValue  = $Stat.Value
+                        $StatResetValue  = $Stat.Week
                         $IsFastlaneValue = $false
                         $Stat = $null
                     }
