@@ -750,11 +750,37 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 $Text.Replace($ip_mark,"") -replace "([0-9a-f]+:){7}[0-9a-f]+","X:X:X:X:X:X:X:X"
             }
 
+            # a runaway miner log (e.g. a pool reconnect loop writing 150k lines a
+            # minute) can grow to hundreds of MB: keep its start (banner, arguments,
+            # pool setup) and the latest output. Masking a whole file that size takes
+            # minutes and about twice its size in memory, while holding an API thread
+            $ReadDebugText = {
+                param($File)
+                if ($File.Length -le 4MB) {return Get-ContentByStreamReader $File}
+                $Stream = [System.IO.File]::Open($File.FullName, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
+                try {
+                    $Head = [byte[]]::new(64KB)
+                    $HeadLength = $Stream.Read($Head, 0, $Head.Length)
+                    $Tail = [byte[]]::new(2MB)
+                    [void]$Stream.Seek(-$Tail.Length, [System.IO.SeekOrigin]::End)
+                    $TailLength = 0
+                    while ($TailLength -lt $Tail.Length -and ($ReadLength = $Stream.Read($Tail, $TailLength, $Tail.Length - $TailLength)) -gt 0) {$TailLength += $ReadLength}
+                } finally {
+                    $Stream.Dispose()
+                }
+                # cut both parts at line boundaries
+                $HeadText = [System.Text.Encoding]::UTF8.GetString($Head, 0, $HeadLength).TrimStart([char]0xFEFF)
+                $HeadText = $HeadText.Substring(0, $HeadText.LastIndexOf("`n") + 1)
+                $TailText = [System.Text.Encoding]::UTF8.GetString($Tail, 0, $TailLength)
+                $TailText = $TailText.Substring($TailText.IndexOf("`n") + 1)
+                "$($HeadText)[... $([Math]::Round(($File.Length - $HeadLength - $TailLength)/1MB,1)) MB truncated by /debug ...]`r`n$($TailText)"
+            }
+
             if (-not (Test-Path $DebugPath)) {New-Item $DebugPath -ItemType "directory" > $null}
             @(Get-ChildItem ".\Logs\*$(Get-Date -Format "yyyy-MM-dd")*.txt" | Select-Object) + @(Get-ChildItem ".\Logs\*$((Get-Date).AddDays(-1).ToString('yyyy-MM-dd'))*.txt" | Select-Object) | Sort-Object LastWriteTime | Foreach-Object {
                 $LastWriteTime = $_.LastWriteTime
                 $NewFile = "$DebugPath\$($_.Name)"
-                $PurgeString = & $MaskDebugText (Get-ContentByStreamReader $_)
+                $PurgeString = & $MaskDebugText (& $ReadDebugText $_)
                 Out-File -InputObject $PurgeString -FilePath $NewFile
                 Get-ChildItem $NewFile | Foreach-Object {$_.LastWriteTime = $_.CreationTime = $_.LastAccessTime = $LastWriteTime}
             }
