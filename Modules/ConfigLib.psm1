@@ -586,13 +586,13 @@ function Set-OCProfilesConfigDefault {
                 $Devices = Get-Device "amd","intel","nvidia" -IgnoreOpenCL
                 $Devices | Select-Object -ExpandProperty Model -Unique | Sort-Object | Foreach-Object {
                     $Model = $_
-                    For($i=1;$i -le 7;$i++) {
+                    For($i=0;$i -le 8;$i++) {
                         $Profile = "Profile$($i)-$($Model)"
                         if (-not $Preset.$Profile) {$Preset | Add-Member $Profile $(if ($Setup.$Profile -ne $null) {$Setup.$Profile} else {$Default}) -Force}
                     }
                 }
                 if (-not $Devices) {
-                    For($i=1;$i -le 7;$i++) {
+                    For($i=0;$i -le 8;$i++) {
                         $Profile = "Profile$($i)"
                         if (-not $Preset.$Profile) {$Preset | Add-Member $Profile $(if ($Setup.$Profile -ne $null) {$Setup.$Profile} else {$Default}) -Force}
                     }
