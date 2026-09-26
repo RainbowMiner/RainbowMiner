@@ -64,9 +64,9 @@
             [PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "tensority"; Params = ""; OCprofile = "Profile5"; MSIAprofile = "5"}
         )
         "Phoenix" = [PSCustomObject[]]@(
-            [PSCustomObject]@{MainAlgorithm = "progpow"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile5"; MSIAprofile = ""}
-            [PSCustomObject]@{MainAlgorithm = "progpow2gb"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile5"; MSIAprofile = ""}
-            [PSCustomObject]@{MainAlgorithm = "progpow3gb"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile5"; MSIAprofile = ""}
+            [PSCustomObject]@{MainAlgorithm = "progpow"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile8"; MSIAprofile = ""}
+            [PSCustomObject]@{MainAlgorithm = "progpow2gb"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile8"; MSIAprofile = ""}
+            [PSCustomObject]@{MainAlgorithm = "progpow3gb"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile8"; MSIAprofile = ""}
         )
         "Sgminer" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "groestlcoin"; SecondaryAlgorithm = ""; Params = "--gpu-threads 2 --worksize 128 --intensity d"; OCprofile = ""; MSIAprofile = ""}
@@ -101,11 +101,11 @@
             [PSCustomObject]@{MainAlgorithm = "x17"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile4"; MSIAprofile = "4"}
         )
         "TTminer" = [PSCustomObject[]]@(
-            [PSCustomObject]@{MainAlgorithm = "progpow"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile5"; MSIAprofile = "5"}
-            [PSCustomObject]@{MainAlgorithm = "progpow2gb"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile5"; MSIAprofile = "5"}
-            [PSCustomObject]@{MainAlgorithm = "progpow3gb"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile5"; MSIAprofile = "5"}
-            [PSCustomObject]@{MainAlgorithm = "progpowz"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile5"; MSIAprofile = "5"}
-            [PSCustomObject]@{MainAlgorithm = "progpowz2gb"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile5"; MSIAprofile = "5"}
-            [PSCustomObject]@{MainAlgorithm = "progpowz3gb"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile5"; MSIAprofile = "5"}
+            [PSCustomObject]@{MainAlgorithm = "progpow"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile8"; MSIAprofile = ""}
+            [PSCustomObject]@{MainAlgorithm = "progpow2gb"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile8"; MSIAprofile = ""}
+            [PSCustomObject]@{MainAlgorithm = "progpow3gb"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile8"; MSIAprofile = ""}
+            [PSCustomObject]@{MainAlgorithm = "progpowz"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile8"; MSIAprofile = ""}
+            [PSCustomObject]@{MainAlgorithm = "progpowz2gb"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile8"; MSIAprofile = ""}
+            [PSCustomObject]@{MainAlgorithm = "progpowz3gb"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile8"; MSIAprofile = ""}
         )
     }
