@@ -74,6 +74,9 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$PoolCoins_Request.$
 		$Pool_Algorithm_Norm = $Pool_Algorithms[$Pool_Algorithm]
 	}
 
+    # the firopow port mines SCC with the Firo DAG profile, not Firo: SCC is offered as SCCPow (sccpow port, smaller DAG, SCC-aware miners)
+    if ($Pool_Algorithm_Norm -eq "FiroPoW" -and $Pool_Currency -eq "SCC") {return}
+
     if (-not $InfoOnly -and (($Algorithm -and $Pool_Algorithm_Norm -notin $Algorithm) -or ($ExcludeAlgorithm -and $Pool_Algorithm_Norm -in $ExcludeAlgorithm))) {return}
 
 	$Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasDAGSize) {if ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsEthash) {"ethproxy"} else {"stratum"}} else {$null}
