@@ -15,8 +15,11 @@ Contents
 2. [Option 1: MSI Afterburner profiles](#option-1-msi-afterburner-profiles)
 3. [Option 2: custom overclocking profiles](#option-2-custom-overclocking-profiles)
 4. [Config\ocprofiles.config.txt](#configocprofilesconfigtxt)
-5. [The Nvidia P2 state](#the-nvidia-p2-state)
-6. [Overclocking does not work on Linux](#overclocking-does-not-work-on-linux)
+5. [The default profiles](#the-default-profiles)
+6. [Memory offsets on Linux](#memory-offsets-on-linux)
+7. [Recommended clock locks](#recommended-clock-locks)
+8. [The Nvidia P2 state](#the-nvidia-p2-state)
+9. [Overclocking does not work on Linux](#overclocking-does-not-work-on-linux)
 
 ## Which of the two options do I want?
 
@@ -63,7 +66,7 @@ The differences:
 > I set the ocprofile to a clock and then set it different within AF under the same profile number
 
 - MSI Afterburner profiles are fixed to a maximum of five and are selected by their number 1 to 5 in parameter "MSIAprofile" in miners.config.txt
-- ocprofiles are unlimited in amount, you decide what their names are. RainbowMiner comes with an example ocprofiles.config.txt, where the profiles are named "Profile1", "Profile", .. "Profile9". The profile is being selected by the full name in parameter "OCprofile" in miners.config.txt (for example "Profile2")
+- ocprofiles are unlimited in amount, you decide what their names are. RainbowMiner comes with preset profiles named "Profile0" to "Profile8" (see [The default profiles](#the-default-profiles)). The profile is being selected by the full name in parameter "OCprofile" in miners.config.txt (for example "Profile2")
 
 > My overclocking settings do not work on Linux
 
@@ -253,6 +256,88 @@ The suffix decides how narrowly a profile is aimed, and the more specific one al
 So a rig with six GTX1060, of which two only take a low memory overclock, needs one
 `Profile2-GTX1060` for the four good ones plus a `Profile2-GPU#04` and `Profile2-GPU#05` for
 the other two.
+
+## The default profiles
+
+RainbowMiner seeds `Profile0` to `Profile8` for every GPU model it finds in your rig. For the
+Nvidia models listed below, the values come from a preset table; every other model gets empty
+profiles that change nothing. The presets are written once: RainbowMiner never overwrites a
+profile that is already in your `ocprofiles.config.txt`, so editing them is safe.
+
+| Profile  | Idea                                   | Used by (algorithms.config.txt)                                          |
+| -------- | -------------------------------------- | ------------------------------------------------------------------------ |
+| Profile0 | core up, memory +0                     | Cuckatoo31/32, Cuckaroo29/30                                             |
+| Profile1 | stock, nothing is changed              | Allium, Qubit                                                            |
+| Profile2 | core up, memory max                    | Autolykos2, NexaPow, XelisHashV2/V3, BeamHash3, MTP - and the default for every algorithm without an entry |
+| Profile3 | core up, half memory                   | Equihash family, NeoScrypt                                               |
+| Profile4 | core up, memory as low as it goes      | kHeavyHash, Karlsen v1, Pyrin, Blake3, SHA512256d, SHA3x, SHA256dt, Hoohash, Qhash, Quantus, DynexSolve, X16r family, Lyra2z |
+| Profile5 | core up, memory reduced (85%)          | a few miner-specific entries in miners.config.txt                         |
+| Profile6 | core down, memory max, low power       | Ethash, EtcHash, EthashB3, UbqHash, FishHash, KarlsenHashV2, Octopus     |
+| Profile7 | core slightly up, memory max           | KawPow family, EvrProgPow, MeowPow, SCCPow                               |
+| Profile8 | core +0, memory max                    | FiroPow, ProgPowZ and the other plain ProgPow variants                   |
+
+Presets exist for GTX1050Ti, GTX1060 (3GB/6GB), GTX1070, GTX1070Ti, GTX1080, GTX1080Ti,
+P104-100, P106-100, GTX1650 (Super), GTX1660 (Super/Ti), RTX2060 to RTX2080Ti (incl. Super),
+the whole RTX30, RTX40 and RTX50 series. They are conservative values that should run on any
+card of that model, not the maximum your card may reach. Things to know:
+
+- **GTX1070, RTX3070** are tested by the RainbowMiner author; all others are taken from public
+  mining benchmarks (hashrate.no, Kryptex) and should be checked on your own rig.
+- **GDDR5X (GTX1080, GTX1080Ti, P104-100):** if you use the ETHlargement Pill or a miner's
+  memory timing tweak, the usable memory offset goes down.
+- **GTX1660 Super with Hynix memory** does not take positive memory offsets well, that's why its
+  preset is low. Samsung and Micron cards can take +750.
+- **GDDR6X (RTX3070Ti, RTX3080/Ti, RTX3090/Ti):** watch the memory junction temperature, it
+  throttles at 110 C. The RTX3090 back-side memory is the first to get there.
+- **4 GB cards** (GTX1050Ti, GTX1650) are too small for most current DAG coins, so Profile6 to
+  Profile8 only matter for them on small-DAG coins.
+
+## Memory offsets on Linux
+
+All presets and all values in this document use the Windows scale, the one that MSI
+Afterburner and nvidiaInspector show. On Linux, RainbowMiner hands MemoryClockBoost to
+nvidia-settings as `GPUMemoryTransferRateOffset`, which is an offset on the memory **transfer
+rate**. GDDR memory transfers data twice per clock, so the transfer rate is exactly twice the
+clock, and **the same number gives only half the memory overclock on Linux**.
+
+This does not depend on the Linux distribution, the GPU generation or the memory type
+(GDDR5, GDDR5X, GDDR6, GDDR6X, GDDR7) - it is the unit of the Linux control. HiveOS says the
+same: "Usually this value is double from what you see in AfterBurner" (+800 on Windows = 1600
+on HiveOS). Values from hashrate.no, HiveOS, lolMiner `--moff` or BzMiner are already in the
+Linux scale; Rigel `--mclock` uses the Windows scale.
+
+So on a Linux rig, double the MemoryClockBoost of the presets. Nothing else is affected:
+CoreClockBoost, PowerLimit and the absolute locks LockCoreClock/LockMemoryClock take the same
+numbers on both systems.
+
+## Recommended clock locks
+
+Since Turing, most miners lock the core clock instead of using an offset: a locked core plus a
+positive CoreClockBoost runs the card at a lower voltage (an undervolt), and memory locked at
+810 MHz, its lowest state, saves a lot of power on algorithms that do not need memory speed.
+The presets do not use locks, because they have side effects:
+
+- on Windows, RainbowMiner can only set locks when it runs as administrator
+- a lock stays in place until something unlocks it. `"*"` leaves a lock untouched, so once one
+  profile of a card sets a lock, **all other profiles of that card must set LockCoreClock and
+  LockMemoryClock to "0"** - otherwise the next algorithm runs with the old lock
+- Pascal (GTX10xx, P10x) does not support locks on most drivers
+
+If you want them, these are good starting points (LockCoreClock / LockMemoryClock in MHz,
+"-" means leave it "*" and use the offset preset):
+
+| Profile                  | Turing      | Ampere GDDR6 | Ampere GDDR6X | Ada         | Blackwell   |
+| ------------------------ | ----------- | ------------ | ------------- | ----------- | ----------- |
+| Profile2 (Autolykos2)    | 1200 / -    | 1410 / -     | 1410 / -      | 2100 / -    | 1800 / -    |
+| Profile3 (Equihash)      | 1500 / -    | 1600 / -     | 1600 / -      | 2400 / -    | 2400 / -    |
+| Profile4 (core-heavy)    | 1500 / 810  | 1400 / 810   | 1450 / 810    | 2200 / 810  | 2000 / 810  |
+| Profile6 (Ethash family) | 1100 / -    | 1410 / -     | 1100 / -      | 2000 / -    | 2400 / -    |
+| Profile7 (KawPow)        | -           | -            | 1200 / -      | 2200 / -    | 2400 / -    |
+| Profile8 (ProgPow)       | -           | -            | 1200 / -      | 2200 / -    | 2400 / -    |
+
+- For more efficiency on Ampere, use 1305 instead of 1400 for Profile4.
+- NexaPow uses Profile2, but prefers memory locked at 5000 instead of an offset.
+- Autolykos2 with memory locked at 5000 loses about 13% hashrate for about 20% less power.
 
 ## The Nvidia P2 state
 
