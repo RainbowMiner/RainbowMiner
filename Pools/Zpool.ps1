@@ -81,6 +81,9 @@ $Pool_Request.PSObject.Properties.Name | ForEach-Object {
         $Pool_Algorithm_Norm = $Pool_Algorithms[$Pool_Algorithm]
     }
 
+    # the firopow port mines SCC with the Firo DAG profile, not Firo: SCC is offered as SCCPow (sccpow port, smaller DAG, SCC-aware miners)
+    if ($Pool_Algorithm_Norm -eq "FiroPoW" -and $Pool_CoinSymbol -eq "SCC") {return}
+
     if (-not $InfoOnly -and (($Algorithm -and $Pool_Algorithm_Norm -notin $Algorithm) -or ($ExcludeAlgorithm -and $Pool_Algorithm_Norm -in $ExcludeAlgorithm))) {return}
     if (-not $InfoOnly -and $Pool_CoinSymbol -and (($CoinSymbol -and $Pool_CoinSymbol -notin $CoinSymbol) -or ($ExcludeCoinSymbol -and $Pool_CoinSymbol -in $ExcludeCoinSymbol))) {return}
 
@@ -113,10 +116,6 @@ $Pool_Request.PSObject.Properties.Name | ForEach-Object {
         $Pool_Price = Get-YiiMPValue $Pool_Request.$_ -DataWindow $Pool_DataWindow -Factor $Pool_Factor
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value $Pool_Price -Duration $(if ($NewStat) {New-TimeSpan -Days 1} else {$StatSpan}) -ChangeDetection $(-not $NewStat) -Actual24h $($Pool_Request.$_.actual_last24h/1000) -Estimate24h $($Pool_Request.$_.estimate_last24h) -HashRate $Pool_Request.$_.hashrate -BlockRate $Pool_BLK -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
-    }
-
-    if ($Pool_Algorithm_Norm -eq "FiroPow" -and $Pool_CoinSymbol -eq "SCC") {
-        $Pool_CoinSymbol = $Pool_CoinName = $null
     }
 
     foreach($Pool_SSL in ($false,$true)) {
