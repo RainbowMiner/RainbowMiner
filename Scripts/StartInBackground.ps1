@@ -156,13 +156,60 @@ $MiningProcess.StartInfo = $psi
 # the watch loop, so a filled redirect pipe can never stall the miner.
 # A null line marks EOF on a stream (the last handle to its pipe was closed);
 # it is counted so the tail wait after the exit can be bounded
-$OutputQueue = New-Object System.Collections.Concurrent.ConcurrentQueue[string]
-$Streams = [hashtable]::Synchronized(@{Queue = $OutputQueue; Eof = 0})
-$OutEvent = Register-ObjectEvent -InputObject $MiningProcess -EventName OutputDataReceived -MessageData $Streams -Action {
-    if ($EventArgs.Data -ne $null) {$Event.MessageData.Queue.Enqueue($EventArgs.Data)} else {$Event.MessageData.Eof++}
+# The handlers are plain .NET delegates (RBMOutputPump): a Register-ObjectEvent
+# -Action subscription belongs to this pooled runspace, and an event arriving
+# while it is idle makes the engine pulse it from a thread-pool thread - two
+# colliding pulses kill the whole process (InvalidPipelineStateException in
+# PSLocalEventManager.PulseEngine, exit code 0xE0434352). The event
+# subscriptions stay only as a fallback if the helper cannot be compiled.
+if (-not ("RBMOutputPump" -as [type])) {
+    Add-Type -ErrorAction Ignore -TypeDefinition @'
+using System.Collections.Concurrent;
+using System.Diagnostics;
+using System.Threading;
+
+public class RBMOutputPump {
+    public readonly ConcurrentQueue<string> Queue = new ConcurrentQueue<string>();
+    private int eof;
+    private readonly Process process;
+    private readonly DataReceivedEventHandler handler;
+
+    public RBMOutputPump(Process p) {
+        process = p;
+        handler = OnData;
+        p.OutputDataReceived += handler;
+        p.ErrorDataReceived += handler;
+    }
+
+    // a null line marks EOF on one of the two streams
+    public int Eof { get { return Interlocked.CompareExchange(ref eof, 0, 0); } }
+
+    private void OnData(object sender, DataReceivedEventArgs e) {
+        if (e.Data != null) Queue.Enqueue(e.Data); else Interlocked.Increment(ref eof);
+    }
+
+    public void Detach() {
+        process.OutputDataReceived -= handler;
+        process.ErrorDataReceived -= handler;
+    }
 }
-$ErrEvent = Register-ObjectEvent -InputObject $MiningProcess -EventName ErrorDataReceived -MessageData $Streams -Action {
-    if ($EventArgs.Data -ne $null) {$Event.MessageData.Queue.Enqueue($EventArgs.Data)} else {$Event.MessageData.Eof++}
+'@
+}
+
+$OutputPump = $OutEvent = $ErrEvent = $null
+if ("RBMOutputPump" -as [type]) {
+    $OutputPump  = [RBMOutputPump]::new($MiningProcess)
+    $OutputQueue = $OutputPump.Queue
+    $Streams     = $OutputPump
+} else {
+    $OutputQueue = New-Object System.Collections.Concurrent.ConcurrentQueue[string]
+    $Streams = [hashtable]::Synchronized(@{Queue = $OutputQueue; Eof = 0})
+    $OutEvent = Register-ObjectEvent -InputObject $MiningProcess -EventName OutputDataReceived -MessageData $Streams -Action {
+        if ($EventArgs.Data -ne $null) {$Event.MessageData.Queue.Enqueue($EventArgs.Data)} else {$Event.MessageData.Eof++}
+    }
+    $ErrEvent = Register-ObjectEvent -InputObject $MiningProcess -EventName ErrorDataReceived -MessageData $Streams -Action {
+        if ($EventArgs.Data -ne $null) {$Event.MessageData.Queue.Enqueue($EventArgs.Data)} else {$Event.MessageData.Eof++}
+    }
 }
 
 try {
@@ -170,10 +217,13 @@ try {
 } catch {
     if ($Comm -ne $null) {$Comm["StartFailed"] = "$($_.Exception.Message)"}
     if ($LogPath) {Add-Content -LiteralPath $LogPath -Value "Failed to start $($FilePath): $($_.Exception.Message)" -ErrorAction Ignore}
-    Unregister-Event -SourceIdentifier $OutEvent.Name -ErrorAction Ignore
-    Unregister-Event -SourceIdentifier $ErrEvent.Name -ErrorAction Ignore
-    Remove-Job $OutEvent -Force -ErrorAction Ignore
-    Remove-Job $ErrEvent -Force -ErrorAction Ignore
+    if ($OutputPump) {$OutputPump.Detach()}
+    foreach ($Event_Job in @($OutEvent, $ErrEvent)) {
+        if ($Event_Job) {
+            Unregister-Event -SourceIdentifier $Event_Job.Name -ErrorAction Ignore
+            Remove-Job $Event_Job -Force -ErrorAction Ignore
+        }
+    }
     $MiningProcess.Dispose()
     return
 }
@@ -293,12 +343,15 @@ try {
     }
     try {$MiningProcess.CancelOutputRead()} catch {}
     try {$MiningProcess.CancelErrorRead()} catch {}
-    Unregister-Event -SourceIdentifier $OutEvent.Name -ErrorAction Ignore
-    Unregister-Event -SourceIdentifier $ErrEvent.Name -ErrorAction Ignore
-    # the -Action subscriptions are PSEventJobs: without Remove-Job they pile
-    # up in the reused pooled runspace's job table (2 per miner start)
-    Remove-Job $OutEvent -Force -ErrorAction Ignore
-    Remove-Job $ErrEvent -Force -ErrorAction Ignore
+    if ($OutputPump) {$OutputPump.Detach()}
+    # the fallback -Action subscriptions are PSEventJobs: without Remove-Job
+    # they pile up in the reused pooled runspace's job table (2 per miner start)
+    foreach ($Event_Job in @($OutEvent, $ErrEvent)) {
+        if ($Event_Job) {
+            Unregister-Event -SourceIdentifier $Event_Job.Name -ErrorAction Ignore
+            Remove-Job $Event_Job -Force -ErrorAction Ignore
+        }
+    }
 
     $MiningProcess.Dispose()
     $MiningProcess = $null
