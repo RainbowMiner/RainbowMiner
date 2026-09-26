@@ -40,7 +40,8 @@ Param(
     $newRunspace = [runspacefactory]::CreateRunspace($initialSessionState)
     $newRunspace.Open()
 
-    $AsyncloaderScript = [ScriptBlock]::Create((Get-Content ".\Scripts\Asyncloader.ps1" -Raw))
+    # pass the text: AddScript parses it in the runspace anyway, a [ScriptBlock]::Create copy would stay alive in the script cache
+    $AsyncloaderScript = Get-Content ".\Scripts\Asyncloader.ps1" -Raw
 
     $newPS = [PowerShell]::Create().AddScript($AsyncloaderScript).AddParameters(@{'CurrentPwd'=$PWD})
     $newPS.Runspace = $newRunspace
