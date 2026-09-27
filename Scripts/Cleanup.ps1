@@ -1958,6 +1958,40 @@ try {
         }
     }
 
+    if ($Version -le (Get-Version "5.0.3.1")) {
+        # KawPow and the other ProgPow variants moved from Profile7 (core slightly up) to Profile8 (core +0).
+        # The algorithm entries are only moved while every Profile7 in ocprofiles.config.txt is still a
+        # shipped preset (the v5.0.3.1 table, the current one or an empty profile): a hand-tuned Profile7
+        # keeps mining, the new Profile8 presets would replace it with untested values.
+        $Changes = 0
+        $OCprofilesActual = Get-Content "$OCprofilesConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        $OCprofilesSetup  = Get-ChildItemContent ".\Data\OCProfilesConfigDefault.ps1"
+        $OldProfile7Memory = @{GTX1060="300";GTX10603GB="300";GTX10606GB="300";P106100="300";RTX2060="300";GTX1070="400";GTX1070TI="400";GTX1080="400";GTX1080TI="400";P104100="400";P1041004GB="400";P1041008GB="400";RTX2070="400";RTX2080="400";RTX3070="1000";RTX3080="1000";RTX3090="1000"}
+        $Untouched = $true
+        foreach ($ProfileName in @($OCprofilesActual.PSObject.Properties.Name | Where-Object {$_ -match "^Profile7(-|$)"})) {
+            $Profile  = $OCprofilesActual.$ProfileName
+            $Model    = $ProfileName -replace "^Profile7-?"
+            $Values   = "$($Profile.PowerLimit)|$($Profile.ThermalLimit)|$($Profile.MemoryClockBoost)|$($Profile.CoreClockBoost)|$($Profile.LockVoltagePoint)|$($Profile.LockMemoryClock)|$($Profile.LockCoreClock)|$($Profile.PreCmd)|$($Profile.PostCmd)"
+            $Expected = @("0|0|*|*|*|*|*||")
+            if ($OldProfile7Memory.ContainsKey($Model)) {$Expected += "70|0|$($OldProfile7Memory[$Model])|50|*|*|*||"}
+            if ($Setup = $OCprofilesSetup.$ProfileName) {$Expected += "$($Setup.PowerLimit)|$($Setup.ThermalLimit)|$($Setup.MemoryClockBoost)|$($Setup.CoreClockBoost)|$($Setup.LockVoltagePoint)|$($Setup.LockMemoryClock)|$($Setup.LockCoreClock)||"}
+            if ($Expected -notcontains $Values) {$Untouched = $false; break}
+        }
+        if ($Untouched) {
+            $AlgorithmsActual = Get-Content "$AlgorithmsConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+            foreach ($Algorithm in @("EvrProgPow","KawPow","KawPow2g","KawPow3g","KawPow4g","KawPow5g","MeowPow","SCCPow")) {
+                if ($AlgorithmsActual.$Algorithm -and $AlgorithmsActual.$Algorithm.OCprofile -eq "Profile7") {
+                    $AlgorithmsActual.$Algorithm | Add-Member OCprofile "Profile8" -Force
+                    $Changes++
+                }
+            }
+            if ($Changes) {
+                Set-ContentJson -PathToFile $AlgorithmsConfigFile -Data $AlgorithmsActual > $null
+                $ChangesTotal += $Changes
+            }
+        }
+    }
+
     ###
     ### END OF VERSION CHECKS
     ###

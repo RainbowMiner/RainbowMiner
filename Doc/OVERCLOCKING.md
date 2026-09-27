@@ -274,8 +274,14 @@ profile that is already in your `ocprofiles.config.txt`, so editing them is safe
 | Profile4 | core up, memory as low as it goes      | kHeavyHash, Karlsen v1, Pyrin, Blake3, SHA512256d, SHA3x, SHA256dt, Hoohash, Qhash, Quantus, DynexSolve, X16r family, Lyra2z |
 | Profile5 | core up, memory reduced (85%)          | a few miner-specific entries in miners.config.txt                         |
 | Profile6 | core down, memory max, low power       | Ethash, EtcHash, EthashB3, UbqHash, FishHash, KarlsenHashV2, Octopus     |
-| Profile7 | core slightly up, memory max           | KawPow family, EvrProgPow, MeowPow, SCCPow                               |
-| Profile8 | core +0, memory max                    | FiroPow, ProgPowZ and the other plain ProgPow variants                   |
+| Profile7 | core slightly up, memory max           | nothing by default, kept as a template for a small core offset on the ProgPow family |
+| Profile8 | core +0, memory max                    | KawPow family, MeowPow, EvrProgPow, SCCPow, FiroPow, ProgPowZ and the other ProgPow variants |
+
+Since v5.0.3.2 the whole ProgPow family, KawPow included, runs on Profile8: the small core
+offset of Profile7 made Gminer's KawPow kernel crash on a GTX1070 rig, for a gain of one or
+two percent at best. That update moves these algorithms from Profile7 to Profile8 in your
+`algorithms.config.txt`, unless one of your Profile7 profiles was edited by hand - then
+nothing is touched and you decide.
 
 Presets exist for GTX1050Ti, GTX1060 (3GB/6GB), GTX1070, GTX1070Ti, GTX1080, GTX1080Ti,
 P104-100, P106-100, GTX1650 (Super), GTX1660 (Super/Ti), RTX2060 to RTX2080Ti (incl. Super),
@@ -357,8 +363,7 @@ If you want them, these are good starting points (LockCoreClock / LockMemoryCloc
 | Profile3 (Equihash)      | 1500 / -    | 1600 / -     | 1600 / -      | 2400 / -    | 2400 / -    |
 | Profile4 (core-heavy)    | 1500 / 810  | 1400 / 810   | 1450 / 810    | 2200 / 810  | 2000 / 810  |
 | Profile6 (Ethash family) | 1100 / -    | 1410 / -     | 1100 / -      | 2000 / -    | 2400 / -    |
-| Profile7 (KawPow)        | -           | -            | 1200 / -      | 2200 / -    | 2400 / -    |
-| Profile8 (ProgPow)       | -           | -            | 1200 / -      | 2200 / -    | 2400 / -    |
+| Profile8 (KawPow/ProgPow)| -           | -            | 1200 / -      | 2200 / -    | 2400 / -    |
 
 - For more efficiency on Ampere, use 1305 instead of 1400 for Profile4.
 - NexaPow uses Profile2, but prefers memory locked at 5000 instead of an offset.
