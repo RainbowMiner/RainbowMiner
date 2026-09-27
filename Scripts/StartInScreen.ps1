@@ -91,82 +91,38 @@ if (-not $Process) {
     return
 }
 
-[PSCustomObject]@{ProcessId = $Process.Id;StartLog = $StartLog}
-
-$ControllerProcess.Handle >$null
-$Process.Handle >$null
-$ProcessName = $Process.Name
-
-do {
-    if ($Done = $ControllerProcess.WaitForExit(1000)) {
-        $ToKill = [System.Collections.ArrayList]::new()
-        [void]$ToKill.Add($Process)
-        foreach ($p in Get-Process -Name $Process.Name -ErrorAction Ignore) {
-            if ($p.Parent -and ($p.Parent.Id -eq $Process.Id)) {
-                [void]$ToKill.Add($p)
-            }
-        }
-        $p = $null
-
-        $ArgumentList = "-S $($ScreenName) -X stuff `^C"
+# hand the watch over to the bash guard: it stops the miner when RainbowMiner dies without a
+# clean shutdown, and it costs a few hundred KB instead of a pwsh job host per running miner
+$GuardScript = Join-Path (Join-Path $CurrentPwd "IncludesLinux") "bash/minerguard.sh"
+if (Test-Path $GuardScript) {
+    $GuardArgs = @($ControllerProcessID, $Process.Id, $Process.Name, "screen", $ScreenName, $PIDPath)
+    $Quote = {param($s) "'" + ("$s" -replace "'","'\''") + "'"}
+    $GuardCmd = "setsid bash $(& $Quote $GuardScript) $(@($GuardArgs | Foreach-Object {& $Quote $_}) -join ' ') </dev/null >/dev/null 2>&1 &"
+    try {
+        & chmod +x $GuardScript 2>$null
         if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
-            Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "screen $ArgumentList" -Quiet > $null
+            # a root miner lives in the ocdaemon's cgroup: start the guard there as well, so that a
+            # service manager stopping RainbowMiner's own cgroup cannot take the guard with it
+            Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd $GuardCmd -Quiet > $null
             $OCDcount++
         } else {
-            $Screen_Process = Start-Process "screen" -ArgumentList $ArgumentList -PassThru
-            $Screen_Process.WaitForExit(5000) > $null
+            & bash -c $GuardCmd
         }
-
-        $StopWatch.Restart()
-        while (($ToKill.HasExited -contains $null -or $ToKill.HasExited -contains $false) -and $StopWatch.Elapsed.TotalSeconds -le 10) {
-            Start-Sleep -Milliseconds 500
-        }
-
-        if (-not $Process.HasExited -and $StartStopDaemon) {
-            $ArgumentList = "--stop --name $ProcessName --pidfile $PIDPath --retry 5"
-            if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
-                Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "start-stop-daemon $ArgumentList" -Quiet > $null
-                $OCDcount++
-            } else {
-                $StartStopDaemon_Process = Start-Process "start-stop-daemon" -ArgumentList $ArgumentList -PassThru
-                $StartStopDaemon_Process.WaitForExit(10000) > $null
-            }
-        }
-
-        $ToKill | Where-Object {-not $_.HasExited} | Foreach-Object {
-            if (Test-OCDaemon) {
-                Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "kill -9 $($_.Id)" -Quiet > $null
-                $OCDcount++
-            } else {
-                Stop-Process -InputObject $_ -Force -ErrorAction Ignore
-            }
-        }
-
-        $ToKill.Clear()
-        $ToKill = $null
-
-        if ($ScreenProcessId) {
-            $ArgumentList = "-S $($ScreenName) -X quit"
-            if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
-                Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "screen $ArgumentList" -Quiet > $null
-                $OCDcount++
-            } else {
-                $Screen_Process = Start-Process "screen" -ArgumentList $ArgumentList -PassThru
-                $Screen_Process.WaitForExit(5000) > $null
-            }
-        }
-    }
-    if ($Global:Error.Count) {
-        $logDate = Get-Date -Format "yyyy-MM-dd"
-        $errPath = Join-Path $CurrentPwd "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").jobs.txt"
-        foreach ($err in $Global:Error) {
-            if ($err.Exception.Message) {
-                Write-ToFile -FilePath $errPath -Message "Error during $($FilePath): $($err.Exception.Message)" -Append -Timestamp
-            }
-        }
-        $Global:Error.Clear()
+        [void]$StartLog.Add("Guard started for $($Process.Name) with id $($Process.Id)")
+    } catch {
+        [void]$StartLog.Add("Failed to start the miner guard: $($_.Exception.Message)")
     }
 }
-while (-not $Done -and $Process.HasExited -eq $false)
 
-$StopWatch = $null
+# the flush must never keep the result from the caller: Write-ToFile lives in Include.psm1, which this job does not import
+if ($Global:Error.Count -and (Get-Command Write-ToFile -ErrorAction Ignore)) {
+    $errPath = Join-Path $CurrentPwd "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").jobs.txt"
+    foreach ($err in $Global:Error) {
+        if ($err.Exception.Message) {
+            Write-ToFile -FilePath $errPath -Message "Error during $($FilePath): $($err.Exception.Message)" -Append -Timestamp
+        }
+    }
+    $Global:Error.Clear()
+}
+
+[PSCustomObject]@{ProcessId = $Process.Id;StartLog = $StartLog}

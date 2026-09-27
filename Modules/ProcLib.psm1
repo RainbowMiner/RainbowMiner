@@ -411,6 +411,39 @@ function Start-SubProcessInConsole {
     }
 }
 
+function New-MinerGuardJob {
+    # stand-in for the start job of a tmux/screen miner: the job itself is removed as soon as
+    # minerguard.sh watches the miner, this record answers the job members MinerAPIs reads
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [int]$ProcessId = 0,
+        [Parameter(Mandatory = $false)]
+        $StartTime = (Get-Date)
+    )
+    if (-not $StartTime) {$StartTime = Get-Date}
+    $XJob = [PSCustomObject]@{
+        PowerShell  = $null
+        Handle      = $null
+        Output      = $null
+        Input       = $null
+        Comm        = $null
+        StartTime   = $StartTime
+        RunspaceJob = $false
+        GuardJob    = $true
+        ProcessId   = $ProcessId
+    }
+    $XJob | Add-Member -MemberType ScriptProperty -Name State -Value {
+        if ($this.ProcessId -gt 0 -and (Get-Process -Id $this.ProcessId -ErrorAction Ignore)) {"Running"} else {"Completed"}
+    }
+    $XJob | Add-Member -MemberType ScriptProperty -Name HasMoreData -Value {$false}
+    $XJob | Add-Member -MemberType ScriptProperty -Name PSBeginTime -Value {$this.StartTime}
+    $XJob | Add-Member -MemberType ScriptProperty -Name PSEndTime -Value {
+        if ($this.State -eq "Running") {$null} else {Get-Date}
+    }
+    $XJob
+}
+
 function Start-SubProcessInScreen {
     [CmdletBinding()]
     param(
@@ -620,10 +653,17 @@ function Start-SubProcessInScreen {
         }
     }
     
+    # the start job has handed the watch over to minerguard.sh: drop its job host process
+    # (a full pwsh of about 170 MB per running miner) and keep a lightweight stand-in
+    $JobStart = $Job.PSBeginTime
+    if ($Job.HasMoreData) {Receive-Job $Job > $null}
+    Remove-Job $Job -Force -ErrorAction Ignore
+    $Job = New-MinerGuardJob -ProcessId $(if ($ProcessIds.Count) {$ProcessIds[0]} else {0}) -StartTime $JobStart
+
     [PSCustomObject]@{
         ScreenName = $ScreenName
         ScreenCmd  = "screen"
-        Name       = $Job.Name
+        Name       = "minerguard"
         WorkingDir = $WorkingDirectory
         XJob       = $Job
         OwnWindow  = $true
@@ -839,10 +879,17 @@ function Start-SubProcessInTmux {
         }
     }
     
+    # the start job has handed the watch over to minerguard.sh: drop its job host process
+    # (a full pwsh of about 170 MB per running miner) and keep a lightweight stand-in
+    $JobStart = $Job.PSBeginTime
+    if ($Job.HasMoreData) {Receive-Job $Job > $null}
+    Remove-Job $Job -Force -ErrorAction Ignore
+    $Job = New-MinerGuardJob -ProcessId $(if ($ProcessIds.Count) {$ProcessIds[0]} else {0}) -StartTime $JobStart
+
     [PSCustomObject]@{
         ScreenName = $ScreenName
         ScreenCmd  = "tmux"
-        Name       = $Job.Name
+        Name       = "minerguard"
         WorkingDir = $WorkingDirectory
         XJob       = $Job
         OwnWindow  = $true
