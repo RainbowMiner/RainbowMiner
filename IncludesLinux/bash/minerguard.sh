@@ -1,6 +1,6 @@
-#!/usr/bin/env bash
+#!/bin/sh
 #
-# minerguard.sh - stops a miner when RainbowMiner itself has gone away
+# minerguard.sh - stops a miner when RainbowMiner itself has gone away (POSIX sh)
 #
 # RainbowMiner starts every Linux miner inside a tmux or screen session, so the
 # miner is not its child and would keep running after a crash of the core. This
@@ -21,11 +21,11 @@ ctl="$1"; pid="$2"; name="$3"; tool="$4"; sess="$5"; pidfile="$6"; ocddir="$7"; 
 alive() { [ -d "/proc/$1" ]; }
 
 # /proc/<pid>/comm carries the first 15 characters of the name: guard against a reused pid
+name15="$(printf '%s' "$name" | cut -c1-15)"
 mine() {
   alive "$pid" || return 1
-  local comm
   comm="$(cat "/proc/$pid/comm" 2>/dev/null)"
-  [ -z "$name" ] || [ -z "$comm" ] || [ "${name:0:15}" = "$comm" ]
+  [ -z "$name15" ] || [ -z "$comm" ] || [ "$name15" = "$comm" ]
 }
 
 while alive "$ctl" && mine; do
@@ -36,7 +36,7 @@ done
 mine || exit 0
 
 killseq() {
-  echo '#!/usr/bin/env bash'
+  echo '#!/bin/sh'
   if [ "$tool" = "tmux" ]; then
     echo "tmux send-keys -t '$sess' C-c >/dev/null 2>&1"
   else
@@ -60,7 +60,7 @@ if [ -n "$ocddir" ] && [ -d "$ocddir" ]; then
   f="$ocddir/${ocdpre:-guard}.guard.$sess.sh"
   killseq > "$f.tmp" && chmod 777 "$f.tmp" && mv "$f.tmp" "$f"
 else
-  killseq | bash
+  killseq | sh
 fi
 
 # give the stop up to half a minute, then leave; the pid file is cleaned up by the next start

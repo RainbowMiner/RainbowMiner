@@ -90,7 +90,7 @@ $GuardScript = Join-Path (Join-Path $CurrentPwd "IncludesLinux") "bash/minerguar
 if (Test-Path $GuardScript) {
     $GuardArgs = @($ControllerProcessID, $Process.Id, $Process.Name, "tmux", $ScreenName, $PIDPath)
     $Quote = {param($s) "'" + ("$s" -replace "'","'\''") + "'"}
-    $GuardCmd = "setsid bash $(& $Quote $GuardScript) $(@($GuardArgs | Foreach-Object {& $Quote $_}) -join ' ') </dev/null >/dev/null 2>&1 &"
+    $GuardCmd = "setsid sh $(& $Quote $GuardScript) $(@($GuardArgs | Foreach-Object {& $Quote $_}) -join ' ') </dev/null >/dev/null 2>&1 &"
     try {
         & chmod +x $GuardScript 2>$null
         if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
