@@ -3943,6 +3943,11 @@ class Xmrig3 : Miner {
 
             $Config = Get-Content $ConfigFile -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
 
+            if ($Config.$Device -and $ThreadsConfig.$Algo -is [string] -and ($Config.$Device.$Algo | Measure-Object).Count -eq 1) {
+                # written while the alias string was mistaken for the thread list (one thread on CPU 0): rebuild it
+                $Config = $null
+            }
+
             if (-not $Config.$Device -and -not ($Config.$Device.$Algo | Measure-Object).Count -and -not ($Config.$Device.$Algo0 | Measure-Object).Count) {
                 if ($ThreadsConfig.$Algo -or $ThreadsConfig.$Algo0) {
                     $Parameters.Config | Add-Member $Device ([PSCustomObject]@{}) -Force
@@ -3950,13 +3955,19 @@ class Xmrig3 : Miner {
                         $n = $_.Name; $v = $_.Value
                         $Parameters.Config.$Device | Add-Member $n $v -Force
                     }
+                    # xmrig stores profile aliases as strings ("rx/arq": "rx/wow"): follow them to the real
+                    # thread list, or RandomArq and friends end up with a single thread on CPU 0
+                    $AlgoSource = $Algo
+                    $AlgoHops   = 0
+                    while ($ThreadsConfig.$AlgoSource -is [string] -and $AlgoHops -lt 3) {$AlgoSource = $ThreadsConfig.$AlgoSource;$AlgoHops++}
+                    if ($ThreadsConfig.$AlgoSource -is [string] -or $ThreadsConfig.$AlgoSource -is [bool] -or -not ($ThreadsConfig.$AlgoSource | Measure-Object).Count) {$AlgoSource = $Algo0}
                     $Algo = if ($ThreadsConfig.$Algo) {$Algo} else {$Algo0}
 
                     if ($Device -eq "cpu") {
                         $cix = @{}
-                        $ThreadsAffinity = $ThreadsConfig.$Algo | Foreach-Object {if ($_ -is [array] -and $_.Count -eq 2) {$cix["k$($_[1])"] = $_[0];$_[1]} else {$_}}
+                        $ThreadsAffinity = $ThreadsConfig.$AlgoSource | Foreach-Object {if ($_ -is [array] -and $_.Count -eq 2) {$cix["k$($_[1])"] = $_[0];$_[1]} else {$_}}
 
-                        $Parameters.Config.$Device | Add-Member $Algo ([Array]($ThreadsAffinity | Sort-Object {$_ -band 1},{$_} | Select-Object -First $(if ($Parameters.Threads -and $Parameters.Threads -lt $ThreadsConfig.$Algo.Count) {$Parameters.Threads} else {$ThreadsConfig.$Algo.Count}) | Sort-Object)) -Force
+                        $Parameters.Config.$Device | Add-Member $Algo ([Array]($ThreadsAffinity | Sort-Object {$_ -band 1},{$_} | Select-Object -First $(if ($Parameters.Threads -and $Parameters.Threads -lt $ThreadsConfig.$AlgoSource.Count) {$Parameters.Threads} else {$ThreadsConfig.$AlgoSource.Count}) | Sort-Object)) -Force
 
                         $Aff = if ($Parameters.Affinity) {ConvertFrom-CPUAffinity $Parameters.Affinity}
                         if ($AffCount = ($Aff | Measure-Object).Count) {
@@ -3974,7 +3985,7 @@ class Xmrig3 : Miner {
                             }
                         }
                     } else { #device is cuda or opencl
-                        $Parameters.Config.$Device | Add-Member $Algo ([Array](@($ThreadsConfig.$Algo | Where-Object {$Parameters.Devices -contains $_.index} | Select-Object) * $Parameters.Threads)) -Force
+                        $Parameters.Config.$Device | Add-Member $Algo ([Array](@($ThreadsConfig.$AlgoSource | Where-Object {$Parameters.Devices -contains $_.index} | Select-Object) * $Parameters.Threads)) -Force
                     }
                     $Parameters.Config | Add-Member autosave $false -Force
                     $Parameters.Config | ConvertTo-Json -Depth 10 | Set-Content $ConfigFile -Force
@@ -4097,6 +4108,11 @@ class Xmrig6 : Miner {
 
             $Config = Get-Content $ConfigFile -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
 
+            if ($Config.$Device -and $ThreadsConfig.$Algo -is [string] -and ($Config.$Device.$Algo | Measure-Object).Count -eq 1) {
+                # written while the alias string was mistaken for the thread list (one thread on CPU 0): rebuild it
+                $Config = $null
+            }
+
             if (-not $Config.$Device -and -not ($Config.$Device.$Algo | Measure-Object).Count -and -not ($Config.$Device.$Algo0 | Measure-Object).Count) {
                 if ($ThreadsConfig.$Algo -or $ThreadsConfig.$Algo0) {
                     $Parameters.Config | Add-Member $Device ([PSCustomObject]@{}) -Force
@@ -4104,6 +4120,12 @@ class Xmrig6 : Miner {
                         $n = $_.Name; $v = $_.Value
                         $Parameters.Config.$Device | Add-Member $n $v -Force
                     }
+                    # xmrig stores profile aliases as strings ("rx/arq": "rx/wow"): follow them to the real
+                    # thread list, or RandomArq and friends end up with a single thread on CPU 0
+                    $AlgoSource = $Algo
+                    $AlgoHops   = 0
+                    while ($ThreadsConfig.$AlgoSource -is [string] -and $AlgoHops -lt 3) {$AlgoSource = $ThreadsConfig.$AlgoSource;$AlgoHops++}
+                    if ($ThreadsConfig.$AlgoSource -is [string] -or $ThreadsConfig.$AlgoSource -is [bool] -or -not ($ThreadsConfig.$AlgoSource | Measure-Object).Count) {$AlgoSource = $Algo0}
                     $Algo = if ($ThreadsConfig.$Algo) {$Algo} else {$Algo0}
 
                     if ($Device -eq "cpu") {
@@ -4111,9 +4133,9 @@ class Xmrig6 : Miner {
                             $Parameters.Config.$Device | Add-Member "max-threads-hint" ([int](100 * $Parameters.Threads / $Global:GlobalCPUInfo.Threads)) -Force
                         }
                         $cix = @{}
-                        $ThreadsAffinity = $ThreadsConfig.$Algo | Foreach-Object {if ($_ -is [array] -and $_.Count -eq 2) {$cix["k$($_[1])"] = $_[0];$_[1]} else {$_}}
+                        $ThreadsAffinity = $ThreadsConfig.$AlgoSource | Foreach-Object {if ($_ -is [array] -and $_.Count -eq 2) {$cix["k$($_[1])"] = $_[0];$_[1]} else {$_}}
 
-                        $Parameters.Config.$Device | Add-Member $Algo ([Array]($ThreadsAffinity | Sort-Object {$_ -band 1},{$_} | Select-Object -First $(if ($Parameters.Threads -and $Parameters.Threads -lt $ThreadsConfig.$Algo.Count) {$Parameters.Threads} else {$ThreadsConfig.$Algo.Count}) | Sort-Object)) -Force
+                        $Parameters.Config.$Device | Add-Member $Algo ([Array]($ThreadsAffinity | Sort-Object {$_ -band 1},{$_} | Select-Object -First $(if ($Parameters.Threads -and $Parameters.Threads -lt $ThreadsConfig.$AlgoSource.Count) {$Parameters.Threads} else {$ThreadsConfig.$AlgoSource.Count}) | Sort-Object)) -Force
 
                         $Aff = if ($Parameters.Affinity) {ConvertFrom-CPUAffinity $Parameters.Affinity}
                         if ($AffCount = ($Aff | Measure-Object).Count) {
@@ -4133,7 +4155,7 @@ class Xmrig6 : Miner {
                         $Parameters.Config | Add-Member cuda   ([PSCustomObject]@{enabled=$false}) -Force
                         $Parameters.Config | Add-Member opencl ([PSCustomObject]@{enabled=$false}) -Force
                     } else { #device is cuda or opencl
-                        $Parameters.Config.$Device | Add-Member $Algo ([Array](@($ThreadsConfig.$Algo | Where-Object {$Parameters.Devices -contains $_.index} | Select-Object) * $Parameters.Threads)) -Force
+                        $Parameters.Config.$Device | Add-Member $Algo ([Array](@($ThreadsConfig.$AlgoSource | Where-Object {$Parameters.Devices -contains $_.index} | Select-Object) * $Parameters.Threads)) -Force
                         $Parameters.Config | Add-Member cpu ([PSCustomObject]@{enabled=$false}) -Force
                         $Parameters.Config | Add-Member "$(if ($Device -eq "cuda") {"opencl"} else {"cuda"})" ([PSCustomObject]@{enabled=$false}) -Force
                     }
