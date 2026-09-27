@@ -850,6 +850,13 @@ function Get-Device {
                             $Global:GlobalCPUInfo.Threads = $allCpus.Count
                             $Global:GlobalCPUInfo.PhysicalCPUs = [Math]::Max(1,($topo_online | Select-Object -ExpandProperty socket -Unique).Count)
 
+                            # getcpuinfo.sh only knows the thread count: mirror the exact values into the
+                            # raw block, which /cpuinfo and devicedata.json show
+                            if ($Global:GlobalCPUInfo.Information) {
+                                foreach ($Field in @("Cores","Threads","PhysicalCPUs")) {
+                                    $Global:GlobalCPUInfo.Information | Add-Member $Field $Global:GlobalCPUInfo.$Field -Force
+                                }
+                            }
                         }
                     }
                     catch {

@@ -124,10 +124,16 @@ sys_l3_kb() {
     lvl=$(cat "$idx/level" 2>/dev/null | awk 'NR==1{print; exit}')
     [ "$lvl" = "3" ] || continue
     sz=$(cat "$idx/size" 2>/dev/null | awk 'NR==1{print; exit}')
+    kb=0
     case "$sz" in
-      *K|*k) echo "$sz" | tr -d 'Kk' | awk '{print $1+0}'; return ;;
-      *M|*m) n=$(echo "$sz" | tr -d 'Mm' | awk '{print $1+0}'); echo $((n*1024)); return ;;
+      *K|*k) kb=$(echo "$sz" | tr -d 'Kk' | awk '{print $1+0}') ;;
+      *M|*m) n=$(echo "$sz" | tr -d 'Mm' | awk '{print $1+0}'); kb=$((n*1024)) ;;
     esac
+    # cpu0 sees one L3 slice only: count the distinct slices of all CPUs (second socket,
+    # Ryzen CCDs) so the total matches what lscpu and Windows report
+    n=$(cat "$SYSCPU"/cpu[0-9]*/cache/"$(basename "$idx")"/shared_cpu_list 2>/dev/null | sort -u | wc -l | awk '{print $1+0}')
+    [ "$n" -gt 1 ] 2>/dev/null && kb=$((kb*n))
+    echo "$kb"; return
   done
   echo 0
 }

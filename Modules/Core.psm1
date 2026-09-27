@@ -917,7 +917,7 @@ function Invoke-Core {
     
     #Error in Config.txt
     if ($Session.Config -isnot [PSCustomObject]) {
-        Write-Log -Level Error "$($Session.ConfigFiles["Config"].Path) is invalid. Cannot continue. "
+        Write-Log -Level Error "$(if ($Session.ConfigFiles["Config"].Path) {$Session.ConfigFiles["Config"].Path} else {"config.txt"}) could not be loaded (see the error above, usually a JSON syntax error). Cannot continue. "
         Start-Sleep 10
         Break
     }
@@ -2376,7 +2376,7 @@ function Invoke-Core {
                                         $newMiner.Affinity = "0x{0:x$(if($CPUAffinityInt -lt 65536){4}else{8})}" -f $CPUAffinityInt
                                         if (-not $newMiner.Threads) {
                                             $CPUThreads = @(ConvertFrom-CPUAffinity $newMiner.Affinity).Count
-                                            if ($newMiner.Threads -eq $null) {$newMiner | Add-Member Threads $Threads -Force} else {$newMiner.Threads = $CPUThreads}
+                                            if ($newMiner.Threads -eq $null) {$newMiner | Add-Member Threads $CPUThreads -Force} else {$newMiner.Threads = $CPUThreads}
                                         }
                                     } else {
                                         $newMiner.Affinity = ""

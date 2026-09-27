@@ -103,7 +103,7 @@ Notes for the automatic values for **APIThreads**:
 - **CPUMiningThreads** = enter the number of softwarethreads being used by CPU miners. Adds "-t [threads]" to commandline of cpuminer forks
 - **CPUMiningAffinity** = enter a hex number to define CPU mining core affinity (e.g. 0xAAAA). Adds "--cpu-affinity [affinity]" to commandline of cpuminer forks
 - **GPUMiningAffinity** = enter a hex number to define GPU miner's CPU core affinity for validating results (e.g. 0xAAAA). Especially useful, when mining CPU and GPU in parallel.
-- **EnableAutoAdjustAffinity** = set to 1 to keep 1-2 threads free for the system, if *all* threads have been selected for CPU mining. It only acts on an affinity that covers every thread, so a hand-picked affinity is never touched [default=1]
+- **EnableAutoAdjustAffinity** = set to 1 to keep 1-2 threads free for the system, if *all* threads have been selected for CPU mining. It only acts on an affinity that covers every thread, so a hand-picked affinity is never touched [default=0]
 
 If you defined CPUMiningThreads or CPUMiningAffinity, you may override the values for single miner, by adding your own "-t" and "--cpu-affinity" to the field Params in miners.config.txt. 
 ClaymoreCPU, FireIce and JceminerCpu are not affected by these settings. They can be finetuned by editing config files (see section MINERS)
@@ -122,10 +122,21 @@ Some examples:
 
 To convert those binary 0/1 values into a hex number, you may use this [Bin/Hex Converter](https://www.rapidtables.com/convert/number/binary-to-hex.html).
 
-On a CPU with hyperthreading/SMT the bits alternate: bit 0 is core 0 / thread 0, bit 1 is
-core 0 / thread 1, bit 2 is core 1 / thread 0, and so on. So `0xFFFFF5` on a 12-core / 24-
-thread CPU means `1111 1111 1111 1111 1111 0101` - everything on, except the second thread
-of core 0 and of core 1.
+Bit N always means the logical CPU N of the operating system, and the two operating systems
+number the SMT siblings differently:
+
+- **Windows** interleaves them: bit 0 is core 0 / thread 0, bit 1 is core 0 / thread 1, bit 2
+  is core 1 / thread 0, and so on. So `0xFFFFF5` on a 12-core / 24-thread CPU means
+  `1111 1111 1111 1111 1111 0101` - everything on, except the second thread of core 0 and 1.
+- **Linux** usually lists all first threads first: on the same CPU the first threads are CPUs
+  0-11 and their siblings 12-23, so `0xFFF` selects one thread per core. Check your rig with
+  `lscpu -e=CPU,CORE,SOCKET` or `cat /sys/devices/system/cpu/cpu0/topology/thread_siblings_list`.
+  Some ARM and AMD boards interleave like Windows.
+
+RainbowMiner reads the real topology at start (`/cpuinfo` in the web API shows `RealCores` and
+`ThreadList`), so an *empty* CPUMiningAffinity always ends up as one thread per physical core,
+whatever the numbering. In a container or with `taskset`, only the CPUs the process may run on
+are used.
 
 Two practical rules:
 
