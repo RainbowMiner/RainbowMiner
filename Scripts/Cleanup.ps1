@@ -1977,18 +1977,23 @@ try {
             if ($Setup = $OCprofilesSetup.$ProfileName) {$Expected += "$($Setup.PowerLimit)|$($Setup.ThermalLimit)|$($Setup.MemoryClockBoost)|$($Setup.CoreClockBoost)|$($Setup.LockVoltagePoint)|$($Setup.LockMemoryClock)|$($Setup.LockCoreClock)||"}
             if ($Expected -notcontains $Values) {$Untouched = $false; break}
         }
+        $AlgorithmsActual = Get-Content "$AlgorithmsConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
         if ($Untouched) {
-            $AlgorithmsActual = Get-Content "$AlgorithmsConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
             foreach ($Algorithm in @("EvrProgPow","KawPow","KawPow2g","KawPow3g","KawPow4g","KawPow5g","MeowPow","SCCPow")) {
                 if ($AlgorithmsActual.$Algorithm -and $AlgorithmsActual.$Algorithm.OCprofile -eq "Profile7") {
                     $AlgorithmsActual.$Algorithm | Add-Member OCprofile "Profile8" -Force
                     $Changes++
                 }
             }
-            if ($Changes) {
-                Set-ContentJson -PathToFile $AlgorithmsConfigFile -Data $AlgorithmsActual > $null
-                $ChangesTotal += $Changes
-            }
+        }
+        # PhiHash had no default entry and ran on the device default (core up): an empty entry gets the ProgPow profile
+        if ($AlgorithmsActual.PhiHash -and "$($AlgorithmsActual.PhiHash.OCprofile)" -eq "") {
+            $AlgorithmsActual.PhiHash | Add-Member OCprofile "Profile8" -Force
+            $Changes++
+        }
+        if ($Changes) {
+            Set-ContentJson -PathToFile $AlgorithmsConfigFile -Data $AlgorithmsActual > $null
+            $ChangesTotal += $Changes
         }
     }
 

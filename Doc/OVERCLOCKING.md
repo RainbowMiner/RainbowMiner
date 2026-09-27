@@ -275,13 +275,14 @@ profile that is already in your `ocprofiles.config.txt`, so editing them is safe
 | Profile5 | core up, memory reduced (85%)          | a few miner-specific entries in miners.config.txt                         |
 | Profile6 | core down, memory max, low power       | Ethash, EtcHash, EthashB3, UbqHash, FishHash, KarlsenHashV2, Octopus     |
 | Profile7 | core slightly up, memory max           | nothing by default, kept as a template for a small core offset on the ProgPow family |
-| Profile8 | core +0, memory max                    | KawPow family, MeowPow, EvrProgPow, SCCPow, FiroPow, ProgPowZ and the other ProgPow variants |
+| Profile8 | core +0, memory max                    | KawPow family, MeowPow, EvrProgPow, SCCPow, PhiHash, FiroPow, ProgPowZ and the other ProgPow variants |
 
 Since v5.0.3.2 the whole ProgPow family, KawPow included, runs on Profile8: the small core
 offset of Profile7 made Gminer's KawPow kernel crash on a GTX1070 rig, for a gain of one or
 two percent at best. That update moves these algorithms from Profile7 to Profile8 in your
 `algorithms.config.txt`, unless one of your Profile7 profiles was edited by hand - then
-nothing is touched and you decide.
+nothing is touched and you decide. PhiHash had no entry before and ran on the device
+default; an empty PhiHash entry gets Profile8 at the update as well.
 
 Presets exist for GTX1050Ti, GTX1060 (3GB/6GB), GTX1070, GTX1070Ti, GTX1080, GTX1080Ti,
 P104-100, P106-100, GTX1650 (Super), GTX1660 (Super/Ti), RTX2060 to RTX2080Ti (incl. Super),

@@ -68,6 +68,7 @@
     "Nist5" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="4";OCprofile="Profile4"}
     "Octopus" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="";OCprofile="Profile6"}
     "PHI2" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="4";OCprofile="Profile4"}
+    "PhiHash" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="";OCprofile="Profile8"}
     "Poseidon2b" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="4";OCprofile="Profile4"}
     "ProgPoW" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="";OCprofile="Profile8"}
     "ProgPowEpic" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="";OCprofile="Profile8"}
