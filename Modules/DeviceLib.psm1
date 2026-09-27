@@ -813,6 +813,17 @@ function Get-Device {
                         $Global:GlobalCPUInfo.Topology = $topo
                         $topo_online = $topo | Where-Object { $_.online }
 
+                        # drop the CPUs a cpuset keeps away from this process (containers, taskset)
+                        $allowedCpus = Get-LinuxAllowedCpus
+                        if ($allowedCpus) {
+                            $topo_allowed = @($topo_online | Where-Object { $allowedCpus.Contains([int]$_.cpu) })
+                            if ($topo_allowed.Count -and $topo_allowed.Count -lt @($topo_online).Count) {
+                                Write-Log -Level Info "CPU set limits RainbowMiner to $($topo_allowed.Count) of $(@($topo_online).Count) CPUs ($($allowedCpus.Count) allowed)"
+                                $topo_online = $topo_allowed
+                            }
+                            $topo_allowed = $null
+                        }
+
                         $allCpus = @(
                             $topo_online | 
                                 Sort-Object socket, core, thread, cpu |
@@ -839,6 +850,13 @@ function Get-Device {
                             $Global:GlobalCPUInfo.Threads = $allCpus.Count
                             $Global:GlobalCPUInfo.PhysicalCPUs = [Math]::Max(1,($topo_online | Select-Object -ExpandProperty socket -Unique).Count)
 
+                            # getcpuinfo.sh only knows the thread count: mirror the exact values into the
+                            # raw block, which /cpuinfo and devicedata.json show
+                            if ($Global:GlobalCPUInfo.Information) {
+                                foreach ($Field in @("Cores","Threads","PhysicalCPUs")) {
+                                    $Global:GlobalCPUInfo.Information | Add-Member $Field $Global:GlobalCPUInfo.$Field -Force
+                                }
+                            }
                         }
                     }
                     catch {
@@ -1768,6 +1786,30 @@ function Get-CpuTopology {
             Invoke-exe $_.FullName | ConvertFrom-Json -ErrorAction Stop
         } catch {}
     }
+}
+
+function Get-LinuxAllowedCpus {
+    # the cpuset RainbowMiner runs in (LXC, Docker, systemd AllowedCPUs, taskset): the kernel
+    # refuses to schedule the miners on any other CPU, so the topology must not offer them.
+    # Returns a HashSet of CPU numbers, or $null when the list cannot be read
+    if (-not $IsLinux) {return $null}
+    try {
+        $Line = Get-Content "/proc/self/status" -ErrorAction Stop | Where-Object {$_ -match "^Cpus_allowed_list:\s*(\S+)"} | Select-Object -First 1
+        if ($Line -match "^Cpus_allowed_list:\s*(\S+)") {
+            $List = $Matches[1]
+            $Set  = [System.Collections.Generic.HashSet[int]]::new()
+            foreach ($Part in ($List -split ',')) {
+                if ($Part -match '^(\d+)-(\d+)$') {
+                    $Lo = [int]$Matches[1]; $Hi = [int]$Matches[2]
+                    for ($i = $Lo; $i -le $Hi; $i++) {[void]$Set.Add($i)}
+                } elseif ($Part -match '^\d+$') {
+                    [void]$Set.Add([int]$Part)
+                }
+            }
+            if ($Set.Count) {return $Set}
+        }
+    } catch {}
+    $null
 }
 
 #
