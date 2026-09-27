@@ -666,6 +666,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                             PowerLimit       = $_.Value.PowerLimit
                             ThermalLimit     = $_.Value.ThermalLimit
                             MemoryClockBoost = $_.Value.MemoryClockBoost
+                            MemoryClockScale = $_.Value.MemoryClockScale
                             CoreClockBoost   = $_.Value.CoreClockBoost
                             LockVoltagePoint = $_.Value.LockVoltagePoint
                             LockMemoryClock  = $_.Value.LockMemoryClock

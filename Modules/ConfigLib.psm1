@@ -580,7 +580,7 @@ function Set-OCProfilesConfigDefault {
         try {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
             $Preset_Copy = $Preset | ConvertTo-Json -Depth 10 -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
-            $Default = [PSCustomObject]@{PowerLimit = 0;ThermalLimit = 0;PriorizeThermalLimit = 0;MemoryClockBoost = "*";CoreClockBoost = "*";LockVoltagePoint = "*";PreCmd="";PreCmdArguments="";PostCmd="";PostCmdArguments="";LockMemoryClock = "*";LockCoreClock = "*"}
+            $Default = [PSCustomObject]@{PowerLimit = 0;ThermalLimit = 0;PriorizeThermalLimit = 0;MemoryClockBoost = "*";CoreClockBoost = "*";LockVoltagePoint = "*";PreCmd="";PreCmdArguments="";PostCmd="";PostCmdArguments="";LockMemoryClock = "*";LockCoreClock = "*";MemoryClockScale = ""}
             if ($true -or -not $Preset.PSObject.Properties.Name) {
                 $Setup = Get-ChildItemContent ".\Data\OCProfilesConfigDefault.ps1"
                 $Devices = Get-Device "amd","intel","nvidia" -IgnoreOpenCL
@@ -600,6 +600,8 @@ function Set-OCProfilesConfigDefault {
             }
             $Preset.PSObject.Properties.Name | Foreach-Object {
                 $PresetName = $_
+                # an empty MemoryClockScale means "apply MemoryClockBoost as it is", which keeps every
+                # profile from before the field existed at its old behavior on every platform
                 foreach($SetupName in $Default.PSObject.Properties.Name) {if ($Preset.$PresetName.$SetupName -eq $null){$Preset.$PresetName | Add-Member $SetupName $Default.$SetupName -Force}}
             }
             $Sorted = [PSCustomObject]@{}

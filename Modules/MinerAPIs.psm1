@@ -951,7 +951,7 @@ class Miner {
                         $applied_any=$true
                         if ($Config) {$this.SetOCprofileValue($DeviceModel,"CoreClockBoost",$val)}
                     }
-                    if ($Profile.MemoryClockBoost -match '^\-*[0-9]+$') {$val = [Convert]::ToInt32($Profile.MemoryClockBoost);if ($GpuNvml) {[void]$NvmlArgs.Add("--mem $($val)")} else {[void]$NvCmd.Add("$(if ($Global:IsLinux) {
+                    if ($Profile.MemoryClockBoost -match '^\-*[0-9]+$') {$val = [Convert]::ToInt32($Profile.MemoryClockBoost);if ($Global:IsLinux -and "$($Profile.MemoryClockScale)" -eq "windows") {$val *= 2};if ($GpuNvml) {[void]$NvmlArgs.Add("--mem $($val)")} else {[void]$NvCmd.Add("$(if ($Global:IsLinux) {
                         if ($ApplyToAllPerformanceLevels) {"-a '[gpu:$($NvTarget)]/GPUMemoryTransferRateOffsetAllPerformanceLevels=$($val)'"}
                         else{"-a '[gpu:$($NvTarget)]/GPUMemoryTransferRateOffset[$($x)]=$($val)'"}} else {"-setMemoryClockOffset:$($DeviceId),0,$($val)"})")}
                         $applied_any=$true
@@ -984,7 +984,7 @@ class Miner {
                     }
                 }
             }
-            if ($applied_any) {[void]$applied.Add("OC set for $($this.BaseName)-$($DeviceModel)-$($this.BaseAlgorithm -join '-'): PL=$(if ($Profile.PowerLimit) {"$($Profile.PowerLimit)%"} else {"-"}), TL=$(if ($Profile.ThermalLimit) {"$($Profile.ThermalLimit)°C"} else {"-"}), PRIO=$(if (Get-Yes $Profile.PriorizeThermalLimit) {"TL"} else {"PL"}), MEMboost=$(if ($Profile.MemoryClockBoost -ne '') {"$($Profile.MemoryClockBoost)"} else {"-"}), COREboost=$(if ($Profile.CoreClockBoost -ne '') {"$($Profile.CoreClockBoost)"} else {"-"}), MEMlock=$(if ($Profile.LockMemoryClock -ne '') {"$($Profile.LockMemoryClock)"} else {"-"}), CORElock=$(if ($Profile.LockCoreClock -ne '') {"$($Profile.LockCoreClock)"} else {"-"}), LVP=$(if ($Profile.LockVoltagePoint -ne '') {"$($Profile.LockVoltagePoint)µV"} else {"-"})")}
+            if ($applied_any) {[void]$applied.Add("OC set for $($this.BaseName)-$($DeviceModel)-$($this.BaseAlgorithm -join '-'): PL=$(if ($Profile.PowerLimit) {"$($Profile.PowerLimit)%"} else {"-"}), TL=$(if ($Profile.ThermalLimit) {"$($Profile.ThermalLimit)°C"} else {"-"}), PRIO=$(if (Get-Yes $Profile.PriorizeThermalLimit) {"TL"} else {"PL"}), MEMboost=$(if ($Profile.MemoryClockBoost -ne '') {"$($Profile.MemoryClockBoost)$(if ($Global:IsLinux -and "$($Profile.MemoryClockScale)" -eq "windows") {"(x2)"})"} else {"-"}), COREboost=$(if ($Profile.CoreClockBoost -ne '') {"$($Profile.CoreClockBoost)"} else {"-"}), MEMlock=$(if ($Profile.LockMemoryClock -ne '') {"$($Profile.LockMemoryClock)"} else {"-"}), CORElock=$(if ($Profile.LockCoreClock -ne '') {"$($Profile.LockCoreClock)"} else {"-"}), LVP=$(if ($Profile.LockVoltagePoint -ne '') {"$($Profile.LockVoltagePoint)µV"} else {"-"})")}
         }
 
         if ($RunCmd.Count) {

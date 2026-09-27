@@ -3385,7 +3385,7 @@ function Start-Setup {
                             @{Label="Thermal Limit"; Expression={"$(if ($_.Value.ThermalLimit -eq '0'){'*'}else{"$($_.Value.ThermalLimit) °C"})"}; Align="center"}
                             @{Label="Prio TL"; Expression={"$($_.Value.PriorizeThermalLimit)"}; Align="center"}
                             @{Label="Core Clock"; Expression={"$(if ($_.Value.CoreClockBoost -eq '*'){'*'}else{"$(if ([Convert]::ToInt32($_.Value.CoreClockBoost) -gt 0){'+'})$($_.Value.CoreClockBoost)"})"}; Align="center"}
-                            @{Label="Memory Clock"; Expression={"$(if ($_.Value.MemoryClockBoost -eq '*'){'*'}else{"$(if ([Convert]::ToInt32($_.Value.MemoryClockBoost) -gt 0){'+'})$($_.Value.MemoryClockBoost)"})"}; Align="center"}
+                            @{Label="Memory Clock"; Expression={"$(if ($_.Value.MemoryClockBoost -eq '*'){'*'}else{"$(if ([Convert]::ToInt32($_.Value.MemoryClockBoost) -gt 0){'+'})$($_.Value.MemoryClockBoost)$(if ($IsLinux -and $_.Value.MemoryClockScale) {" ($(if ($_.Value.MemoryClockScale -eq 'windows') {'win'} else {'lin'}))"})"})"}; Align="center"}
                             @{Label="Lock Core Clock"; Expression={"$($_.Value.LockCoreClock)"}; Align="center"}
                             @{Label="Lock Memory Clock"; Expression={"$($_.Value.LockMemoryClock)"}; Align="center"}
                         ) | Out-Host
@@ -3451,12 +3451,15 @@ function Start-Setup {
                             LockVoltagePoint = "*"
                             LockMemoryClock = "*"
                             LockCoreClock = "*"
+                            MemoryClockScale = $(if ($IsLinux) {"linux"} else {"windows"})
                         }
                         foreach($SetupName in $OCProfileDefault.PSObject.Properties.Name) {if ($OCProfilesActual.$OCProfile_Name.$SetupName -eq $null){$OCProfilesActual.$OCProfile_Name | Add-Member $SetupName $OCProfileDefault.$SetupName -Force}}
 
                         $OCProfileConfig = $OCProfilesActual.$OCProfile_Name.PSObject.Copy()
 
-                        $OCProfileSetupSteps.AddRange(@("powerlimit","thermallimit","priorizethermallimit","coreclockboost","memoryclockboost","lockcoreclock","lockmemoryclock")) > $null
+                        $OCProfileSetupSteps.AddRange(@("powerlimit","thermallimit","priorizethermallimit","coreclockboost","memoryclockboost")) > $null
+                        if ($IsLinux) {[void]$OCProfileSetupSteps.Add("memoryclockscale")}
+                        $OCProfileSetupSteps.AddRange(@("lockcoreclock","lockmemoryclock")) > $null
                         if (Get-Yes $ConfigActual.EnableOCVoltage) {[void]$OCProfileSetupSteps.Add("lockvoltagepoint")}
                         [void]$OCProfileSetupSteps.Add("save")
                                         
@@ -3482,6 +3485,14 @@ function Start-Setup {
                                             if ($p -match '^.+-' -or $p -eq '') {Write-Host "This is not a correct number" -ForegroundColor Yellow; throw "goto powerlimit"}
                                         }
                                         $OCProfileConfig.MemoryClockBoost = $p                                                            
+                                    }
+                                    "memoryclockscale" {
+                                        Write-Host " "
+                                        Write-Host "Linux takes the memory clock boost as transfer rate offset, which is twice the number MSI Afterburner shows." -ForegroundColor Yellow
+                                        Write-Host "windows = the number is in Afterburner scale, as in the RainbowMiner presets and docs (RainbowMiner doubles it)" -ForegroundColor Yellow
+                                        Write-Host "linux   = the number is in nvidia-settings/HiveOS scale and is sent as it is" -ForegroundColor Yellow
+                                        Write-Host " "
+                                        $OCProfileConfig.MemoryClockScale = Read-HostString -Prompt "Which scale is the memory clock boost in? (windows or linux)" -Default $(if ($OCProfileConfig.MemoryClockScale) {$OCProfileConfig.MemoryClockScale} else {"linux"}) -Valid @("windows","linux") | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     }
                                     "coreclockboost" {
                                         $p = Read-HostString -Prompt "Enter a value for core clock boost or `"*`" to never set" -Default $OCProfileConfig.CoreClockBoost -Characters "0-9*+-" -Mandatory | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}

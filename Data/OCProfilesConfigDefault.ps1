@@ -4,6 +4,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -14,6 +15,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -24,6 +26,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -34,6 +37,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "200"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -44,6 +48,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -54,6 +59,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "350"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -64,6 +70,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -74,6 +81,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "75"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -84,6 +92,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -94,6 +103,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -104,6 +114,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -114,6 +125,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -124,6 +136,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "200"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -134,6 +147,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -144,6 +158,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "350"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -154,6 +169,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -164,6 +180,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "50"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -174,6 +191,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -184,6 +202,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -194,6 +213,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -204,6 +224,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -214,6 +235,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "200"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -224,6 +246,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -234,6 +257,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "350"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -244,6 +268,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -254,6 +279,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "50"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -264,6 +290,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -274,6 +301,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -284,6 +312,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -294,6 +323,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -304,6 +334,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "200"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -314,6 +345,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -324,6 +356,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "350"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -334,6 +367,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -344,6 +378,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "50"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -354,6 +389,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -364,6 +400,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -374,6 +411,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -384,6 +422,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -394,6 +433,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "200"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -404,6 +444,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -414,6 +455,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "350"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -424,6 +466,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -434,6 +477,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "50"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -444,6 +488,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -454,6 +499,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -464,6 +510,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -474,6 +521,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -484,6 +532,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "200"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -494,6 +543,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -504,6 +554,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "350"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -514,6 +565,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -524,6 +576,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "50"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -534,6 +587,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -544,6 +598,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -554,6 +609,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -564,6 +620,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -574,6 +631,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "250"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -584,6 +642,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -594,6 +653,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "425"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -604,6 +664,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -614,6 +675,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "50"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -624,6 +686,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -634,6 +697,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -644,6 +708,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -654,6 +719,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -664,6 +730,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "200"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -674,6 +741,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -684,6 +752,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "350"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -694,6 +763,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -704,6 +774,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "50"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -714,6 +785,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -724,6 +796,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -734,6 +807,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -744,6 +818,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -754,6 +829,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "200"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -764,6 +840,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -774,6 +851,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "350"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -784,6 +862,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -794,6 +873,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "50"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -804,6 +884,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -814,6 +895,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -824,6 +906,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -834,6 +917,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -844,6 +928,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "200"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -854,6 +939,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -864,6 +950,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "350"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -874,6 +961,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -884,6 +972,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "50"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -894,6 +983,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -904,6 +994,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -914,6 +1005,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -924,6 +1016,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -934,6 +1027,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "200"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -944,6 +1038,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -954,6 +1049,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "350"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -964,6 +1060,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -974,6 +1071,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "50"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -984,6 +1082,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -994,6 +1093,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1004,6 +1104,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1014,6 +1115,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1024,6 +1126,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "200"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1034,6 +1137,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1044,6 +1148,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "350"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1054,6 +1159,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1064,6 +1170,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "50"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1074,6 +1181,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1084,6 +1192,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1094,6 +1203,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1104,6 +1214,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1114,6 +1225,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "250"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1124,6 +1236,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1134,6 +1247,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "425"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1144,6 +1258,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "-200"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1154,6 +1269,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "50"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1164,6 +1280,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1174,6 +1291,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1184,6 +1302,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1194,6 +1313,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "600"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1204,6 +1324,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "300"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1214,6 +1335,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1224,6 +1346,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1234,6 +1357,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "600"
+        MemoryClockScale = "windows"
         CoreClockBoost = "-200"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1244,6 +1368,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "600"
+        MemoryClockScale = "windows"
         CoreClockBoost = "50"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1254,6 +1379,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "600"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1264,6 +1390,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1274,6 +1401,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1284,6 +1412,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "600"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1294,6 +1423,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "300"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1304,6 +1434,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1314,6 +1445,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1324,6 +1456,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "600"
+        MemoryClockScale = "windows"
         CoreClockBoost = "-200"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1334,6 +1467,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "600"
+        MemoryClockScale = "windows"
         CoreClockBoost = "50"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1344,6 +1478,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "600"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1354,6 +1489,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1364,6 +1500,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1374,6 +1511,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "300"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1384,6 +1522,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "150"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1394,6 +1533,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1404,6 +1544,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "250"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1414,6 +1555,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "300"
+        MemoryClockScale = "windows"
         CoreClockBoost = "-200"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1424,6 +1566,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "300"
+        MemoryClockScale = "windows"
         CoreClockBoost = "50"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1434,6 +1577,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "300"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1444,6 +1588,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1454,6 +1599,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1464,6 +1610,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "600"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1474,6 +1621,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "300"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1484,6 +1632,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1494,6 +1643,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1504,6 +1654,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "600"
+        MemoryClockScale = "windows"
         CoreClockBoost = "-200"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1514,6 +1665,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "600"
+        MemoryClockScale = "windows"
         CoreClockBoost = "50"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1524,6 +1676,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "600"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1534,6 +1687,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1544,6 +1698,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1554,6 +1709,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "600"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1564,6 +1720,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "300"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1574,6 +1731,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1584,6 +1742,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1594,6 +1753,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "600"
+        MemoryClockScale = "windows"
         CoreClockBoost = "-200"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1604,6 +1764,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "600"
+        MemoryClockScale = "windows"
         CoreClockBoost = "50"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1614,6 +1775,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "600"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1624,6 +1786,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1634,6 +1797,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1644,6 +1808,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "700"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1654,6 +1819,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "350"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1664,6 +1830,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1674,6 +1841,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "600"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1684,6 +1852,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "700"
+        MemoryClockScale = "windows"
         CoreClockBoost = "-200"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1694,6 +1863,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "700"
+        MemoryClockScale = "windows"
         CoreClockBoost = "50"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1704,6 +1874,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "700"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1714,6 +1885,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1724,6 +1896,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1734,6 +1907,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "700"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1744,6 +1918,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "350"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1754,6 +1929,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1764,6 +1940,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "600"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1774,6 +1951,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "700"
+        MemoryClockScale = "windows"
         CoreClockBoost = "-200"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1784,6 +1962,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "700"
+        MemoryClockScale = "windows"
         CoreClockBoost = "50"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1794,6 +1973,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "700"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1804,6 +1984,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1814,6 +1995,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1824,6 +2006,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "800"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1834,6 +2017,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1844,6 +2028,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1854,6 +2039,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "675"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1864,6 +2050,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "800"
+        MemoryClockScale = "windows"
         CoreClockBoost = "-200"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1874,6 +2061,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "800"
+        MemoryClockScale = "windows"
         CoreClockBoost = "50"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1884,6 +2072,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "800"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1894,6 +2083,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1904,6 +2094,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1914,6 +2105,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "700"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1924,6 +2116,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "350"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1934,6 +2127,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1944,6 +2138,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "600"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1954,6 +2149,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "700"
+        MemoryClockScale = "windows"
         CoreClockBoost = "-200"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1964,6 +2160,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "700"
+        MemoryClockScale = "windows"
         CoreClockBoost = "50"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1974,6 +2171,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "700"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1984,6 +2182,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -1994,6 +2193,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2004,6 +2204,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "900"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2014,6 +2215,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "450"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2024,6 +2226,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2034,6 +2237,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "775"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2044,6 +2248,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "900"
+        MemoryClockScale = "windows"
         CoreClockBoost = "-200"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2054,6 +2259,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "900"
+        MemoryClockScale = "windows"
         CoreClockBoost = "50"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2064,6 +2270,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "900"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2074,6 +2281,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2084,6 +2292,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2094,6 +2303,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "700"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2104,6 +2314,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "350"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2114,6 +2325,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2124,6 +2336,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "600"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2134,6 +2347,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "700"
+        MemoryClockScale = "windows"
         CoreClockBoost = "-200"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2144,6 +2358,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "700"
+        MemoryClockScale = "windows"
         CoreClockBoost = "50"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2154,6 +2369,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "700"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2164,6 +2380,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2174,6 +2391,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2184,6 +2402,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "900"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2194,6 +2413,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "450"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2204,6 +2424,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2214,6 +2435,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "775"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2224,6 +2446,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "900"
+        MemoryClockScale = "windows"
         CoreClockBoost = "-500"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2234,6 +2457,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "900"
+        MemoryClockScale = "windows"
         CoreClockBoost = "50"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2244,6 +2468,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "900"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2254,6 +2479,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2264,6 +2490,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2274,6 +2501,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2284,6 +2512,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2294,6 +2523,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2304,6 +2534,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "850"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2314,6 +2545,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "-500"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2324,6 +2556,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "50"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2334,6 +2567,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2344,6 +2578,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2354,6 +2589,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2364,6 +2600,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2374,6 +2611,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2384,6 +2622,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2394,6 +2633,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "850"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2404,6 +2644,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "-500"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2414,6 +2655,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "50"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2424,6 +2666,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2434,6 +2677,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2444,6 +2688,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2454,6 +2699,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2464,6 +2710,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2474,6 +2721,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2484,6 +2732,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "875"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2494,6 +2743,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "-500"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2504,6 +2754,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "50"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2514,6 +2765,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2524,6 +2776,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2534,6 +2787,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2544,6 +2798,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "800"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2554,6 +2809,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2564,6 +2820,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2574,6 +2831,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "675"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2584,6 +2842,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "800"
+        MemoryClockScale = "windows"
         CoreClockBoost = "-500"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2594,6 +2853,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "800"
+        MemoryClockScale = "windows"
         CoreClockBoost = "50"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2604,6 +2864,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "800"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2614,6 +2875,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2624,6 +2886,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2634,6 +2897,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "900"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2644,6 +2908,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "450"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2654,6 +2919,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2664,6 +2930,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "775"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2674,6 +2941,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "900"
+        MemoryClockScale = "windows"
         CoreClockBoost = "-500"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2684,6 +2952,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "900"
+        MemoryClockScale = "windows"
         CoreClockBoost = "50"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2694,6 +2963,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "900"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2704,6 +2974,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2714,6 +2985,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2724,6 +2996,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "900"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2734,6 +3007,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "450"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2744,6 +3018,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2754,6 +3029,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "775"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2764,6 +3040,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "900"
+        MemoryClockScale = "windows"
         CoreClockBoost = "-500"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2774,6 +3051,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "900"
+        MemoryClockScale = "windows"
         CoreClockBoost = "50"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2784,6 +3062,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "900"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2794,6 +3073,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2804,6 +3084,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2814,6 +3095,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "800"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2824,6 +3106,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "400"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2834,6 +3117,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2844,6 +3128,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "675"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2854,6 +3139,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "800"
+        MemoryClockScale = "windows"
         CoreClockBoost = "-500"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2864,6 +3150,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "800"
+        MemoryClockScale = "windows"
         CoreClockBoost = "50"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2874,6 +3161,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "800"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2884,6 +3172,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2894,6 +3183,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2904,6 +3194,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "900"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2914,6 +3205,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "450"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2924,6 +3216,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2934,6 +3227,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "775"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2944,6 +3238,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "900"
+        MemoryClockScale = "windows"
         CoreClockBoost = "-500"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2954,6 +3249,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "900"
+        MemoryClockScale = "windows"
         CoreClockBoost = "50"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2964,6 +3260,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "900"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2974,6 +3271,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2984,6 +3282,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -2994,6 +3293,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3004,6 +3304,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3014,6 +3315,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3024,6 +3326,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "850"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3034,6 +3337,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3044,6 +3348,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "75"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3054,6 +3359,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3064,6 +3370,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3074,6 +3381,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3084,6 +3392,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3094,6 +3403,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3104,6 +3414,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3114,6 +3425,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "850"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3124,6 +3436,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3134,6 +3447,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "75"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3144,6 +3458,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3154,6 +3469,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3164,6 +3480,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3174,6 +3491,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3184,6 +3502,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3194,6 +3513,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3204,6 +3524,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "850"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3214,6 +3535,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3224,6 +3546,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "75"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3234,6 +3557,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3244,6 +3568,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3254,6 +3579,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3264,6 +3590,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3274,6 +3601,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3284,6 +3612,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3294,6 +3623,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "850"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3304,6 +3634,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3314,6 +3645,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "75"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3324,6 +3656,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3334,6 +3667,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3344,6 +3678,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3354,6 +3689,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3364,6 +3700,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3374,6 +3711,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3384,6 +3722,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "850"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3394,6 +3733,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3404,6 +3744,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "75"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3414,6 +3755,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3424,6 +3766,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3434,6 +3777,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3444,6 +3788,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3454,6 +3799,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3464,6 +3810,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3474,6 +3821,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "850"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3484,6 +3832,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3494,6 +3843,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "75"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3504,6 +3854,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3514,6 +3865,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3524,6 +3876,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3534,6 +3887,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3544,6 +3898,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3554,6 +3909,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3564,6 +3920,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "850"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3574,6 +3931,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3584,6 +3942,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "75"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3594,6 +3953,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3604,6 +3964,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3614,6 +3975,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3624,6 +3986,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3634,6 +3997,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3644,6 +4008,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3654,6 +4019,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "850"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3664,6 +4030,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3674,6 +4041,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "75"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3684,6 +4052,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3694,6 +4063,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3704,6 +4074,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3714,6 +4085,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3724,6 +4096,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3734,6 +4107,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3744,6 +4118,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "850"
+        MemoryClockScale = "windows"
         CoreClockBoost = "150"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3754,6 +4129,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3764,6 +4140,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "75"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3774,6 +4151,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3784,6 +4162,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "200"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3794,6 +4173,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3804,6 +4184,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "200"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3814,6 +4195,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "200"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3824,6 +4206,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "200"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3834,6 +4217,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "850"
+        MemoryClockScale = "windows"
         CoreClockBoost = "200"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3844,6 +4228,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3854,6 +4239,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3864,6 +4250,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3874,6 +4261,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "200"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3884,6 +4272,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3894,6 +4283,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "200"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3904,6 +4294,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "200"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3914,6 +4305,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "200"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3924,6 +4316,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "850"
+        MemoryClockScale = "windows"
         CoreClockBoost = "200"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3934,6 +4327,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3944,6 +4338,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3954,6 +4349,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3964,6 +4360,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "200"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3974,6 +4371,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3984,6 +4382,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "200"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -3994,6 +4393,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "200"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -4004,6 +4404,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "200"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -4014,6 +4415,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "850"
+        MemoryClockScale = "windows"
         CoreClockBoost = "200"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -4024,6 +4426,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -4034,6 +4437,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -4044,6 +4448,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -4054,6 +4459,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "200"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -4064,6 +4470,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -4074,6 +4481,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "200"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -4084,6 +4492,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "200"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -4094,6 +4503,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "200"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -4104,6 +4514,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "850"
+        MemoryClockScale = "windows"
         CoreClockBoost = "200"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -4114,6 +4525,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -4124,6 +4536,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -4134,6 +4547,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -4144,6 +4558,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "0"
+        MemoryClockScale = "windows"
         CoreClockBoost = "200"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -4154,6 +4569,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "*"
+        MemoryClockScale = "windows"
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -4164,6 +4580,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "200"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -4174,6 +4591,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "200"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -4184,6 +4602,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "-500"
+        MemoryClockScale = "windows"
         CoreClockBoost = "200"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -4194,6 +4613,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "850"
+        MemoryClockScale = "windows"
         CoreClockBoost = "200"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -4204,6 +4624,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -4214,6 +4635,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
@@ -4224,6 +4646,7 @@
         ThermalLimit = 0
         PriorizeThermalLimit = 0
         MemoryClockBoost = "1000"
+        MemoryClockScale = "windows"
         CoreClockBoost = "0"
         LockVoltagePoint = "*"
         LockMemoryClock = "*"
