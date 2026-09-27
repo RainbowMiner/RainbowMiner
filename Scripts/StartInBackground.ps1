@@ -266,11 +266,14 @@ try {
     # Lines are always emitted to the pipeline output stream as well: the *Wrapper
     # APIs parse them via Read-MinerJobOutput on Windows (EndOfRoundCleanup
     # null-drains them for all other miners).
+    # At most MaxLines per call: the pump enqueues at native speed, and a miner
+    # that floods faster than this loop dequeues would otherwise keep it from
+    # ever returning to the watch loop (exit detection, kill on controller exit)
     $DrainToLog = {
-        param($Queue, $Path)
+        param($Queue, $Path, $MaxLines = 10000)
         $line  = $null
         $lines = New-Object System.Collections.Generic.List[string]
-        while ($Queue.TryDequeue([ref]$line)) {[void]$lines.Add($line)}
+        while ($lines.Count -lt $MaxLines -and $Queue.TryDequeue([ref]$line)) {[void]$lines.Add($line)}
         if ($lines.Count) {
             if ($Path) {Add-Content -LiteralPath $Path -Value $lines -ErrorAction Ignore}
             $lines
@@ -330,7 +333,12 @@ try {
         }
     }
     if ($Streams.Eof -lt 2 -and $LogPath) {Add-Content -LiteralPath $LogPath -Value "Warning: output streams of $($FilePath) did not reach EOF within 10s - a foreign process still holds them" -ErrorAction Ignore}
-    try {& $DrainToLog $OutputQueue $LogPath} catch {}
+    # the tail after the exit can exceed one chunk: drain until the queue is
+    # empty, time-bounded in case a foreign holder of the pipe keeps writing
+    $sw.Restart()
+    do {
+        try {& $DrainToLog $OutputQueue $LogPath} catch {}
+    } while (-not $OutputQueue.IsEmpty -and $sw.Elapsed.TotalSeconds -lt 5)
 } finally {
     try {if (-not $MiningProcess.HasExited) {$MiningProcess.Kill()}} catch {}
     if ($JobHandle -ne [IntPtr]::Zero) {
