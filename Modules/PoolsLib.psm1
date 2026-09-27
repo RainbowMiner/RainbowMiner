@@ -117,7 +117,7 @@ function Get-PoolsData {
 function Get-PoolPortsFromRequest {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $True)]
+        [Parameter(Mandatory = $False)]
         $Request,
         [Parameter(Mandatory = $False)]
         [String]$mCPU = "",
@@ -132,6 +132,9 @@ function Get-PoolPortsFromRequest {
         [Parameter(Mandatory = $False)]
         [String]$portField = "port"
     )
+
+    # a failed pool API call hands in $null: return nothing instead of a parameter binding error
+    if (-not $Request) {return}
 
     $Portlist = if ($Request.config.ports) {$Request.config.ports | Where-Object {$_.Disabled -ne $true -and $_.Virtual -ne $true -and (-not $mAvoid -or $_.$descField -notmatch $mAvoid)}}
                                       else {$Request | Where-Object {$_.Disabled -ne $true -and $_.Virtual -ne $true -and (-not $mAvoid -or $_.$descField -notmatch $mAvoid)}}
@@ -157,7 +160,7 @@ function Get-PoolPortsFromRequest {
 function Get-PoolDataFromRequest {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $True)]
+        [Parameter(Mandatory = $False)]
         $Request,
         [Parameter(Mandatory = $False)]
         [String]$Currency = "",

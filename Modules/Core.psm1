@@ -5311,14 +5311,21 @@ function Invoke-Core {
 
     if ($Global:Error.Count) {
         $logDate = Get-Date -Format "yyyy-MM-dd"
+        # one line per distinct message and position per round: a miner API that is not up yet
+        # answers every poll with the same refused connection and flooded the file
+        $errSeen = [ordered]@{}
         foreach ($err in $Global:Error) {
             if ($err.Exception.Message) {
                 # add the script position: a bare "Cannot convert null to type System.DateTime" cannot be traced otherwise
                 $errLoc = if ($err.InvocationInfo.ScriptName) {" [$(Split-Path $err.InvocationInfo.ScriptName -Leaf):$($err.InvocationInfo.ScriptLineNumber)]"} elseif ($err.ScriptStackTrace) {" [$("$($err.ScriptStackTrace)".Split("`n")[0].Trim())]"} else {""}
-                Write-ToFile -FilePath "Logs\errors_$logDate.main.txt" -Message "$($err.Exception.Message)$($errLoc)" -Append -Timestamp
+                $errKey = "$($err.Exception.Message)$($errLoc)"
+                if ($errSeen.Contains($errKey)) {$errSeen[$errKey]++} else {$errSeen[$errKey] = 1}
             }
         }
-        $errLoc = $null
+        foreach ($errKey in $errSeen.Keys) {
+            Write-ToFile -FilePath "Logs\errors_$logDate.main.txt" -Message "$($errKey)$(if ($errSeen[$errKey] -gt 1) {" (x$($errSeen[$errKey]))"})" -Append -Timestamp
+        }
+        $errLoc = $errKey = $errSeen = $null
         $Global:Error.Clear()
     }
 
@@ -7082,7 +7089,7 @@ function Set-Balance {
         try {
             $Stat = Get-ContentByStreamReader $Path | ConvertFrom-Json -ErrorAction Stop
 
-            $Stat_LastEarnings = [System.Collections.ArrayList]::new(@($Stat.Last_Earnings | Foreach-Object {[PSCustomObject]@{Date = [DateTime]$_.Date;Value = [Decimal]$_.Value}} | Select-Object))
+            $Stat_LastEarnings = [System.Collections.ArrayList]::new(@($Stat.Last_Earnings | Where-Object {$_.Date} | Foreach-Object {[PSCustomObject]@{Date = [DateTime]$_.Date;Value = [Decimal]$_.Value}} | Select-Object))
 
             $Stat = [PSCustomObject]@{
                         PoolName = $Balance.Name

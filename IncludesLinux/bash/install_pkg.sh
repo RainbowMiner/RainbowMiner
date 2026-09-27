@@ -98,6 +98,8 @@ install_package "" "libuv1" "libuv" "libuv" "libuv1" "libuv"
 install_package "" "libcurl4 libcurl4-openssl-dev" "libcurl libcurl-devel" "curl" "libcurl4" "curl"
 install_package "" "libaprutil1" "apr-util" "apr-util" "libapr-util1" "apr-util"
 install_package "" "ocl-icd-libopencl1" "ocl-icd" "ocl-icd" "ocl-icd" "ocl-icd"
+# xlarig and other xmrig builds link libnuma; Debian/Ubuntu ship it by default, Arch does not
+install_package "" "libnuma1" "numactl-libs" "numactl" "libnuma1" "numactl"
 install_package "" "libjansson4" "jansson" "jansson" "libjansson4" "jansson"
 install_package "" "libltdl7" "libtool-ltdl" "libtool" "libltdl7" "libtool-ltdl"
 install_package "" "libncurses5" "ncurses-libs" "ncurses" "ncurses5" "ncurses-libs"
