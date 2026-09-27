@@ -3966,17 +3966,24 @@ class Xmrig3 : Miner {
                     $Algo = if ($ThreadsConfig.$Algo) {$Algo} else {$Algo0}
 
                     if ($Device -eq "cpu") {
+                        # pick CPUs in topology order (one thread per physical core first): the former
+                        # even-first sort assumed Windows sibling numbering and paired siblings on Linux
+                        $CpuRank = @{}
+                        foreach ($CpuNo in @(@($Global:GlobalCPUInfo.RealCores) + @($Global:GlobalCPUInfo.ThreadList))) {
+                            if ($CpuNo -ne $null -and -not $CpuRank.ContainsKey([int]$CpuNo)) {$CpuRank[[int]$CpuNo] = $CpuRank.Count}
+                        }
+                        $CpuSort = {if ($CpuRank.ContainsKey([int]$_)) {$CpuRank[[int]$_]} else {1000000 + [int]$_}}
                         $cix = @{}
                         $ThreadsAffinity = $ThreadsConfig.$AlgoSource | Foreach-Object {if ($_ -is [array] -and $_.Count -eq 2) {$cix["k$($_[1])"] = $_[0];$_[1]} else {$_}}
 
-                        $Parameters.Config.$Device | Add-Member $Algo ([Array]($ThreadsAffinity | Sort-Object {$_ -band 1},{$_} | Select-Object -First $(if ($Parameters.Threads -and $Parameters.Threads -lt $ThreadsConfig.$AlgoSource.Count) {$Parameters.Threads} else {$ThreadsConfig.$AlgoSource.Count}) | Sort-Object)) -Force
+                        $Parameters.Config.$Device | Add-Member $Algo ([Array]($ThreadsAffinity | Sort-Object $CpuSort | Select-Object -First $(if ($Parameters.Threads -and $Parameters.Threads -lt $ThreadsConfig.$AlgoSource.Count) {$Parameters.Threads} else {$ThreadsConfig.$AlgoSource.Count}) | Sort-Object)) -Force
 
                         $Aff = if ($Parameters.Affinity) {ConvertFrom-CPUAffinity $Parameters.Affinity}
                         if ($AffCount = ($Aff | Measure-Object).Count) {
                             $AffThreads = [System.Collections.ArrayList]::new(@(Compare-Object $Aff $Parameters.Config.$Device.$Algo -IncludeEqual -ExcludeDifferent | Where-Object {$_.SideIndicator -eq "=="} | Foreach-Object {$_.InputObject} | Select-Object))
                             $ThreadsCount = [Math]::Min($AffCount,$Parameters.Config.$Device.$Algo.Count)
                             if ($AffThreads.Count -lt $ThreadsCount) {
-                                $Aff | Where-Object {$_ -notin $AffThreads} | Sort-Object {$_ -band 1},{$_} | Select-Object -First ($ThreadsCount-$AffThreads.Count) | Foreach-Object {[void]$AffThreads.Add($_)}
+                                $Aff | Where-Object {$_ -notin $AffThreads} | Sort-Object $CpuSort | Select-Object -First ($ThreadsCount-$AffThreads.Count) | Foreach-Object {[void]$AffThreads.Add($_)}
                             }
                             $Parameters.Config.$Device.$Algo = @($AffThreads | Sort-Object);
                         }
@@ -4134,17 +4141,24 @@ class Xmrig6 : Miner {
                         if ($Algo -eq "ghostrider") {
                             $Parameters.Config.$Device | Add-Member "max-threads-hint" ([int](100 * $Parameters.Threads / $Global:GlobalCPUInfo.Threads)) -Force
                         }
+                        # pick CPUs in topology order (one thread per physical core first): the former
+                        # even-first sort assumed Windows sibling numbering and paired siblings on Linux
+                        $CpuRank = @{}
+                        foreach ($CpuNo in @(@($Global:GlobalCPUInfo.RealCores) + @($Global:GlobalCPUInfo.ThreadList))) {
+                            if ($CpuNo -ne $null -and -not $CpuRank.ContainsKey([int]$CpuNo)) {$CpuRank[[int]$CpuNo] = $CpuRank.Count}
+                        }
+                        $CpuSort = {if ($CpuRank.ContainsKey([int]$_)) {$CpuRank[[int]$_]} else {1000000 + [int]$_}}
                         $cix = @{}
                         $ThreadsAffinity = $ThreadsConfig.$AlgoSource | Foreach-Object {if ($_ -is [array] -and $_.Count -eq 2) {$cix["k$($_[1])"] = $_[0];$_[1]} else {$_}}
 
-                        $Parameters.Config.$Device | Add-Member $Algo ([Array]($ThreadsAffinity | Sort-Object {$_ -band 1},{$_} | Select-Object -First $(if ($Parameters.Threads -and $Parameters.Threads -lt $ThreadsConfig.$AlgoSource.Count) {$Parameters.Threads} else {$ThreadsConfig.$AlgoSource.Count}) | Sort-Object)) -Force
+                        $Parameters.Config.$Device | Add-Member $Algo ([Array]($ThreadsAffinity | Sort-Object $CpuSort | Select-Object -First $(if ($Parameters.Threads -and $Parameters.Threads -lt $ThreadsConfig.$AlgoSource.Count) {$Parameters.Threads} else {$ThreadsConfig.$AlgoSource.Count}) | Sort-Object)) -Force
 
                         $Aff = if ($Parameters.Affinity) {ConvertFrom-CPUAffinity $Parameters.Affinity}
                         if ($AffCount = ($Aff | Measure-Object).Count) {
                             $AffThreads = [System.Collections.ArrayList]::new(@(Compare-Object $Aff $Parameters.Config.$Device.$Algo -IncludeEqual -ExcludeDifferent | Where-Object {$_.SideIndicator -eq "=="} | Foreach-Object {$_.InputObject} | Select-Object))
                             $ThreadsCount = [Math]::Min($AffCount,$Parameters.Config.$Device.$Algo.Count)
                             if ($AffThreads.Count -lt $ThreadsCount) {
-                                $Aff | Where-Object {$_ -notin $AffThreads} | Sort-Object {$_ -band 1},{$_} | Select-Object -First ($ThreadsCount-$AffThreads.Count) | Foreach-Object {[void]$AffThreads.Add($_)}
+                                $Aff | Where-Object {$_ -notin $AffThreads} | Sort-Object $CpuSort | Select-Object -First ($ThreadsCount-$AffThreads.Count) | Foreach-Object {[void]$AffThreads.Add($_)}
                             }
                             $Parameters.Config.$Device.$Algo = @($AffThreads | Sort-Object);
                         }
