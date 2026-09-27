@@ -432,12 +432,12 @@ try {Update-HelperBinaries} catch {}
 
 Initialize-Session
 
-$Session.Version         = "5.0.3.1"
+$Session.Version         = "5.0.3.2"
 $Session.MainWindowTitle = "RainbowMiner v$($Session.Version)"
 $Session.SetupOnly       = $SetupOnly
 $Session.LogLevel        = $LogLevel
 
-$Session.SupportedPSVersion = "7.6.5"
+$Session.SupportedPSVersion = "7.6.6"
 
 $Session.OpenCLPlatformSorting = @()
 
