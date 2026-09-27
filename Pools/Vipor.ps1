@@ -64,11 +64,12 @@ $Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.symbol;$_.paymentPr
             $blocks          = $Pool_BlocksRequest.result | Foreach-Object {[int]([datetime]::UtcNow - ([datetime]$_.created).ToUniversalTime()).TotalSeconds} | Where-Object {$_ -lt 86400}
             $blocks_measure  = $blocks | Measure-Object -Minimum -Maximum
             $Pool_BLK        = [int]$($(if ($blocks_measure.Count -gt 1 -and ($blocks_measure.Maximum - $blocks_measure.Minimum)) {86400/($blocks_measure.Maximum - $blocks_measure.Minimum)} else {1})*$blocks_measure.Count)
-            $Pool_TSL        = [int]([datetime]::UtcNow - ([datetime]$Pool_BlocksRequest.stats.lastPoolBlockTime).ToUniversalTime()).TotalSeconds
+            # a pool that has not found a block yet reports no lastPoolBlockTime: the null cast threw and dropped the coin
+            $Pool_TSL        = if ($Pool_BlocksRequest.stats.lastPoolBlockTime) {[int]([datetime]::UtcNow - ([datetime]$Pool_BlocksRequest.stats.lastPoolBlockTime).ToUniversalTime()).TotalSeconds} else {$null}
             $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate $_.poolStats.poolHashrate -BlockRate $Pool_BLK -Quiet
         }
     } else {
-        $Pool_TSL = [int]([datetime]::UtcNow - ([datetime]$_.lastPoolBlockTime).ToUniversalTime()).TotalSeconds
+        $Pool_TSL = if ($_.lastPoolBlockTime) {[int]([datetime]::UtcNow - ([datetime]$_.lastPoolBlockTime).ToUniversalTime()).TotalSeconds} else {$null}
     }
 
     foreach($Pool_Region in $Pool_Regions) {

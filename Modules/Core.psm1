@@ -3751,7 +3751,9 @@ function Invoke-Core {
                     }
                     $NeedsReset = $true
 
-                } else {
+                } elseif ($Global:StatsCache.ContainsKey($Miner_StatKey)) {
+                    # only an existing stat gets the version stamp: without one, the null
+                    # roundtrip below threw "The property 'Duration' cannot be found"
 
                     $Miner_Version = $AllMiners_VersionCheck[$Miner.BaseName].Version
 
@@ -5304,9 +5306,12 @@ function Invoke-Core {
         $logDate = Get-Date -Format "yyyy-MM-dd"
         foreach ($err in $Global:Error) {
             if ($err.Exception.Message) {
-                Write-ToFile -FilePath "Logs\errors_$logDate.main.txt" -Message "$($err.Exception.Message)" -Append -Timestamp
+                # add the script position: a bare "Cannot convert null to type System.DateTime" cannot be traced otherwise
+                $errLoc = if ($err.InvocationInfo.ScriptName) {" [$(Split-Path $err.InvocationInfo.ScriptName -Leaf):$($err.InvocationInfo.ScriptLineNumber)]"} elseif ($err.ScriptStackTrace) {" [$("$($err.ScriptStackTrace)".Split("`n")[0].Trim())]"} else {""}
+                Write-ToFile -FilePath "Logs\errors_$logDate.main.txt" -Message "$($err.Exception.Message)$($errLoc)" -Append -Timestamp
             }
         }
+        $errLoc = $null
         $Global:Error.Clear()
     }
 
@@ -6960,12 +6965,13 @@ function Set-TotalsAvg {
     $Last1d = (Get-Date).AddDays(-1)
     $Last1w = (Get-Date).AddDays(-7)
 
-    Get-ChildItem "Stats\Totals" -Filter "Totals_*.csv" | Where-Object {$_.BaseName -lt $LastValid_File} | Foreach-Object {Remove-Item $_.FullName -Force -ErrorAction Ignore}
+    # the folder appears with the first Set-Total: a fresh install has none yet
+    Get-ChildItem "Stats\Totals" -Filter "Totals_*.csv" -ErrorAction Ignore | Where-Object {$_.BaseName -lt $LastValid_File} | Foreach-Object {Remove-Item $_.FullName -Force -ErrorAction Ignore}
 
     if ($CleanupOnly) {return}
 
     $Totals = [PSCustomObject]@{}
-    Get-ChildItem "Stats\Totals" -Filter "*_TotalAvg.txt" | Foreach-Object {
+    Get-ChildItem "Stats\Totals" -Filter "*_TotalAvg.txt" -ErrorAction Ignore | Foreach-Object {
         $PoolName = $_.BaseName -replace "_TotalAvg"
         $Started = (Get-ContentByStreamReader $_.FullName | ConvertFrom-Json -ErrorAction Ignore).Started
         $Totals | Add-Member $PoolName ([PSCustomObject]@{
@@ -6989,7 +6995,7 @@ function Set-TotalsAvg {
 
     try {
         $FirstDate = $CurrentDate = ""
-        Get-ChildItem "Stats\Totals" -Filter "Totals_*.csv" | Where-Object {$_.BaseName -ge $Last1w_File} | Sort-Object BaseName | Foreach-Object {
+        Get-ChildItem "Stats\Totals" -Filter "Totals_*.csv" -ErrorAction Ignore | Where-Object {$_.BaseName -ge $Last1w_File} | Sort-Object BaseName | Foreach-Object {
             Import-Csv $_.FullName -ErrorAction Ignore | Where-Object {$_.Date -ge $Last1w -and [decimal]$_.Profit -gt 0 -and $_.Donation -ne "1" -and $Totals."$($_.PoolName)" -ne $null} | Foreach-Object {
                 if (-not $FirstDate) {$FirstDate = $_.Date}
                 $CurrentDate = $_.Date
