@@ -234,6 +234,7 @@ Example (this is the setup for one of my GTX1070 rigs, basically substituting th
 - PowerLimit: in percent, set to 0, if you do not want this to be changed
 - ThermalLimit: in °C, set to 0, if you do not want this to be changed
 - MemoryClockBoost: in MHz, set to "*", if you do not want this to be changed
+- MemoryClockScale: "windows" if MemoryClockBoost is an MSI Afterburner number (Linux doubles it), "linux" if it is a nvidia-settings/HiveOS number (see [Memory offsets on Linux](#memory-offsets-on-linux))
 - CoreClockBoost: in MHz, set to "*", if you do not want this to be changed
 - LockVoltagePoint: in µV, set to "*", if you do not want this to be changed or "0", if voltagePoint should be unlocked
 - LockMemoryClock: in MHz, set to "*", if you do not want this to be changed or "0", if MemoryClock should be unlocked
@@ -279,7 +280,9 @@ profile that is already in your `ocprofiles.config.txt`, so editing them is safe
 Presets exist for GTX1050Ti, GTX1060 (3GB/6GB), GTX1070, GTX1070Ti, GTX1080, GTX1080Ti,
 P104-100, P106-100, GTX1650 (Super), GTX1660 (Super/Ti), RTX2060 to RTX2080Ti (incl. Super),
 the whole RTX30, RTX40 and RTX50 series. They are conservative values that should run on any
-card of that model, not the maximum your card may reach. Things to know:
+card of that model, not the maximum your card may reach. All presets are in MSI Afterburner scale
+and carry `"MemoryClockScale": "windows"`, so they give the same overclock on Windows and on
+Linux. Things to know:
 
 - **GTX1070, RTX3070** are tested by the RainbowMiner author; all others are taken from public
   mining benchmarks (hashrate.no, Kryptex) and should be checked on your own rig.
@@ -306,9 +309,31 @@ same: "Usually this value is double from what you see in AfterBurner" (+800 on W
 on HiveOS). Values from hashrate.no, HiveOS, lolMiner `--moff` or BzMiner are already in the
 Linux scale; Rigel `--mclock` uses the Windows scale.
 
-So on a Linux rig, double the MemoryClockBoost of the presets. Nothing else is affected:
-CoreClockBoost, PowerLimit and the absolute locks LockCoreClock/LockMemoryClock take the same
-numbers on both systems.
+Every profile therefore says which scale its MemoryClockBoost is in, with the field
+`MemoryClockScale`:
+
+| MemoryClockScale | MemoryClockBoost is        | On Linux RainbowMiner sends | On Windows |
+| ---------------- | -------------------------- | --------------------------- | ---------- |
+| `windows`        | an Afterburner number      | the number times two        | the number |
+| `linux`          | a nvidia-settings number   | the number as it is         | the number |
+| empty            | whatever it was so far     | the number as it is         | the number |
+
+- The presets ship as `windows`, so `"MemoryClockBoost": "800"` is +800 in Afterburner terms on
+  both systems (Linux gets 1600 as transfer rate offset).
+- Profiles from before this field existed get it added empty, which means "as it is" on every
+  platform: nothing changes for them, on no rig and in no server/client combination, until you
+  set the scale yourself. The same goes for profiles from an older setup.json or an older
+  server. If you seeded the presets on a Linux rig before the field existed, delete the
+  `ProfileN-<Model>` entries you have not edited; RainbowMiner seeds them again with `windows`.
+- Numbers from hashrate.no, HiveOS, lolMiner or BzMiner go into a `linux` profile as they are.
+  Numbers from the RainbowMiner docs, MSI Afterburner or Rigel go into a `windows` profile.
+- The field travels with the profile: server config, setup.json and copied files carry it.
+- The log shows what was sent: `MEMboost=800(x2)` means 1600 went to the driver.
+- Windows never scales. On a mixed farm, keep the server's profiles in the scale of the clients
+  that use them, or give each model its own profile with the right scale.
+
+Nothing else is affected: CoreClockBoost, PowerLimit and the absolute locks
+LockCoreClock/LockMemoryClock take the same numbers on both systems.
 
 ## Recommended clock locks
 
