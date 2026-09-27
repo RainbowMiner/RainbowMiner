@@ -137,5 +137,7 @@ Invoke-MinerFamily -Name $Name -Pools $Pools -InfoOnly $InfoOnly -Setup @{
     Commands = $Commands
     MakeArgs = { "-b `$mport -a $(if ($Miner_Coin -and $_.$Miner_Coin) {$_.$Miner_Coin} else {$_.MainAlgorithm}) -o stratum+tcp$(if ($Pools.$Algorithm_Norm.SSL) {"s"})://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$($DeviceParams) --no-doh $($_.Params)" }
     PerKey = { $Miner_Coin = $Pools.$Algorithm_Norm.CoinSymbol }
-    PreKey = { $DeviceParams = "$(if ($CPUThreads){" -t $CPUThreads"})$(if ($CPUAffinity){" --cpu-affinity $CPUAffinity --no-smart"})" }
+    # --no-smart makes cpuminer-rplant pin every worker thread to CPU 0 on Linux (verified with 5.0.46); its smart
+    # mode honors the mask there, so the switch stays Windows-only
+    PreKey = { $DeviceParams = "$(if ($CPUThreads){" -t $CPUThreads"})$(if ($CPUAffinity){" --cpu-affinity $CPUAffinity$(if ($IsWindows) {" --no-smart"})"})" }
 }
