@@ -6919,19 +6919,25 @@ function Set-Total {
         if (Test-Path $Path) {Write-Log -Level $(if ($Quiet) {"Info"} else {"Warn"}) "Could not write to $($PathCsv_Name) "}
     }
 
-    $Stat = Get-ContentByStreamReader $Path
-
-    try {
-        $Stat = $Stat | ConvertFrom-Json -ErrorAction Stop
-        if ($Stat.ProfitApi -eq $null) {$Stat | Add-Member ProfitApi 0 -Force}
-        $Stat.Duration  += $Duration.TotalMinutes
-        $Stat.Cost      += $TotalCost
-        $Stat.Profit    += $TotalProfit
-        $Stat.ProfitApi += $TotalProfitApi
-        $Stat.Power     += $TotalPower
-        $Stat.Updated    = $Updated_UTC
-    } catch {
-        if (Test-Path $Path) {Write-Log -Level $(if ($Quiet) {"Info"} else {"Warn"}) "Totals file ($Path_Name) is corrupt and will be reset. "}
+    # a pool's first totals file does not exist yet: build it without going through an exception
+    $Stat = $null
+    if (Test-Path $Path) {
+        try {
+            $Stat = Get-ContentByStreamReader $Path | ConvertFrom-Json -ErrorAction Stop
+            if ($Stat.Duration -eq $null) {throw "no Duration field"}
+            if ($Stat.ProfitApi -eq $null) {$Stat | Add-Member ProfitApi 0 -Force}
+            $Stat.Duration  += $Duration.TotalMinutes
+            $Stat.Cost      += $TotalCost
+            $Stat.Profit    += $TotalProfit
+            $Stat.ProfitApi += $TotalProfitApi
+            $Stat.Power     += $TotalPower
+            $Stat.Updated    = $Updated_UTC
+        } catch {
+            Write-Log -Level $(if ($Quiet) {"Info"} else {"Warn"}) "Totals file ($Path_Name) is corrupt and will be reset. "
+            $Stat = $null
+        }
+    }
+    if (-not $Stat) {
         $Stat = [PSCustomObject]@{
                     Pool          = $Miner.Pool[0]
                     Duration      = $Duration.TotalMinutes
