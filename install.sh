@@ -23,7 +23,7 @@ is_user_root() { [ "$(id -u)" -eq 0 ]; }
 # Powershell version
 pwsh_major_version="7"
 pwsh_minor_version="6"
-pwsh_build_version="5"
+pwsh_build_version="6"
 
 pwsh_version="${pwsh_major_version}.${pwsh_minor_version}.${pwsh_build_version}"
 
