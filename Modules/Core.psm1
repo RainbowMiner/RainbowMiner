@@ -1020,6 +1020,10 @@ function Invoke-Core {
         if ($Session.Config.RestartRBMMemory -lt 367001600) {$Session.Config.RestartRBMMemory = 0}
 
         if ($IsLinux) {
+            if ("$($Session.Config.LinuxOCMethod)".ToLower() -notin @("nvidia-settings","auto","nvml")) {
+                $Session.Config | Add-Member LinuxOCMethod "nvidia-settings" -Force
+            }
+
             if ($Session.Config.LinuxMinerTerminal -notin @("auto","screen","tmux")) {
                 $Session.Config.LinuxMinerTerminal = "auto"
             } 
@@ -2180,12 +2184,37 @@ function Invoke-Core {
         if ($IsLinux) {
             $Session.OCDaemonOnEmptyAdd = [System.Collections.ArrayList]::new()
 
-            if ($Session.Config.EnableLinuxHeadless) {
-                if ($Session.Config.LinuxDisplay) {
-                    [void]$Session.OCDaemonOnEmptyAdd.Add("export DISPLAY=$($Session.Config.LinuxDisplay)")
+            $LinuxDisplay    = "$($Session.Config.LinuxDisplay)" -replace "[`"']"
+            $LinuxXAuthority = "$($Session.Config.LinuxXAuthority)" -replace "[`"']"
+
+            if ($Session.Config.EnableOCProfiles) {
+                if ($LinuxDisplay -match "^\d+(\.\d+)?$") {
+                    Write-Log -Level Warn "LinuxDisplay `"$($LinuxDisplay)`" lacks the leading colon, using `":$($LinuxDisplay)`""
+                    $LinuxDisplay = ":$($LinuxDisplay)"
                 }
-                if ($Session.Config.LinuxXAuthority) {
-                    [void]$Session.OCDaemonOnEmptyAdd.Add("export XAUTHORITY=$($Session.Config.LinuxXAuthority)")
+                if (-not $LinuxXAuthority) {
+                    $LinuxXAuthority = "$(Get-LinuxXAuthority | Select-Object -First 1)" -replace "[`"']"
+                    if ($LinuxXAuthority) {Write-Log -Level Info "LinuxXAuthority is empty, using detected $($LinuxXAuthority)"}
+                } elseif (-not (Test-Path $LinuxXAuthority -PathType Leaf -ErrorAction Ignore)) {
+                    Write-Log -Level Info "LinuxXAuthority $($LinuxXAuthority) is not readable for RainbowMiner (fine, if it belongs to another user)"
+                }
+            }
+
+            if ($Session.Config.EnableLinuxHeadless) {
+                if ($LinuxDisplay) {
+                    [void]$Session.OCDaemonOnEmptyAdd.Add("export DISPLAY=`"$($LinuxDisplay)`"")
+                }
+                if ($LinuxXAuthority) {
+                    [void]$Session.OCDaemonOnEmptyAdd.Add("export XAUTHORITY=`"$($LinuxXAuthority)`"")
+                }
+            } else {
+                # the ocdaemon runs as root without a desktop session, so it has no
+                # DISPLAY: fill in the values only where the environment has none
+                if ($LinuxDisplay) {
+                    [void]$Session.OCDaemonOnEmptyAdd.Add("export DISPLAY=`"`${DISPLAY:-$($LinuxDisplay)}`"")
+                }
+                if ($LinuxXAuthority) {
+                    [void]$Session.OCDaemonOnEmptyAdd.Add("export XAUTHORITY=`"`${XAUTHORITY:-$($LinuxXAuthority)}`"")
                 }
             }
 
@@ -2196,6 +2225,7 @@ function Invoke-Core {
                 Set-OCDaemon "sleep 1" -OnEmptyAdd $Session.OCDaemonOnEmptyAdd
                 Invoke-NvidiaSettings -SetPowerMizer
                 Invoke-OCDaemon -FilePath ".\IncludesLinux\bash\oc_init.sh" -Quiet > $null
+                Update-NvidiaOCMap
             }
         }
 
@@ -4596,6 +4626,12 @@ function Invoke-Core {
         }
     }
 
+    # the OC reset of stopped miners is only queued: run it now, so that GPUs
+    # without a follow-up miner do not keep the old clocks
+    if ($IsLinux -and $Session.Config.EnableOCprofiles -and $Global:GlobalOCD.Count) {
+        Invoke-OCDaemon -FilePath ".\IncludesLinux\bash\oc_reset.sh" | Write-OCDaemonResult -Name "OC reset"
+    }
+
     #Kill maroding miners
     $Running_ProcessIds = [System.Collections.Generic.HashSet[int]]::new()
     $Miner = $null
@@ -4737,7 +4773,7 @@ function Invoke-Core {
                     }
                 } elseif ($Session.Config.EnableOCprofiles) {
                     $Miner.SetOCprofile($Session.Config, 500)
-                    if ($IsLinux) { Invoke-OCDaemon -Miner $Miner -Quiet > $null }
+                    if ($IsLinux) { Invoke-OCDaemon -Miner $Miner | Write-OCDaemonResult -Name "OC $($Miner.Name)" }
                 }
 
                 $Miner.SetStaticPort($Session.Config.StaticGPUMinerPort)
@@ -5718,12 +5754,16 @@ function Stop-Core {
             if ($Miner.GetStatus() -eq [MinerStatus]::Running) {
                 Write-Log "Closing miner $($Miner.Name)"
                 $Miner.StopMining()
+                if ($Session.Config.EnableOCprofiles) {$Miner.ResetOCprofile(0)}
             }
             if ($Miner.BaseName -like "Excavator*" -and -not $ExcavatorWindowsClosed.Contains($Miner.BaseName)) {
                 $Miner.ShutDownMiner()
                 [void]$ExcavatorWindowsClosed.Add($Miner.BaseName)
             }
         }
+    }
+    if ($IsLinux -and $Session.Config.EnableOCprofiles -and $Global:GlobalOCD.Count) {
+        Invoke-OCDaemon -FilePath ".\IncludesLinux\bash\oc_reset.sh" -Quiet > $null
     }
     Stop-MinerRunspacePool
     if ($IsWindows) {
@@ -6733,7 +6773,7 @@ function Update-ActiveMiners {
             }
 
             Switch ("$($Miner_Status)") {
-                "Running"       {if ($Session.Config.EnableOCprofiles -and ($Miner.DeviceName -notlike "CPU*") -and ($Session.Config.OCResetInterval -gt 0) -and ($Miner.GetLastSetOCTime() -lt (Get-Date).AddSeconds(-$Session.Config.OCResetInterval).ToUniversalTime() -or $API.ApplyOC)) {$Miner.SetOCprofile($Session.Config,500);if ($IsLinux) {Invoke-OCDaemon -Miner $Miner -Quiet > $null};$API.ApplyOC=$false};$MinersUpdated++;Break}
+                "Running"       {if ($Session.Config.EnableOCprofiles -and ($Miner.DeviceName -notlike "CPU*") -and ($Session.Config.OCResetInterval -gt 0) -and ($Miner.GetLastSetOCTime() -lt (Get-Date).AddSeconds(-$Session.Config.OCResetInterval).ToUniversalTime() -or $API.ApplyOC)) {$Miner.SetOCprofile($Session.Config,500);if ($IsLinux) {Invoke-OCDaemon -Miner $Miner | Write-OCDaemonResult -Name "OC $($Miner.Name)"};$API.ApplyOC=$false};$MinersUpdated++;Break}
                 "RunningFailed" {$Miner.ResetMinerData();$MinersFailed++;if ($Miner.IsExclusiveMiner) {$ExclusiveMinersFailed++};Break}
             }
         }

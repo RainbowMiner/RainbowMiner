@@ -845,6 +845,39 @@
                   "label": "Enable"
                 }
               ]
+            },
+            {
+              "kind": "field",
+              "key": "LinuxOCMethod",
+              "id": "inputLinuxOCMethod",
+              "label": {
+                "html": "Linux OC method",
+                "class": "col-sm-2 col-form-label"
+              },
+              "rowClasses": [
+                "is--ocprofiles"
+              ],
+              "colClass": "col-sm-10",
+              "help": {
+                "html": "How core/memory offsets are set on Linux: nvidia-settings (needs an X server), nvml (no X server needed) or auto (nvml only if nvidia-settings cannot reach an X server).",
+                "id": "inputLinuxOCMethodHelp"
+              },
+              "control": "select",
+              "attrs": {},
+              "options": [
+                {
+                  "value": "nvidia-settings",
+                  "label": "nvidia-settings"
+                },
+                {
+                  "value": "auto",
+                  "label": "auto"
+                },
+                {
+                  "value": "nvml",
+                  "label": "nvml"
+                }
+              ]
             }
           ]
         }

@@ -831,6 +831,9 @@ class Miner {
 
         $IsAfterburner = Test-Afterburner
 
+        $CanLockClocks = $Global:IsLinux -or (Test-IsElevated)
+        $UseNvml       = $Global:IsLinux -and (Test-NvmlOC)
+
         $DeviceVendor = $Global:GlobalCachedDevices | Where-Object {$this.OCprofile.ContainsKey($_.Model)} | Foreach-Object {$_.Vendor} | Select-Object -Unique
 
         if ($Global:IsWindows) {
@@ -863,7 +866,7 @@ class Miner {
                     "1650"      {4;Break}
                     "1660"      {4;Break}
                     "^RTX"      {4;Break}
-                    default {3}
+                    default {-1}
                 }
                 [System.Collections.Generic.List[int]]$DeviceIds = @()
                 [System.Collections.Generic.List[string]]$CardIds   = @()
@@ -901,7 +904,6 @@ class Miner {
                 if ($this.Profiles.$DeviceModel.Profile.PostCmd) {
                     [void]$RunCmd.Add([PSCustomObject]@{FilePath = $this.Profiles.$DeviceModel.Profile.PostCmd;ArgumentList=$this.Profiles.$DeviceModel.Profile.PostCmdArguments})
                 }
-                $this.OCprofileSet = $null
             } else {
                 $Profile = $this.Profiles.$DeviceModel.Profile
 
@@ -923,27 +925,41 @@ class Miner {
             if ($DeviceVendor -eq "NVIDIA") {
 
                 foreach($DeviceId in $this.Profiles.$DeviceModel.Index) {
+                    $NvTarget = $DeviceId
+                    $NvBusId  = $null
+                    $x = $this.Profiles.$DeviceModel.x
+                    if ($Global:IsLinux) {
+                        if ($NvOCTarget = Get-NvidiaOCTarget -Index $DeviceId) {
+                            $NvTarget = $NvOCTarget.Index
+                            $NvBusId  = $NvOCTarget.BusId
+                            if ($x -lt 0 -and $NvOCTarget.Perf -ne $null) {$x = $NvOCTarget.Perf}
+                        }
+                    }
+                    if ($x -lt 0) {$x = 3}
+                    $GpuNvml = $UseNvml -and $NvBusId
+                    [System.Collections.Generic.List[string]]$NvmlArgs = @()
                     if ($Profile.PowerLimit -gt 0) {$val=[Math]::Max([Math]::Min($Profile.PowerLimit,200),20);if ($Global:IsLinux) {Set-NvidiaPowerLimit $DeviceId $val} else {[void]$NvCmd.Add("-setPowerTarget:$($DeviceId),$($val)")};$applied_any=$true;if ($Config) {$this.SetOCprofileValue($DeviceModel,"PowerLimit",$val)}}
                     if (-not $Global:IsLinux) {
                         if ($Profile.ThermalLimit -gt 0) {$val=[Math]::Max([Math]::Min($Profile.ThermalLimit,95),50);[void]$NvCmd.Add("-setTempTarget:$($DeviceId),$(if (Get-Yes $Profile.PriorizeThermalLimit) {"1"} else {"0"}),$($val)");$applied_any=$true;if ($Config) {$this.SetOCprofileValue($DeviceModel,"ThermalLimit",$val);$this.SetOCprofileValue($DeviceModel,"PriorizeThermalLimit",(Get-Yes $Profile.PriorizeThermalLimit))}}
                         if ($Profile.LockVoltagePoint-match '^\-*[0-9]+$') {$val=[int]([Convert]::ToInt32($Profile.LockVoltagePoint)/12500)*12500;[void]$NvCmd.Add("-lockVoltagePoint:$($DeviceId),$($val)");$applied_any=$true;if ($Config) {$this.SetOCprofileValue($DeviceModel,"LockVoltagePoint",$val)}}
-                    } else {
-                        [void]$NvCmd.Add("-a '[gpu:$($DeviceId)]/GPUPowerMizerMode=1'")
+                    } elseif (-not $GpuNvml) {
+                        [void]$NvCmd.Add("-a '[gpu:$($NvTarget)]/GPUPowerMizerMode=1'")
                     }
-                    if ($Profile.CoreClockBoost -match '^\-*[0-9]+$') {$val=[Convert]::ToInt32($Profile.CoreClockBoost);[void]$NvCmd.Add("$(if ($Global:IsLinux) {
-                        if ($ApplyToAllPerformanceLevels) {"-a '[gpu:$($DeviceId)]/GPUGraphicsClockOffsetAllPerformanceLevels=$($val)'"}
-                        else {"-a '[gpu:$($DeviceId)]/GPUGraphicsClockOffset[$($this.Profiles.$DeviceModel.x)]=$($val)'"}} else {"-setBaseClockOffset:$($DeviceId),0,$($val)"})")
+                    if ($Profile.CoreClockBoost -match '^\-*[0-9]+$') {$val=[Convert]::ToInt32($Profile.CoreClockBoost);if ($GpuNvml) {[void]$NvmlArgs.Add("--core $($val)")} else {[void]$NvCmd.Add("$(if ($Global:IsLinux) {
+                        if ($ApplyToAllPerformanceLevels) {"-a '[gpu:$($NvTarget)]/GPUGraphicsClockOffsetAllPerformanceLevels=$($val)'"}
+                        else {"-a '[gpu:$($NvTarget)]/GPUGraphicsClockOffset[$($x)]=$($val)'"}} else {"-setBaseClockOffset:$($DeviceId),0,$($val)"})")}
                         $applied_any=$true
                         if ($Config) {$this.SetOCprofileValue($DeviceModel,"CoreClockBoost",$val)}
                     }
-                    if ($Profile.MemoryClockBoost -match '^\-*[0-9]+$') {$val = [Convert]::ToInt32($Profile.MemoryClockBoost);[void]$NvCmd.Add("$(if ($Global:IsLinux) {
-                        if ($ApplyToAllPerformanceLevels) {"-a '[gpu:$($DeviceId)]/GPUMemoryTransferRateOffsetAllPerformanceLevels=$($val)'"}
-                        else{"-a '[gpu:$($DeviceId)]/GPUMemoryTransferRateOffset[$($this.Profiles.$DeviceModel.x)]=$($val)'"}} else {"-setMemoryClockOffset:$($DeviceId),0,$($val)"})")
+                    if ($Profile.MemoryClockBoost -match '^\-*[0-9]+$') {$val = [Convert]::ToInt32($Profile.MemoryClockBoost);if ($GpuNvml) {[void]$NvmlArgs.Add("--mem $($val)")} else {[void]$NvCmd.Add("$(if ($Global:IsLinux) {
+                        if ($ApplyToAllPerformanceLevels) {"-a '[gpu:$($NvTarget)]/GPUMemoryTransferRateOffsetAllPerformanceLevels=$($val)'"}
+                        else{"-a '[gpu:$($NvTarget)]/GPUMemoryTransferRateOffset[$($x)]=$($val)'"}} else {"-setMemoryClockOffset:$($DeviceId),0,$($val)"})")}
                         $applied_any=$true
                         if ($Config) {$this.SetOCprofileValue($DeviceModel,"MemoryClockBoost",$val)}
                     }
-                    if ($Profile.LockCoreClock -match '^[0-9]+$') {[void]$NvSmiCmd.Add("-i $($DeviceId) $(if ($Profile.LockCoreClock -eq 0) {"-rgc"} else {"-lgc $($Profile.LockCoreClock)"})");if ($Config) {$this.SetOCprofileValue($DeviceModel,"LockCoreClock",$Profile.LockCoreClock)}}
-                    if ($Profile.LockMemoryClock -match '^[0-9]+$') {[void]$NvSmiCmd.Add("-i $($DeviceId) $(if ($Profile.LockMemoryClock -eq 0) {"-rmc"} else {"-lmc $($Profile.LockMemoryClock)"})");if ($Config) {$this.SetOCprofileValue($DeviceModel,"LockMemoryClock",$Profile.LockMemoryClock)}}
+                    if ($Profile.LockCoreClock -match '^[0-9]+$') {if ($CanLockClocks) {$applied_any=$true};[void]$NvSmiCmd.Add("-i $($DeviceId) $(if ($Profile.LockCoreClock -eq 0) {"-rgc"} else {"-lgc $($Profile.LockCoreClock)"})");if ($Config) {$this.SetOCprofileValue($DeviceModel,"LockCoreClock",$Profile.LockCoreClock)}}
+                    if ($Profile.LockMemoryClock -match '^[0-9]+$') {if ($CanLockClocks) {$applied_any=$true};[void]$NvSmiCmd.Add("-i $($DeviceId) $(if ($Profile.LockMemoryClock -eq 0) {"-rmc"} else {"-lmc $($Profile.LockMemoryClock)"})");if ($Config) {$this.SetOCprofileValue($DeviceModel,"LockMemoryClock",$Profile.LockMemoryClock)}}
+                    if ($NvmlArgs.Count) {Set-OCDaemon "python3 `"$(Get-NvmlOCHelper)`" set --bus $($NvBusId) $($NvmlArgs -join ' ')" -OnEmptyAdd $Global:Session.OCDaemonOnEmptyAdd -Check}
                 }
 
             } elseif ($DeviceVendor -eq "AMD" -and $Global:IsLinux) {
@@ -1006,7 +1022,7 @@ class Miner {
                 } elseif ($IsAfterburner) {
                     $Script:abControl.CommitChanges()
                 }
-                $applied | Foreach-Object {Write-Log -Level Info $_}
+                $applied | Foreach-Object {Write-Log -Level Info $(if ($Global:IsLinux) {$_ -replace '^OC set','OC queued'} else {$_})}
                 if ($Sleep -gt 0) {Start-Sleep -Milliseconds $Sleep}
             } catch {
                 Write-Log -Level Warn "Failed to apply OC for $($this.Name))!"
