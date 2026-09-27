@@ -14,7 +14,14 @@ function Read-ConsoleKeyGuarded {
     # press, up to 10 repeats. Ctrl+C stays single-press only, because the
     # miner cleanup loops emit the exact pattern C-c C-c and a stray
     # delivery of it must never stop the core
-    if (-not [System.Console]::KeyAvailable) {return}
+    # without a console (systemd unit, nohup, docker) KeyAvailable throws on every poll
+    if ($Script:ConsoleKeyUnavailable -or [System.Console]::IsInputRedirected) {return}
+    try {
+        if (-not [System.Console]::KeyAvailable) {return}
+    } catch {
+        $Script:ConsoleKeyUnavailable = $true
+        return
+    }
     $keyBatch = [System.Collections.Generic.List[System.ConsoleKeyInfo]]::new()
     while ([System.Console]::KeyAvailable -and $keyBatch.Count -lt 4096) {
         [void]$keyBatch.Add([System.Console]::ReadKey($true))
