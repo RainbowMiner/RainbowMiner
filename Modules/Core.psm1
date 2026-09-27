@@ -1022,6 +1022,14 @@ function Invoke-Core {
         if ($IsLinux) {
             if ("$($Session.Config.LinuxOCMethod)".ToLower() -notin @("nvidia-settings","auto","nvml")) {
                 $Session.Config | Add-Member LinuxOCMethod "nvidia-settings" -Force
+            } elseif ("$($Session.Config.LinuxOCMethod)".ToLower() -ne "nvidia-settings" -and $Session.Config.EnableOCProfiles) {
+                # the NVML helper is a python3 script run by the ocdaemon; without either, Test-NvmlOC
+                # falls back to nvidia-settings silently - say so once, python3 is not on every distro
+                if (-not (Get-Command "python3" -ErrorAction Ignore)) {
+                    Write-Log -Level Warn "config.txt: LinuxOCMethod=`"$($Session.Config.LinuxOCMethod)`" needs python3 (Arch: pacman -S python, Debian/Ubuntu: apt install python3), using nvidia-settings"
+                } elseif (-not (Test-OCDaemon)) {
+                    Write-Log -Level Warn "config.txt: LinuxOCMethod=`"$($Session.Config.LinuxOCMethod)`" needs the ocdaemon (run install.sh as root), using nvidia-settings"
+                }
             }
 
             if ($Session.Config.LinuxMinerTerminal -notin @("auto","screen","tmux")) {

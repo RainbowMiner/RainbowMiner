@@ -34,7 +34,8 @@ if ($IsLinux) {
     $Libs = $null
     Remove-Variable -Name Libs -ErrorAction Ignore
 
-    Invoke-Expression "lspci" | Select-String "VGA", "3D" | Tee-Object -Variable lspci | Tee-Object -FilePath ".\Data\gpu-count.txt" | Out-null
+    # match the PCI class names only: a plain "3D" also hits every device on PCI bus 3d and "3DNAND" SSDs
+    Invoke-Expression "lspci" | Select-String -Pattern "VGA compatible controller|3D controller|Display controller" | Tee-Object -Variable lspci | Tee-Object -FilePath ".\Data\gpu-count.txt" | Out-null
 }
 
 if ($IsWindows) {

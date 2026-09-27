@@ -431,7 +431,9 @@ server cannot be asked, the old numbering is used. The log line "nvidia-settings
 GPU#01 (bus 03:00) as [gpu:0] ..." shows where the orders differ.
 
 **LinuxOCMethod.** Without an X server, the offsets can be set through NVML, the driver
-library that nvidia-smi uses as well. It needs python3 and the running ocdaemon:
+library that nvidia-smi uses as well. It needs python3 and the running ocdaemon. `install.sh`
+installs python3 (Arch: `pacman -S python`); without it RainbowMiner logs a warning and keeps
+using nvidia-settings:
 
 | LinuxOCMethod     | Core/memory offsets are set by                                      |
 | ----------------- | ------------------------------------------------------------------- |

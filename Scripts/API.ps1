@@ -825,7 +825,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             if ($IsLinux) {
 
                 try {
-                    Invoke-Expression "lspci" | Select-String "VGA", "3D" | Tee-Object -Variable lspci | Tee-Object -FilePath ".\Data\gpu-count.txt" | Out-null
+                    Invoke-Expression "lspci" | Select-String -Pattern "VGA compatible controller|3D controller|Display controller" | Tee-Object -Variable lspci | Tee-Object -FilePath ".\Data\gpu-count.txt" | Out-null
                 } catch {
                 }
 

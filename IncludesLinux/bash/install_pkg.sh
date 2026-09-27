@@ -80,6 +80,8 @@ install_package "jq" "jq" "jq" "jq" "jq" "jq"
 install_package "lm-sensors" "lm-sensors" "lm_sensors" "lm_sensors" "lm_sensors" "lm_sensors"
 install_package "clinfo" "clinfo" "clinfo" "clinfo" "clinfo" "clinfo"
 install_package "virt-what" "virt-what" "virt-what" "virt-what" "virt-what" "virt-what"
+# python3 runs the NVML overclocking helper (LinuxOCMethod=nvml/auto); Arch and Alpine do not ship it by default
+install_package "python3" "python3" "python3" "python" "python3" "python3"
 
 # Architecture-specific installations
 if [ "$arch" = "aarch64" ]; then
