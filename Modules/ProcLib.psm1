@@ -161,7 +161,7 @@ function Start-SubProcess {
         [Parameter(Mandatory = $false)]
         [Bool]$IsWrapper = $false,
         [Parameter(Mandatory = $false)]
-        [Int]$CPUAffinity = 0,
+        [Int64]$CPUAffinity = 0,
         [Parameter(Mandatory = $false)]
         [String[]]$EnvVars = @(),
         [Parameter(Mandatory = $false)]
@@ -208,7 +208,7 @@ function Start-SubProcessInBackground {
         [Parameter(Mandatory = $false)]
         [Int]$Priority = 0,
         [Parameter(Mandatory = $false)]
-        [Int]$CPUAffinity = 0,
+        [Int64]$CPUAffinity = 0,
         [Parameter(Mandatory = $false)]
         [String[]]$EnvVars = @(),
         [Parameter(Mandatory = $false)]
@@ -333,7 +333,7 @@ function Start-SubProcessInConsole {
         [Parameter(Mandatory = $false)]
         [Int]$Priority = 0,
         [Parameter(Mandatory = $false)]
-        [Int]$CPUAffinity = 0,
+        [Int64]$CPUAffinity = 0,
         [Parameter(Mandatory = $false)]
         [String[]]$EnvVars = @(),
         [Parameter(Mandatory = $false)]
@@ -426,7 +426,7 @@ function Start-SubProcessInScreen {
         [Parameter(Mandatory = $false)]
         [Int]$Priority = 0,
         [Parameter(Mandatory = $false)]
-        [Int]$CPUAffinity = 0,
+        [Int64]$CPUAffinity = 0,
         [Parameter(Mandatory = $false)]
         [String[]]$EnvVars = @(),
         [Parameter(Mandatory = $false)]
@@ -646,7 +646,7 @@ function Start-SubProcessInTmux {
         [Parameter(Mandatory = $false)]
         [Int]$Priority = 0,
         [Parameter(Mandatory = $false)]
-        [Int]$CPUAffinity = 0,
+        [Int64]$CPUAffinity = 0,
         [Parameter(Mandatory = $false)]
         [String[]]$EnvVars = @(),
         [Parameter(Mandatory = $false)]
@@ -923,7 +923,7 @@ function Set-SubProcessPriority {
         [Parameter(Mandatory = $false)]
         [Int]$Priority = 0,
         [Parameter(Mandatory = $false)]
-        [Int]$CPUAffinity = 0,
+        [Int64]$CPUAffinity = 0,
         [Parameter(Mandatory = $false)]
         [Switch]$Quiet = $false
     )
@@ -931,7 +931,7 @@ function Set-SubProcessPriority {
         try {
             if ($Process = Get-Process -Id $_ -ErrorAction Stop) {
                 $Process.PriorityClass = @{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority]
-                if ($CPUAffinity) {$Process.ProcessorAffinity = $CPUAffinity}
+                if ($CPUAffinity) {$Process.ProcessorAffinity = [IntPtr]$CPUAffinity}
             }
         } catch {
             if (-not $Quiet) {Write-Log -Level Warn "Could not set process priority/affinity: $($_.Exception.Message)"}

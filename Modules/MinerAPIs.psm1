@@ -422,7 +422,9 @@ class Miner {
         if ($gpu -lt -2) {$gpu=-2} elseif ($gpu -gt 3) {$gpu=3}
         $this.Priorities.CPU = $cpu
         $this.Priorities.GPU = $gpu
-        $this.Priorities.CPUAffinity = ConvertFrom-CPUAffinity $affinity -ToInt
+        # the process affinity is an IntPtr: masks beyond 63 bits cannot be applied at process level
+        $aff = ConvertFrom-CPUAffinity $affinity -ToInt
+        $this.Priorities.CPUAffinity = if ($aff -gt [Int64]::MaxValue) {0} else {[Int64]$aff}
     }
 
     SetStaticPort([int]$port=0) {
