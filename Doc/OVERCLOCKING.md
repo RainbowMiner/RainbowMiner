@@ -368,16 +368,49 @@ them back a little rather than hunting for a P0 switch that does not exist on Li
 
 ## Overclocking does not work on Linux
 
-If the power limit and the thermal limit are applied but the memory and core clocks are not,
-the cause is almost always the access to the X server:
+On Linux, RainbowMiner sets the power limit and the clock locks with `nvidia-smi`, and the
+core/memory offsets with `nvidia-settings`. ThermalLimit and LockVoltagePoint are not applied
+on Linux. All commands run through the ocdaemon as root, and every command that fails is
+reported in the log as a warning, for example:
+
+    OC GTX1070-...: RBM_OC_FAIL rc=1 nvidia-settings -a [gpu:0]/GPUGraphicsClockOffset[3]=100
+    OC GTX1070-...: ERROR: Unable to init server: Could not connect: Connection refused
+
+If the power limit applies but the memory and core clocks do not, the cause is almost always
+the access to the X server, because nvidia-settings needs one:
 
 - `"EnableOCProfiles": "1"` must be set
-- on a rig without a monitor, `"EnableLinuxHeadless": "1"` must be set as well
 - `ocdaemon status` in a shell must report `Running` - if it does not, run `./install.sh`
   again
-- the XAUTHORITY path must match your system. `IncludesLinux/bash/getxauth.sh` guesses it;
-  if the guess is wrong, find the real one with `ps aux | grep Xorg` and put it into
-  `"LinuxXAuthority"` in config.txt
+- on a rig without a monitor, `"EnableLinuxHeadless": "1"` must be set as well. With a
+  monitor, RainbowMiner passes DISPLAY and XAUTHORITY to the ocdaemon only where they are
+  missing
+- `"LinuxDisplay"` is the X display, normally `":0"` (a bare `"0"` is corrected with a
+  warning)
+- `"LinuxXAuthority"` must point to the cookie file of the running X server. If it is empty,
+  RainbowMiner looks for it, including the `-auth` file of a running Xorg (the gdm login
+  screen case). To check by hand: `ps aux | grep Xorg`
+- on a rig without any X server (Ubuntu Server, no Xorg installed), nvidia-settings cannot
+  work at all. Use NVML instead, see below
+
+**nvidia-settings GPU numbers.** The X server numbers its GPUs in its own order, which does
+not have to match RainbowMiner's. At start, RainbowMiner asks the X server for the PCI address
+and the performance levels of every GPU and addresses each card by its PCI bus. If the X
+server cannot be asked, the old numbering is used. The log line "nvidia-settings addresses
+GPU#01 (bus 03:00) as [gpu:0] ..." shows where the orders differ.
+
+**LinuxOCMethod.** Without an X server, the offsets can be set through NVML, the driver
+library that nvidia-smi uses as well. It needs python3 and the running ocdaemon:
+
+| LinuxOCMethod     | Core/memory offsets are set by                                      |
+| ----------------- | ------------------------------------------------------------------- |
+| `nvidia-settings` | nvidia-settings (default, unchanged behavior)                        |
+| `auto`            | nvidia-settings, and NVML only if no X server can be reached        |
+| `nvml`            | NVML always                                                         |
+
+NVML is new in RainbowMiner: check the result with `nvidia-smi -q -d CLOCK` and
+`python3 IncludesLinux/bash/nvml_oc.py query` when you switch it on. The memory offset is
+passed to NVML with the same number as to nvidia-settings.
 
 One trap on a client rig: `EnableLinuxHeadless` is an ordinary config value, so a server
 config can overwrite it. If overclocking stops working right after a config sync, check
