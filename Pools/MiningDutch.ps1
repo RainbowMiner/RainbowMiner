@@ -45,6 +45,8 @@ $Pool_Fee = 2
 
 $Pool_Currency = if ($AEcurrency) {$AEcurrency} else {"BTC"}
 
+$Pool_NoPort = [System.Collections.Generic.List[string]]::new()
+
 $Pool_Request.PSObject.Properties.Value | ForEach-Object {
 
     $Pool_Algorithm = $_.name
@@ -53,6 +55,12 @@ $Pool_Request.PSObject.Properties.Value | ForEach-Object {
     $Pool_Fee = [double]$_.fees
     $Pool_Symbol = ''
     $Pool_Port = [int]$_.port
+    if ($Pool_Port -le 0) {
+        # the pool API stopped delivering stratum ports (2026-09): a pool entry
+        # without a port is unusable for miners and MiningRigRentals rejects it
+        [void]$Pool_NoPort.Add($Pool_Algorithm)
+        return
+    }
     $Pool_Host = "mining-dutch.nl"
     $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethstratumnh"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
         
@@ -112,4 +120,8 @@ $Pool_Request.PSObject.Properties.Value | ForEach-Object {
             }
         }
     }
+}
+
+if ($Pool_NoPort.Count) {
+    Write-Log -Level Info "$($Name): no stratum port for $($Pool_NoPort -join ', ') - skipped. "
 }
