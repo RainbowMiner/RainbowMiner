@@ -1397,7 +1397,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                 $CreateRig["price"]["btc"]["modifier"] = "$(if ($CreateRig["price"]["btc"]["modifier"] -gt 0) {"+"})$($CreateRig["price"]["btc"]["modifier"])"
                                             }
 
-                                            $RigPool = $PoolsData | Where-Object {$_.Algorithm -eq $Algorithm_Norm -and -not $_.SSL} | Sort-Object -Descending {$_.Region -eq $Session.Config.Region}, {$ix = $Session.Config.DefaultPoolRegion.IndexOf($_.Region);[int]($ix -ge 0)*(100-$ix)} | Select-Object -First 1
+                                            $RigPool = $PoolsData | Where-Object {$_.Algorithm -eq $Algorithm_Norm -and -not $_.SSL -and $_.Port} | Sort-Object -Descending {$_.Region -eq $Session.Config.Region}, {$ix = $Session.Config.DefaultPoolRegion.IndexOf($_.Region);[int]($ix -ge 0)*(100-$ix)} | Select-Object -First 1
                                             if ($RigRunMode -eq "create") {
 
                                                 if ($OrphanedRigs_Request -and ($OrphanedRig = $OrphanedRigs_Request | Where-Object {$_.name -eq $CreateRig["name"]} | Select-Object -First 1)) {
