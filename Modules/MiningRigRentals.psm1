@@ -982,7 +982,7 @@ Param(
     $Pool
 )
     # a pool entry on a rig that RainbowMiner put there (donate worker mrx, legacy rbm.worker1)
-    ($Pool.user -match "\.mrx(#|$)") -or ($Pool.pass -match "^@?mrx(:|$)") -or ($Pool.pass -match "=mrx") -or ($Pool.user -eq "rbm.worker1")
+    ($Pool.user -match "[./]mrx(#|$)") -or ($Pool.pass -match "^@?mrx(:|$)") -or ($Pool.pass -match "=mrx") -or ($Pool.user -eq "rbm.worker1")
 }
 
 function Get-MiningRigRentalGroups {
