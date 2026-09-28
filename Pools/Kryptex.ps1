@@ -68,41 +68,48 @@ $Pool_Request | ForEach-Object {
     if (-not $InfoOnly) {
         $Stat = Set-Stat -Name "$($Name)_$($Pool_StatName)_Profit" -Value $(if ($Pool_WTM) {0} else {[Double]$_.profit}) -Duration $StatSpan -HashRate $_.hashrate -BlockRate $Pool_BLK -ChangeDetection $false -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
+    }
 
-        if ($Wallets.$Pool_Currency) {
-            if ($Pool_DirectMining) {
-                $Pool_ExCurrency = try {
-                    [mailaddress]$Wallets.$Pool_Currency > $null
-                    "BTC"
-                }
-                catch {
-                    $Pool_Currency
-                }
-            } else {
-                $Pool_ExCurrency = $Pool_Currency
+    # the credential decides login and payout currency, in InfoOnly mode as well, so that
+    # a listing made with credentials (the MRR pool data) carries a usable User
+    $Pool_ExCurrency = $null
+    $Pool_Wallet     = ""
+
+    if ($Wallets.$Pool_Currency) {
+        if ($Pool_DirectMining) {
+            $Pool_ExCurrency = try {
+                [mailaddress]$Wallets.$Pool_Currency > $null
+                "BTC"
             }
-            $Pool_Wallet = $Wallets.$Pool_Currency
-        } elseif ($MiningUsername -ne "") {
-            if (-not $Pool_DirectMining) {return}
-            $Pool_ExCurrency = "BTC"
-            $Pool_Wallet = $MiningUsername
-        } elseif ($Email -ne "") {
-            if ($Pool_DirectMining) {
-                $Pool_ExCurrency = try {
-                    [mailaddress]$Email > $null
-                    "BTC"
-                }
-                catch {
-                }
-            } else {
-                $Pool_ExCurrency = $null
+            catch {
+                $Pool_Currency
             }
-            $Pool_Wallet = $Email
+        } else {
+            $Pool_ExCurrency = $Pool_Currency
         }
+        $Pool_Wallet = $Wallets.$Pool_Currency
+    } elseif ($MiningUsername -ne "") {
+        if (-not $Pool_DirectMining) {return}
+        $Pool_ExCurrency = "BTC"
+        $Pool_Wallet = $MiningUsername
+    } elseif ($Email -ne "") {
+        if ($Pool_DirectMining) {
+            $Pool_ExCurrency = try {
+                [mailaddress]$Email > $null
+                "BTC"
+            }
+            catch {
+            }
+        } else {
+            $Pool_ExCurrency = $null
+        }
+        $Pool_Wallet = $Email
+    }
 
-        if (-not $Pool_ExCurrency) {return}
-    } else {
-        $Pool_ExCurrency = if ($Pool_Currency -in $Pool_MineToAccount) {"BTC"} else {$Pool_Currency}
+    if ($InfoOnly) {
+        if (-not $Pool_ExCurrency) {$Pool_ExCurrency = if ($Pool_Currency -in $Pool_MineToAccount) {"BTC"} else {$Pool_Currency}}
+    } elseif (-not $Pool_ExCurrency) {
+        return
     }
 
     $Pool_Data = $_
