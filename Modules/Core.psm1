@@ -5338,6 +5338,11 @@ function Invoke-Core {
         $Global:Error.Clear()
     }
 
+    # give freed native memory back to the kernel once per round (glibc arenas keep it otherwise), see RainbowMiner.ps1
+    if ($Global:GlibcTrim) {
+        try {[RBM.Glibc]::malloc_trim(0) > $null} catch {$Global:GlibcTrim = $false}
+    }
+
     Get-Job | Where-Object {$_.State -in @("Completed","Stopped","Failed") -and $_.Name -notmatch "^WebRequest-"} | Foreach-Object {
         if ($_.HasMoreData) {Receive-Job $_ > $null}
         Remove-Job $_ -Force -ErrorAction Ignore

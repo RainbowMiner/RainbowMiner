@@ -424,6 +424,20 @@ $EnableMinerStatus = $true
 
 if ($MyInvocation.MyCommand.Path) {Set-Location (Split-Path $MyInvocation.MyCommand.Path)}
 
+# glibc keeps freed native memory in per-thread malloc arenas (up to eight per core), and with
+# RainbowMiner's runspaces that was about 500 MB of resident memory nothing used (2026-09-28:
+# 1481 -> 936 MB working set at one hour with MALLOC_ARENA_MAX=2). The arena limit itself must
+# come from the environment (glibc fixes it with the first extra arena, before this script runs);
+# from inside the process, malloc_trim hands the unused arena space back to the kernel, so the
+# core calls it once per round. musl and macOS have no glibc and are skipped
+if ([System.Environment]::OSVersion.Platform -eq "Unix") {
+    try {
+        Add-Type -Namespace RBM -Name Glibc -MemberDefinition '[DllImport("libc.so.6", EntryPoint = "mallopt")] public static extern int mallopt(int param, int value); [DllImport("libc.so.6", EntryPoint = "malloc_trim")] public static extern int malloc_trim(ulong pad);' -ErrorAction Stop
+        if (-not $env:MALLOC_ARENA_MAX) {[RBM.Glibc]::mallopt(-8, 2) > $null}
+        $Global:GlibcTrim = $true
+    } catch {$Global:GlibcTrim = $false}
+}
+
 Import-Module .\Modules\Include.psm1
 
 # sync helper binaries (7-Zip, curl, GetCPU, MSI Afterburner wrapper) from .\Includes\dist
