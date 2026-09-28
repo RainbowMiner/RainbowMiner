@@ -931,23 +931,58 @@ function Get-MiningRigRentalsPoolsData {
 [cmdletbinding()]
 Param(   
     [Parameter(Mandatory = $False)]
-    [Switch]$UpdateLocalCopy
+    [Switch]$UpdateLocalCopy,
+    [Parameter(Mandatory = $False)]
+    [Switch]$Alt
 )
+    # -Alt loads the fallback provider rows (mrrpoolsalt.json): a second pool per
+    # algorithm that only newer clients know about. A missing file is not an error.
+    $FileName  = if ($Alt) {"mrrpoolsalt.json"} else {"mrrpoolsall.json"}
+    $PoolsData = $null
     try {
-        $PoolsData = Invoke-RestMethodAsync "https://api.rbminer.net/data/mrrpoolsall.json" -Tag "MiningRigRentals" -cycletime 1800
-        if ($UpdateLocalCopy) {
-            Set-ContentJson -PathToFile ".\Data\mrrpoolsall.json" -Data $PoolsData -Compress > $null
+        $PoolsData = Invoke-RestMethodAsync "https://api.rbminer.net/data/$($FileName)" -Tag "MiningRigRentals" -cycletime 1800
+        if ($PoolsData -is [string]) {$PoolsData = $null}
+        if ($UpdateLocalCopy -and $PoolsData) {
+            Set-ContentJson -PathToFile ".\Data\$($FileName)" -Data $PoolsData -Compress > $null
         }
     } catch {
-        Write-Log -Level Warn "MiningRigRentals: api.rbminer.net/data/mrrpoolsall.json could not be reached"
+        if ($Alt) {
+            Write-Log -Level Info "MiningRigRentals: api.rbminer.net/data/$($FileName) not available"
+        } else {
+            Write-Log -Level Warn "MiningRigRentals: api.rbminer.net/data/$($FileName) could not be reached"
+        }
     }
-    if (-not $PoolsData) {
+    if (-not $PoolsData -and (Test-Path ".\Data\$($FileName)")) {
         try {
-            $PoolsData = Get-ContentByStreamReader ".\Data\mrrpoolsall.json" | ConvertFrom-Json -ErrorAction Stop
+            $PoolsData = Get-ContentByStreamReader ".\Data\$($FileName)" | ConvertFrom-Json -ErrorAction Stop
         } catch {}
     }
-    $PoolsData | Foreach-Object {$_.Algorithm = Get-Algorithm $_.Algorithm}
+    $PoolsData | Where-Object {$_.Algorithm} | Foreach-Object {$_.Algorithm = Get-Algorithm $_.Algorithm}
     $PoolsData
+}
+
+function Get-MiningRigRentalsRigPool {
+[cmdletbinding()]
+Param(
+    [Parameter(Mandatory = $False)]
+    $PoolsData,
+    [Parameter(Mandatory = $False)]
+    [String]$Algorithm = "",
+    [Parameter(Mandatory = $False)]
+    [String]$ExcludeHost = ""
+)
+    # best row of a pool data set for an algorithm: non-SSL, with a port, own region first
+    $PoolsData | Where-Object {$_.Algorithm -eq $Algorithm -and -not $_.SSL -and $_.Port -and $_.Host -ne $ExcludeHost} | Sort-Object -Descending {$_.Region -eq $Session.Config.Region}, {$ix = $Session.Config.DefaultPoolRegion.IndexOf($_.Region);[int]($ix -ge 0)*(100-$ix)} | Select-Object -First 1
+}
+
+function Test-MiningRigRentalsOwnPool {
+[cmdletbinding()]
+Param(
+    [Parameter(Mandatory = $False)]
+    $Pool
+)
+    # a pool entry on a rig that RainbowMiner put there (donate worker mrx, legacy rbm.worker1)
+    ($Pool.user -match "\.mrx(#|$)") -or ($Pool.pass -match "^@?mrx(:|$)") -or ($Pool.pass -match "=mrx") -or ($Pool.user -eq "rbm.worker1")
 }
 
 function Get-MiningRigRentalGroups {
