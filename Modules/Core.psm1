@@ -5313,9 +5313,18 @@ function Invoke-Core {
         $logDate = Get-Date -Format "yyyy-MM-dd"
         # one line per distinct message and position per round: a miner API that is not up yet
         # answers every poll with the same refused connection and flooded the file
+        # a miner that has just been started refuses its API port until it is ready (a DAG build takes
+        # minutes): polls refused during the first five minutes of a miner are expected, not errors
+        $errSkipPorts = @{}
+        foreach ($errMiner in $Global:ActiveMiners) {
+            if ($errMiner.Port -and $errMiner.StartTime -and $errMiner.StartTime -ne [DateTime]::MinValue -and ((Get-Date).ToUniversalTime() - $errMiner.StartTime).TotalSeconds -lt 300) {
+                $errSkipPorts["$($errMiner.Port)"] = $true
+            }
+        }
         $errSeen = [ordered]@{}
         foreach ($err in $Global:Error) {
             if ($err.Exception.Message) {
+                if ($errSkipPorts.Count -and $err.Exception.Message -match "Connection refused \(127\.0\.0\.1:(\d+)\)" -and $errSkipPorts.ContainsKey($Matches[1])) {continue}
                 # add the script position: a bare "Cannot convert null to type System.DateTime" cannot be traced otherwise
                 $errLoc = if ($err.InvocationInfo.ScriptName) {" [$(Split-Path $err.InvocationInfo.ScriptName -Leaf):$($err.InvocationInfo.ScriptLineNumber)]"} elseif ($err.ScriptStackTrace) {" [$("$($err.ScriptStackTrace)".Split("`n")[0].Trim())]"} else {""}
                 $errKey = "$($err.Exception.Message)$($errLoc)"
@@ -5325,7 +5334,7 @@ function Invoke-Core {
         foreach ($errKey in $errSeen.Keys) {
             Write-ToFile -FilePath "Logs\errors_$logDate.main.txt" -Message "$($errKey)$(if ($errSeen[$errKey] -gt 1) {" (x$($errSeen[$errKey]))"})" -Append -Timestamp
         }
-        $errLoc = $errKey = $errSeen = $null
+        $errLoc = $errKey = $errSeen = $errSkipPorts = $errMiner = $null
         $Global:Error.Clear()
     }
 

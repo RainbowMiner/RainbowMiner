@@ -532,7 +532,8 @@ function Write-ToFile {
         $ErrorMessage = $null
         try {
             $FilePath = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($FilePath)
-            $file = New-Object System.IO.StreamWriter($FilePath, $Append, [System.Text.Encoding]::UTF8)
+            # UTF-8 without BOM: Encoding.UTF8 puts a BOM in front of every new log file, which trips tools that parse the first line
+            $file = New-Object System.IO.StreamWriter($FilePath, $Append, (New-Object System.Text.UTF8Encoding($false)))
         } catch {$ErrorMessage = "$($_.Exception.Message)"}
     }
     Process {
