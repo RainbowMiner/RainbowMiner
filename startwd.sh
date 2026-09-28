@@ -15,6 +15,11 @@ export GPU_MAX_ALLOC_PERCENT=100
 export GPU_SINGLE_ALLOC_PERCENT=100
 export GPU_MAX_WORKGROUP_SIZE=256
 export CUDA_DEVICE_ORDER=PCI_BUS_ID
+# glibc keeps freed memory in one malloc arena per busy thread, and .NET double-maps its JIT code
+# for W^X: on a 6 GPU rig that was about 500 MB and 100 MB of resident memory nothing used
+# (2026-09-28). A value already set in the environment wins
+export MALLOC_ARENA_MAX=${MALLOC_ARENA_MAX:-2}
+export DOTNET_EnableWriteXorExecute=${DOTNET_EnableWriteXorExecute:-0}
 export RBM_STARTLOOP=1
 
 if command -v screen >/dev/null 2>&1 && ! test -d "/opt/rainbowminer/lib"
