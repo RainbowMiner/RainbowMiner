@@ -1089,7 +1089,13 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
             }
         }
 
-        $PoolsData = Get-MiningRigRentalsPoolsData -UpdateLocalCopy
+        # a failed pool snapshot must not make every rig look empty (each would get a pool PUT at slot 0)
+        $RigPoolsValid = ($RigPools.Count -gt 0) -or -not $AllRigs_Request
+
+        $PoolsData    = Get-MiningRigRentalsPoolsData -UpdateLocalCopy
+        $PoolsDataAlt = @(Get-MiningRigRentalsPoolsData -Alt -UpdateLocalCopy | Where-Object {$_})
+
+        $MaxRigPoolSlots = 5
 
         foreach($RigRunMode in @("create","update")) {
 
@@ -1397,7 +1403,16 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                 $CreateRig["price"]["btc"]["modifier"] = "$(if ($CreateRig["price"]["btc"]["modifier"] -gt 0) {"+"})$($CreateRig["price"]["btc"]["modifier"])"
                                             }
 
-                                            $RigPool = $PoolsData | Where-Object {$_.Algorithm -eq $Algorithm_Norm -and -not $_.SSL -and $_.Port} | Sort-Object -Descending {$_.Region -eq $Session.Config.Region}, {$ix = $Session.Config.DefaultPoolRegion.IndexOf($_.Region);[int]($ix -ge 0)*(100-$ix)} | Select-Object -First 1
+                                            $RigPool    = Get-MiningRigRentalsRigPool $PoolsData $Algorithm_Norm
+                                            $RigPoolAlt = $null
+                                            if ($PoolsDataAlt.Count) {
+                                                $RigPoolAlt = Get-MiningRigRentalsRigPool $PoolsDataAlt $Algorithm_Norm $(if ($RigPool) {$RigPool.Host} else {""})
+                                                if (-not $RigPool -and $RigPoolAlt) {
+                                                    # no usable primary row (e.g. port 0): the fallback becomes the rig pool
+                                                    $RigPool    = $RigPoolAlt
+                                                    $RigPoolAlt = $null
+                                                }
+                                            }
                                             if ($RigRunMode -eq "create") {
 
                                                 if ($OrphanedRigs_Request -and ($OrphanedRig = $OrphanedRigs_Request | Where-Object {$_.name -eq $CreateRig["name"]} | Select-Object -First 1)) {
@@ -1422,19 +1437,23 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                     try {
                                                         $Result = Invoke-MiningRigRentalRequest "/rig" $API_Key $API_Secret -params $CreateRig -method "PUT" -Timeout 60
                                                         if ($Result.id) {
+                                                            $RigId = $Result.id
                                                             if ($RigGroupId) {
-                                                                $RigGroupsAdd += [PSCustomObject]@{groupid = $RigGroupId;rigid = $Result.id}
+                                                                $RigGroupsAdd += [PSCustomObject]@{groupid = $RigGroupId;rigid = $RigId}
                                                             }
-                                                            Write-Log -Level Info "$($Name): Created rig #$($Result.id) $($Algorithm_Norm) [$($RigName)]: hash=$($CreateRig.hash.hash)$($CreateRig.hash.type), minimum=$($RigMinPrice)/$($RigDivisors[$PriceDivisor].type)/day, minhours=$($CreateRig.minhours)"
-                                                            if ($RigPool) {
+                                                            Write-Log -Level Info "$($Name): Created rig #$($RigId) $($Algorithm_Norm) [$($RigName)]: hash=$($CreateRig.hash.hash)$($CreateRig.hash.type), minimum=$($RigMinPrice)/$($RigDivisors[$PriceDivisor].type)/day, minhours=$($CreateRig.minhours)"
+                                                            $RigPoolsToAdd = @()
+                                                            if ($RigPool)    {$RigPoolsToAdd += [PSCustomObject]@{Priority = 0; Pool = $RigPool}}
+                                                            if ($RigPoolAlt) {$RigPoolsToAdd += [PSCustomObject]@{Priority = 1; Pool = $RigPoolAlt}}
+                                                            foreach ($RigPoolAdd in $RigPoolsToAdd) {
                                                                 try {
-                                                                    $Result = Invoke-MiningRigRentalRequest "/rig/$($Result.id)/pool" $API_Key $API_Secret -params @{host=$RigPool.Host;port=$RigPool.Port;user=$RigPool.User;pass=$RigPool.pass} -method "PUT" -Timeout 60
-                                                                    if ($Result.success) {
+                                                                    $PoolResult = Invoke-MiningRigRentalRequest "/rig/$($RigId)/pool/$($RigPoolAdd.Priority)" $API_Key $API_Secret -params @{host=$RigPoolAdd.Pool.Host;port=$RigPoolAdd.Pool.Port;user=$RigPoolAdd.Pool.User;pass=$RigPoolAdd.Pool.Pass} -method "PUT" -Timeout 60
+                                                                    if ($PoolResult.success) {
                                                                         $RigCreated++
                                                                     }
-                                                                    Write-Log -Level Info "$($Name): $(if ($Result.success) {"Update"} else {"Unable to add"}) pools of rig #$($Result.id) $($Algorithm_Norm) [$($RigName)]: $($RigPool.Host)"
+                                                                    Write-Log -Level Info "$($Name): $(if ($PoolResult.success) {"Add"} else {"Unable to add"}) pool $($RigPoolAdd.Priority + 1) to rig #$($RigId) $($Algorithm_Norm) [$($RigName)]: $($RigPoolAdd.Pool.Host)"
                                                                 } catch {
-                                                                    Write-Log -Level Warn "$($Name): Unable to add pools to $($Algorithm_Norm) rig for $($RigName): $($_.Exception.Message)"
+                                                                    Write-Log -Level Warn "$($Name): Unable to add pool $($RigPoolAdd.Priority + 1) to $($Algorithm_Norm) rig for $($RigName): $($_.Exception.Message)"
                                                                 }
                                                             }
                                                         } else {
@@ -1508,43 +1527,77 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                         }
                                                     }
 
-                                                    if ($RigPool) { # -and $RigCreated -lt $MaxAPICalls) {
-                                                        $RigPoolCurrent = $RigPools[$RigPools_Id] | Where-Object {$_.user -match "mrx$" -or $_.pass -match "^mrx"  -or $_.pass -match "=mrx" -or $_.user -eq "rbm.worker1"} | Select-Object -First 1
-                                                        if ((-not $RigPoolCurrent -and ($RigPools[$RigPools_Id] | Measure-Object).Count -lt 5) -or ($RigPoolCurrent -and ($RigPoolCurrent.host -ne $RigPool.Host -or $RigPoolCurrent.user -ne $RigPool.User -or $RigPoolCurrent.pass -ne $RigPool.Pass))) {
-                                                            try {
-                                                                $RigPriority = [int]$(if ($RigPoolCurrent) {
-                                                                    $RigPoolCurrent.priority
-                                                                } else {
-                                                                    foreach($i in 0..4) {
-                                                                        if (-not ($RigPools[$RigPools_Id] | Where-Object {$_.priority -eq $i})) {
-                                                                            $i
-                                                                            break
-                                                                        }
-                                                                    }
-                                                                })
-                                                                $Result = Invoke-MiningRigRentalRequest "/rig/$($RigPools_Id)/pool/$($RigPriority)" $API_Key $API_Secret -params @{host=$RigPool.Host;port=$RigPool.Port;user=$RigPool.User;pass=$RigPool.pass} -method "PUT" -Timeout 60
-                                                                if ($Result.success) {
-                                                                    $RigCreated++
-                                                                }
-                                                                Write-Log -Level Info "$($Name): $(if ($Result.success) {"Update"} else {"Unable to update"}) pools of rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($RigPool.Host)"
-                                                            } catch {
-                                                                Write-Log -Level Warn "$($Name): Unable to update pools of rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($_.Exception.Message)"
-                                                            }                                                        
+                                                    if ($RigPool -and $RigPoolsValid) {
+                                                        # slot plan for the pools RainbowMiner keeps on the rig: primary first, fallback behind it
+                                                        $RigPoolsCurrent = @($RigPools[$RigPools_Id] | Where-Object {$_} | Select-Object)
+                                                        $RigOwnPools     = @($RigPoolsCurrent | Where-Object {Test-MiningRigRentalsOwnPool $_} | Sort-Object {[int]$_.priority})
+
+                                                        $RigWanted = @([PSCustomObject]@{Name = "primary"; Pool = $RigPool; Priority = -1})
+                                                        if ($RigPoolAlt) {$RigWanted += [PSCustomObject]@{Name = "fallback"; Pool = $RigPoolAlt; Priority = -1}}
+                                                        $RigClaimed = @()
+
+                                                        # pass 1: an own pool with the same host keeps its slot
+                                                        foreach ($RigWant in $RigWanted) {
+                                                            $RigSlotEntry = $RigOwnPools | Where-Object {[int]$_.priority -notin $RigClaimed -and $_.host -eq $RigWant.Pool.Host} | Select-Object -First 1
+                                                            if ($RigSlotEntry) {$RigWant.Priority = [int]$RigSlotEntry.priority; $RigClaimed += $RigWant.Priority}
+                                                        }
+                                                        # pass 2: reuse the lowest unclaimed own slot
+                                                        foreach ($RigWant in $RigWanted) {
+                                                            if ($RigWant.Priority -ge 0) {continue}
+                                                            $RigSlotEntry = $RigOwnPools | Where-Object {[int]$_.priority -notin $RigClaimed} | Select-Object -First 1
+                                                            if ($RigSlotEntry) {$RigWant.Priority = [int]$RigSlotEntry.priority; $RigClaimed += $RigWant.Priority}
+                                                        }
+                                                        # pass 3: first free slot
+                                                        $RigUsedSlots = @($RigPoolsCurrent | Foreach-Object {[int]$_.priority})
+                                                        foreach ($RigWant in $RigWanted) {
+                                                            if ($RigWant.Priority -ge 0) {continue}
+                                                            foreach ($i in 0..($MaxRigPoolSlots - 1)) {
+                                                                if ($i -notin $RigUsedSlots -and $i -notin $RigClaimed) {$RigWant.Priority = $i; $RigClaimed += $i; break}
+                                                            }
+                                                        }
+                                                        # the fallback never sits in front of the primary
+                                                        if ($RigWanted.Count -eq 2 -and $RigWanted[1].Priority -ge 0 -and $RigWanted[1].Priority -lt $RigWanted[0].Priority) {
+                                                            $RigSlotNo = $RigWanted[0].Priority
+                                                            $RigWanted[0].Priority = $RigWanted[1].Priority
+                                                            $RigWanted[1].Priority = $RigSlotNo
                                                         }
 
-                                                        #temporary fix
-                                                        @($RigPools[$RigPools_Id] | Where-Object {$_.user -eq "rbm.worker1"} | Select-Object) + @($RigPools[$RigPools_Id] | Where-Object {$_.pass -match "ID=mrx"} | Select-Object -Skip 1) | Foreach-Object {
-                                                            #if ($RigCreated -lt $MaxAPICalls) {
-                                                                try {
-                                                                    $Result = Invoke-MiningRigRentalRequest "/rig/$($RigPools_Id)/pool/$($_.priority)" $API_Key $API_Secret -method "DELETE" -Timeout 60
-                                                                    if ($Result.success) {
-                                                                        $RigCreated++
-                                                                    }
-                                                                    Write-Log -Level Info "$($Name): $(if ($Result.success) {"Delete"} else {"Unable to delete"}) pool $(1 + $_.priority) from rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($RigPool.Host)"
-                                                                } catch {
-                                                                    Write-Log -Level Warn "$($Name): Unable to delete pool $(1 + $_.priority) from rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($_.Exception.Message)"
+                                                        foreach ($RigWant in $RigWanted) {
+                                                            if ($RigWant.Priority -lt 0) {
+                                                                Write-Log -Level Info "$($Name): No free pool slot for the $($RigWant.Name) pool of rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]"
+                                                                continue
+                                                            }
+                                                            $RigSlotEntry = $RigPoolsCurrent | Where-Object {[int]$_.priority -eq $RigWant.Priority} | Select-Object -First 1
+                                                            if ($RigSlotEntry -and $RigSlotEntry.host -eq $RigWant.Pool.Host -and $RigSlotEntry.user -eq $RigWant.Pool.User -and $RigSlotEntry.pass -eq $RigWant.Pool.Pass) {continue}
+                                                            if ($RigWant.Name -eq "fallback" -and $RigCreated -ge $MaxAPICalls) {continue}
+                                                            try {
+                                                                $Result = Invoke-MiningRigRentalRequest "/rig/$($RigPools_Id)/pool/$($RigWant.Priority)" $API_Key $API_Secret -params @{host=$RigWant.Pool.Host;port=$RigWant.Pool.Port;user=$RigWant.Pool.User;pass=$RigWant.Pool.Pass} -method "PUT" -Timeout 60
+                                                                if ($Result.success) {
+                                                                    $RigCreated++
+                                                                    $RigPoolsCurrent = @($RigPoolsCurrent | Where-Object {[int]$_.priority -ne $RigWant.Priority}) + @([PSCustomObject]@{host = $RigWant.Pool.Host; port = $RigWant.Pool.Port; user = $RigWant.Pool.User; pass = $RigWant.Pool.Pass; priority = $RigWant.Priority})
+                                                                    $RigPools[$RigPools_Id] = $RigPoolsCurrent
                                                                 }
-                                                            #}
+                                                                Write-Log -Level Info "$($Name): $(if ($Result.success) {"Update"} else {"Unable to update"}) $($RigWant.Name) pool $($RigWant.Priority + 1) of rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($RigWant.Pool.Host)"
+                                                            } catch {
+                                                                Write-Log -Level Warn "$($Name): Unable to update $($RigWant.Name) pool $($RigWant.Priority + 1) of rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($_.Exception.Message)"
+                                                            }
+                                                        }
+
+                                                        # remove legacy placeholders and own duplicates of a wanted host, highest slot first
+                                                        $RigWantedHosts = @($RigWanted | Foreach-Object {$_.Pool.Host})
+                                                        @($RigPoolsCurrent | Where-Object {[int]$_.priority -notin $RigClaimed -and ($_.user -eq "rbm.worker1" -or $_.pass -match "ID=mrx" -or ((Test-MiningRigRentalsOwnPool $_) -and $_.host -in $RigWantedHosts))} | Sort-Object {[int]$_.priority} -Descending) | Foreach-Object {
+                                                            $RigSlotNo = [int]$_.priority
+                                                            try {
+                                                                $Result = Invoke-MiningRigRentalRequest "/rig/$($RigPools_Id)/pool/$($RigSlotNo)" $API_Key $API_Secret -method "DELETE" -Timeout 60
+                                                                if ($Result.success) {
+                                                                    $RigCreated++
+                                                                    $RigPoolsCurrent = @($RigPoolsCurrent | Where-Object {[int]$_.priority -ne $RigSlotNo})
+                                                                    $RigPools[$RigPools_Id] = $RigPoolsCurrent
+                                                                }
+                                                                Write-Log -Level Info "$($Name): $(if ($Result.success) {"Delete"} else {"Unable to delete"}) pool $($RigSlotNo + 1) from rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($_.host)"
+                                                            } catch {
+                                                                Write-Log -Level Warn "$($Name): Unable to delete pool $($RigSlotNo + 1) from rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($_.Exception.Message)"
+                                                            }
                                                         }
                                                     }
                                                 }
@@ -1626,6 +1679,9 @@ if ($EnableAutoBenchmark -and $Global:AllPools) {
     if (-not $PoolsData) {
         $PoolsData = Get-MiningRigRentalsPoolsData
     }
+    if (-not $PoolsDataAlt) {
+        $PoolsDataAlt = @(Get-MiningRigRentalsPoolsData -Alt | Where-Object {$_})
+    }
 
     if ($PoolsData -is [array]) {
 
@@ -1640,8 +1696,14 @@ if ($EnableAutoBenchmark -and $Global:AllPools) {
        
         $ActiveAlgorithms = @($Global:AllPools | Where-Object {$_.Name -ne "MiningRigRentals" -and $_.Algorithm0} | Select-Object -ExpandProperty Algorithm0 -Unique)
 
-        foreach ( $Pool in $PoolsData ) {
-            if ($Pool.Algorithm -notin $ActiveAlgorithms -and ($Pool.Pool -ne "Nicehash" -or $Pool.Algorithm -notin $InactiveNicehashAlgorithms)) {
+        # primary rows first, the fallback provider only for algorithms without a usable primary row
+        $BenchPools = @($PoolsData | Where-Object {$_.Algorithm -notin $ActiveAlgorithms -and ($_.Pool -ne "Nicehash" -or $_.Algorithm -notin $InactiveNicehashAlgorithms)})
+        if ($PoolsDataAlt.Count) {
+            $BenchAlgorithms = @($BenchPools | Foreach-Object {$_.Algorithm} | Select-Object -Unique)
+            $BenchPools += @($PoolsDataAlt | Where-Object {$_.Algorithm -notin $BenchAlgorithms -and $_.Algorithm -notin $ActiveAlgorithms -and ($_.Pool -ne "Nicehash" -or $_.Algorithm -notin $InactiveNicehashAlgorithms)})
+        }
+
+        foreach ( $Pool in $BenchPools ) {
                 [PSCustomObject]@{
                     Algorithm     = $Pool.Algorithm
 			        Algorithm0    = $Pool.Algorithm
@@ -1675,7 +1737,6 @@ if ($EnableAutoBenchmark -and $Global:AllPools) {
                     Worker        = $Pool.Worker
                     Email         = ""
                 }
-            }
         }
     }
 }
