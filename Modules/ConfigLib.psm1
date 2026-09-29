@@ -1163,14 +1163,14 @@ function Get-ServerConfig {
     )
     $rv = $true
     $ConfigName = $ConfigName | Where-Object {Test-Config $_ -Exists}
-    if (($ConfigName | Measure-Object).Count -and $Server -and $Port -and (Test-TcpServer -Server $Server -Port $Port -Timeout 2)) {
+    if (($ConfigName | Measure-Object).Count -and $Server -and $Port -and ($ServerHost = Get-ServerAddress -ServerName $Server -Port $Port)) {
         $ErrorMessage = ""
         if (-not (Test-Path ".\Data\serverlwt")) {New-Item ".\Data\serverlwt" -ItemType "directory" -ErrorAction Ignore > $null}
         $ServerLWTFile = Join-Path ".\Data\serverlwt" "$(if ($GroupName) {$GroupName} elseif ($WorkerName) {$WorkerName} else {"this"})_$($Server.ToLower() -replace '\.','-')_$($Port).json"
         $ServerLWT = if (Test-Path $ServerLWTFile) {try {Get-ContentByStreamReader $ServerLWTFile | ConvertFrom-Json -ErrorAction Stop} catch {}}
         if (-not $ServerLWT) {$ServerLWT = [PSCustomObject]@{}}
         $Params = ($ConfigName | Foreach-Object {$PathToFile = $ConfigFiles[$_].Path;"$($_)ZZZ$(if ($Force -or -not (Test-Path $PathToFile) -or -not $ServerLWT.$_) {"0"} else {$ServerLWT.$_})"}) -join ','
-        $Uri = "http://$($Server):$($Port)/getconfig?config=$($Params)&workername=$($WorkerName)&groupname=$($GroupName)&machinename=$($Session.MachineName)&myip=$($Session.MyIP)&port=$($APIPort)&version=$($Session.Version)"
+        $Uri = "http://$($ServerHost):$($Port)/getconfig?config=$($Params)&workername=$($WorkerName)&groupname=$($GroupName)&machinename=$($Session.MachineName)&myip=$($Session.MyIP)&port=$($APIPort)&version=$($Session.Version)"
         try {
             $Result = Invoke-GetUrl $Uri -user $Username -password $Password -ForceLocal -Timeout 30
         } catch {

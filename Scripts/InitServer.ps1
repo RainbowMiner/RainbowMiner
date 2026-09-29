@@ -37,6 +37,7 @@ $Config | Add-Member APIauth $(if ($Config.APIauth -eq "`$APIauth") {$false} els
 $Config | Add-Member APIuser $(if ($Config.APIuser -eq "`$APIuser") {""} else {$Config.APIuser}) -Force
 $Config | Add-Member APIpassword $(if ($Config.APIpassword -eq "`$APIpassword") {""} else {$Config.APIpassword}) -Force
 $Config | Add-Member StartPaused $(if ($Config.StartPaused -eq "`$StartPaused") {$false} else {Get-Yes $Config.StartPaused}) -Force
+$Config | Add-Member EnableServerDiscovery $(if ($Config.EnableServerDiscovery -eq $null -or $Config.EnableServerDiscovery -eq "`$EnableServerDiscovery") {$false} else {Get-Yes $Config.EnableServerDiscovery}) -Force
 
 do {
     if (-not (Read-HostBool "Setup $([System.Environment]::MachineName) as SERVER?" -default ($Config.RunMode -eq "Server"))) {exit}
@@ -51,10 +52,12 @@ do {
     if (Get-Yes $Config.APIauth) {
         $Config.APIuser = Read-HostString -Prompt "Enter an API username (leave empty to disable auth) " -Default $Config.APIuser -Characters "A-Z0-9"
         $Config.APIPassword = Read-HostString -Prompt "Enter an API password " -Default $Config.APIPassword -Characters ""
+        $Config.EnableServerDiscovery = Read-HostBool -Prompt "Announce this server's ip address to the clients in the local network (signed with the api password)? " -Default $Config.EnableServerDiscovery
     }    
     $Config.StartPaused = Read-HostBool "Start the Server machine in pause/no-mining mode automatically? " -Default $Config.StartPaused
 
     $Config.APIauth = if (Get-Yes $Config.APIauth) {"1"} else {"0"}
+    $Config.EnableServerDiscovery = if ((Get-Yes $Config.APIauth) -and (Get-Yes $Config.EnableServerDiscovery)) {"1"} else {"0"}
     $Config.StartPaused = if (Get-Yes $Config.StartPaused) {"1"} else {"0"}
 
     Write-Host " "
@@ -64,6 +67,7 @@ do {
     if (Get-Yes $Config.APIauth) {
         Write-Host " APIuser = $($Config.APIuser)"
         Write-Host " APIpassword = $($Config.APIpassword)"
+        Write-Host " EnableServerDiscovery = $($Config.EnableServerDiscovery) $(if (Get-Yes $Config.EnableServerDiscovery) {"(the ip address will be announced to the local network)"} else {"(no announcements)"})"
     }
     Write-Host " "
     Write-Host "Write down the following:" -ForegroundColor Green

@@ -171,6 +171,124 @@ function Test-TcpServer {
     $Result
 }
 
+function Get-ServerAddressState {
+    # the learned address of the configured server. Lives in $Session, so the AsyncLoader and API runspaces see it too
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [String]$ServerName,
+        [Parameter(Mandatory = $true)]
+        [Int]$Port
+    )
+    $Key = "$($ServerName.ToLower())|$($Port)"
+    $State = $Session.ServerAddress
+    if (-not $State -or $State.Key -ne $Key) {
+        $State = [PSCustomObject]@{
+            Key         = $Key
+            ServerName  = $ServerName
+            Port        = $Port
+            IP          = $null
+            MachineName = ""
+            Timestamp   = [int64]0
+            ProbeHost   = $null
+            ProbeTime   = [int64]0
+        }
+        $PathToFile = ".\Data\serveraddr.json"
+        if (Test-Path $PathToFile) {
+            try {
+                $Data = Get-ContentByStreamReader $PathToFile | ConvertFrom-Json -ErrorAction Stop
+                if ("$($Data.servername)".ToLower() -eq $ServerName.ToLower() -and [int]$Data.serverport -eq $Port -and "$($Data.ip)" -match '^\d{1,3}(\.\d{1,3}){3}$') {
+                    $State.IP          = "$($Data.ip)"
+                    $State.MachineName = "$($Data.machinename)"
+                    $State.Timestamp   = [int64]$Data.timestamp
+                }
+            } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+        }
+        $Session.ServerAddress = $State
+    }
+    $State
+}
+
+function Get-ServerAddress {
+    # the host to build server urls with: the learned ip first, then the configured name. $null when nothing answers
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [String]$ServerName = "",
+        [Parameter(Mandatory = $false)]
+        [Int]$Port = 0,
+        [Parameter(Mandatory = $false)]
+        [Int]$Timeout = 2
+    )
+    if (-not $ServerName -or -not $Port) {return}
+    $State = Get-ServerAddressState -ServerName $ServerName -Port $Port
+    $Now = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+    # several call sites probe per round: share one result for a few seconds
+    if ($State.ProbeTime -gt ($Now - 3)) {return $State.ProbeHost}
+    $ServerHost = $null
+    if ($State.IP -and $State.IP -ne $ServerName -and (Test-TcpServer -Server $State.IP -Port $Port -Timeout $Timeout)) {
+        $ServerHost = $State.IP
+        if ($State.ProbeHost -ne $ServerHost) {
+            Write-Log -Level Info "Server $($ServerName):$($Port) is reached at the announced address $($ServerHost)"
+        }
+    } else {
+        # a name is resolved here and its ipv4 addresses are probed one by one: TcpClient on pwsh 7 walks the whole
+        # address list itself, ipv6 first, and a stale or unreachable ipv6 address eats the complete timeout - the same
+        # would happen to the http calls later on, so the working ip goes into the urls
+        $Candidates = @()
+        if ($ServerName -notmatch '^\d{1,3}(\.\d{1,3}){3}$' -and $ServerName -ne "localhost") {
+            try {
+                $Candidates = @([System.Net.Dns]::GetHostAddresses($ServerName) | Where-Object {$_.AddressFamily -eq [System.Net.Sockets.AddressFamily]::InterNetwork} | Foreach-Object {$_.ToString()} | Select-Object -Unique -First 3)
+            } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+        }
+        if ($Candidates.Count) {
+            foreach ($Candidate in $Candidates) {
+                if ($Candidate -ne $State.IP -and (Test-TcpServer -Server $Candidate -Port $Port -Timeout $Timeout)) {$ServerHost = $Candidate; break}
+            }
+        } elseif (Test-TcpServer -Server $ServerName -Port $Port -Timeout $Timeout) {
+            $ServerHost = $ServerName
+        }
+        if ($ServerHost -and $State.IP -and $State.IP -ne $ServerName) {
+            # the announced ip is dead but the name answers again: forget it, or every probe pays the timeout first
+            Write-Log -Level Info "Server $($ServerName):$($Port) no longer answers at the announced address $($State.IP), using the configured name again"
+            $State.IP = $null
+            $State.MachineName = ""
+            Remove-Item ".\Data\serveraddr.json" -Force -ErrorAction Ignore
+        }
+    }
+    $State.ProbeHost = $ServerHost
+    $State.ProbeTime = $Now
+    $ServerHost
+}
+
+function Set-ServerAddress {
+    # a verified announcement: remember the server's address for all runspaces and across restarts
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [String]$ServerName,
+        [Parameter(Mandatory = $true)]
+        [Int]$Port,
+        [Parameter(Mandatory = $true)]
+        [String]$IP,
+        [Parameter(Mandatory = $false)]
+        [String]$MachineName = "",
+        [Parameter(Mandatory = $false)]
+        [Int64]$Timestamp = 0
+    )
+    $State = Get-ServerAddressState -ServerName $ServerName -Port $Port
+    $Changed = ($State.IP -ne $IP) -or ($State.MachineName -ne $MachineName)
+    $State.IP          = $IP
+    $State.MachineName = $MachineName
+    $State.Timestamp   = $Timestamp
+    if ($Changed) {
+        $State.ProbeTime = 0
+        Set-ContentJson -PathToFile ".\Data\serveraddr.json" -Data ([PSCustomObject]@{servername = $ServerName; serverport = $Port; machinename = $MachineName; ip = $IP; timestamp = $Timestamp}) -Quiet > $null
+        Write-Log -Level Info "Server $($ServerName):$($Port) announced its address $($IP)$(if ($MachineName) {" (machine $($MachineName))"})"
+    }
+    $Changed
+}
+
 function Invoke-PingStratum {
 [cmdletbinding()]
 param(

@@ -240,7 +240,7 @@ param(
         if (-not $ForceLocal) {
             $Config = if ($Session.IsDonationRun) {$Session.UserConfig} else {$Session.Config}
 
-            if ($Config.RunMode -eq "Client" -and $Config.ServerName -and $Config.ServerPort -and (Test-TcpServer $Config.ServerName -Port $Config.ServerPort -Timeout 2)) {
+            if ($Config.RunMode -eq "Client" -and $Config.ServerName -and $Config.ServerPort -and ($ServerHost = Get-ServerAddress -ServerName $Config.ServerName -Port $Config.ServerPort)) {
                 $serverbody = @{
                     endpoint  = $endpoint
                     key       = $key
@@ -261,7 +261,7 @@ param(
                     myip      = $Session.MyIP
                 }
                 try {
-                    $GetMrr_Result = Invoke-GetUrl "http://$($Config.ServerName):$($Config.ServerPort)/getmrr" -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal -Timeout 30
+                    $GetMrr_Result = Invoke-GetUrl "http://$($ServerHost):$($Config.ServerPort)/getmrr" -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal -Timeout 30
                     if ($GetMrr_Result.Status) {$Data = $GetMrr_Result.Content;$Remote = $true}
                     if ($GetMrr_Result -ne $null) {$GetMrr_Result = $null}
                     #Write-Log -Level Info "MRR server $($method): endpoint=$($endpoint) params=$($serverbody.params)"

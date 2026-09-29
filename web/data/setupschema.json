@@ -1482,6 +1482,35 @@
           ]
         },
         {
+          "kind": "field",
+          "key": "EnableServerDiscovery",
+          "id": "inputEnableServerDiscovery",
+          "label": {
+            "html": "Server Discovery",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [
+            "is--network"
+          ],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "Server: announce the API address to the local network. Client: learn the server's IP address from those announcements, so an IP change of the server needs no reconfiguration. The announcements are signed with the server's API password: enable API auth on the server and set the server's username and password on the clients.",
+            "id": "inputEnableServerDiscoveryHelp"
+          },
+          "control": "select",
+          "attrs": {},
+          "options": [
+            {
+              "value": "0",
+              "label": "Disable"
+            },
+            {
+              "value": "1",
+              "label": "Enable"
+            }
+          ]
+        },
+        {
           "kind": "group",
           "classes": [
             "is--client"

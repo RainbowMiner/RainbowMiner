@@ -230,10 +230,12 @@ For Client (Runmode=client) setup:
   - `pools:<poolname>` = protect all values of pool "poolname"
   - `pools:<poolname>:<variablename>` = protect "variablename" in pool "poolname"
 - **EnableServerExcludeList** = set to "1" to always use the server's "ExcludeServerConfigVars", instead of the local one in config.txt
+- **EnableServerDiscovery** = set to "1" to learn the server's ip address from its signed announcements in the local network, so that an ip change of the server needs no reconfiguration (needs ServerUser/ServerPassword and the same setting on the server, see Doc/NETWORKING.md)
 
 For Server (Runmode=server) setup:
 
 - make sure to set **APIport**, **APIauth**, **APIuser**, **APIpassword**, **APIallowIPs**
+- **EnableServerDiscovery** = set to "1" to announce the api address to the clients in the local network (signed with APIpassword, so APIauth with APIuser/APIpassword is required)
 
 
 ## Set electricity cost handling

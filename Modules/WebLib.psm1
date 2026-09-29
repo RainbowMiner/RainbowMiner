@@ -411,7 +411,7 @@ Param(
     if ($JobKey -and $JobData) {
         if (-not $ForceLocal -and $JobData.url -notmatch "^server://") {
             $Config = if ($Session.IsDonationRun) {$Session.UserConfig} else {$Session.Config}
-            if ($Config.RunMode -eq "Client" -and $Config.ServerName -and $Config.ServerPort -and (Test-TcpServer $Config.ServerName -Port $Config.ServerPort -Timeout 2)) {
+            if ($Config.RunMode -eq "Client" -and $Config.ServerName -and $Config.ServerPort -and ($ServerHost = Get-ServerAddress -ServerName $Config.ServerName -Port $Config.ServerPort)) {
                 $serverbody = @{
                     url           = $JobData.url
                     requestmethod = $JobData.requestmethod
@@ -433,8 +433,8 @@ Param(
                     myip          = $Session.MyIP
                     port          = $Config.APIPort
                 }
-                #Write-ToFile -FilePath "Logs\geturl_$(Get-Date -Format "yyyy-MM-dd").txt" -Message "http://$($Config.ServerName):$($Config.ServerPort)/getjob $(ConvertTo-Json $serverbody)" -Append -Timestamp
-                $Result = Invoke-GetUrl "http://$($Config.ServerName):$($Config.ServerPort)/getjob" -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal -Timeout 30
+                #Write-ToFile -FilePath "Logs\geturl_$(Get-Date -Format "yyyy-MM-dd").txt" -Message "http://$($ServerHost):$($Config.ServerPort)/getjob $(ConvertTo-Json $serverbody)" -Append -Timestamp
+                $Result = Invoke-GetUrl "http://$($ServerHost):$($Config.ServerPort)/getjob" -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal -Timeout 30
                 #Write-ToFile -FilePath "Logs\geturl_$(Get-Date -Format "yyyy-MM-dd").txt" -Message ".. $(if ($Result.Status) {"ok!"} else {"failed"})" -Append -Timestamp
                 if ($Result.Status) {return $Result.Content}
             }
@@ -452,9 +452,10 @@ Param(
     }
 
     if ($url -match "^server://(.+)$") {
+        $ServerPath = $Matches[1]
         $Config = if ($Session.IsDonationRun) {$Session.UserConfig} else {$Session.Config}
-        if ($Config.RunMode -eq "Client" -and $Config.ServerName -and $Config.ServerPort -and (Test-TcpServer $Config.ServerName -Port $Config.ServerPort -Timeout 2)) {
-            $url           = "http://$($Config.ServerName):$($Config.ServerPort)/$($Matches[1])"
+        if ($Config.RunMode -eq "Client" -and $Config.ServerName -and $Config.ServerPort -and ($ServerHost = Get-ServerAddress -ServerName $Config.ServerName -Port $Config.ServerPort)) {
+            $url           = "http://$($ServerHost):$($Config.ServerPort)/$($ServerPath)"
             $user          = $Config.ServerUser
             $password      = $Config.ServerPassword
         } else {
@@ -1085,7 +1086,7 @@ param(
         if (-not $ForceLocal) {
             $Config = if ($Session.IsDonationRun) {$Session.UserConfig} else {$Session.Config}
 
-            if ($Config.RunMode -eq "Client" -and $Config.ServerName -and $Config.ServerPort -and (Test-TcpServer $Config.ServerName -Port $Config.ServerPort -Timeout 2)) {
+            if ($Config.RunMode -eq "Client" -and $Config.ServerName -and $Config.ServerPort -and ($ServerHost = Get-ServerAddress -ServerName $Config.ServerName -Port $Config.ServerPort)) {
                 $serverbody = @{
                     endpoint  = $endpoint
                     key       = $key
@@ -1100,7 +1101,7 @@ param(
                     port      = $Config.APIPort
                 }
                 try {
-                    $Result = Invoke-GetUrl "http://$($Config.ServerName):$($Config.ServerPort)/getbinance" -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal -Timeout 30
+                    $Result = Invoke-GetUrl "http://$($ServerHost):$($Config.ServerPort)/getbinance" -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal -Timeout 30
                     if ($Result.Status) {$Request = $Result.Content;$Remote = $true}
                 } catch {
                     Write-Log "Binance server call: $($_.Exception.Message)"
@@ -1172,7 +1173,7 @@ param(
         if (-not $ForceLocal) {
             $Config = if ($Session.IsDonationRun) {$Session.UserConfig} else {$Session.Config}
 
-            if ($Config.RunMode -eq "Client" -and $Config.ServerName -and $Config.ServerPort -and (Test-TcpServer $Config.ServerName -Port $Config.ServerPort -Timeout 2)) {
+            if ($Config.RunMode -eq "Client" -and $Config.ServerName -and $Config.ServerPort -and ($ServerHost = Get-ServerAddress -ServerName $Config.ServerName -Port $Config.ServerPort)) {
                 $serverbody = @{
                     endpoint  = $endpoint
                     key       = $key
@@ -1188,7 +1189,7 @@ param(
                     port      = $Config.APIPort
                 }
                 try {
-                    $Result = Invoke-GetUrl "http://$($Config.ServerName):$($Config.ServerPort)/getnh" -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal -Timeout 30
+                    $Result = Invoke-GetUrl "http://$($ServerHost):$($Config.ServerPort)/getnh" -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal -Timeout 30
                     if ($Result.Status) {$Request = $Result.Content;$Remote = $true}
                 } catch {
                     Write-Log "Nicehash server call: $($_.Exception.Message)"
@@ -1262,7 +1263,7 @@ param(
         if (-not $ForceLocal) {
             $Config = if ($Session.IsDonationRun) {$Session.UserConfig} else {$Session.Config}
 
-            if ($Config.RunMode -eq "Client" -and $Config.ServerName -and $Config.ServerPort -and (Test-TcpServer $Config.ServerName -Port $Config.ServerPort -Timeout 2)) {
+            if ($Config.RunMode -eq "Client" -and $Config.ServerName -and $Config.ServerPort -and ($ServerHost = Get-ServerAddress -ServerName $Config.ServerName -Port $Config.ServerPort)) {
                 $serverbody = @{
                     endpoint  = $endpoint
                     key       = $key
@@ -1277,7 +1278,7 @@ param(
                     port      = $Config.APIPort
                 }
                 try {
-                    $Result = Invoke-GetUrl "http://$($Config.ServerName):$($Config.ServerPort)/getunmineable" -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal -Timeout 30
+                    $Result = Invoke-GetUrl "http://$($ServerHost):$($Config.ServerPort)/getunmineable" -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal -Timeout 30
                     if ($Result.Status) {$Request = $Result.Content;$Remote = $true}
                 } catch {
                     Write-Log "unMineable server call: $($_.Exception.Message)"

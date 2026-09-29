@@ -1086,6 +1086,18 @@ function Invoke-Process {
 }
 
 function Get-MyIP {
+    # the default route's source address: connecting a udp socket sends nothing, it only picks the route
+    $Socket = $null
+    try {
+        $Socket = [System.Net.Sockets.Socket]::new([System.Net.Sockets.AddressFamily]::InterNetwork, [System.Net.Sockets.SocketType]::Dgram, [System.Net.Sockets.ProtocolType]::Udp)
+        $Socket.Connect("8.8.8.8", 53)
+        $MyIP = "$($Socket.LocalEndPoint.Address)"
+        if ($MyIP -match '^\d{1,3}(\.\d{1,3}){3}$' -and $MyIP -ne "0.0.0.0") {return $MyIP}
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+    } finally {
+        if ($Socket) {$Socket.Close(); $Socket.Dispose(); $Socket = $null}
+    }
     if ($IsWindows -and ($cmd = Get-Command "ipconfig" -ErrorAction Ignore)) {
         $IpcResult = Invoke-Exe $cmd.Source -ExpandLines | Where-Object {$_ -match 'IPv4.+\s(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'} | Foreach-Object {$Matches[1]}
         if ($IpcResult.Count -gt 1) {

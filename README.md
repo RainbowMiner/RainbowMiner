@@ -428,6 +428,7 @@ These are the server-fields to fill in the config.txt (or use the initscripts or
     "APIauth": "1",
     "APIuser": "serverusername",
     "APIpassword": "serverpassword",
+    "EnableServerDiscovery": "1",
 
 
 ### Setup as Client
@@ -446,6 +447,7 @@ These are the client-fields to fill in the config.txt (or use the initscripts or
     "ServerPassword": "serverpassword",
     "EnableServerConfig": "1",
     "EnableServerPools": "1",
+    "EnableServerDiscovery": "1",
     "ServerConfigName": "config,coins,pools",
     "EnableServerExcludeList": "0",
     "ExcludeServerConfigVars": "WorkerName,DeviceName,ExcludeDeviceName,Proxy,APIPort,APIUser,APIPassword,APIAuth,MSIApath,NVSMIpath,CPUMiningThreads,CPUMiningAffinity,GPUMiningAffinity,ServerName,ServerPort,ServerUser,ServerPassword,EnableServerConfig,ServerConfigName,ExcludeServerConfigVars,RunMode,StartPaused",
@@ -455,6 +457,8 @@ Setting the field "EnableServerExcludeList" to "1" lets your client use the serv
 All variables defined in "ExcludeServerConfig" will not be overwritten by the server's values.
 
 If "EnableServerPools" is set to "1", the client will download the server's pool and balance statistics and mine to exactly those pools (except for MiningRigRentals, which will always be handled locally).
+
+If "EnableServerDiscovery" is set to "1" on the server and on the clients, the server announces its api address to the local network and the clients learn it from those announcements, so an ip change of the server needs no reconfiguration. The announcements are signed with the server's api password, so auth must be enabled. Details in [Doc/NETWORKING.md](Doc/NETWORKING.md).
 
 ## POOLS
 

@@ -43,6 +43,7 @@ $Config | Add-Member GroupName $(if ($Config.GroupName -eq "`$GroupName") {""} e
 $Config | Add-Member StartPaused $(if ($Config.StartPaused -eq "`$StartPaused") {$false} else {Get-Yes $Config.StartPaused}) -Force
 $Config | Add-Member EnableServerConfig $(if ($Config.EnableServerConfig -eq "`$EnableServerConfig") {$ConfigSetup.EnableServerConfig} else {$Config.EnableServerConfig}) -Force
 $Config | Add-Member EnableServerPools $(if ($Config.EnableServerPools -eq "`$EnableServerPools") {$ConfigSetup.EnableServerPools} else {$Config.EnableServerPools}) -Force
+$Config | Add-Member EnableServerDiscovery $(if ($Config.EnableServerDiscovery -eq $null -or $Config.EnableServerDiscovery -eq "`$EnableServerDiscovery") {$ConfigSetup.EnableServerDiscovery} else {$Config.EnableServerDiscovery}) -Force
 $Config | Add-Member ServerConfigName $(if ($Config.ServerConfigName -eq "`$ServerConfigName" -or $Config.ServerConfigName -eq "") {$ConfigSetup.ServerConfigName} else {@(Get-ConfigArray $Config.ServerConfigName)}) -Force
 $Config | Add-Member ExcludeServerConfigVars $(if ($Config.ExcludeServerConfigVars -eq "`$ExcludeServerConfigVars" -or $Config.ExcludeServerConfigVars -eq "") {$ConfigSetup.ExcludeServerConfigVars} else {@(Get-ConfigArray $Config.ExcludeServerConfigVars)}) -Force
 $Config | Add-Member EnableServerExcludeList $(if ($Config.EnableServerExcludeList -eq "`$EnableServerExcludeList") {$ConfigSetup.EnableServerExcludeList} else {$Config.EnableServerExcludeList}) -Force
@@ -59,6 +60,7 @@ do {
     $Config.ServerPort = Read-HostInt -Prompt "Enter the server's API port " -Default $Config.ServerPort -Min 0 -Max 9999
     $Config.ServerUser = Read-HostString -Prompt "If you have auth enabled on your server's API, enter the username " -Default $Config.ServerUser -Characters "A-Z0-9"
     $Config.ServerPassword = Read-HostString -Prompt "If you have auth enabled on your server's API, enter the password " -Default $Config.ServerPassword -Characters ""
+    $Config.EnableServerDiscovery = Read-HostBool -Prompt "Learn the server's ip address from its announcements in the local network (needs the server's auth and EnableServerDiscovery on the server)? " -Default $Config.EnableServerDiscovery
     $Config.EnableServerPools = Read-HostBool -Prompt "Use the server's pool/coins/balance statistics and mine exactly to those pools (except for MiningRigRentals)? " -Default $Config.EnableServerPools
     $Config.EnableServerConfig = Read-HostBool -Prompt "Enable automatic download of selected server config files? " -Default $Config.EnableServerConfig
     if (Get-Yes $Config.EnableServerConfig) {
@@ -76,6 +78,7 @@ do {
 
     $Config.StartPaused = if (Get-Yes $Config.StartPaused) {"1"} else {"0"}
     $Config.EnableServerPools = if (Get-Yes $Config.EnableServerPools) {"1"} else {"0"}
+    $Config.EnableServerDiscovery = if (Get-Yes $Config.EnableServerDiscovery) {"1"} else {"0"}
     $Config.EnableServerConfig = if (Get-Yes $Config.EnableServerConfig) {"1"} else {"0"}
     $Config.EnableServerExcludeList = if (Get-Yes $Config.EnableServerExcludeList) {"1"} else {"0"}
     $Config.ServerConfigName = $Config.ServerConfigName -join ','
@@ -88,6 +91,7 @@ do {
     Write-Host " ServerUser = $($Config.ServerUser)"
     Write-Host " ServerPassword = $($Config.ServerPassword)"
     Write-Host " EnableServerPools = $($Config.EnableServerPools) $(if (Get-Yes $Config.EnableServerPools) {"(server's pools/banlances will be used)"} else {"(locally configured pools will be used)"})"
+    Write-Host " EnableServerDiscovery = $($Config.EnableServerDiscovery) $(if (Get-Yes $Config.EnableServerDiscovery) {"(the server's ip address will be learned from its announcements)"} else {"(the server is reached by its name/ip only)"})"
     if (Get-Yes $Config.EnableServerConfig) {
         Write-Host " ServerConfigName = $($Config.ServerConfigName) (automatic download from server enabled)"
         Write-Host " GroupName = $($Config.GroupName)"
@@ -113,7 +117,7 @@ if ($IsWindows -and -not (Test-IsElevated)) {
     Write-Host " "
 }
 
-Initialize-APIServer -Port $Config.APIport
+Initialize-APIServer -Port $Config.APIport -ServerPort $(if (Get-Yes $Config.EnableServerDiscovery) {$Config.ServerPort} else {0})
 
 $Config | ConvertTo-Json -Depth 10 | Out-File ".\Config\config.txt" -Encoding utf8 
 

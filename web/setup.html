@@ -114,6 +114,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const applyToggles = [
                     bindToggle("inputAPIauth", "is--auth", v => v == "1"),
                     bindToggle("inputRunMode", "is--client", v => v == "client"),
+                    bindToggle("inputRunMode", "is--network", v => v == "client" || v == "server"),
                     bindToggle("inputEnableServerConfig", "is--serverconfig",
                         v => document.getElementById("inputRunMode").value == "client" && v == "1"),
                     bindToggle("inputEnableMinerStatus", "is--reporting", v => v == "1"),

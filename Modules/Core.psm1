@@ -673,6 +673,7 @@ function Start-Core {
         ReportDeviceData = 0
         ReportRates  = 0
         ReportTotals = 0
+        MyIP         = Get-Date
     }
 
     #Load databases, that only need updates once in a while
@@ -1172,6 +1173,17 @@ function Invoke-Core {
         $Session.TimeDiff = [Math]::Sign($TimeDiff)*[Math]::Floor([Math]::Abs($TimeDiff))
     }
 
+    #Refresh the rig's own ip address: a new dhcp lease must reach the server announcement, the client list and the report
+    if (-not $Session.Updatetracker.MyIP -or $Session.Updatetracker.MyIP -lt (Get-Date).AddMinutes(-5)) {
+        $Session.Updatetracker.MyIP = Get-Date
+        $MyIP = Get-MyIP
+        if ($MyIP -and $MyIP -ne $Session.MyIP) {
+            Write-Log -Level Info "This rig's ip address changed from $($Session.MyIP) to $($MyIP)"
+            $Session.MyIP = $MyIP
+        }
+        $MyIP = $null
+    }
+
     #Start/stop services
     if ($Session.RoundCounter -eq 0) {
         Start-Autoexec -Priority $Session.Config.AutoexecPriority
@@ -1218,6 +1230,34 @@ function Invoke-Core {
     }
 
     if ($CheckConfig -or $Session.RoundCounter -eq 0) {Set-APIConfig}
+
+    #Server address announcements: the server broadcasts its api address, the clients learn it (opt-in, signed with the api password)
+    if (-not $psISE) {
+        $BeaconConfig = if ($Session.IsDonationRun) {$Session.UserConfig} else {$Session.Config}
+        $BeaconActive = $false
+        if ($BeaconConfig.EnableServerDiscovery) {
+            if ($BeaconConfig.RunMode -eq "Server") {
+                if ($API.RemoteAPI -and $BeaconConfig.APIauth -and $BeaconConfig.APIuser -and $BeaconConfig.APIpassword) {
+                    Send-APIServerUdp -Port $BeaconConfig.APIport -MachineName $Session.MachineName -Password $BeaconConfig.APIpassword > $null
+                } elseif (-not $Session.ServerDiscoveryWarned) {
+                    Write-Log -Level Warn "EnableServerDiscovery needs the api server running with APIauth, APIuser and APIpassword"
+                    $Session.ServerDiscoveryWarned = $true
+                }
+            } elseif ($BeaconConfig.RunMode -eq "Client" -and $BeaconConfig.ServerName -and $BeaconConfig.ServerPort) {
+                if ($BeaconConfig.ServerPassword -and $BeaconConfig.ServerName -notmatch '^(localhost|127\.)') {
+                    if (Start-APIBeacon -Port $BeaconConfig.ServerPort) {
+                        $BeaconActive = $true
+                        Receive-APIBeacon -ServerName $BeaconConfig.ServerName -Port $BeaconConfig.ServerPort -Password $BeaconConfig.ServerPassword
+                    }
+                } elseif (-not $Session.ServerDiscoveryWarned) {
+                    Write-Log -Level Warn "EnableServerDiscovery needs ServerPassword and a ServerName in the local network"
+                    $Session.ServerDiscoveryWarned = $true
+                }
+            }
+        }
+        if (-not $BeaconActive) {Stop-APIBeacon}
+        $BeaconConfig = $null
+    }
 
     $API.PauseMiners.Pause       = $Global:PauseMiners.Test()
     $API.PauseMiners.PauseIA     = $Global:PauseMiners.TestIA()
@@ -1970,7 +2010,7 @@ function Invoke-Core {
     $ServerPoolNames = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 
     if (-not $Session.IsDonationRun -and $Session.Config.RunMode -eq "Client" -and $Session.Config.ServerName -and $Session.Config.ServerPort -and $Session.Config.EnableServerPools) {
-        $ServerConnected = Test-TcpServer $Session.Config.ServerName -Port $Session.Config.ServerPort -Timeout 2
+        $ServerConnected = [bool](Get-ServerAddress -ServerName $Session.Config.ServerName -Port $Session.Config.ServerPort)
         if ($ServerConnected) {
 
             try {
@@ -5239,14 +5279,16 @@ function Invoke-Core {
 
     #Check if server is up
     if ($UserConfig.RunMode -eq "Client" -and $UserConfig.ServerName -and $UserConfig.ServerPort) {
-        $ServerConnected = Test-TcpServer $UserConfig.ServerName -Port $UserConfig.ServerPort -Timeout 2
+        $ServerHost = Get-ServerAddress -ServerName $UserConfig.ServerName -Port $UserConfig.ServerPort
+        $ServerConnected = [bool]$ServerHost
         if ($ServerConnected) {            
-            Write-Host "[Client-Mode] Connected to $($UserConfig.ServerName):$($UserConfig.ServerPort)" -ForegroundColor Green
+            Write-Host "[Client-Mode] Connected to $($UserConfig.ServerName):$($UserConfig.ServerPort)$(if ($ServerHost -ne $UserConfig.ServerName) {" via $($ServerHost)"})" -ForegroundColor Green
         } else {
             Write-Host "[Client-Mode] Server $($UserConfig.ServerName):$($UserConfig.ServerPort) does not respond." -ForegroundColor Red
         }
         Write-Host " "
-        Write-Log "Client-Mode: $(if ($ServerConnected) {"Connected"} else {"Not connected"}) to $($UserConfig.ServerName):$($UserConfig.ServerPort)"
+        Write-Log "Client-Mode: $(if ($ServerConnected) {"Connected"} else {"Not connected"}) to $($UserConfig.ServerName):$($UserConfig.ServerPort)$(if ($ServerConnected -and $ServerHost -ne $UserConfig.ServerName) {" via $($ServerHost)"})"
+        $ServerHost = $null
     }
     if ($UserConfig.RunMode -eq "Server") {
         if ($API.RemoteAPI) {
@@ -5781,6 +5823,7 @@ function Invoke-Core {
 function Stop-Core {
 
     #Stop services
+    Stop-APIBeacon
     if (-not $Session.Config.DisableAPI)         {Stop-APIServer}
     if (-not $Session.Config.DisableAsyncLoader) {Stop-AsyncLoader}
 
@@ -5955,7 +5998,7 @@ function Get-Balance {
     param($Config,[Bool]$Refresh = $false)
     
     if ($Config.RunMode -eq "Client" -and $Config.ServerName -and $Config.ServerPort -and $Config.EnableServerPools) {
-        if (Test-TcpServer $Config.ServerName -Port $Config.ServerPort -Timeout 2) {
+        if (Get-ServerAddress -ServerName $Config.ServerName -Port $Config.ServerPort) {
             try {
                 Invoke-RestMethodAsync "server://balances?raw=1" -cycletime ($Config.BalanceUpdateMinutes*60) -Timeout 20
             } catch {}

@@ -43,6 +43,7 @@
     MinimumMiningIntervals = 1
     MaxActivityDays = 2
     EnableServerConfig = $false
+    EnableServerDiscovery = $false
     ServerConfigName = @("config","coins","pools","algorithms","scheduler","mrralgorithms","userpools","customminers")
     ExcludeServerConfigVars = @("APIAuth","APIPassword","APIPort","APIUser","CPUMiningAffinity","CPUMiningThreads","DeviceName","EnableServerConfig","ExcludeDeviceName","ExcludeServerConfigVars","GPUMiningAffinity","GroupName","LinuxDisplay","LinuxXAuthority","MSIApath","NVSMIpath","Proxy","RunMode","ServerConfigName","ServerName","ServerPassword","ServerPort","ServerUser","StartPaused","WorkerName","StaticCPUMinerPort","StaticGPUMinerPort","OpenCLPlatformSorting")
     EnableServerExcludeList = $false

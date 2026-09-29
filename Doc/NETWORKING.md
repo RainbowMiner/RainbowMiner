@@ -27,6 +27,7 @@ These are the server-fields to fill in the config.txt (or use the initscripts or
   "APIauth": "1",
   "APIuser": "serverusername",
   "APIpassword": "serverpassword",
+  "EnableServerDiscovery": "1",
 ```
 
 #### Setup as Client
@@ -45,12 +46,47 @@ These are the client-fields to fill in the config.txt (or use the initscripts or
   "ServerPassword": "serverpassword",
   "EnableServerConfig": "1",
   "EnableServerPools": "1",
+  "EnableServerDiscovery": "1",
   "ServerConfigName": "config,coins,pools",
 ```
 
 If "EnableServerConfig" is set to "1" (like in the above example), the Client will download the config files defined with the list "ServerConfigName" from the Server. In the example: config.txt, coins.config.txt, pools.config.txt would be downloaded automatically. Possible names are config, coins, pools, algorithms, scheduler, mrralgorithms, userpools, customminers, miners and ocprofiles.
 
 If "EnableServerPools" is set to "1", the client will download the server's pool and balance statistics and mine to exactly those pools (except for MiningRigRentals, which will always be handled locally)
+
+### Server discovery: surviving an ip change of the server
+
+A client reaches the server by `ServerName`. If that is an ip address and the server gets a new
+one from DHCP, or if it is a name that the router's DNS still resolves to the old address, the
+client shows `Server ... does not respond` and works as a standalone rig until the config is
+corrected by hand.
+
+With `"EnableServerDiscovery": "1"` on the server and on the clients, the server announces its
+api address to the local network once per round (a UDP broadcast to its api port) and the
+clients learn the address from those announcements:
+
+- an announcement is signed with the server's `APIpassword` (HMAC-SHA256). `APIauth`, `APIuser`
+  and `APIpassword` must be set on the server, `ServerUser` and `ServerPassword` on the clients.
+  Without a password nothing is sent and nothing is accepted: an unsigned announcement would let
+  any device in the network redirect the clients
+- a client accepts an announcement only if the signature matches, the sender is the address it
+  announces, the timestamp is fresh and the machine name matches `ServerName` (or, when
+  `ServerName` is an ip address, the machine name first seen at that address)
+- the learned address is stored in `Data\serveraddr.json` and used for all server calls, the
+  status line shows `Connected to <ServerName>:<port> via <ip>`. If the learned address stops
+  answering while the configured name works again, the file is dropped
+- the announcements are broadcasts, so server and clients must be in the same network segment.
+  Clients in other networks keep using the name (see the DDNS hint below)
+- Windows clients need an inbound firewall rule for UDP on the server's port. The rule exists
+  when the client's own `APIport` is that same port (the usual 4000). Otherwise run
+  `InitClient.bat` again or add the rule "RainbowMiner API <port> UDP". Linux rigs with an
+  active firewall: `ufw allow <port>/udp`
+- `EnableServerDiscovery` is part of the server's config.txt that managed clients download, so
+  enabling it on the server enables it on the clients with `EnableServerConfig` as well
+
+Independent of this option, a client resolves a `ServerName` itself and connects to the first
+of its IPv4 addresses that answers on the api port. PowerShell 7 would otherwise try the name's
+IPv6 addresses first, and one stale IPv6 address costs the complete connection timeout.
 
 ### Connecting a client over the internet
 
