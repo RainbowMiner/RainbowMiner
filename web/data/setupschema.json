@@ -1551,6 +1551,52 @@
             },
             {
               "kind": "field",
+              "key": "ServerSSL",
+              "id": "inputServerSSL",
+              "label": {
+                "html": "Server over HTTPS",
+                "class": "col-sm-2 col-form-label"
+              },
+              "rowClasses": [],
+              "colClass": "col-sm-10",
+              "help": {
+                "html": "Talk https to the server, for a TLS proxy such as Caddy in front of the server's API port (see Doc/NETWORKING.md). The certificate must pass the normal validation, or match the fingerprint below.",
+                "id": "inputServerSSLHelp"
+              },
+              "control": "select",
+              "attrs": {},
+              "options": [
+                {
+                  "value": "0",
+                  "label": "Disable"
+                },
+                {
+                  "value": "1",
+                  "label": "Enable"
+                }
+              ]
+            },
+            {
+              "kind": "field",
+              "key": "ServerCertHash",
+              "id": "inputServerCertHash",
+              "label": {
+                "html": "Server Certificate Fingerprint",
+                "class": "col-sm-2 col-form-label"
+              },
+              "rowClasses": [],
+              "colClass": "col-sm-10",
+              "help": {
+                "html": "Optional with HTTPS: the SHA-256 (or SHA-1) fingerprint of the server's certificate, for a self-signed certificate. Leave empty for the normal certificate validation.",
+                "id": "inputServerCertHashHelp"
+              },
+              "control": "text",
+              "attrs": {
+                "placeholder": "e.g. 5A:1B:...:9F, empty = normal validation"
+              }
+            },
+            {
+              "kind": "field",
               "key": "MinerServerUser",
               "id": "inputServerUser",
               "label": {

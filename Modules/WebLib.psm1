@@ -434,9 +434,17 @@ Param(
                     port          = $Config.APIPort
                 }
                 #Write-ToFile -FilePath "Logs\geturl_$(Get-Date -Format "yyyy-MM-dd").txt" -Message "http://$($ServerHost):$($Config.ServerPort)/getjob $(ConvertTo-Json $serverbody)" -Append -Timestamp
-                $Result = Invoke-GetUrl "http://$($ServerHost):$($Config.ServerPort)/getjob" -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal -Timeout 30
-                #Write-ToFile -FilePath "Logs\geturl_$(Get-Date -Format "yyyy-MM-dd").txt" -Message ".. $(if ($Result.Status) {"ok!"} else {"failed"})" -Append -Timestamp
-                if ($Result.Status) {return $Result.Content}
+                # a relay that throws (tls handshake refused, connection reset) must not fail the job: fetch directly, as after a "Status = false"
+                try {
+                    $Result = Invoke-GetUrl (Get-ServerUrl -ServerHost $ServerHost -Port $Config.ServerPort -Path "getjob" -SSL:(Get-Yes $Config.ServerSSL) -CertHash "$($Config.ServerCertHash)") -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal -ForceHttpClient:(Get-Yes $Config.ServerSSL) -Timeout 30
+                    #Write-ToFile -FilePath "Logs\geturl_$(Get-Date -Format "yyyy-MM-dd").txt" -Message ".. $(if ($Result.Status) {"ok!"} else {"failed"})" -Append -Timestamp
+                    if ($Result.Status) {return $Result.Content}
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                    $RelayError = "$($_.Exception.Message)" -replace '^.*?occurred\. \(([^)]+)\).*$','$1'
+                    $RelayHost  = try {([uri]$JobData.url).Host} catch {$JobData.url}
+                    Write-Log -Level Info "Job relay to the server failed ($($RelayError)), fetching $($RelayHost) directly"
+                }
             }
         }
 
@@ -455,9 +463,10 @@ Param(
         $ServerPath = $Matches[1]
         $Config = if ($Session.IsDonationRun) {$Session.UserConfig} else {$Session.Config}
         if ($Config.RunMode -eq "Client" -and $Config.ServerName -and $Config.ServerPort -and ($ServerHost = Get-ServerAddress -ServerName $Config.ServerName -Port $Config.ServerPort)) {
-            $url           = "http://$($ServerHost):$($Config.ServerPort)/$($ServerPath)"
+            $url           = Get-ServerUrl -ServerHost $ServerHost -Port $Config.ServerPort -Path $ServerPath -SSL:(Get-Yes $Config.ServerSSL) -CertHash "$($Config.ServerCertHash)"
             $user          = $Config.ServerUser
             $password      = $Config.ServerPassword
+            if (Get-Yes $Config.ServerSSL) {$ForceHttpClient = $true}
         } else {
             return
         }
@@ -1101,7 +1110,7 @@ param(
                     port      = $Config.APIPort
                 }
                 try {
-                    $Result = Invoke-GetUrl "http://$($ServerHost):$($Config.ServerPort)/getbinance" -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal -Timeout 30
+                    $Result = Invoke-GetUrl (Get-ServerUrl -ServerHost $ServerHost -Port $Config.ServerPort -Path "getbinance" -SSL:(Get-Yes $Config.ServerSSL) -CertHash "$($Config.ServerCertHash)") -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal -ForceHttpClient:(Get-Yes $Config.ServerSSL) -Timeout 30
                     if ($Result.Status) {$Request = $Result.Content;$Remote = $true}
                 } catch {
                     Write-Log "Binance server call: $($_.Exception.Message)"
@@ -1189,7 +1198,7 @@ param(
                     port      = $Config.APIPort
                 }
                 try {
-                    $Result = Invoke-GetUrl "http://$($ServerHost):$($Config.ServerPort)/getnh" -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal -Timeout 30
+                    $Result = Invoke-GetUrl (Get-ServerUrl -ServerHost $ServerHost -Port $Config.ServerPort -Path "getnh" -SSL:(Get-Yes $Config.ServerSSL) -CertHash "$($Config.ServerCertHash)") -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal -ForceHttpClient:(Get-Yes $Config.ServerSSL) -Timeout 30
                     if ($Result.Status) {$Request = $Result.Content;$Remote = $true}
                 } catch {
                     Write-Log "Nicehash server call: $($_.Exception.Message)"
@@ -1278,7 +1287,7 @@ param(
                     port      = $Config.APIPort
                 }
                 try {
-                    $Result = Invoke-GetUrl "http://$($ServerHost):$($Config.ServerPort)/getunmineable" -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal -Timeout 30
+                    $Result = Invoke-GetUrl (Get-ServerUrl -ServerHost $ServerHost -Port $Config.ServerPort -Path "getunmineable" -SSL:(Get-Yes $Config.ServerSSL) -CertHash "$($Config.ServerCertHash)") -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal -ForceHttpClient:(Get-Yes $Config.ServerSSL) -Timeout 30
                     if ($Result.Status) {$Request = $Result.Content;$Remote = $true}
                 } catch {
                     Write-Log "unMineable server call: $($_.Exception.Message)"
@@ -1441,23 +1450,38 @@ param(
             $httpHandler.AutomaticDecompression = [System.Net.DecompressionMethods]::GZip -bor [System.Net.DecompressionMethods]::Deflate
 
             if (Test-IsCore) {
+                # RBMCertPin (DotNet/Tools/CertPin.cs) accepts every host as before, except the https servers registered by Get-ServerUrl
+                $SslCallback = $null
                 try {
-                    Add-Type -TypeDefinition @"
+                    $SslCallback = [RBMCertPin]::GetCallback()
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                    try {
+                        Add-Type -TypeDefinition @"
 public class SSLHandler
 {
     public static System.Net.Security.RemoteCertificateValidationCallback GetSSLHandler()
     {
         return new System.Net.Security.RemoteCertificateValidationCallback((sender, certificate, chain, policyErrors) => { return true; });
     }
-    
+
 }
 "@
-                    if ($Sockets) {
-                        $httpHandler.SslOptions.RemoteCertificateValidationCallback = [SSLHandler]::GetSSLHandler()
-                    } else {
-                        $httpHandler.ServerCertificateCustomValidationCallback = [SSLHandler]::GetSSLHandler()
+                        $SslCallback = [SSLHandler]::GetSSLHandler()
+                    } catch {
+                        if ($Error.Count){$Error.RemoveAt(0)}
                     }
-                } catch {
+                }
+                if ($SslCallback) {
+                    try {
+                        if ($Sockets) {
+                            $httpHandler.SslOptions.RemoteCertificateValidationCallback = $SslCallback
+                        } else {
+                            $httpHandler.ServerCertificateCustomValidationCallback = $SslCallback
+                        }
+                    } catch {
+                        if ($Error.Count){$Error.RemoveAt(0)}
+                    }
                 }
             }
 

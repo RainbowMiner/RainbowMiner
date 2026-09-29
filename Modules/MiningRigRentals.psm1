@@ -261,7 +261,7 @@ param(
                     myip      = $Session.MyIP
                 }
                 try {
-                    $GetMrr_Result = Invoke-GetUrl "http://$($ServerHost):$($Config.ServerPort)/getmrr" -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal -Timeout 30
+                    $GetMrr_Result = Invoke-GetUrl (Get-ServerUrl -ServerHost $ServerHost -Port $Config.ServerPort -Path "getmrr" -SSL:(Get-Yes $Config.ServerSSL) -CertHash "$($Config.ServerCertHash)") -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal -ForceHttpClient:(Get-Yes $Config.ServerSSL) -Timeout 30
                     if ($GetMrr_Result.Status) {$Data = $GetMrr_Result.Content;$Remote = $true}
                     if ($GetMrr_Result -ne $null) {$GetMrr_Result = $null}
                     #Write-Log -Level Info "MRR server $($method): endpoint=$($endpoint) params=$($serverbody.params)"

@@ -460,6 +460,8 @@ If "EnableServerPools" is set to "1", the client will download the server's pool
 
 If "EnableServerDiscovery" is set to "1" on the server and on the clients, the server announces its api address to the local network and the clients learn it from those announcements, so an ip change of the server needs no reconfiguration. The announcements are signed with the server's api password, so auth must be enabled. Details in [Doc/NETWORKING.md](Doc/NETWORKING.md).
 
+Clients that reach the server over the internet should not use a forwarded API port: use a VPN, or a TLS proxy in front of the server together with "ServerSSL" on the clients. Both are described step by step in [Doc/NETWORKING.md](Doc/NETWORKING.md).
+
 ## POOLS
 
 RainbowMiner ships with a module for 70 pools. What each of them pays out, which wallet,

@@ -261,6 +261,30 @@ function Get-ServerAddress {
     $ServerHost
 }
 
+function Get-ServerUrl {
+    # the url of a server endpoint. With -SSL the host is registered for certificate checks: chain validation, or the pinned fingerprint
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [String]$ServerHost,
+        [Parameter(Mandatory = $true)]
+        $Port,
+        [Parameter(Mandatory = $false)]
+        [String]$Path = "",
+        [Parameter(Mandatory = $false)]
+        [Switch]$SSL,
+        [Parameter(Mandatory = $false)]
+        [String]$CertHash = ""
+    )
+    if ($SSL) {
+        try {[RBMCertPin]::Set($ServerHost, $CertHash)} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+        "https://$($ServerHost):$($Port)/$($Path)"
+    } else {
+        try {[RBMCertPin]::Remove($ServerHost)} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+        "http://$($ServerHost):$($Port)/$($Path)"
+    }
+}
+
 function Set-ServerAddress {
     # a verified announcement: remember the server's address for all runspaces and across restarts
     [CmdletBinding()]

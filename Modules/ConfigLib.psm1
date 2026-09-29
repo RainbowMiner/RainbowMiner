@@ -1117,7 +1117,7 @@ function Get-SessionServerConfig {
 
     $CurrentConfig = if ($Session.Config) {$Session.Config} else {
         $Result = Get-ConfigContent "Config"
-        @("RunMode","ServerName","ServerPort","ServerUser","ServerPassword","EnableServerConfig","ServerConfigName","ExcludeServerConfigVars","EnableServerExcludeList","WorkerName","GroupName","APIPort") | Where-Object {$Session.DefaultValues.ContainsKey($_) -and $Result.$_ -eq "`$$_"} | ForEach-Object {
+        @("RunMode","ServerName","ServerPort","ServerSSL","ServerCertHash","ServerUser","ServerPassword","EnableServerConfig","ServerConfigName","ExcludeServerConfigVars","EnableServerExcludeList","WorkerName","GroupName","APIPort") | Where-Object {$Session.DefaultValues.ContainsKey($_) -and $Result.$_ -eq "`$$_"} | ForEach-Object {
             $val = $Session.DefaultValues[$_]
             if ($val -is [array]) {$val = $val -join ','}
             $Result.$_ = $val
@@ -1128,7 +1128,7 @@ function Get-SessionServerConfig {
     if ($CurrentConfig -and $CurrentConfig.RunMode -eq "client" -and $CurrentConfig.ServerName -and $CurrentConfig.ServerPort -and (Get-Yes $CurrentConfig.EnableServerConfig)) {
         $ServerConfigName = if ($CurrentConfig.ServerConfigName) {Get-ConfigArray $CurrentConfig.ServerConfigName}
         if (($ServerConfigName | Measure-Object).Count) {
-            Get-ServerConfig -ConfigFiles $Session.ConfigFiles -ConfigName $ServerConfigName -ExcludeConfigVars (Get-ConfigArray $CurrentConfig.ExcludeServerConfigVars) -Server $CurrentConfig.ServerName -Port $CurrentConfig.ServerPort -APIPort $CurrentConfig.APIPort -WorkerName $CurrentConfig.WorkerName -GroupName $CurrentConfig.GroupName -Username $CurrentConfig.ServerUser -Password $CurrentConfig.ServerPassword -Force:$Force -EnableServerExcludeList:(Get-Yes $CurrentConfig.EnableServerExcludeList) > $null
+            Get-ServerConfig -ConfigFiles $Session.ConfigFiles -ConfigName $ServerConfigName -ExcludeConfigVars (Get-ConfigArray $CurrentConfig.ExcludeServerConfigVars) -Server $CurrentConfig.ServerName -Port $CurrentConfig.ServerPort -SSL:(Get-Yes $CurrentConfig.ServerSSL) -CertHash "$($CurrentConfig.ServerCertHash)" -APIPort $CurrentConfig.APIPort -WorkerName $CurrentConfig.WorkerName -GroupName $CurrentConfig.GroupName -Username $CurrentConfig.ServerUser -Password $CurrentConfig.ServerPassword -Force:$Force -EnableServerExcludeList:(Get-Yes $CurrentConfig.EnableServerExcludeList) > $null
         }
     }
 }
@@ -1146,6 +1146,10 @@ function Get-ServerConfig {
         [string]$Server = "",
         [Parameter(Mandatory = $False)]
         [int]$Port = 0,
+        [Parameter(Mandatory = $False)]
+        [switch]$SSL,
+        [Parameter(Mandatory = $False)]
+        [string]$CertHash = "",
         [Parameter(Mandatory = $False)]
         [int]$APIPort = 4000,
         [Parameter(Mandatory = $False)]
@@ -1170,9 +1174,9 @@ function Get-ServerConfig {
         $ServerLWT = if (Test-Path $ServerLWTFile) {try {Get-ContentByStreamReader $ServerLWTFile | ConvertFrom-Json -ErrorAction Stop} catch {}}
         if (-not $ServerLWT) {$ServerLWT = [PSCustomObject]@{}}
         $Params = ($ConfigName | Foreach-Object {$PathToFile = $ConfigFiles[$_].Path;"$($_)ZZZ$(if ($Force -or -not (Test-Path $PathToFile) -or -not $ServerLWT.$_) {"0"} else {$ServerLWT.$_})"}) -join ','
-        $Uri = "http://$($ServerHost):$($Port)/getconfig?config=$($Params)&workername=$($WorkerName)&groupname=$($GroupName)&machinename=$($Session.MachineName)&myip=$($Session.MyIP)&port=$($APIPort)&version=$($Session.Version)"
+        $Uri = Get-ServerUrl -ServerHost $ServerHost -Port $Port -SSL:$SSL -CertHash $CertHash -Path "getconfig?config=$($Params)&workername=$($WorkerName)&groupname=$($GroupName)&machinename=$($Session.MachineName)&myip=$($Session.MyIP)&port=$($APIPort)&version=$($Session.Version)"
         try {
-            $Result = Invoke-GetUrl $Uri -user $Username -password $Password -ForceLocal -Timeout 30
+            $Result = Invoke-GetUrl $Uri -user $Username -password $Password -ForceLocal -ForceHttpClient:$SSL -Timeout 30
         } catch {
             $ErrorMessage = "$($_.Exception.Message)"
         }
@@ -1184,7 +1188,8 @@ function Get-ServerConfig {
                 $Data = $Result.Content.$_.data
                 if ($_ -eq "config") {
                     $Preset = Get-ConfigContent "config"
-                    $Data.PSObject.Properties.Name | Where-Object {$ExcludeConfigVars -inotcontains $_} | Foreach-Object {$Preset | Add-Member $_ $Data.$_ -Force}
+                    # ServerSSL and ServerCertHash describe this client's own way to the server: never taken from the server, an exclude list written before these keys existed does not know them
+                    $Data.PSObject.Properties.Name | Where-Object {$ExcludeConfigVars -inotcontains $_ -and $_ -notin @("ServerSSL","ServerCertHash")} | Foreach-Object {$Preset | Add-Member $_ $Data.$_ -Force}
 
                     # add missing config values in case of server/client version mismatch
                     if ($Session.DefaultValues) {

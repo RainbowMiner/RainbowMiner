@@ -37,6 +37,8 @@ $Config | Add-Member RunMode $(if ($Config.RunMode -eq "`$RunMode") {"Standalone
 $Config | Add-Member APIport $(if ($Config.APIport -eq "`$APIport" -or -not $Config.APIport) {4000} else {[int]$Config.APIport}) -Force
 $Config | Add-Member ServerName $(if ($Config.ServerName -eq "`$ServerName") {""} else {$Config.ServerName}) -Force
 $Config | Add-Member ServerPort $(if ($Config.ServerPort -eq "`$ServerPort" -or -not $Config.ServerPort) {4000} else {[int]$Config.ServerPort}) -Force
+$Config | Add-Member ServerSSL $(if ($Config.ServerSSL -eq $null -or $Config.ServerSSL -eq "`$ServerSSL") {$false} else {Get-Yes $Config.ServerSSL}) -Force
+$Config | Add-Member ServerCertHash $(if ($Config.ServerCertHash -eq $null -or $Config.ServerCertHash -eq "`$ServerCertHash") {""} else {$Config.ServerCertHash}) -Force
 $Config | Add-Member ServerUser $(if ($Config.ServerUser -eq "`$ServerUser") {""} else {$Config.ServerUser}) -Force
 $Config | Add-Member ServerPassword $(if ($Config.ServerPassword -eq "`$ServerPassword") {""} else {$Config.ServerPassword}) -Force
 $Config | Add-Member GroupName $(if ($Config.GroupName -eq "`$GroupName") {""} else {$Config.GroupName}) -Force
@@ -58,6 +60,12 @@ do {
     $Config.RunMode    = "Client"
     $Config.ServerName = Read-HostString -Prompt "Enter the server's name or IP-address " -Default $Config.ServerName -Characters "A-Z0-9\-_\."
     $Config.ServerPort = Read-HostInt -Prompt "Enter the server's API port " -Default $Config.ServerPort -Min 0 -Max 9999
+    $Config.ServerSSL = Read-HostBool -Prompt "Connect to the server over https (a TLS proxy such as Caddy in front of the server's API port, see Doc/NETWORKING.md)? " -Default $Config.ServerSSL
+    if (Get-Yes $Config.ServerSSL) {
+        $Config.ServerCertHash = Read-HostString -Prompt "Enter the SHA-256 (or SHA-1) fingerprint of the server's certificate to pin it (leave empty for the normal certificate validation) " -Default $Config.ServerCertHash -Characters "0-9A-F:"
+    } else {
+        $Config.ServerCertHash = ""
+    }
     $Config.ServerUser = Read-HostString -Prompt "If you have auth enabled on your server's API, enter the username " -Default $Config.ServerUser -Characters "A-Z0-9"
     $Config.ServerPassword = Read-HostString -Prompt "If you have auth enabled on your server's API, enter the password " -Default $Config.ServerPassword -Characters ""
     $Config.EnableServerDiscovery = Read-HostBool -Prompt "Learn the server's ip address from its announcements in the local network (needs the server's auth and EnableServerDiscovery on the server)? " -Default $Config.EnableServerDiscovery
@@ -77,6 +85,7 @@ do {
     }
 
     $Config.StartPaused = if (Get-Yes $Config.StartPaused) {"1"} else {"0"}
+    $Config.ServerSSL = if (Get-Yes $Config.ServerSSL) {"1"} else {"0"}
     $Config.EnableServerPools = if (Get-Yes $Config.EnableServerPools) {"1"} else {"0"}
     $Config.EnableServerDiscovery = if (Get-Yes $Config.EnableServerDiscovery) {"1"} else {"0"}
     $Config.EnableServerConfig = if (Get-Yes $Config.EnableServerConfig) {"1"} else {"0"}
@@ -88,6 +97,8 @@ do {
     Write-Host "Check your data:"
     Write-Host " ServerName = $($Config.ServerName)"
     Write-Host " ServerPort = $($Config.ServerPort)"
+    Write-Host " ServerSSL = $($Config.ServerSSL)"
+    if (Get-Yes $Config.ServerSSL) {Write-Host " ServerCertHash = $(if ($Config.ServerCertHash) {$Config.ServerCertHash} else {"(none, the certificate must pass the normal validation)"})"}
     Write-Host " ServerUser = $($Config.ServerUser)"
     Write-Host " ServerPassword = $($Config.ServerPassword)"
     Write-Host " EnableServerPools = $($Config.EnableServerPools) $(if (Get-Yes $Config.EnableServerPools) {"(server's pools/banlances will be used)"} else {"(locally configured pools will be used)"})"

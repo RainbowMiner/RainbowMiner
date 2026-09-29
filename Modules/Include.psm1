@@ -113,6 +113,12 @@ function Set-OsFlags {
             [System.Net.ServicePointManager]::CertificatePolicy = New-Object -TypeName TrustAllCertsPolicy
         }
 
+        # certificate checks for https servers (ServerSSL): registered hosts are verified or pinned, every other host is accepted as before
+        Initialize-DLLs -CSFileName "CertPin.cs"
+        if (-not (Test-IsCore)) {
+            try {[System.Net.ServicePointManager]::ServerCertificateValidationCallback = [RBMCertPin]::GetCallback()} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+        }
+
         if ($IsWindows -and -not $Mini) {
             Initialize-DLLs -CSFileName "CPUID.cs"
             Initialize-DLLs -CSFileName "UserInput.cs"

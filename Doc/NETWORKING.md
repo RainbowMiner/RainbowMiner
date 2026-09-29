@@ -119,25 +119,86 @@ anyway, so leave `EnableServerDiscovery` off for these clients.
 
 #### 2. A TLS reverse proxy in front of the server
 
-If the server must be reachable directly, put a TLS proxy in front of the API port and forward
-only the proxy's port. Caddy fetches and renews a Let's Encrypt certificate for a DDNS name
-by itself; this is the complete Caddyfile:
+If the server must be reachable directly, a TLS proxy takes over the encryption: it listens on
+port 443 with a certificate and forwards every request to RainbowMiner's api port on the same
+machine. The clients and the browser talk https to the proxy, RainbowMiner itself is not
+changed. Step by step, with Caddy, which fetches and renews a free Let's Encrypt certificate
+by itself:
 
-```
-rig.example.dyndns.org {
-    reverse_proxy 127.0.0.1:4000
-}
-```
+1. Give the server a public host name. With a changing internet address, register the
+   router at a DDNS service, e.g. `rig.example.dyndns.org`.
 
-Forward ports 443 and 80 (the certificate challenge) of the router to the machine running
-the proxy, and do not forward the API port itself. This secures the access to the web
-interface from anywhere with `https://rig.example.dyndns.org`.
+2. Install Caddy on the server rig - a single binary for Windows and Linux from
+   https://caddyserver.com/download (Linux packages: `apt install caddy`). Create a text file
+   named `Caddyfile` with three lines:
 
-It does not secure RainbowMiner clients by itself: a client speaks plain http to
-`ServerName:ServerPort`. To run a client through the proxy, give it a TLS tunnel of its own
-(e.g. stunnel in client mode: it listens on `127.0.0.1:4000` on the client rig and forwards
-to `rig.example.dyndns.org:443` over TLS) and set `"ServerName": "localhost"`. If that is
-too much plumbing, use the VPN.
+   ```
+   rig.example.dyndns.org {
+       reverse_proxy 127.0.0.1:4000
+   }
+   ```
+
+   `4000` is the server's `APIport`. Start Caddy in that folder with `caddy run` (Windows:
+   also `caddy start` for the background, Linux package: `systemctl enable --now caddy` with
+   the Caddyfile in `/etc/caddy/`).
+
+3. In the router, forward ports 443 and 80 to the server rig - 80 is needed once per
+   certificate renewal. Do not forward the api port itself. After a minute
+   `https://rig.example.dyndns.org` shows the web interface with a valid certificate.
+
+4. On every client, point RainbowMiner at the proxy:
+
+   ```
+     "RunMode": "client",
+     "ServerName": "rig.example.dyndns.org",
+     "ServerPort": "443",
+     "ServerSSL": "1",
+     "ServerUser": "serverusername",
+     "ServerPassword": "serverpassword",
+   ```
+
+   `ServerSSL` makes the client talk https to `ServerName:ServerPort` and verify the
+   certificate the way a browser does. Leave `EnableServerDiscovery` off for these clients,
+   the announcements carry the server's LAN address and api port.
+
+**Without a public host name** (no DDNS, or a rig that is only reachable by ip), let Caddy
+create a self-signed certificate instead. Replace the first line with the ip and add
+`tls internal`:
+
+   ```
+   https://123.45.67.89 {
+       tls internal
+       reverse_proxy 127.0.0.1:4000
+   }
+   ```
+
+A self-signed certificate fails the normal validation, so the clients must be told exactly
+which certificate to expect: its fingerprint goes into `ServerCertHash`. The client then
+accepts this one certificate and nothing else, which also protects against somebody who
+sits in the middle with a certificate of his own.
+
+   ```
+     "ServerName": "123.45.67.89",
+     "ServerPort": "443",
+     "ServerSSL": "1",
+     "ServerCertHash": "5A1B...9F",
+   ```
+
+Read the fingerprint from any machine that reaches the proxy (Linux, or PowerShell 7 on
+Windows):
+
+   ```
+   openssl s_client -connect 123.45.67.89:443 </dev/null 2>/dev/null | openssl x509 -fingerprint -sha256 -noout
+   ```
+   ```
+   $t = [System.Net.Sockets.TcpClient]::new("123.45.67.89", 443); $s = [System.Net.Security.SslStream]::new($t.GetStream(), $false, {$true}); $s.AuthenticateAsClient("123.45.67.89"); $s.RemoteCertificate.GetCertHashString([System.Security.Cryptography.HashAlgorithmName]::SHA256); $t.Close()
+   ```
+
+Colons, spaces and letter case do not matter, the SHA-1 fingerprint shown by Windows'
+certificate dialog works as well. Caddy's self-signed certificate is renewed automatically
+too, so check the fingerprint when a client reports `Server ... does not respond` after a
+long time. In the browser, a self-signed certificate shows a warning once - that is
+expected, the browser has no fingerprint to compare.
 
 #### Plain port forwarding
 

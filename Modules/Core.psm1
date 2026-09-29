@@ -901,6 +901,13 @@ function Invoke-Core {
                         Write-Log "Proxy settings have changed: Restarting HttpClient$(if ($RestartRunspaces) {" and Runspaces"})"
                         Initialize-HttpClient -Restart > $null
                     }
+                    if ($Session.RoundCounter -gt 0 -and $ConfigBackup -and "$($Session.Config.ServerSSL)|$($Session.Config.ServerCertHash)" -ne "$($ConfigBackup.ServerSSL)|$($ConfigBackup.ServerCertHash)") {
+                        # pooled https connections keep the certificate check of their handshake: start over with the new settings
+                        if ((Test-Path Variable:Global:AsyncLoader) -and -not $AsyncLoader.Pause) {$AsyncLoader.Pause = $true}
+                        $RestartRunspaces = $true
+                        Write-Log "Server certificate settings have changed: Restarting HttpClient and Runspaces"
+                        Initialize-HttpClient -Restart > $null
+                    }
                 }
 
                 $ReReadConfig = $false

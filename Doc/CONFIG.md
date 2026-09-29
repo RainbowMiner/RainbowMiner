@@ -219,6 +219,8 @@ For Client (Runmode=client) setup:
 
 - **ServerName** = enter the server's machinename or ip
 - **ServerPort** = enter the server's ports
+- **ServerSSL** = set to "1" to talk https to the server, for a TLS proxy such as Caddy in front of the server's API port (see Doc/NETWORKING.md). The certificate must pass the normal validation, or match ServerCertHash
+- **ServerCertHash** = with ServerSSL: the SHA-256 (or SHA-1) fingerprint of the server's certificate, for a self-signed certificate. Leave empty for the normal certificate validation
 - **ServerUser** = enter the server's username (if auth)
 - **ServerPassword** = enter the server's password
 - **EnableServerConfig** = set to "1" to use the server's config files on this rig
