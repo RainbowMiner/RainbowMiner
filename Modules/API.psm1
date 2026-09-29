@@ -211,23 +211,23 @@ function Send-APIServerUdp {
     }
 
     $Sent = 0
-    $UdpClient = $null
-    try {
-        $UdpClient = [System.Net.Sockets.UdpClient]::new([System.Net.Sockets.AddressFamily]::InterNetwork)
-        $UdpClient.EnableBroadcast = $true
-        $Timestamp = Get-UnixTimestamp
-        foreach ($Target in $Targets) {
-            $Message = "RBM2|$($MachineName)|$($Target.IP)|$($Port)|$($Timestamp)"
-            $Buffer  = [System.Text.Encoding]::ASCII.GetBytes("$($Message)|$(Get-APIBeaconHmac -Message $Message -Password $Password)")
-            try {
-                [void]$UdpClient.Send($Buffer, $Buffer.Length, [System.Net.IPEndPoint]::new($Target.Broadcast, $Port))
-                $Sent++
-            } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+    $Timestamp = Get-UnixTimestamp
+    foreach ($Target in $Targets) {
+        # a socket bound to the interface's own address: the datagram's source must be the announced ip, or the clients
+        # drop it - an unbound socket would send every announcement through the one interface the routing table prefers
+        $Message = "RBM2|$($MachineName)|$($Target.IP)|$($Port)|$($Timestamp)"
+        $Buffer  = [System.Text.Encoding]::ASCII.GetBytes("$($Message)|$(Get-APIBeaconHmac -Message $Message -Password $Password)")
+        $UdpClient = $null
+        try {
+            $UdpClient = [System.Net.Sockets.UdpClient]::new([System.Net.IPEndPoint]::new([System.Net.IPAddress]::Parse($Target.IP), 0))
+            $UdpClient.EnableBroadcast = $true
+            [void]$UdpClient.Send($Buffer, $Buffer.Length, [System.Net.IPEndPoint]::new($Target.Broadcast, $Port))
+            $Sent++
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+        } finally {
+            if ($UdpClient) {$UdpClient.Close(); $UdpClient.Dispose(); $UdpClient = $null}
         }
-    } catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
-    } finally {
-        if ($UdpClient) {$UdpClient.Close(); $UdpClient.Dispose(); $UdpClient = $null}
     }
     $Targets.Clear()
     $Sent -gt 0
