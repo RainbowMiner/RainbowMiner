@@ -106,7 +106,7 @@ Notes for the automatic values for **APIThreads**:
 - **EnableAutoAdjustAffinity** = set to 1 to keep 1-2 threads free for the system, if *all* threads have been selected for CPU mining. It only acts on an affinity that covers every thread, so a hand-picked affinity is never touched [default=0]
 
 If you defined CPUMiningThreads or CPUMiningAffinity, you may override the values for single miner, by adding your own "-t" and "--cpu-affinity" to the field Params in miners.config.txt. 
-ClaymoreCPU, FireIce and JceminerCpu are not affected by these settings. They can be finetuned by editing config files (see section MINERS)
+Xmrig brings its own thread layout, which can override these settings for some algorithms - see "Xmrig and the CPU threads" in the [README](../README.md#special-finetuning)
 
 The affinity values define bitmasks, bit 0 = Core 0, bit 1 = Core 1, etc. The bitmasks are built from right to left.
 

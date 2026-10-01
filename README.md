@@ -95,7 +95,7 @@ operation and the remaining configuration files.
     - [Nvidia Driver Version v471.41 - Windows 7,8,8.1](https://international.download.nvidia.com/Windows/471.41/471.41-desktop-win7-64bit-international-whql.exe) (the last series that supports Windows 7/8.1)
     - [AMD Adrenalin 2022 Edition 22.3.2](https://drivers.amd.com/drivers/amd-software-adrenalin-edition-22.3.2-win10-win11-march24.exe)
 4. If your rig contains AMD graphic cards, RainbowMiner's overclocking features rely on MSI Afterburner, you should install and run it: [Download](http://download.msi.com/uti_exe//vga/MSIAfterburnerSetup.zip)
-5. If you want to have accurate power and clock values for your CPU, please install the [PawnIO driver](https://github.com/namazso/PawnIO.Setup/releases/latest/download/PawnIO_setup.exe) available from here: https://pawnio.eu/
+5. For accurate power and clock values of your CPU, the [PawnIO driver](https://github.com/namazso/PawnIO.Setup/releases/latest/download/PawnIO_setup.exe) (https://pawnio.eu/) is needed. `Install.bat` installs it automatically - on an existing installation, run `Install.bat` once more, or download and start the installer by hand. Without it, RainbowMiner only sees the CPU load and estimates the power draw from the CPU's TDP. PawnIO replaces the old WinRing0 driver, which Windows now flags as malicious
 
 Finally: check, if Powershell 7 is in your PATH, because RainbowMiner will not run correctly, if the path to powershell is missing. Sometimes `C:\Program Files\PowerShell\7` has to be added manually to the PATH environment variable after installing PowerShell 7. Here is a nice tutorial, on how to add to PATH environment variable https://www.howtogeek.com/118594/how-to-edit-your-system-path-for-easy-command-line-access/amp/
 
@@ -269,8 +269,8 @@ The very same commands are available as buttons on the **Console** page of the w
 
 - Set your Windows virtual memory size to a fixed size, to the sum of your GPU memories x 1.1, e.g. if you have 6x GTX1070 8GB installed, use at least 53000 (Computer Properties->Advanced System Settings->Performance->Advanced->Virtual Memory)
 - Submit bugs and feature requests here: https://github.com/RainbowMiner/RainbowMiner/issues 
-- Find a lot of additional information and documentation here: https://github.com/RainbowMiner/RainbowMiner/issues?q=is%3Aissue+label%3Adocumentation
-- if mining on GeForce GTX 1070/GTX 1070Ti/GTX 1080/GTX 1080Ti, it is recommended to set "Force P2-State" to "Off", so that the card will always operate in P0 state. [How to set P0 state for my GTX1070 and GTX1080](https://github.com/RainbowMiner/RainbowMiner/issues/36)
+- Find all documentation in the [Doc](Doc) folder - see the overview in section [DOCUMENTATION](#documentation)
+- if mining on GeForce GTX 1070/GTX 1070Ti/GTX 1080/GTX 1080Ti, it is recommended to set "Force P2-State" to "Off", so that the card will always operate in P0 state. [The Nvidia P2 state](Doc/OVERCLOCKING.md#the-nvidia-p2-state)
 - Important: **NEVER EDIT THE "Start.bat" or "StartWD.bat" !** It will break the autoupdate. If you want to add commands to the start, edit .\Config\autoexec.txt
 - the root directory of RainbowMiner contains the following, additional batch files:
 
@@ -583,10 +583,6 @@ The following miners can be fine tuned, using config files. Most of the config f
 
 | Minername        | Type   | Path                      | Configfile(s)                         | Documentation Link                                               |
 | ---------------- | ------ | ------------------------- | ------------------------------------- | ---------------------------------------------------------------- |
-| FireIce/XMR-Stak | AMD    | Bin\\Cryptonight-FireIce  | amd.txt                               | https://github.com/fireice-uk/xmr-stak/blob/master/doc/tuning.md |
-| FireIce/XMR-Stak | CPU    | Bin\\Cryptonight-FireIce  | cpu.txt                               | https://github.com/fireice-uk/xmr-stak/blob/master/doc/tuning.md |
-| FireIce/XMR-Stak | NVIDIA | Bin\\Cryptonight-FireIce  | nvidia.txt                            | https://github.com/fireice-uk/xmr-stak/blob/master/doc/tuning.md |
-| JceminerCpu      | CPU    | Bin\\CPU-Jceminer         | config\_[algorithm]-CPU.txt           | https://bitcointalk.org/index.php?topic=3281187.0                |
 | SrbMiner         | AMD    | Bin\\Cryptonight-Srbminer | config\_[algorithm]-[devicemodel].txt | https://bitcointalk.org/index.php?topic=3167363.0                |
 | Xmrig            | CPU    | Bin\\ANY-Xmrig            | threads\_[algorithm]\_[hwsig].json     | https://xmrig.com/docs/miner/config                              |
 

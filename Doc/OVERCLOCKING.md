@@ -148,6 +148,8 @@ This file contains all custom overclocking profiles. These profiles can be assig
 
 To make it easy to handle names, profiles may be assigned to devices. Just add the device model (see file Config\devices.config.txt for all model names), a specific device's name ("GPU#00","GPU#01",..) or PCI bus id ("00:02","00:03",..) with "-" to the profile name. With this feature, it is very easy to use different overclocking rules for devices under one name.
 
+If more than one entry matches a GPU, the most specific one wins: device name (`"Profile2-GPU#03"`) before PCI bus id (`"Profile2-03:00"`) before device model (`"Profile2-GTX1060"`) before the plain profile (`"Profile2"`). So a rig with six GTX1060, two of which do not take the memory overclock of the other four, needs one `"Profile2-GTX1060"` for the four and a `"Profile2-GPU#.."` entry for each of the two weaker cards. In the setup (`[C]onfiguration->[O]C-Profiles`), a plain number like `3` is accepted as a shortcut for `GPU#03`.
+
 Example (this is the setup for one of my GTX1070 rigs, basically substituting the MSI Afterburner profiles I recommended above)
 
     {
