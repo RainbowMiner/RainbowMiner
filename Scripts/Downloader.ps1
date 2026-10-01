@@ -1,4 +1,6 @@
-﻿$DownloadList = $args
+﻿# the Core appends one marker item with the paths of the running miners
+$DownloadList = @($args | Where-Object {-not $_.IsRunningMinerPaths})
+$RunningMinerPaths = $args | Where-Object {$_.IsRunningMinerPaths} | Select-Object -First 1
 
 if (-not (Get-Module Include)) { Import-Module .\Modules\Include.psm1 }
 if (-not (Get-Module WebLib)) { Import-Module .\Modules\WebLib.psm1 }
@@ -19,19 +21,24 @@ if (Test-Path ".\Config\minerconfigfiles.txt") {
 $Sha256 = if (Test-Path (".\Data\minersha256.json")) {Get-Content ".\Data\minersha256.json" -Raw | ConvertFrom-Json}
 
 [System.Collections.ArrayList]$RunningMiners_Paths = @()
-try {
-    $RunningMiners_Request = Invoke-RestMethod "http://127.0.0.1:$($LocalAPIport)/runningminers" -UseBasicParsing -ErrorAction Stop
-    if ($RunningMiners_Request -isnot [array]) {
-        if (-not $RunningMiners_Paths.Contains($RunningMiners_Request.Path)) {
-            [void]$RunningMiners_Paths.Add($RunningMiners_Request.Path)
+if ($RunningMinerPaths) {
+    # no API request: with APIauth the listener rejects anonymous calls with 401
+    $RunningMinerPaths.Paths | Where-Object {$_} | Foreach-Object {[void]$RunningMiners_Paths.Add($_)}
+} else {
+    try {
+        $RunningMiners_Request = Invoke-RestMethod "http://127.0.0.1:$($LocalAPIport)/runningminers" -UseBasicParsing -ErrorAction Stop
+        if ($RunningMiners_Request -isnot [array]) {
+            if (-not $RunningMiners_Paths.Contains($RunningMiners_Request.Path)) {
+                [void]$RunningMiners_Paths.Add($RunningMiners_Request.Path)
+            }
+        }
+        else {
+            $RunningMiners_Request | Foreach-Object {[void]$RunningMiners_Paths.Add($_.Path)}
         }
     }
-    else {
-        $RunningMiners_Request | Foreach-Object {[void]$RunningMiners_Paths.Add($_.Path)}
+    catch {
+        Write-Log -Level Warn "RainbowMiner API is down!"
     }
-}
-catch {
-    Write-Log -Level Warn "RainbowMiner API is down!"
 }
 
 if ([Net.ServicePointManager]::SecurityProtocol -notmatch [Net.SecurityProtocolType]::Tls12) {

@@ -3952,19 +3952,22 @@ function Invoke-Core {
         $Miners_DownloadList    = @($AllMiners | Where-Object {$AllMiners_VersionCheck[$_.BaseName].Ok -ne $true} | Sort-Object {$_.ExtendInterval} -Descending | Select-Object -Unique @{name = "URI"; expression = {$_.URI}}, @{name = "Path"; expression = {$_.Path}}, @{name = "IsMiner"; expression = {$true}})
         $Miners_DownloadListPrq = @($AllMiners | Where-Object {$_.PrerequisitePath -and -not (Test-Path "$($_.PrerequisitePath)")} | Select-Object -Unique @{name = "URI"; expression = {$_.PrerequisiteURI}}, @{name = "Path"; expression = {$_.PrerequisitePath}}, @{name = "IsMiner"; expression = {$false}})
 
+        # the downloader skips the folders of running miners - pass them along instead of letting it ask the API
+        $Miners_RunningPaths = [PSCustomObject]@{IsRunningMinerPaths = $true; Paths = [string[]]@($Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running}).ForEach({$_.Path}) | Select-Object -Unique)}
+
         if ($Miners_DownloadList.Count -gt 0) {
             if ($Global:Downloader.State -ne "Running") {
                 Clear-Host
                 Write-Log "Starting download of $($Miners_DownloadList.Count) miners."
                 if ($Session.RoundCounter -eq 0) {Write-Host "Starting downloader ($($Miners_DownloadList.Count) miners) .."}
-                $Global:Downloader = Start-ThreadJob -InitializationScript ([scriptblock]::Create("Set-Location `"$((Get-Location).Path -replace '"','``"')`"")) -ArgumentList ($Miners_DownloadList) -FilePath .\Scripts\Downloader.ps1
+                $Global:Downloader = Start-ThreadJob -InitializationScript ([scriptblock]::Create("Set-Location `"$((Get-Location).Path -replace '"','``"')`"")) -ArgumentList ($Miners_DownloadList + $Miners_RunningPaths) -FilePath .\Scripts\Downloader.ps1
             }
         } elseif ($Miners_DownloadListPrq.Count -gt 0) {
             $Miners_DownloadMsgPrq = @($AllMiners | Where-Object {$_.PrerequisitePath -and $_.PrerequisiteMsg -and -not (Test-Path $_.PrerequisitePath)} | Select-Object -Unique PrerequisiteMsg | Foreach-Object {$_.PrerequisiteMsg})
             if ($Global:Downloader.State -ne "Running" -and $Global:DownloaderPrq.State -ne "Running") {
                 Write-Log "Starting download of $($Miners_DownloadListPrq.Count) pre-requisites."
                 if ($Session.RoundCounter -eq 0) {Write-Host "Starting downloader ($($Miners_DownloadListPrq.Count) pre-requisites) .."}
-                $Global:DownloaderPrq = Start-ThreadJob -InitializationScript ([scriptblock]::Create("Set-Location `"$((Get-Location).Path -replace '"','``"')`"")) -ArgumentList ($Miners_DownloadListPrq) -FilePath .\Scripts\Downloader.ps1
+                $Global:DownloaderPrq = Start-ThreadJob -InitializationScript ([scriptblock]::Create("Set-Location `"$((Get-Location).Path -replace '"','``"')`"")) -ArgumentList ($Miners_DownloadListPrq + $Miners_RunningPaths) -FilePath .\Scripts\Downloader.ps1
             }
         }
 
