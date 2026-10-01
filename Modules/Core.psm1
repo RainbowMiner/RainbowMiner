@@ -5306,21 +5306,28 @@ function Invoke-Core {
             if ($APIClients) {
                 Write-Host " "
                 Write-Host "Clients: " -NoNewLine
-                $lookup = @{}
+                #Keep the newest entry per client, forget clients not seen for 24h
+                $now = Get-UnixTimestamp
+                $lookup = [ordered]@{}
                 $dropsome = $false
-                foreach ($obj in $APIClients) {
-                    $key = "$($obj.workername)|$($obj.machinename)" 
-                    if (-not $lookup.ContainsKey($key) -or $obj.timestamp -gt $lookup[$key].timestamp) {
+                foreach ($obj in @($APIClients.ToArray())) {
+                    $key = "$($obj.workername)|$($obj.machinename)"
+                    if ($now - $obj.timestamp -gt 86400) {
+                        $dropsome = $true
+                    } elseif (-not $lookup.Contains($key)) {
                         $lookup[$key] = $obj
-                        $lastseen = [Math]::Round((Get-UnixTimestamp)-$obj.timestamp,0)
-                        Write-Host "[$($obj.workername)@$(if ($obj.machinename) {$obj.machinename} else {$obj.machineip})]" -ForegroundColor "$(if ($lastseen -gt 300) {"Red"} else {"Green"}) " -NoNewline
                     } else {
+                        if ($obj.timestamp -gt $lookup[$key].timestamp) {$lookup[$key] = $obj}
                         $dropsome = $true
                     }
                 }
                 if ($dropsome) {
                     $APIClients.Clear()
-                    $APIClients.AddRange($lookup.Values)
+                    if ($lookup.Count) {$APIClients.AddRange(@($lookup.Values))}
+                }
+                foreach ($obj in $lookup.Values) {
+                    $lastseen = [Math]::Round($now-$obj.timestamp,0)
+                    Write-Host "[$($obj.workername)@$(if ($obj.machinename) {$obj.machinename} else {$obj.machineip})]" -ForegroundColor $(if ($lastseen -gt 300) {"Red"} else {"Green"}) -NoNewline
                 }
                 $lookup = $null
                 Write-Host " "
