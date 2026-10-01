@@ -378,7 +378,7 @@ The pages are grouped in the menu on the left.
 - **JSON Editor**: edit any of the config files directly, with a syntax check before saving
 - **Running Config**: the configuration, that the running RainbowMiner actually uses (config files, presets and - on a client - the server's config, all merged)
 - **Get setup.json**: download this rig's configuration, to copy it to a new rig (see section [COPY CURRENT CONFIGURATION TO NEW RIGS](#copy-current-configuration-to-new-rigs))
-- **Get Minerstats**: download a backup zip of one or all miner benchmarks
+- **Minerstats Backup**: back up all miner benchmarks on the rig, restore or delete a backup, or download a zip of one or all miners (see section [Backing up and restoring benchmarks](#backing-up-and-restoring-benchmarks))
 - **Debug File**: download a zip with the miner start scripts, the miner logs, the configuration and the details of your system. This is the fastest way to collect everything that is needed for a bug report - please attach it, when you open an [issue](https://github.com/RainbowMiner/RainbowMiner/issues)
 
 **MRR** (only shown, if the pool MiningRigRentals is in use)
@@ -534,6 +534,32 @@ Related: after a heavy market move the stored pool profits can lag behind. `Rese
 starts the profit statistics over, or delete single files in `Stats\Pools`
 (`<poolname>_<algorithm>_Profit.txt`). Expect more switching for a while afterwards, until
 the stable price has settled again.
+
+### Backing up and restoring benchmarks
+
+Benchmarks take time, so it is worth keeping a copy - before a driver or miner update, before
+experiments with overclocking, or simply now and then. Open **Config > Minerstats Backup** in
+the web interface:
+
+- **Create Backup now** zips all benchmark files of `Stats\Miners` into
+  `Stats\Backups\minerstats_<date>_<time>.zip` on the rig
+- the list below shows all backups with their date and number of benchmarks. Every row can be
+  downloaded, restored or deleted
+- **Restore** replaces all current benchmarks with the ones from the backup. The current
+  benchmarks are saved as a "before restore" backup first, so a restore can always be undone.
+  RainbowMiner uses the restored benchmarks from the next round on, no restart needed
+- restore and delete are blocked, while "APIlockConfig" is set to 1 in config.txt
+- **Download a zip** at the bottom of the page fetches a zip of one or all miners, e.g. to copy
+  the benchmarks to a rig with the same cards
+
+If a card drops out (e.g. after a power outage) the GPU numbers of the following cards shift,
+and RainbowMiner would benchmark them again. `CopyGpuStats.bat` (Windows) or
+`./copygpustats.sh` (Linux) copies the benchmarks of one GPU number to another. Stop
+RainbowMiner first, then enter the GPU numbers when asked - e.g. from 5 to 3, if the card
+GPU#05 now shows up as GPU#03. Only the benchmarks of that single card are copied, those of
+device combinations stay untouched, and replaced files are moved to
+`Stats\Miners-backup-<timestamp>`. Once the missing card is back, its original benchmarks
+are still there.
 
 ### Presets
 

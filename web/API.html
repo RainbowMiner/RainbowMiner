@@ -123,6 +123,14 @@
         <a href="/minerstats">/minerstats</a>
         <p>Shows the benchmark status of all miners</p>
 
+        <h3>Miner Stats Backups</h3>
+        <a href="/minerstatsbackups">/minerstatsbackups</a>
+        <p>Lists the miner stats backups stored in .\Stats\Backups (Name, Date, Tag, Files, Size), newest first</p>
+
+        <h3>Miner Stats Backup</h3>
+        <a href="/minerstatsbackup">/minerstatsbackup</a>
+        <p>Create, restore or delete a miner stats backup. Send as POST request with the parameters Action (create, restore or delete) and Name (the backup zip, not needed for create). A restore saves the current stats as a backup first. Action=download&amp;Name=... returns the zip file. Returns Success, Error and Result.</p>
+
         <h3>Miner Information Record</h3>
         <a href="/minerinfo">/minerinfo</a>
         <p>Shows an overview of currently available miners</p>

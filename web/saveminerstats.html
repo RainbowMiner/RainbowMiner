@@ -1,8 +1,37 @@
 ﻿<!--#include file="/parts/head.html" -->
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 id="title" data-navbaractive="navsaveminerstats" class="h2">Download Backup of Miner Statistics</h1>
+    <h1 id="title" data-navbaractive="navsaveminerstats" class="h2">Miner Statistics Backup</h1>
 </div>
 
+<h5>Backups on this rig</h5>
+<p class="text-muted small">
+    The backups are stored in .\Stats\Backups. A restore replaces all current miner stats with the ones from the backup,
+    the current stats are saved as a "before restore" backup first, so a restore can always be undone.
+</p>
+
+<div class="d-flex align-items-center mb-2">
+    <button type="button" id="msb-create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Create Backup now</button>
+</div>
+
+<table id="minerstatsbackups" class="rbm-table-init table"
+       data-url="/minerstatsbackups"
+       data-response-handler="formatMinerStatsBackups"
+       data-cache="false"
+       data-sort-name="Date"
+       data-sort-order="desc">
+    <thead>
+        <tr>
+            <th data-field="Date" data-sortable="true">Date</th>
+            <th data-field="tTag" data-sortable="true">Type</th>
+            <th data-field="Files" data-align="right" data-sortable="true">Stats</th>
+            <th data-field="tSize" data-align="right">Size</th>
+            <th data-field="Name">File</th>
+            <th data-field="tActions" data-align="right" data-min-width="120" data-formatter="formatMsbActions">Actions</th>
+        </tr>
+    </thead>
+</table>
+
+<h5 class="mt-4">Download a zip</h5>
 <form id="formConfig" method="POST" action="/saveminerstats">
     <div class="card mb-3">
         <select id="select--MinerName" name="MinerName" class="form-control">
@@ -14,22 +43,100 @@
 </form>
 
 <script type="text/javascript">
+(function () {
+    let locked = false;
 
-document.addEventListener("DOMContentLoaded", async () => {
-    try {
-        const response = await fetch("/availminerstats");
-        const data = await response.json();
-        const sel = document.getElementById("select--MinerName");
-        for (const miner of data) {
-            if (miner.Statcount > 0) {
-                sel.appendChild(new Option(miner.Name + "(" + miner.Statcount + ")", miner.Name));
-            }
+    window.formatMinerStatsBackups = function (data) {
+        for (const item of data) {
+            item.tTag = item.Tag === "beforerestore" ? "before restore" : "manual";
+            item.tSize = item.Size >= 1048576 ? (item.Size / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(item.Size / 1024)) + " KB";
         }
-        document.querySelector("option#waiting")?.remove();
-    } catch (error) {
-        console.error("availminerstats:", error);
-    }
-});
+        return data;
+    };
 
+    window.formatMsbActions = function (value, item) {
+        const n = esc(item.Name);
+        return '<div class="btn-group btn-group-sm">' +
+            '<a class="btn btn-outline-secondary" href="/minerstatsbackup?Action=download&Name=' + encodeURIComponent(item.Name) + '" title="Download"><i class="bi bi-download"></i></a>' +
+            '<button type="button" class="btn btn-outline-primary msb-act-restore" data-name="' + n + '" title="Restore"><i class="bi bi-arrow-counterclockwise"></i></button>' +
+            '<button type="button" class="btn btn-outline-danger msb-act-delete" data-name="' + n + '" title="Delete"><i class="bi bi-trash"></i></button>' +
+            '</div>';
+    };
+
+    function reloadTable() {
+        const table = RbmTables.getTable('#minerstatsbackups');
+        if (table) table.replaceData();
+    }
+
+    async function postBackup(params, title) {
+        try {
+            const response = await fetch("/minerstatsbackup", {
+                method: "POST",
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+                body: new URLSearchParams(params).toString()
+            });
+            const res = await response.json();
+            if (!res.Success) rbmShowModal(res.Error || 'Something went wrong', title + ' failed');
+            reloadTable();
+            return res.Success ? res : null;
+        } catch (error) {
+            console.error("minerstatsbackup:", error);
+            rbmShowModal('The request failed: ' + error, title + ' failed');
+            return null;
+        }
+    }
+
+    function guardWrite() {
+        if (locked) {
+            rbmShowModal('To be able to restore or delete, manually set parameter "APIlockConfig" to "0" in config.txt', 'Warning: config lock is enabled');
+            return false;
+        }
+        return true;
+    }
+
+    document.addEventListener("DOMContentLoaded", async () => {
+        ConfigLoader.whenReady().then((cfg) => { locked = !!cfg.IsLocked; });
+
+        document.getElementById("msb-create").addEventListener("click", async () => {
+            const btn = document.getElementById("msb-create");
+            btn.disabled = true;
+            const res = await postBackup({ Action: "create" }, 'Backup');
+            btn.disabled = false;
+            if (res) rbmShowModal('The backup ' + res.Result.Name + ' with ' + res.Result.Files + ' miner stats has been created.', 'Backup created');
+        });
+
+        RbmTables.whenReady('#minerstatsbackups').then((table) => {
+            document.getElementById('minerstatsbackups').addEventListener("click", async (event) => {
+                const btn = event.target.closest("button[data-name]");
+                if (!btn) return;
+                const name = btn.dataset.name;
+                if (btn.classList.contains("msb-act-restore")) {
+                    if (!guardWrite()) return;
+                    if (!confirm("Restore the miner stats from " + name + "?\n\nAll current miner stats will be replaced. They are saved as a \"before restore\" backup first.")) return;
+                    const res = await postBackup({ Action: "restore", Name: name }, 'Restore');
+                    if (res) rbmShowModal(res.Result.Files + ' miner stats have been restored from ' + name + '.' + (res.Result.Saved ? ' The previous stats were saved as ' + res.Result.Saved + '.' : '') + ' RainbowMiner uses them from the next round on.', 'Backup restored');
+                } else if (btn.classList.contains("msb-act-delete")) {
+                    if (!guardWrite()) return;
+                    if (!confirm("Delete the backup " + name + "?")) return;
+                    await postBackup({ Action: "delete", Name: name }, 'Delete');
+                }
+            });
+        });
+
+        try {
+            const response = await fetch("/availminerstats");
+            const data = await response.json();
+            const sel = document.getElementById("select--MinerName");
+            for (const miner of data) {
+                if (miner.Statcount > 0) {
+                    sel.appendChild(new Option(miner.Name + "(" + miner.Statcount + ")", miner.Name));
+                }
+            }
+            document.querySelector("option#waiting")?.remove();
+        } catch (error) {
+            console.error("availminerstats:", error);
+        }
+    });
+})();
 </script>
 <!--#include file="/parts/foot.html" -->

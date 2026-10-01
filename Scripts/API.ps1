@@ -650,6 +650,45 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             Remove-Variable -Name Miner, ZipDate, ZipFileName, ZipPath, StatsPath, Params -ErrorAction Ignore
             Break
         }
+        "/minerstatsbackups" {
+            $Data = ConvertTo-Json @(Get-MinerStatsBackups | Select-Object) -Depth 10
+            Break
+        }
+        "/minerstatsbackup" {
+            # Action=create|restore|delete (POST) or download (GET), Name=<backup zip name>
+            $BackupAction = "$($Parameters.Action)".Trim().ToLower()
+            $BackupName   = "$($Parameters.Name)".Trim()
+            if ($BackupAction -eq "download") {
+                if ($BackupPath = Get-MinerStatsBackupPath -Name $BackupName) {
+                    $Data = [System.IO.File]::ReadAllBytes($BackupPath)
+                    $ContentType = Get-MimeType ".zip"
+                    $ContentFileName = $BackupName
+                } else {
+                    $Data = ConvertTo-Json ([PSCustomObject]@{Success=$false;Error="Backup not found"}) -Depth 10
+                }
+            } else {
+                $Success = $false
+                $ErrMsg  = ""
+                $Result  = $null
+                if ($BackupAction -in @("restore","delete") -and $API.LockConfig) {
+                    $ErrMsg = "The configuration is locked (APIlockConfig in config.txt)"
+                } else {
+                    try {
+                        if ($BackupAction -eq "create") {$Result = New-MinerStatsBackup}
+                        elseif ($BackupAction -eq "restore") {$Result = Restore-MinerStatsBackup -Name $BackupName}
+                        elseif ($BackupAction -eq "delete") {Remove-MinerStatsBackup -Name $BackupName}
+                        else {throw "Unknown action"}
+                        $Success = $true
+                    } catch {
+                        $ErrMsg = "$($_.Exception.Message)"
+                    }
+                }
+                $Data = ConvertTo-Json ([PSCustomObject]@{Success=$Success;Error=$ErrMsg;Result=$Result}) -Depth 10
+            }
+            $BackupAction = $BackupName = $BackupPath = $Success = $ErrMsg = $Result = $null
+            Remove-Variable -Name BackupAction, BackupName, BackupPath, Success, ErrMsg, Result -ErrorAction Ignore
+            Break
+        }
         "/config" {
             $Data = ConvertTo-Json $Session.Config -Depth 10
             Break

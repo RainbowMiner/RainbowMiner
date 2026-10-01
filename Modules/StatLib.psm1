@@ -735,3 +735,181 @@ function Get-Stat {
         if (-not $Quiet) {$NewStats}
     }
 }
+
+function Initialize-ZipSupport {
+    if (-not ("System.IO.Compression.ZipFile" -as [type])) {
+        Add-Type -AssemblyName System.IO.Compression, System.IO.Compression.FileSystem
+    }
+}
+
+function Get-MinerStatsBackupPath {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [String]$Name = ""
+    )
+    $Path = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Stats\Backups")
+    if ($Name -eq "") {
+        if (-not [System.IO.Directory]::Exists($Path)) {[void][System.IO.Directory]::CreateDirectory($Path)}
+        $Path
+    } elseif ($Name -match "^minerstats_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}(_[a-z]+)?\.zip$") {
+        # only names this module creates: no path parts can sneak in
+        $Path = [System.IO.Path]::Combine($Path, $Name)
+        if ([System.IO.File]::Exists($Path)) {$Path}
+    }
+}
+
+function Get-MinerStatsBackups {
+    $Path = Get-MinerStatsBackupPath
+    foreach ($File in @([System.IO.Directory]::GetFiles($Path, "minerstats_*.zip") | Sort-Object -Descending)) {
+        $Name = [System.IO.Path]::GetFileName($File)
+        if ($Name -notmatch "^minerstats_(\d{4}-\d{2}-\d{2})_(\d{2})-(\d{2})-(\d{2})(?:_([a-z]+))?\.zip$") {continue}
+        $Count = $null
+        $Zip = $null
+        try {
+            Initialize-ZipSupport
+            $Zip = [System.IO.Compression.ZipFile]::OpenRead($File)
+            $Count = $Zip.Entries.Count
+        } catch {
+        } finally {
+            if ($Zip) {$Zip.Dispose()}
+        }
+        [PSCustomObject]@{
+            Name  = $Name
+            Date  = "$($Matches[1]) $($Matches[2]):$($Matches[3]):$($Matches[4])"
+            Tag   = "$($Matches[5])"
+            Files = $Count
+            Size  = ([System.IO.FileInfo]::new($File)).Length
+        }
+    }
+}
+
+function New-MinerStatsBackup {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [ValidatePattern("^[a-z]*$")]
+        [String]$Tag = ""
+    )
+
+    Initialize-ZipSupport
+
+    $StatsPath = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Stats\Miners")
+    $Files = @(if ([System.IO.Directory]::Exists($StatsPath)) {[System.IO.Directory]::GetFiles($StatsPath, "*.txt") | Where-Object {$_ -match "_HashRate\.txt$"}})
+    if (-not $Files.Count) {throw "There are no miner stats to back up"}
+
+    $Name    = "minerstats_$((Get-Date).ToString("yyyy-MM-dd_HH-mm-ss"))$(if ($Tag) {"_$Tag"}).zip"
+    $ZipPath = [System.IO.Path]::Combine((Get-MinerStatsBackupPath), $Name)
+    if ([System.IO.File]::Exists($ZipPath)) {throw "A backup with this time stamp exists already, please try again"}
+
+    $Count = 0
+    $Zip   = $null
+    try {
+        $Zip = [System.IO.Compression.ZipFile]::Open($ZipPath, [System.IO.Compression.ZipArchiveMode]::Create)
+        foreach ($File in $Files) {
+            $Source = $null
+            $Target = $null
+            try {
+                # share ReadWrite: Set-Stat may write a stat file at the same time
+                $Source = [System.IO.File]::Open($File, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
+                $Entry  = $Zip.CreateEntry([System.IO.Path]::GetFileName($File), [System.IO.Compression.CompressionLevel]::Optimal)
+                $Entry.LastWriteTime = [System.IO.File]::GetLastWriteTime($File)
+                $Target = $Entry.Open()
+                $Source.CopyTo($Target)
+                $Count++
+            } catch {
+                Write-Log -Level Warn "Miner stats backup: $([System.IO.Path]::GetFileName($File)) skipped: $($_.Exception.Message)"
+            } finally {
+                if ($Target) {$Target.Dispose()}
+                if ($Source) {$Source.Dispose()}
+            }
+        }
+    } finally {
+        if ($Zip) {$Zip.Dispose()}
+    }
+
+    if (-not $Count) {
+        [System.IO.File]::Delete($ZipPath)
+        throw "No miner stats could be read"
+    }
+
+    Write-Log "Miner stats backup $Name created with $Count files"
+    [PSCustomObject]@{Name = $Name; Files = $Count}
+}
+
+function Restore-MinerStatsBackup {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [String]$Name
+    )
+
+    if (-not ($ZipPath = Get-MinerStatsBackupPath -Name $Name)) {throw "Backup $Name not found"}
+
+    Initialize-ZipSupport
+
+    $StatsPath = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Stats\Miners")
+    if (-not [System.IO.Directory]::Exists($StatsPath)) {[void][System.IO.Directory]::CreateDirectory($StatsPath)}
+
+    $Zip = $null
+    $Restored = [System.Collections.Generic.List[string]]::new()
+    $Saved = $null
+    try {
+        $Zip = [System.IO.Compression.ZipFile]::OpenRead($ZipPath)
+
+        # check the whole archive before anything is touched
+        $Entries = @($Zip.Entries | Where-Object {$_.Length -gt 0})
+        if (-not $Entries.Count) {throw "Backup $Name is empty"}
+        if ($Entries | Where-Object {$_.FullName -notmatch "^[^\\/:]+_HashRate\.txt$" -or [System.IO.Path]::GetDirectoryName([System.IO.Path]::GetFullPath([System.IO.Path]::Combine($StatsPath, $_.FullName))) -ne $StatsPath.TrimEnd('\','/')}) {throw "Backup $Name contains unexpected files, nothing restored"}
+
+        # keep the current state, so that a restore can be undone
+        if (@([System.IO.Directory]::GetFiles($StatsPath, "*.txt") | Where-Object {$_ -match "_HashRate\.txt$"}).Count) {
+            $Saved = (New-MinerStatsBackup -Tag "beforerestore").Name
+        }
+
+        foreach ($File in @([System.IO.Directory]::GetFiles($StatsPath, "*.txt") | Where-Object {$_ -match "_HashRate\.txt$"})) {
+            [System.IO.File]::Delete($File)
+        }
+
+        foreach ($Entry in $Entries) {
+            $Target = [System.IO.Path]::Combine($StatsPath, $Entry.FullName)
+            $Source = $null
+            $Output = $null
+            try {
+                $Source = $Entry.Open()
+                $Output = [System.IO.File]::Create($Target)
+                $Source.CopyTo($Output)
+            } finally {
+                if ($Output) {$Output.Dispose()}
+                if ($Source) {$Source.Dispose()}
+            }
+            # TouchBenchmark and the benchmark logic look at the file age
+            [System.IO.File]::SetLastWriteTime($Target, $Entry.LastWriteTime.LocalDateTime)
+            [void]$Restored.Add($Target)
+        }
+    } finally {
+        if ($Zip) {$Zip.Dispose()}
+    }
+
+    # reload each restored stat into the cache in place: dropping the cache would let the
+    # running round see all miners as unbenchmarked; vanished stats leave with the next round
+    foreach ($Target in $Restored) {
+        $Key = [System.IO.Path]::GetFileNameWithoutExtension($Target) -replace "^(AMD|CPU|INTEL|NVIDIA)-"
+        if ($Global:StatsCache.ContainsKey($Key)) {[void]$Global:StatsCache.Remove($Key)}
+        [void](Get-StatFromFile -Path $Target -Name $Key -Cached -Check "Minute")
+    }
+
+    Write-Log "Miner stats backup $Name restored with $($Restored.Count) files$(if ($Saved) {", previous stats saved as $Saved"})"
+    [PSCustomObject]@{Name = $Name; Files = $Restored.Count; Saved = $Saved}
+}
+
+function Remove-MinerStatsBackup {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [String]$Name
+    )
+    if (-not ($ZipPath = Get-MinerStatsBackupPath -Name $Name)) {throw "Backup $Name not found"}
+    [System.IO.File]::Delete($ZipPath)
+    Write-Log "Miner stats backup $Name deleted"
+}
