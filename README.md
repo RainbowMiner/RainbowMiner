@@ -307,6 +307,7 @@ The very same commands are available as buttons on the **Console** page of the w
 | `ResetBenchmarkNVIDIA.bat` | -                          | reset all NVIDIA benchmarks                                                                                                                                             |
 | `ResetProfit.bat`          | -                          | reset RainbowMiner's profit calculation                                                                                                                                 |
 | `TouchBenchmark.bat`       | -                          | avoid benchmark of new miners, will set the timestamp of all miner stat files to now                                                                                    |
+| `CopyGpuStats.bat`         | `./copygpustats.sh`        | copy the benchmarks of one GPU to another, e.g. when a card dropped out and the GPU numbers shifted (stop RainbowMiner first)                                           |
 | `Stopp.bat`                | `./stopp.sh`               | halt RainbowMiner at once                                                                                                                                               |
   	
 
