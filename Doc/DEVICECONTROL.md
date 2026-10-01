@@ -36,6 +36,11 @@ Contents
 
    The **Available** list is what you can address, each entry with the **Selector** to
    address it by.
+
+   If the rig runs with **RemoteAPI** and **APIauth**, the API answers every request
+   without credentials with `401 Unauthorized` - also on localhost. Add your **APIuser**
+   and **APIpassword** to this and all following calls, e.g.
+   `curl -u user:pass http://localhost:4000/getdevices`.
 3. Run on three GPUs:
 
    ```
