@@ -507,6 +507,7 @@
     "LITB" = [PSCustomObject]@{Algo = "YespowerLITB"; Name = "LightBit"; Symbol = "LITB"}
     "LKS" = [PSCustomObject]@{Algo = "X11"; Name = "LKS"; Symbol = "LKS"}
     "LKY" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Lucky"; Symbol = "LKY"}
+    "LMT" = [PSCustomObject]@{Algo = "HomeScrypt"; Name = "Lumenite"; Symbol = "LMT"}
     "LNCR" = [PSCustomObject]@{Algo = "YespowerLTNCG"; Name = "Lighteningcashr"; Symbol = "LNCR"}
     "LOG" = [PSCustomObject]@{Algo = "Skein2"; Name = "Woodcoin"; Symbol = "LOG"}
     "LOKI" = [PSCustomObject]@{Algo = "RandomXL"; Name = "Loki"; Symbol = "LOKI"}
@@ -748,7 +749,8 @@
     "SMART" = [PSCustomObject]@{Algo = "Keccak"; Name = "Smartcash"; Symbol = "SMART"}
     "SMLY-MyriadGroestl" = [PSCustomObject]@{Algo = "MyriadGroestl"; Name = "Smileycoin"; Symbol = "SMLY"; Multi = $true}
     "SMLY-Skein" = [PSCustomObject]@{Algo = "Skein"; Name = "Smileycoin"; Symbol = "SMLY"; Multi = $true}
-    "SMT" = [PSCustomObject]@{Algo = "Yespower"; Name = "Smartie"; Symbol = "SMT"}
+    "SMT" = [PSCustomObject]@{Algo = "YespowerSMT"; Name = "Smartie"; Symbol = "SMT"}
+    "SMTC" = [PSCustomObject]@{Algo = "Yespower"; Name = "SmartieClassic"; Symbol = "SMTC"}
     "SNAP" = [PSCustomObject]@{Algo = "RandomSNAP"; Name = "SnapCoin"; Symbol = "SNAP"}
     "SOH" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Stohn"; Symbol = "SOH"}
     "SONO" = [PSCustomObject]@{Algo = "SonoA"; Name = "Sono"; Symbol = "SONO"}
