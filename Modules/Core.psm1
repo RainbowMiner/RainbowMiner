@@ -103,6 +103,19 @@ function Start-Core {
             }
         }
 
+        # floor for the .NET thread pool: HttpClient needs free workers for
+        # connect, TLS and response parsing, and the pool adds workers only
+        # slowly - slower still while the CPU is saturated (CPU mining on a
+        # small CPU). A blocking user of pool threads (the miner output readers
+        # did that until 2026-10-05, two per miner) then stalls every web
+        # request in the process until its timeout
+        try {
+            [int]$MinWorkerThreads = 0
+            [int]$MinIOThreads = 0
+            [System.Threading.ThreadPool]::GetMinThreads([ref]$MinWorkerThreads, [ref]$MinIOThreads)
+            if ($MinWorkerThreads -lt 16) {[void][System.Threading.ThreadPool]::SetMinThreads(16, $MinIOThreads)}
+        } catch {}
+
         $Session.ConfigName = [IO.Path]::GetFileNameWithoutExtension($ConfigFile)
 
         #Setup console and display logo
