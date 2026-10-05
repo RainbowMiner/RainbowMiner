@@ -180,6 +180,9 @@ using System.Threading;
 public class RBMOutputPump {
     public readonly ConcurrentQueue<string> Queue = new ConcurrentQueue<string>();
     private int eof;
+    private volatile bool stopped;
+    private StreamReader stdout;
+    private StreamReader stderr;
     private readonly Process process;
     private readonly DataReceivedEventHandler handler;
 
@@ -200,8 +203,20 @@ public class RBMOutputPump {
     // call after Process.Start instead of BeginOutputReadLine/BeginErrorReadLine
     public void Start() {
         Detach();
-        StartReader(process.StandardOutput, "stdout");
-        StartReader(process.StandardError, "stderr");
+        stdout = process.StandardOutput;
+        stderr = process.StandardError;
+        StartReader(stdout, "stdout");
+        StartReader(stderr, "stderr");
+    }
+
+    // after the final drain: lines are dropped from here on, and the streams
+    // are disposed, so a reader still blocked on a pipe that a foreign process
+    // keeps open ends with that process's next write instead of queueing its
+    // output unread until the process dies
+    public void Stop() {
+        stopped = true;
+        try { if (stdout != null) stdout.Dispose(); } catch { }
+        try { if (stderr != null) stderr.Dispose(); } catch { }
     }
 
     private void StartReader(StreamReader reader, string stream) {
@@ -218,7 +233,7 @@ public class RBMOutputPump {
     private void Read(StreamReader reader) {
         try {
             string line;
-            while ((line = reader.ReadLine()) != null) Queue.Enqueue(line);
+            while ((line = reader.ReadLine()) != null) { if (!stopped) Queue.Enqueue(line); }
         } catch {
         } finally {
             try { reader.Dispose(); } catch { }
@@ -397,7 +412,11 @@ try {
         try {$MiningProcess.CancelOutputRead()} catch {}
         try {$MiningProcess.CancelErrorRead()} catch {}
     }
-    if ($OutputPump) {$OutputPump.Detach()}
+    if ($OutputPump) {
+        $OutputPump.Detach()
+        if (-not $AsyncReads) {$OutputPump.Stop()}
+        $OutputPump = $null
+    }
     # the fallback -Action subscriptions are PSEventJobs: without Remove-Job
     # they pile up in the reused pooled runspace's job table (2 per miner start)
     foreach ($Event_Job in @($OutEvent, $ErrEvent)) {
