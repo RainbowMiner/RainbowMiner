@@ -419,6 +419,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                                         SetLDLIBRARYPATH = $false
                                         ListDevices    = "--list-devices"
                                         ExcludePoolName = $_.ExcludePoolName
+                                        LogFileArgs    = '--log-file "$logfile" --log-file-mode 1'
                                         ShowMinerWindow = $true
 				                    }
                                 }
@@ -466,6 +467,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                             SetLDLIBRARYPATH = $false
                             ListDevices    = "--list-devices"
                             ExcludePoolName = $_.ExcludePoolName
+                            LogFileArgs    = '--log-file "$logfile" --log-file-mode 1'
 				        }
                     }
 			    }
