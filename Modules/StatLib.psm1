@@ -1022,6 +1022,18 @@ function Get-MinerStatsStale {
         $StatAlgo    = $Matches[3]
         $StatName    = "$($StatMiner)$($Matches[2])"
 
+        # a dual mining instance carries its algorithms in the name
+        # (BzMiner-Autolykos2-SHA512256d-GPU#05): the miner is the longest
+        # leading part that is a known miner
+        $StatBase = $StatMiner
+        if (($Avail.Count -or $CurrentBase.Count) -and -not ($Avail.Contains($StatBase) -or $CurrentBase.Contains($StatBase))) {
+            $StatParts = $StatMiner -split '-'
+            for ($StatIndex = $StatParts.Count - 1; $StatIndex -gt 0; $StatIndex--) {
+                $StatCandidate = $StatParts[0..($StatIndex - 1)] -join '-'
+                if ($Avail.Contains($StatCandidate) -or $CurrentBase.Contains($StatCandidate)) {$StatBase = $StatCandidate; break}
+            }
+        }
+
         $Reason = ""
         if ($Devices.Count) {
             foreach ($StatDevice in $StatDevices) {
@@ -1029,7 +1041,7 @@ function Get-MinerStatsStale {
             }
         }
         if (-not $Reason -and ($Avail.Count -or $CurrentBase.Count)) {
-            if (($Avail.Count -and -not $Avail.Contains($StatMiner)) -or ($CurrentBase.Count -and -not $CurrentBase.Contains($StatMiner))) {$Reason = "miner"}
+            if (($Avail.Count -and -not $Avail.Contains($StatBase)) -or ($CurrentBase.Count -and -not $CurrentBase.Contains($StatBase))) {$Reason = "miner"}
         }
         if (-not $Reason -and $CurrentName.Count) {
             if (-not $CurrentName.Contains($StatName)) {$Reason = "set"}
@@ -1042,7 +1054,8 @@ function Get-MinerStatsStale {
 
         [PSCustomObject]@{
             Name      = $FileName
-            Miner     = $StatMiner
+            Miner     = $StatBase
+            Instance  = $StatMiner
             Devices   = $StatDevices -join "-"
             Algorithm = $StatAlgo
             Reason    = $Reason
