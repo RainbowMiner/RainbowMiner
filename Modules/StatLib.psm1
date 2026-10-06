@@ -963,3 +963,133 @@ function Remove-MinerStatsBackup {
     [System.IO.File]::Delete($ZipPath)
     Write-Log "Miner stats backup $Name deleted"
 }
+
+function Get-MinerStatsStale {
+    # benchmarks that no current miner can use and that have not been updated
+    # for -Days: a rig keeps the stat file of every miner, device set and
+    # algorithm it ever benchmarked. Each file gets the first matching reason:
+    #   device    - names a device the system does not detect
+    #   miner     - the miner is not installed or not in the current miner list
+    #   set       - the miner runs, but not with this device set (e.g. the
+    #               combos of the remaining cards while one had dropped out)
+    #   algorithm - the miner runs with this device set, but not this algorithm
+    # Reasons without their input (no device names, no miner list) are skipped,
+    # the benchmarks of the current miners are never listed
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [Int]$Days = 30,
+        [Parameter(Mandatory = $false)]
+        [String[]]$DeviceNames = @(),
+        [Parameter(Mandatory = $false)]
+        [String[]]$AvailMiners = @(),
+        [Parameter(Mandatory = $false)]
+        $Miners = $null
+    )
+
+    $StatsPath = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Stats\Miners")
+    if (-not [System.IO.Directory]::Exists($StatsPath)) {return}
+
+    $Devices = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    foreach ($DeviceName in $DeviceNames) {if ($DeviceName) {[void]$Devices.Add($DeviceName)}}
+
+    $Avail = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    foreach ($Miner in $AvailMiners) {if ($Miner) {[void]$Avail.Add($Miner)}}
+
+    # current miner list: base names, names (= base name + device set) and name + algorithm
+    $CurrentBase = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    $CurrentName = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    $CurrentAlgo = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    foreach ($Miner in @($Miners)) {
+        if (-not $Miner.Name) {continue}
+        $MinerBase = if ($Miner.BaseName) {$Miner.BaseName} else {$Miner.Name -replace '(-(?:GPU|CPU)#\d+)+$'}
+        [void]$CurrentBase.Add($MinerBase)
+        [void]$CurrentName.Add($Miner.Name)
+        if ($Miner.HashRates) {
+            foreach ($Algo in @($Miner.HashRates.PSObject.Properties.Name)) {
+                [void]$CurrentAlgo.Add("$($Miner.Name)_$($Algo -replace '\-.*$')")
+            }
+        }
+    }
+
+    $Limit = (Get-Date).AddDays(-$Days)
+
+    foreach ($File in @([System.IO.Directory]::GetFiles($StatsPath, "*_HashRate.txt") | Sort-Object)) {
+        $FileName = [System.IO.Path]::GetFileName($File)
+        if ($FileName -notmatch '^(?:AMD|CPU|INTEL|NVIDIA)-(.+?)((?:-(?:GPU|CPU)#\d+)+)_([^_]+)_HashRate\.txt$') {continue}
+        $StatMiner   = $Matches[1]
+        $StatDevices = @($Matches[2].TrimStart('-') -split '-')
+        $StatAlgo    = $Matches[3]
+        $StatName    = "$($StatMiner)$($Matches[2])"
+
+        $Reason = ""
+        if ($Devices.Count) {
+            foreach ($StatDevice in $StatDevices) {
+                if (-not $Devices.Contains($StatDevice)) {$Reason = "device"; break}
+            }
+        }
+        if (-not $Reason -and ($Avail.Count -or $CurrentBase.Count)) {
+            if (($Avail.Count -and -not $Avail.Contains($StatMiner)) -or ($CurrentBase.Count -and -not $CurrentBase.Contains($StatMiner))) {$Reason = "miner"}
+        }
+        if (-not $Reason -and $CurrentName.Count) {
+            if (-not $CurrentName.Contains($StatName)) {$Reason = "set"}
+            elseif ($CurrentAlgo.Count -and -not $CurrentAlgo.Contains("$($StatName)_$($StatAlgo)")) {$Reason = "algorithm"}
+        }
+        if (-not $Reason) {continue}
+
+        $Info = [System.IO.FileInfo]::new($File)
+        if ($Info.LastWriteTime -gt $Limit) {continue}
+
+        [PSCustomObject]@{
+            Name      = $FileName
+            Miner     = $StatMiner
+            Devices   = $StatDevices -join "-"
+            Algorithm = $StatAlgo
+            Reason    = $Reason
+            Updated   = $Info.LastWriteTime.ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss")
+            Age       = [Math]::Floor(((Get-Date) - $Info.LastWriteTime).TotalDays)
+            Size      = $Info.Length
+        }
+    }
+}
+
+function Remove-MinerStatsStale {
+    # deletes the named benchmark files, a backup of all current benchmarks is
+    # taken first ("beforecleanup"), so the cleanup can be undone with a restore
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [String[]]$Names
+    )
+
+    $StatsPath = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Stats\Miners")
+
+    # only names this module creates: no path parts can sneak in
+    $Files = [System.Collections.Generic.List[string]]::new()
+    foreach ($Name in @($Names | Select-Object -Unique)) {
+        $Name = "$Name".Trim()
+        if ($Name -notmatch '^(?:AMD|CPU|INTEL|NVIDIA)-[^\\/:*?"<>|]+_HashRate\.txt$') {continue}
+        $File = [System.IO.Path]::Combine($StatsPath, $Name)
+        if ([System.IO.File]::Exists($File)) {[void]$Files.Add($File)}
+    }
+    if (-not $Files.Count) {throw "None of the benchmarks exists"}
+
+    $Saved = (New-MinerStatsBackup -Tag "beforecleanup").Name
+
+    $Count = 0
+    foreach ($File in $Files) {
+        try {
+            [System.IO.File]::Delete($File)
+            $Count++
+        } catch {
+            Write-Log -Level Warn "Miner stats cleanup: $([System.IO.Path]::GetFileName($File)) not deleted: $($_.Exception.Message)"
+            continue
+        }
+        # the running round keeps its cached values; the next round reloads the folder
+        $Key = [System.IO.Path]::GetFileNameWithoutExtension($File) -replace "^(AMD|CPU|INTEL|NVIDIA)-"
+        if ($Global:StatsCache.ContainsKey($Key)) {[void]$Global:StatsCache.Remove($Key)}
+    }
+
+    Write-Log "Miner stats cleanup deleted $Count benchmarks, previous stats saved as $Saved"
+    [PSCustomObject]@{Files = $Count; Saved = $Saved}
+}

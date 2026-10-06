@@ -31,6 +31,45 @@
     </thead>
 </table>
 
+<h5 class="mt-4">Clean up stale benchmarks</h5>
+<p class="text-muted small">
+    A rig keeps the benchmark of every miner, device set and algorithm it ever ran. The scan lists the benchmarks that
+    no current miner can use and that have not been updated for the given number of days. The listed files are deleted
+    from .\Stats\Miners, the current benchmarks are saved as a "before cleanup" backup first, so a cleanup can be undone.
+</p>
+
+<div class="d-flex flex-wrap align-items-center gap-3 mb-2">
+    <div class="input-group input-group-sm" style="width: auto;">
+        <span class="input-group-text">not updated for</span>
+        <input type="number" id="msc-days" class="form-control" value="30" min="0" max="3650" style="width: 5em;">
+        <span class="input-group-text">days</span>
+    </div>
+    <div class="form-check form-check-inline mb-0"><input class="form-check-input msc-reason" type="checkbox" id="msc-device" value="device" checked><label class="form-check-label" for="msc-device">device not detected</label></div>
+    <div class="form-check form-check-inline mb-0"><input class="form-check-input msc-reason" type="checkbox" id="msc-miner" value="miner" checked><label class="form-check-label" for="msc-miner">miner not available</label></div>
+    <div class="form-check form-check-inline mb-0"><input class="form-check-input msc-reason" type="checkbox" id="msc-set" value="set" checked><label class="form-check-label" for="msc-set">device set not in use</label></div>
+    <div class="form-check form-check-inline mb-0"><input class="form-check-input msc-reason" type="checkbox" id="msc-algorithm" value="algorithm"><label class="form-check-label" for="msc-algorithm">algorithm not in use</label></div>
+    <button type="button" id="msc-scan" class="btn btn-primary btn-sm"><i class="bi bi-search"></i> Scan</button>
+    <button type="button" id="msc-delete" class="btn btn-danger btn-sm" disabled><i class="bi bi-trash"></i> Delete listed benchmarks</button>
+</div>
+<div id="msc-summary" class="small text-muted mb-2">Press Scan to look for stale benchmarks.</div>
+
+<table id="minerstatsstale" class="rbm-table-init table"
+       data-sort-name="Age"
+       data-sort-order="desc"
+       data-pagination="true"
+       data-page-list="[25, 50, 100, all]">
+    <thead>
+        <tr>
+            <th data-field="Miner" data-sortable="true">Miner</th>
+            <th data-field="Devices" data-sortable="true">Devices</th>
+            <th data-field="Algorithm" data-sortable="true">Algorithm</th>
+            <th data-field="tReason" data-sortable="true">Reason</th>
+            <th data-field="Updated" data-sortable="true">Last update (UTC)</th>
+            <th data-field="Age" data-align="right" data-sortable="true">Days</th>
+        </tr>
+    </thead>
+</table>
+
 <h5 class="mt-4">Download a zip</h5>
 <form id="formConfig" method="POST" action="/saveminerstats">
     <div class="card mb-3">
@@ -136,6 +175,70 @@
         } catch (error) {
             console.error("availminerstats:", error);
         }
+    });
+
+    // stale benchmarks: the scan result is kept, the reason check boxes only filter the table
+    let staleRows = [];
+    const reasonText = { device: "device not detected", miner: "miner not available", set: "device set not in use", algorithm: "algorithm not in use" };
+
+    function showStale() {
+        const reasons = Array.from(document.querySelectorAll(".msc-reason:checked")).map((e) => e.value);
+        const rows = staleRows.filter((r) => reasons.includes(r.Reason)).map((r) => Object.assign({}, r, { tReason: reasonText[r.Reason] || r.Reason }));
+        const table = RbmTables.getTable('#minerstatsstale');
+        if (table) table.setData(rows);
+        const counts = {};
+        for (const r of staleRows) counts[r.Reason] = (counts[r.Reason] || 0) + 1;
+        document.getElementById("msc-summary").textContent = staleRows.length
+            ? rows.length + " of " + staleRows.length + " stale benchmarks listed (" + Object.keys(counts).map((k) => counts[k] + " " + (reasonText[k] || k)).join(", ") + ")"
+            : "No stale benchmarks found.";
+        document.getElementById("msc-delete").disabled = !rows.length;
+        return rows;
+    }
+
+    async function scanStale() {
+        const btn = document.getElementById("msc-scan");
+        btn.disabled = true;
+        try {
+            const days = Math.max(0, parseInt(document.getElementById("msc-days").value, 10) || 0);
+            const response = await fetch("/minerstatsstale?Days=" + days + "&_=" + Date.now());
+            const data = await response.json();
+            staleRows = Array.isArray(data) ? data : [];
+        } catch (error) {
+            console.error("minerstatsstale:", error);
+            rbmShowModal('The request failed: ' + error, 'Scan failed');
+            staleRows = [];
+        }
+        btn.disabled = false;
+        showStale();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("msc-scan").addEventListener("click", scanStale);
+        for (const box of document.querySelectorAll(".msc-reason")) box.addEventListener("change", showStale);
+
+        document.getElementById("msc-delete").addEventListener("click", async () => {
+            if (!guardWrite()) return;
+            const rows = showStale();
+            if (!rows.length) return;
+            if (!confirm("Delete the " + rows.length + " listed benchmarks?\n\nAll current benchmarks are saved as a \"before cleanup\" backup first.")) return;
+            const btn = document.getElementById("msc-delete");
+            btn.disabled = true;
+            try {
+                const response = await fetch("/minerstatscleanup", {
+                    method: "POST",
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+                    body: new URLSearchParams({ Names: rows.map((r) => r.Name).join(",") }).toString()
+                });
+                const res = await response.json();
+                if (res.Success) rbmShowModal(res.Result.Files + ' benchmarks have been deleted. The previous benchmarks were saved as ' + res.Result.Saved + '.', 'Cleanup done');
+                else rbmShowModal(res.Error || 'Something went wrong', 'Cleanup failed');
+            } catch (error) {
+                console.error("minerstatscleanup:", error);
+                rbmShowModal('The request failed: ' + error, 'Cleanup failed');
+            }
+            reloadTable();
+            await scanStale();
+        });
     });
 })();
 </script>

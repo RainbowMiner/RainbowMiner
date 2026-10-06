@@ -689,6 +689,37 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             Remove-Variable -Name BackupAction, BackupName, BackupPath, Success, ErrMsg, Result -ErrorAction Ignore
             Break
         }
+        "/minerstatsstale" {
+            # Days=<minimum age in days, default 30>: benchmarks no current miner can use, with the reason
+            $StaleDays = if ("$($Parameters.Days)" -match "^\d+$") {[int]$Parameters.Days} else {30}
+            $StaleMiners = if (Test-Path ".\Data\miners.json") {ConvertFrom-Json "$(Get-ContentByStreamReader ".\Data\miners.json")" -ErrorAction Ignore} else {$null}
+            $Data = ConvertTo-Json @(Get-MinerStatsStale -Days $StaleDays -DeviceNames @($API.AllDevices | Foreach-Object {$_.Name} | Where-Object {$_}) -AvailMiners @($Session.AvailMiners | Where-Object {$_}) -Miners $StaleMiners | Select-Object) -Depth 10
+            $StaleDays = $StaleMiners = $null
+            Remove-Variable -Name StaleDays, StaleMiners -ErrorAction Ignore
+            Break
+        }
+        "/minerstatscleanup" {
+            # POST Names=<comma separated benchmark file names>: deletes them after a "beforecleanup" backup
+            $Success = $false
+            $ErrMsg  = ""
+            $Result  = $null
+            if ($API.LockConfig) {
+                $ErrMsg = "The configuration is locked (APIlockConfig in config.txt)"
+            } else {
+                try {
+                    $StaleNames = @("$($Parameters.Names)" -split "," | Foreach-Object {$_.Trim()} | Where-Object {$_})
+                    if (-not $StaleNames.Count) {throw "No benchmarks given"}
+                    $Result = Remove-MinerStatsStale -Names $StaleNames
+                    $Success = $true
+                } catch {
+                    $ErrMsg = "$($_.Exception.Message)"
+                }
+            }
+            $Data = ConvertTo-Json ([PSCustomObject]@{Success=$Success;Error=$ErrMsg;Result=$Result}) -Depth 10
+            $Success = $ErrMsg = $Result = $StaleNames = $null
+            Remove-Variable -Name Success, ErrMsg, Result, StaleNames -ErrorAction Ignore
+            Break
+        }
         "/config" {
             $Data = ConvertTo-Json $Session.Config -Depth 10
             Break
