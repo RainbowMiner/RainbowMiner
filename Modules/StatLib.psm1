@@ -5,6 +5,10 @@
 $Script:StatFluctuationFields = @("Minute_Fluctuation","Minute_5_Fluctuation","Minute_10_Fluctuation","Hour_Fluctuation","Day_Fluctuation","ThreeDay_Fluctuation","Week_Fluctuation")
 $Script:StatDirsChecked = @{}
 $Script:Utf8NoBomEncoding = [System.Text.UTF8Encoding]::new($false)
+# state of the last Get-Stat -Miners pass: the folder's write time (NTFS and
+# ext4 bump it on every file add/remove, not on a rewrite) and the present
+# device names - unchanged means the cache already mirrors the folder
+$Script:MinerStatsStamp = $null
 
 function Test-StatDir {
     param(
@@ -717,6 +721,41 @@ function Get-Stat {
         $MatchStr = if ($MatchArray.Count -gt 1) {$MatchArray -join "|"} else {$MatchArray}
         if ($MatchStr -match "|") {$MatchStr = "($MatchStr)"}
 
+        # miner stats are only cached for devices the system detects: a stat
+        # file names its devices (BzMiner-GPU#00-GPU#01_KawPOW_HashRate), and a
+        # rig accumulates files for every device set it ever ran - a card that
+        # dropped out for a while leaves the sets of the remaining cards behind
+        # for good. Every set of detected devices stays, selected or not: the
+        # benchmark seeding in Invoke-Core takes sibling sets of the same model
+        # as its source, and it rejects a set naming an undetected device by
+        # the same rule. The files stay untouched, so a returning card gets its
+        # stats back on the next pass
+        $PresentDevices = $null
+        if ($Miners -and $Cached -and (Test-Path Variable:Global:GlobalCachedDevices) -and $Global:GlobalCachedDevices) {
+            $PresentDevices = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+            foreach ($Device in $Global:GlobalCachedDevices) {if ($Device.Name) {[void]$PresentDevices.Add($Device.Name)}}
+            if (-not $PresentDevices.Count) {$PresentDevices = $null}
+        }
+
+        # a pass that cannot find anything new is skipped: with the folder
+        # unchanged and the same devices the cache already mirrors the folder.
+        # The result is only requested by callers that need it (-Quiet is the
+        # per-round refresh), so the skip is limited to those. The stamp is
+        # armed only once the folder has been quiet for a few seconds: on a
+        # file system with coarse timestamps (ext3, FAT) a later change could
+        # otherwise land in the same window as the recorded one
+        if ($Miners -and $Cached -and $Quiet) {
+            $Stamp = $null
+            try {
+                $StatsDirWrite = (Get-Item $Path -ErrorAction Stop).LastWriteTimeUtc
+                if (((Get-Date).ToUniversalTime() - $StatsDirWrite).TotalSeconds -gt 3) {
+                    $Stamp = "$($StatsDirWrite.Ticks)|$(if ($PresentDevices) {@($PresentDevices | Sort-Object) -join ","})"
+                }
+            } catch {}
+            if ($Stamp -and $Stamp -eq $Script:MinerStatsStamp) {return}
+            $Script:MinerStatsStamp = $Stamp
+        }
+
         foreach($p in (Get-ChildItem -Recurse $Path -File -Filter "*.txt")) {
             $BaseName = $p.BaseName
             $FullName = $p.FullName
@@ -724,13 +763,24 @@ function Get-Stat {
 
             $NewStatsKey = $BaseName -replace "^(AMD|CPU|INTEL|NVIDIA)-"
 
+            if ($PresentDevices) {
+                # the device names sit between the miner name and the first "_"
+                $StatDevices = [regex]::Matches($NewStatsKey.Substring(0, [Math]::Max(0, $NewStatsKey.IndexOf("_"))), "(?:GPU|CPU)#\d+")
+                $StatDeviceMissing = $false
+                foreach ($StatDevice in $StatDevices) {
+                    if (-not $PresentDevices.Contains($StatDevice.Value)) {$StatDeviceMissing = $true; break}
+                }
+                if ($StatDeviceMissing) {continue}
+            }
+
             if ($Stat = Get-StatFromFile -Path $FullName -Name $NewStatsKey -Cached:$Cached -Check $Check) {
                 $NewStats[$NewStatsKey] = $Stat
             }
         }
         if ($Cached) {
-            $RemoveKeys = (Compare-Object @($NewStats.Keys | Select-Object) @($Global:StatsCache.Keys | Where {$_ -match "_$MatchStr$"} | Select-Object)) | Where-Object {$_.SideIndicator -eq "=>"} | Foreach-Object {$_.InputObject}
-            $RemoveKeys | Foreach-Object {[void]$Global:StatsCache.Remove($_)}
+            foreach ($CacheKey in @($Global:StatsCache.Keys)) {
+                if ($CacheKey -match "_$MatchStr$" -and -not $NewStats.ContainsKey($CacheKey)) {[void]$Global:StatsCache.Remove($CacheKey)}
+            }
         }
         if (-not $Quiet) {$NewStats}
     }
