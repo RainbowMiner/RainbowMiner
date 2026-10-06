@@ -4349,6 +4349,7 @@ function Invoke-Core {
                     BaseName             = $Miner.BaseName
                     Path                 = $Miner.Path
                     Arguments            = $Miner.Arguments
+                    LogFileArgs          = $Miner.LogFileArgs
                     API                  = $Miner.API
                     Port                 = $Miner.Port
                     Algorithm            = $Miner.HashRates.PSObject.Properties.Name

@@ -43,6 +43,7 @@ class Miner {
     [Int]$Benchmarked
     [Int]$BenchmarkedOffset = 0
     [string]$LogFile    
+    [string]$LogFileArgs
     [Bool]$ShowMinerWindow = $false
     [int]$MSIAprofile
     $OCprofile
@@ -235,7 +236,18 @@ class Miner {
             $Now = Get-Date
             $this.StartTime = $Now.ToUniversalTime()
             $this.LogFile   = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Logs\$($this.Name)-$($this.Port)_$($Now.ToString("yyyy-MM-dd_HH-mm-ss")).txt")
-            $this.Job = Start-SubProcess -FilePath $this.Path -ArgumentList $this.ArgumentList -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -CPUAffinity $this.Priorities.CPUAffinity -ShowMinerWindow $this.ShowMinerWindow -IsWrapper $this.IsWrapper() -EnvVars $this.EnvVars -MultiProcess $this.MultiProcess -Executables $this.Executables -ScreenName "$($this.DeviceName -join '_')" -BashFileName "start_$($this.DeviceName -join '_')_$($this.Pool -join '_')_$($this.BaseAlgorithm -join '_')" -Vendor $DeviceVendor -SetLDLIBRARYPATH:$this.SetLDLIBRARYPATH -WinTitle "$($this.Name -replace "-.+$") on $($this.DeviceModel) at $($this.Pool -join '+') with $($this.BaseAlgorithm -join '+')".Trim()
+            # a miner that block-buffers its stdout when it is a pipe (SRBMiner: 4 KB
+            # chunks, the last one lost on kill) writes the log file itself on
+            # Windows: LogFileArgs carries its command line fragment with the
+            # $logfile placeholder, and the background launcher then drains the
+            # pipe without appending it to the file
+            $PipeToLog = $true
+            if ($Global:IsWindows -and $this.LogFileArgs) {
+                $this.ArgumentList = "$($this.ArgumentList) $($this.LogFileArgs.Replace('$logfile', $this.LogFile))".Trim()
+                $PipeToLog = $false
+                Write-Log "Miner $($this.Name) writes its log file itself: $($this.LogFileArgs.Replace('$logfile', $this.LogFile))"
+            }
+            $this.Job = Start-SubProcess -FilePath $this.Path -ArgumentList $this.ArgumentList -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -CPUAffinity $this.Priorities.CPUAffinity -ShowMinerWindow $this.ShowMinerWindow -IsWrapper $this.IsWrapper() -EnvVars $this.EnvVars -MultiProcess $this.MultiProcess -Executables $this.Executables -ScreenName "$($this.DeviceName -join '_')" -BashFileName "start_$($this.DeviceName -join '_')_$($this.Pool -join '_')_$($this.BaseAlgorithm -join '_')" -Vendor $DeviceVendor -SetLDLIBRARYPATH:$this.SetLDLIBRARYPATH -WinTitle "$($this.Name -replace "-.+$") on $($this.DeviceModel) at $($this.Pool -join '+') with $($this.BaseAlgorithm -join '+')".Trim() -PipeToLog $PipeToLog
 
             if ($this.Job.XJob) {
                 $this.Status = [MinerStatus]::Running

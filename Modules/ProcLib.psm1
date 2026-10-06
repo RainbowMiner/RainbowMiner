@@ -179,7 +179,9 @@ function Start-SubProcess {
         [Parameter(Mandatory = $false)]
         [Switch]$SetLDLIBRARYPATH = $false,
         [Parameter(Mandatory = $false)]
-        [Switch]$Quiet = $false
+        [Switch]$Quiet = $false,
+        [Parameter(Mandatory = $false)]
+        [Bool]$PipeToLog = $true
     )
 
     if ($IsLinux -and (-not $Session.Config.LinuxMinerTerminal -or $Session.Config.LinuxMinerTerminal -in @("auto","tmux")) -and (Get-Command "tmux" -ErrorAction Ignore)) {
@@ -189,7 +191,7 @@ function Start-SubProcess {
     } elseif (($ShowMinerWindow -and -not $IsWrapper) -or -not $IsWindows) {
         Start-SubProcessInConsole -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -Executables $Executables -SetLDLIBRARYPATH:$SetLDLIBRARYPATH -Quiet:$Quiet -WinTitle $WinTitle
     } else {
-        Start-SubProcessInBackground -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -Executables $Executables -SetLDLIBRARYPATH:$SetLDLIBRARYPATH -Quiet:$Quiet
+        Start-SubProcessInBackground -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -Executables $Executables -SetLDLIBRARYPATH:$SetLDLIBRARYPATH -Quiet:$Quiet -PipeToLog $PipeToLog
     }
 }
 
@@ -218,7 +220,9 @@ function Start-SubProcessInBackground {
         [Parameter(Mandatory = $false)]
         [Switch]$SetLDLIBRARYPATH = $false,
         [Parameter(Mandatory = $false)]
-        [Switch]$Quiet = $false
+        [Switch]$Quiet = $false,
+        [Parameter(Mandatory = $false)]
+        [Bool]$PipeToLog = $true
     )
 
     $Running = [System.Collections.Generic.List[int]]::new()
@@ -248,6 +252,7 @@ function Start-SubProcessInBackground {
         CurrentPwd          = "$PWD"
         Comm                = $Comm
         CPUAffinity         = $CPUAffinity
+        PipeToLog           = $PipeToLog
     })
     $Handle = $PS.BeginInvoke($InCol, $OutCol)
 

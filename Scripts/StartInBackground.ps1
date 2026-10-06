@@ -1,4 +1,4 @@
-﻿param($ControllerProcessID, $WorkingDirectory, $FilePath, $ArgumentList, $LogPath, $EnvVars, $Priority, $CurrentPwd, $Comm = $null, $CPUAffinity = 0)
+﻿param($ControllerProcessID, $WorkingDirectory, $FilePath, $ArgumentList, $LogPath, $EnvVars, $Priority, $CurrentPwd, $Comm = $null, $CPUAffinity = 0, $PipeToLog = $true)
 
 $ControllerProcess = Get-Process -Id $ControllerProcessID -ErrorAction Ignore
 if ($ControllerProcess -eq $null) {return}
@@ -328,6 +328,11 @@ try {
     # At most MaxLines per call: the pump enqueues at native speed, and a miner
     # that floods faster than this loop dequeues would otherwise keep it from
     # ever returning to the watch loop (exit detection, kill on controller exit)
+    # PipeToLog = false: the miner writes the log file itself (LogFileArgs in
+    # MinerAPIs.psm1) - the pipe is still drained so the miner never blocks on
+    # a full pipe, but nothing from it reaches the file
+    $PipeLogPath = if ($PipeToLog) {$LogPath} else {""}
+
     $DrainToLog = {
         param($Queue, $Path, $MaxLines = 10000)
         $line  = $null
@@ -360,7 +365,7 @@ try {
 
     do {
         $Done = $ControllerProcess.WaitForExit(1000)
-        try {& $DrainToLog $OutputQueue $LogPath} catch {}
+        try {& $DrainToLog $OutputQueue $PipeLogPath} catch {}
         if ($Done -and -not $MiningProcess.HasExited) {
             try {$MiningProcess.Kill()} catch {}
         }
@@ -396,7 +401,7 @@ try {
     # empty, time-bounded in case a foreign holder of the pipe keeps writing
     $sw.Restart()
     do {
-        try {& $DrainToLog $OutputQueue $LogPath} catch {}
+        try {& $DrainToLog $OutputQueue $PipeLogPath} catch {}
     } while (-not $OutputQueue.IsEmpty -and $sw.Elapsed.TotalSeconds -lt 5)
 } finally {
     try {if (-not $MiningProcess.HasExited) {$MiningProcess.Kill()}} catch {}
