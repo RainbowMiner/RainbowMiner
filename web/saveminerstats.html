@@ -34,8 +34,11 @@
 <h5 class="mt-4">Clean up stale benchmarks</h5>
 <p class="text-muted small">
     A rig keeps the benchmark of every miner, device set and algorithm it ever ran. The scan lists the benchmarks that
-    no current miner can use and that have not been updated for the given number of days. The listed files are deleted
-    from .\Stats\Miners, the current benchmarks are saved as a "before cleanup" backup first, so a cleanup can be undone.
+    cannot be used any more and that have not been updated for the given number of days: the device is gone, the miner
+    module is gone, the miner does not list the algorithm any more, or the device set is not a group of the installed
+    cards (e.g. the sets of the remaining cards while one had dropped out). Benchmarks of miners or algorithms that are
+    merely not offered right now stay. The listed files are deleted from .\Stats\Miners, the current benchmarks are
+    saved as a "before cleanup" backup first, so a cleanup can be undone.
 </p>
 
 <div class="d-flex flex-wrap align-items-center gap-3 mb-2">
@@ -45,9 +48,9 @@
         <span class="input-group-text">days</span>
     </div>
     <div class="form-check form-check-inline mb-0"><input class="form-check-input msc-reason" type="checkbox" id="msc-device" value="device" checked><label class="form-check-label" for="msc-device">device not detected</label></div>
-    <div class="form-check form-check-inline mb-0"><input class="form-check-input msc-reason" type="checkbox" id="msc-miner" value="miner" checked><label class="form-check-label" for="msc-miner">miner not available</label></div>
+    <div class="form-check form-check-inline mb-0"><input class="form-check-input msc-reason" type="checkbox" id="msc-miner" value="miner" checked><label class="form-check-label" for="msc-miner">miner not installed</label></div>
     <div class="form-check form-check-inline mb-0"><input class="form-check-input msc-reason" type="checkbox" id="msc-set" value="set" checked><label class="form-check-label" for="msc-set">device set not in use</label></div>
-    <div class="form-check form-check-inline mb-0"><input class="form-check-input msc-reason" type="checkbox" id="msc-algorithm" value="algorithm"><label class="form-check-label" for="msc-algorithm">algorithm not in use</label></div>
+    <div class="form-check form-check-inline mb-0"><input class="form-check-input msc-reason" type="checkbox" id="msc-algorithm" value="algorithm" checked><label class="form-check-label" for="msc-algorithm">algorithm dropped by the miner</label></div>
     <button type="button" id="msc-scan" class="btn btn-primary btn-sm"><i class="bi bi-search"></i> Scan</button>
     <button type="button" id="msc-delete" class="btn btn-danger btn-sm" disabled><i class="bi bi-trash"></i> Delete listed benchmarks</button>
 </div>
@@ -179,7 +182,7 @@
 
     // stale benchmarks: the scan result is kept, the reason check boxes only filter the table
     let staleRows = [];
-    const reasonText = { device: "device not detected", miner: "miner not available", set: "device set not in use", algorithm: "algorithm not in use" };
+    const reasonText = { device: "device not detected", miner: "miner not installed", set: "device set not in use", algorithm: "algorithm dropped by the miner" };
 
     function showStale() {
         const reasons = Array.from(document.querySelectorAll(".msc-reason:checked")).map((e) => e.value);

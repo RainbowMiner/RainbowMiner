@@ -964,57 +964,127 @@ function Remove-MinerStatsBackup {
     Write-Log "Miner stats backup $Name deleted"
 }
 
+function Update-MinerAlgorithmsInfo {
+    # algorithms per miner module for the stats cleanup (Get-MinerStatsStale):
+    # the normalized main and secondary algorithms of the module's InfoOnly
+    # command list, keyed by module name and stamped with the module file's
+    # write time, so an updated module is read again. Stored in
+    # Data\mineralgorithms.json next to minerinfo.json. A module without a
+    # command list (custom miners, a module that fails) gets no entry, and the
+    # cleanup then never lists its benchmarks as "algorithm"
+    [CmdletBinding()]
+    param()
+
+    $Path = ".\Data\mineralgorithms.json"
+    $Info = [hashtable]@{}
+    if (Test-Path $Path) {
+        try {
+            (Get-ContentByStreamReader $Path | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | Foreach-Object {$Info[$_.Name] = $_.Value}
+        } catch {
+            $Info = [hashtable]@{}
+        }
+    }
+
+    $Changed = $false
+    $Avail = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    foreach ($Name in @($Session.AvailMiners | Where-Object {$_})) {[void]$Avail.Add($Name)}
+    foreach ($Name in @($Info.Keys)) {
+        if (-not $Avail.Contains($Name)) {[void]$Info.Remove($Name); $Changed = $true}
+    }
+    foreach ($Name in $Avail) {
+        $File = Get-Item ".\Miners\$($Name).ps1" -ErrorAction Ignore
+        if (-not $File) {continue}
+        $Stamp = "$($File.LastWriteTimeUtc.Ticks)"
+        if ($Info[$Name] -and "$($Info[$Name].Stamp)" -eq $Stamp) {continue}
+        $Algorithms = @()
+        try {
+            $Algorithms = @(Get-MinersContent -MinerName $Name -Parameters @{InfoOnly = $true} | Foreach-Object {$_.Commands} | Where-Object {$_ -ne $null -and $_ -isnot [string] -and "$($_.MainAlgorithm)".Trim() -ne ""} | Foreach-Object {
+                Get-Algorithm "$($_.MainAlgorithm)".Trim()
+                foreach ($Second in @($_.SecondaryAlgorithm, $_.SecondAlgorithm)) {
+                    if ("$Second".Trim() -ne "") {Get-Algorithm "$Second".Trim()}
+                }
+            } | Where-Object {$_} | Sort-Object -Unique)
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            $Algorithms = @()
+        }
+        if ($Algorithms.Count) {
+            $Info[$Name] = [PSCustomObject]@{Stamp = $Stamp; Algorithms = $Algorithms}
+        } elseif ($Info[$Name]) {
+            [void]$Info.Remove($Name)
+        } else {
+            continue
+        }
+        $Changed = $true
+    }
+    if ($Changed) {Set-ContentJson -PathToFile $Path -Data $Info -Compress > $null}
+    $Info
+}
+
 function Get-MinerStatsStale {
-    # benchmarks that no current miner can use and that have not been updated
+    # benchmarks that cannot be used any more and that have not been updated
     # for -Days: a rig keeps the stat file of every miner, device set and
     # algorithm it ever benchmarked. Each file gets the first matching reason:
     #   device    - names a device the system does not detect
-    #   miner     - the miner is not installed or not in the current miner list
-    #   set       - the miner runs, but not with this device set (e.g. the
-    #               combos of the remaining cards while one had dropped out)
-    #   algorithm - the miner runs with this device set, but not this algorithm
-    #               or dual mining pair
-    # Reasons without their input (no device names, no miner list) are skipped,
-    # the benchmarks of the current miners are never listed
+    #   miner     - the miner module does not exist
+    #   algorithm - the miner module does not list this algorithm any more
+    #   set       - the device set is neither a model group of the detected
+    #               devices nor a combination of model groups (e.g. the sets
+    #               of the remaining cards while one had dropped out)
+    # Nothing here depends on the current miner list, the pools or exclusions:
+    # a miner or algorithm that is merely not offered right now stays. Reasons
+    # without their input (no devices, no miner list, no algorithm list) are
+    # skipped
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $false)]
         [Int]$Days = 30,
         [Parameter(Mandatory = $false)]
-        [String[]]$DeviceNames = @(),
+        $Devices = $null,
         [Parameter(Mandatory = $false)]
         [String[]]$AvailMiners = @(),
         [Parameter(Mandatory = $false)]
-        $Miners = $null
+        $MinerAlgorithms = $null
     )
 
     $StatsPath = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Stats\Miners")
     if (-not [System.IO.Directory]::Exists($StatsPath)) {return}
 
-    $Devices = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
-    foreach ($DeviceName in $DeviceNames) {if ($DeviceName) {[void]$Devices.Add($DeviceName)}}
+    # detected device names, and the device sets a miner instance can have:
+    # every model group and every combination of model groups
+    $DeviceNames = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    $ValidSets   = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    $Groups = @{}
+    foreach ($Device in @($Devices)) {
+        if (-not $Device.Name) {continue}
+        [void]$DeviceNames.Add($Device.Name)
+        $Model = "$($Device.Model)"
+        if (-not $Groups.ContainsKey($Model)) {$Groups[$Model] = [System.Collections.Generic.List[string]]::new()}
+        if (-not $Groups[$Model].Contains($Device.Name)) {[void]$Groups[$Model].Add($Device.Name)}
+    }
+    $GroupList = @($Groups.Values)
+    if ($GroupList.Count -gt 0 -and $GroupList.Count -le 10) {
+        for ($Mask = 1; $Mask -lt [Math]::Pow(2, $GroupList.Count); $Mask++) {
+            $Members = [System.Collections.Generic.List[string]]::new()
+            for ($Bit = 0; $Bit -lt $GroupList.Count; $Bit++) {
+                if ($Mask -band (1 -shl $Bit)) {$Members.AddRange($GroupList[$Bit])}
+            }
+            [void]$ValidSets.Add((@($Members | Sort-Object) -join "-"))
+        }
+    } else {
+        foreach ($Group in $GroupList) {[void]$ValidSets.Add((@($Group | Sort-Object) -join "-"))}
+        if ($DeviceNames.Count) {[void]$ValidSets.Add((@($DeviceNames | Sort-Object) -join "-"))}
+    }
 
     $Avail = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
     foreach ($Miner in $AvailMiners) {if ($Miner) {[void]$Avail.Add($Miner)}}
 
-    # current miner list: base names, base name + device set, instance names
-    # (= base name, for dual mining plus the algorithms, + device set) and
-    # instance name + algorithm
-    $CurrentBase = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
-    $CurrentSet  = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
-    $CurrentName = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
-    $CurrentAlgo = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
-    foreach ($Miner in @($Miners)) {
-        if (-not $Miner.Name) {continue}
-        $MinerBase = if ($Miner.BaseName) {$Miner.BaseName} else {$Miner.Name -replace '(-(?:GPU|CPU)#\d+)+$'}
-        [void]$CurrentBase.Add($MinerBase)
-        [void]$CurrentName.Add($Miner.Name)
-        if ($Miner.Name -match '((?:-(?:GPU|CPU)#\d+)+)$') {[void]$CurrentSet.Add("$($MinerBase)$($Matches[1])")}
-        if ($Miner.HashRates) {
-            foreach ($Algo in @($Miner.HashRates.PSObject.Properties.Name)) {
-                [void]$CurrentAlgo.Add("$($Miner.Name)_$($Algo -replace '\-.*$')")
-            }
-        }
+    # algorithms per module: hashtable or object from Data\mineralgorithms.json
+    $Algos = @{}
+    if ($MinerAlgorithms -is [hashtable]) {
+        foreach ($Key in $MinerAlgorithms.Keys) {if ($MinerAlgorithms[$Key].Algorithms) {$Algos[$Key] = @($MinerAlgorithms[$Key].Algorithms)}}
+    } elseif ($MinerAlgorithms) {
+        foreach ($Property in $MinerAlgorithms.PSObject.Properties) {if ($Property.Value.Algorithms) {$Algos[$Property.Name] = @($Property.Value.Algorithms)}}
     }
 
     $Limit = (Get-Date).AddDays(-$Days)
@@ -1025,37 +1095,28 @@ function Get-MinerStatsStale {
         $StatMiner   = $Matches[1]
         $StatDevices = @($Matches[2].TrimStart('-') -split '-')
         $StatAlgo    = $Matches[3]
-        $StatSuffix  = $Matches[2]
-        $StatName    = "$($StatMiner)$($StatSuffix)"
 
         # a dual mining instance carries its algorithms in the name
         # (BzMiner-Autolykos2-SHA512256d-GPU#05): the miner is the longest
-        # leading part that is a known miner
+        # leading part that is a known module
         $StatBase = $StatMiner
-        if (($Avail.Count -or $CurrentBase.Count) -and -not ($Avail.Contains($StatBase) -or $CurrentBase.Contains($StatBase))) {
+        if ($Avail.Count -and -not $Avail.Contains($StatBase)) {
             $StatParts = $StatMiner -split '-'
             for ($StatIndex = $StatParts.Count - 1; $StatIndex -gt 0; $StatIndex--) {
                 $StatCandidate = $StatParts[0..($StatIndex - 1)] -join '-'
-                if ($Avail.Contains($StatCandidate) -or $CurrentBase.Contains($StatCandidate)) {$StatBase = $StatCandidate; break}
+                if ($Avail.Contains($StatCandidate)) {$StatBase = $StatCandidate; break}
             }
         }
 
         $Reason = ""
-        if ($Devices.Count) {
+        if ($DeviceNames.Count) {
             foreach ($StatDevice in $StatDevices) {
-                if (-not $Devices.Contains($StatDevice)) {$Reason = "device"; break}
+                if (-not $DeviceNames.Contains($StatDevice)) {$Reason = "device"; break}
             }
         }
-        if (-not $Reason -and ($Avail.Count -or $CurrentBase.Count)) {
-            if (($Avail.Count -and -not $Avail.Contains($StatBase)) -or ($CurrentBase.Count -and -not $CurrentBase.Contains($StatBase))) {$Reason = "miner"}
-        }
-        if (-not $Reason -and $CurrentName.Count) {
-            # the miner does not run with this device set at all: set. It does,
-            # but not this instance (a dual mining pair) or algorithm: algorithm
-            if (-not $CurrentSet.Contains("$($StatBase)$($StatSuffix)")) {$Reason = "set"}
-            elseif (-not $CurrentName.Contains($StatName)) {$Reason = "algorithm"}
-            elseif ($CurrentAlgo.Count -and -not $CurrentAlgo.Contains("$($StatName)_$($StatAlgo)")) {$Reason = "algorithm"}
-        }
+        if (-not $Reason -and $Avail.Count -and -not $Avail.Contains($StatBase)) {$Reason = "miner"}
+        if (-not $Reason -and $Algos.ContainsKey($StatBase) -and $Algos[$StatBase] -notcontains $StatAlgo) {$Reason = "algorithm"}
+        if (-not $Reason -and $ValidSets.Count -and -not $ValidSets.Contains((@($StatDevices | Sort-Object) -join "-"))) {$Reason = "set"}
         if (-not $Reason) {continue}
 
         $Info = [System.IO.FileInfo]::new($File)

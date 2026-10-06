@@ -690,12 +690,12 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             Break
         }
         "/minerstatsstale" {
-            # Days=<minimum age in days, default 30>: benchmarks no current miner can use, with the reason
+            # Days=<minimum age in days, default 30>: benchmarks that cannot be used any more, with the reason
             $StaleDays = if ("$($Parameters.Days)" -match "^\d+$") {[int]$Parameters.Days} else {30}
-            $StaleMiners = if (Test-Path ".\Data\miners.json") {ConvertFrom-Json "$(Get-ContentByStreamReader ".\Data\miners.json")" -ErrorAction Ignore} else {$null}
-            $Data = ConvertTo-Json @(Get-MinerStatsStale -Days $StaleDays -DeviceNames @($API.AllDevices | Foreach-Object {$_.Name} | Where-Object {$_}) -AvailMiners @($Session.AvailMiners | Where-Object {$_}) -Miners $StaleMiners | Select-Object) -Depth 10
-            $StaleDays = $StaleMiners = $null
-            Remove-Variable -Name StaleDays, StaleMiners -ErrorAction Ignore
+            $StaleAlgos = if (Test-Path ".\Data\mineralgorithms.json") {ConvertFrom-Json "$(Get-ContentByStreamReader ".\Data\mineralgorithms.json")" -ErrorAction Ignore} else {$null}
+            $Data = ConvertTo-Json @(Get-MinerStatsStale -Days $StaleDays -Devices @($API.AllDevices | Select-Object) -AvailMiners @($Session.AvailMiners | Where-Object {$_}) -MinerAlgorithms $StaleAlgos | Select-Object) -Depth 10
+            $StaleDays = $StaleAlgos = $null
+            Remove-Variable -Name StaleDays, StaleAlgos -ErrorAction Ignore
             Break
         }
         "/minerstatscleanup" {

@@ -2505,6 +2505,10 @@ function Invoke-Core {
         $MinerInfoChanged = $true
     }
     if ($MinerInfoChanged) {Set-ContentJson -PathToFile ".\Data\minerinfo.json" -Data $Global:MinerInfo -Compress > $null}
+    # algorithms per module for the stats cleanup (Data\mineralgorithms.json): read
+    # once per start and whenever the module set changed, a changed module file
+    # is read again
+    if ($Session.RoundCounter -eq 0 -or $MinerInfoChanged) {try {Update-MinerAlgorithmsInfo > $null} catch {if ($Error.Count){$Error.RemoveAt(0)}}}
 
     #Check for GPU failure and reboot, if needed
     if ($Session.Config.RebootOnGPUFailure) { 
