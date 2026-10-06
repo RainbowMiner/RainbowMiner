@@ -553,7 +553,8 @@ the web interface:
   have not been updated for the given number of days (default 30): a device the system does
   not detect, a miner that is not installed or not in the miner list, a device set the miner
   does not run with (e.g. the combinations of the remaining cards while one had dropped out),
-  or an algorithm the miner does not mine any more. Tick the reasons to list, check the table
+  or an algorithm or dual mining pair the miner does not mine any more. Tick the reasons to
+  list, check the table
   and delete them. The current benchmarks are saved as a "before cleanup" backup first
 - **Download a zip** at the bottom of the page fetches a zip of one or all miners, e.g. to copy
   the benchmarks to a rig with the same cards

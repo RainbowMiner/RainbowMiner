@@ -973,6 +973,7 @@ function Get-MinerStatsStale {
     #   set       - the miner runs, but not with this device set (e.g. the
     #               combos of the remaining cards while one had dropped out)
     #   algorithm - the miner runs with this device set, but not this algorithm
+    #               or dual mining pair
     # Reasons without their input (no device names, no miner list) are skipped,
     # the benchmarks of the current miners are never listed
     [CmdletBinding()]
@@ -996,8 +997,11 @@ function Get-MinerStatsStale {
     $Avail = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
     foreach ($Miner in $AvailMiners) {if ($Miner) {[void]$Avail.Add($Miner)}}
 
-    # current miner list: base names, names (= base name + device set) and name + algorithm
+    # current miner list: base names, base name + device set, instance names
+    # (= base name, for dual mining plus the algorithms, + device set) and
+    # instance name + algorithm
     $CurrentBase = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    $CurrentSet  = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
     $CurrentName = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
     $CurrentAlgo = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
     foreach ($Miner in @($Miners)) {
@@ -1005,6 +1009,7 @@ function Get-MinerStatsStale {
         $MinerBase = if ($Miner.BaseName) {$Miner.BaseName} else {$Miner.Name -replace '(-(?:GPU|CPU)#\d+)+$'}
         [void]$CurrentBase.Add($MinerBase)
         [void]$CurrentName.Add($Miner.Name)
+        if ($Miner.Name -match '((?:-(?:GPU|CPU)#\d+)+)$') {[void]$CurrentSet.Add("$($MinerBase)$($Matches[1])")}
         if ($Miner.HashRates) {
             foreach ($Algo in @($Miner.HashRates.PSObject.Properties.Name)) {
                 [void]$CurrentAlgo.Add("$($Miner.Name)_$($Algo -replace '\-.*$')")
@@ -1020,7 +1025,8 @@ function Get-MinerStatsStale {
         $StatMiner   = $Matches[1]
         $StatDevices = @($Matches[2].TrimStart('-') -split '-')
         $StatAlgo    = $Matches[3]
-        $StatName    = "$($StatMiner)$($Matches[2])"
+        $StatSuffix  = $Matches[2]
+        $StatName    = "$($StatMiner)$($StatSuffix)"
 
         # a dual mining instance carries its algorithms in the name
         # (BzMiner-Autolykos2-SHA512256d-GPU#05): the miner is the longest
@@ -1044,7 +1050,10 @@ function Get-MinerStatsStale {
             if (($Avail.Count -and -not $Avail.Contains($StatBase)) -or ($CurrentBase.Count -and -not $CurrentBase.Contains($StatBase))) {$Reason = "miner"}
         }
         if (-not $Reason -and $CurrentName.Count) {
-            if (-not $CurrentName.Contains($StatName)) {$Reason = "set"}
+            # the miner does not run with this device set at all: set. It does,
+            # but not this instance (a dual mining pair) or algorithm: algorithm
+            if (-not $CurrentSet.Contains("$($StatBase)$($StatSuffix)")) {$Reason = "set"}
+            elseif (-not $CurrentName.Contains($StatName)) {$Reason = "algorithm"}
             elseif ($CurrentAlgo.Count -and -not $CurrentAlgo.Contains("$($StatName)_$($StatAlgo)")) {$Reason = "algorithm"}
         }
         if (-not $Reason) {continue}
