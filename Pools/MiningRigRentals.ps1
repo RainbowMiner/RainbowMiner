@@ -1159,8 +1159,13 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                             "Workername" = $RigName
                         }
                     
+                        $RigHeldBack = 0
+
                         if ($RigDeviceRevenue24h -and $RigDeviceStat.Duration) {
-                            if ($RigDeviceStat.Duration -lt [timespan]::FromHours(3)) {throw "your rig must run for at least 3 hours be accurate"}
+                            # a profit stat younger than 3 hours is no base for a price: only a rig create or a rig change waits for it,
+                            # rigs that are up to date pass silently and their pools are still looked after
+                            $RigDeviceStatAge   = [TimeSpan]$RigDeviceStat.Duration
+                            $RigDeviceStatYoung = $RigDeviceStatAge -lt [timespan]::FromHours(3)
                             $RigModels         = @($RigDevice.Foreach("Model") | Sort-Object -Unique)
                             $RigAlreadyCreated = @($UniqueRigs_Request | Where-Object {$_.description -match "\[$RigName\]"})
                             $RigProfitBTCLimit = [Math]::Max($RigDeviceRevenue24h * [Math]::Min($MRRConfig.$RigName.AutoCreateMinProfitPercent,100)/100,$MRRConfig.$RigName.AutoCreateMinProfitBTC)
@@ -1417,7 +1422,11 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                             }
                                             if ($RigRunMode -eq "create") {
 
-                                                if ($OrphanedRigs_Request -and ($OrphanedRig = $OrphanedRigs_Request | Where-Object {$_.name -eq $CreateRig["name"]} | Select-Object -First 1)) {
+                                                if ($RigDeviceStatYoung) {
+
+                                                    $RigHeldBack++
+
+                                                } elseif ($OrphanedRigs_Request -and ($OrphanedRig = $OrphanedRigs_Request | Where-Object {$_.name -eq $CreateRig["name"]} | Select-Object -First 1)) {
 
                                                     # Orphaned rig found: recover it!
 
@@ -1489,7 +1498,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                         $RigHashCurrent     = [double]$_.hashrate.advertised.hash * $(ConvertFrom-Hash "1$($_.hashrate.advertised.type)")
                                                         $RigMinPriceCurrent = [double]$_.price.BTC.minimum / $(ConvertFrom-Hash "1$($_.price.type)")
 
-                                                        if ( (-not $RigMinPriceCurrent) -or
+                                                        $RigNeedsUpdate = (-not $RigMinPriceCurrent) -or
                                                              ([decimal]($RigSpeed*$RigDivisors[$HashDivisor].value) -ne [decimal]$RigHashCurrent) -or
                                                              ([Math]::Abs($RigMinPrice / $RigDivisors[$PriceDivisor].value / $RigMinPriceCurrent - 1) -gt ($MRRConfig.$RigName.AutoUpdateMinPriceChangePercent / 100)) -or
                                                              ([int]$_.minhours -ne $CreateRig.minhours) -or
@@ -1505,7 +1514,10 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                              ($_.price.DOGE.enabled -ne $CreateRig.price.doge.enabled) -or
                                                              ($RigServer -and ($_.region -ne $RigServer.region)) -or
                                                              ($_.extensions -ne $CreateRig.extensions)
-                                                        ) {
+
+                                                        if ($RigNeedsUpdate -and $RigDeviceStatYoung) {
+                                                            $RigHeldBack++
+                                                        } elseif ($RigNeedsUpdate) {
                                                             $CreateRig["id"] = $RigPools_Id
                                                             if ($_.region -ne $RigServer.region) {$CreateRig["server"] = $RigServer.name}
                                                             $RigUpdated = $false
@@ -1608,6 +1620,9 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                     }
                                 }
                             }
+                        }
+                        if ($RigHeldBack) {
+                            Write-Log -Level Warn "$($Name): $($RigHeldBack) rig$(if ($RigHeldBack -gt 1) {"s"}) on $($RigName) not $(if ($RigRunMode -eq "create") {"created"} else {"updated"}) yet - the profit stat of the devices must run for at least 3 hours to be accurate (now $([Math]::Round($RigDeviceStatAge.TotalHours,1))h)"
                         }
                     } catch {
                         Write-Log -Level Warn "$($Name): Unable to $($RigRunMode) rigs for $($RigName): $($_.Exception.Message)"
