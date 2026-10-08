@@ -739,6 +739,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                             MemoryClockScale = $_.Value.MemoryClockScale
                             CoreClockBoost   = $_.Value.CoreClockBoost
                             LockVoltagePoint = $_.Value.LockVoltagePoint
+                            AmdVoltageOffset = $_.Value.AmdVoltageOffset
                             LockMemoryClock  = $_.Value.LockMemoryClock
                             LockCoreClock    = $_.Value.LockCoreClock
                         }
