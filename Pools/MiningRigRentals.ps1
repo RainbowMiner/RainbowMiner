@@ -322,8 +322,14 @@ if ($AllRigs_Request) {
             $Divisor = Get-MiningRigRentalsDivisor $_.price.type
             $Pool_Price = $_.price.BTC.price
 
+            $Rigs_Model = if ($Worker1 -ne $Worker) {"$(($Session.Config.DeviceModel | Where-Object {$Session.Config.Devices.$_.Worker -eq $Worker1} | Sort-Object -Unique) -join '-')"} elseif ($Global:DeviceCache.DeviceNames.CPU -ne $null) {"GPU"}
+
+            $Pool_Algorithm_Norm_With_Model = "$Pool_Algorithm_Norm$(if ($Rigs_Model) {"-$Rigs_Model"})"
+
             if (-not $InfoOnly) {
-                $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$Pool_Price / $Divisor) -Duration $StatSpan -ChangeDetection $false -Quiet
+                # one price stat per worker: the rigs of a CPU worker and a GPU worker share the algorithm but not the price,
+                # a shared stat would flip between both every round. The main worker keeps the plain name
+                $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)$(if ($Worker1 -ne $Worker -and $Rigs_Model) {"-$Rigs_Model"})_Profit" -Value ([Double]$Pool_Price / $Divisor) -Duration $StatSpan -ChangeDetection $false -Quiet
             }
 
             $Pool_Rig = $RigInfo_Request | Where-Object {$_.rigid -eq $Pool_RigId -and $_.port -ne "error"}
@@ -335,10 +341,6 @@ if ($AllRigs_Request) {
 
                 $Pool_RigRented = $_.status.status -eq "rented" -or $_.status.rented
                 $Rental_PoolStatus = $_.poolstatus
-
-                $Rigs_Model = if ($Worker1 -ne $Worker) {"$(($Session.Config.DeviceModel | Where-Object {$Session.Config.Devices.$_.Worker -eq $Worker1} | Sort-Object -Unique) -join '-')"} elseif ($Global:DeviceCache.DeviceNames.CPU -ne $null) {"GPU"}
-
-                $Pool_Algorithm_Norm_With_Model = "$Pool_Algorithm_Norm$(if ($Rigs_Model) {"-$Rigs_Model"})"
 
 
                 if ($Pool_RigRented) {
