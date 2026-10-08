@@ -22,7 +22,7 @@ $Pool_Host   = @{eu="84.32.220.219"; asia="129.226.55.135"}
 $Pool_Ports  = @(9000)
 $Pool_Wallet = $Wallets.$Pool_Currency
 $Pool_Pass   = "x"
-$Pool_Fee    = 0.00
+$Pool_Fee    = 1.00
 
 $Pool_Coin  = Get-Coin $Pool_Currency
 $Pool_Algorithm_Norm = $Pool_Coin.Algo
