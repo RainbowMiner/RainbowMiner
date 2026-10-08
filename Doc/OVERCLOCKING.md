@@ -447,6 +447,52 @@ NVML is new in RainbowMiner: check the result with `nvidia-smi -q -d CLOCK` and
 `python3 IncludesLinux/bash/nvml_oc.py query` when you switch it on. The memory offset is
 passed to NVML with the same number as to nvidia-settings.
 
+
+**Linux AMD overclocking (opt-in).** Linux AMD GPU overclocking is disabled
+by default (`LinuxAmdOCMethod = "disabled"`) so existing rigs keep their
+previous behavior. Set `LinuxAmdOCMethod = "amdgpu-sysfs"` and
+`EnableOCProfiles = 1` to enable the native sysfs backend. This is independent
+of `LinuxOCMethod`, which controls NVIDIA GPUs only.
+
+The built-in privileged `ocdaemon`, the `flock` utility and the kernel's AMDGPU
+overdrive interfaces are required. The OC helper is
+`IncludesLinux/bash/amd-oc.sh`. This backend has **no** third-party OC
+runtime dependency, does **not** modify PowerPlay tables, and does not change
+GPU fan settings. It should be the sole manager of clocks and power for each
+selected GPU; LACT can continue controlling fans, but disable LACT/CoreCtrl
+clock/voltage auto-tuning for the same card to avoid conflicting writes.
+
+| RainbowMiner OC profile field | AMDGPU sysfs action | Units |
+| --- | --- | --- |
+| `PowerLimit` | `power1_cap`, based on the GPU's default cap | % of default |
+| `LockCoreClock` | maximum `OD_SCLK` clock, **not** a fixed clock | MHz |
+| `LockMemoryClock` | maximum `OD_MCLK` clock | MHz |
+| `AmdVoltageOffset` | `OD_VDDGFX_OFFSET`, only when the hardware advertises a valid `OD_RANGE` | signed mV |
+
+The `*` value leaves a field unchanged. AMD `AmdVoltageOffset` is **not** an
+absolute core voltage target: `-100` means a negative 100 mV offset, *not*
+100 mV VDDC. `LockVoltagePoint`, `CoreClockBoost` and `MemoryClockBoost` retain
+their non-AMD meaning and must not be used as substitute AMD voltages.
+Absolute VDDC, MVDD, MVDDCI, SOCV and PowerPlay editing are outside the scope
+of this backend; unsupported offset requests are rejected before any OC write.
+
+Before writing, the helper validates the AMD PCI device and supported ranges,
+then snapshots original settings separately for each PCI GPU under
+`/run/rainbowminer-amd-oc/`. Apply/reset operations are locked per GPU to avoid
+races; the initial baseline survives successive OC profiles and is restored on
+miner stop. Every requested clock, supported voltage offset and power setting
+is read back from the driver. A reset that fails readback leaves its baseline
+for retry instead of claiming success. The per-GPU state lives in `/run` and
+is cleared on a reboot. No driver-wide OC reset (`r`) is issued.
+
+Test syntax, mock failure handling, two-card isolation and rollback with
+`python3 Tests/amd-oc-mock.py`. A controlled hardware validation was performed
+on Linux with RX 7600 (clock, `-250` mV, reset) and two RX 6650 XT cards
+(clock, multi-GPU reset), including a simultaneous mixed-model Quantus run
+with accepted shares. Other GPU generations, missing driver interfaces and
+sustained long-term stability require their own tests; a valid profile on one
+board is not automatically safe for all boards.
+
 One trap on a client rig: `EnableLinuxHeadless` is an ordinary config value, so a server
 config can overwrite it. If overclocking stops working right after a config sync, check
 whether the setting is still there and add it to `ExcludeServerConfigVars` if needed.

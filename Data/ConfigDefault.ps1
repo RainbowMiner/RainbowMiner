@@ -13,6 +13,7 @@
     MSIAprofile = 0
     DisableMSIAmonitor = $false
     EnableOCProfiles = $false
+    LinuxAmdOCMethod = "disabled"
     EnableOCVoltage = $false
     EnableOCFullReset = $true
     EnableOCLinuxForcePState = $true
@@ -45,7 +46,7 @@
     EnableServerConfig = $false
     EnableServerDiscovery = $false
     ServerConfigName = @("config","coins","pools","algorithms","scheduler","mrralgorithms","userpools","customminers")
-    ExcludeServerConfigVars = @("APIAuth","APIPassword","APIPort","APIUser","CPUMiningAffinity","CPUMiningThreads","DeviceName","EnableServerConfig","ExcludeDeviceName","ExcludeServerConfigVars","GPUMiningAffinity","GroupName","LinuxDisplay","LinuxXAuthority","MSIApath","NVSMIpath","Proxy","RunMode","ServerConfigName","ServerName","ServerPassword","ServerPort","ServerSSL","ServerCertHash","ServerUser","StartPaused","WorkerName","StaticCPUMinerPort","StaticGPUMinerPort","OpenCLPlatformSorting")
+    ExcludeServerConfigVars = @("APIAuth","APIPassword","APIPort","APIUser","CPUMiningAffinity","CPUMiningThreads","DeviceName","EnableServerConfig","ExcludeDeviceName","ExcludeServerConfigVars","GPUMiningAffinity","GroupName","LinuxAmdOCMethod","LinuxDisplay","LinuxXAuthority","MSIApath","NVSMIpath","Proxy","RunMode","ServerConfigName","ServerName","ServerPassword","ServerPort","ServerSSL","ServerCertHash","ServerUser","StartPaused","WorkerName","StaticCPUMinerPort","StaticGPUMinerPort","OpenCLPlatformSorting")
     EnableServerExcludeList = $false
     ExcludeCoinsymbolBalances = @("MAX","MUSIC")
 }

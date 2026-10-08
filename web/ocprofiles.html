@@ -33,6 +33,7 @@
           <th data-field="tClockMemScale" data-sortable="true" data-align="center" data-filter-control="select" data-title-tooltip="Scale of the memory clock boost: windows = MSI Afterburner scale (doubled on Linux), linux = transfer rate as nvidia-settings takes it">Scale</th>
           <th data-field="tLockClockCore" data-sortable="true" data-align="right" data-title-tooltip="Lock GPU clock in MHz" data-sorter="sortOCProfilesStarsAndNumbers">LockCore</th>
           <th data-field="tLockClockMem" data-sortable="true" data-align="right" data-title-tooltip="Lock Memory clock in MHz" data-sorter="sortOCProfilesStarsAndNumbers">LockMemory</th>
+          <th data-field="tAmdVoltageOffset" data-sortable="true" data-align="right" data-title-tooltip="AMD voltage offset (mV); e.g. -100, distinct from NVIDIA LockVoltage" data-sorter="sortOCProfilesStarsAndNumbers">AMD Voltage Offset</th>
           <th data-field="tLockVoltagePoint" data-sortable="true" data-align="right" data-title-tooltip="Lock voltage point" data-sorter="sortOCProfilesStarsAndNumbers">LockVoltage</th>
           <th data-field="tThermalLimit" data-sortable="true" data-align="right" data-title-tooltip="Thermal limit temperature in °C" data-formatter="formatOCProfilesTemperature">Temp.</th>
       </tr>
@@ -65,6 +66,7 @@ function formatOCProfiles(data) {
           item.tClockMemScale = typeof (item.MemoryClockScale) !== "undefined" && item.MemoryClockScale ? item.MemoryClockScale : '-'
           item.tLockClockCore = typeof (item.LockCoreClock) !== "undefined" && item.LockCoreClock ? item.LockCoreClock : '*'
           item.tLockClockMem = typeof (item.LockMemoryClock) !== "undefined" && item.LockMemoryClock ? item.LockMemoryClock : '*'
+          item.tAmdVoltageOffset = typeof (item.AmdVoltageOffset) !== "undefined" && item.AmdVoltageOffset !== null && item.AmdVoltageOffset !== "" ? item.AmdVoltageOffset : "*"
           item.tLockVoltagePoint = typeof (item.LockVoltagePoint) !== "undefined" && item.LockVoltagePoint ? item.LockVoltagePoint : '*'
       }
     return data;

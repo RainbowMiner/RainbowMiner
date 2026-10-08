@@ -1048,6 +1048,9 @@ function Invoke-Core {
         if ($Session.Config.RestartRBMMemory -lt 367001600) {$Session.Config.RestartRBMMemory = 0}
 
         if ($IsLinux) {
+            if ("$($Session.Config.LinuxAmdOCMethod)".ToLower() -notin @("disabled","amdgpu-sysfs")) {
+                $Session.Config | Add-Member LinuxAmdOCMethod "disabled" -Force
+            }
             if ("$($Session.Config.LinuxOCMethod)".ToLower() -notin @("nvidia-settings","auto","nvml")) {
                 $Session.Config | Add-Member LinuxOCMethod "nvidia-settings" -Force
             } elseif ("$($Session.Config.LinuxOCMethod)".ToLower() -ne "nvidia-settings" -and $Session.Config.EnableOCProfiles) {

@@ -883,25 +883,29 @@ class Miner {
                     default {-1}
                 }
                 [System.Collections.Generic.List[int]]$DeviceIds = @()
-                [System.Collections.Generic.List[string]]$CardIds   = @()
+                [System.Collections.Generic.List[string]]$CardIds = @()
+                [System.Collections.Generic.List[string]]$BusIds = @()
                 $Global:GlobalCachedDevices | Where-Object Model -eq $DeviceModel | Foreach-Object {
                     $VendorIndex = $_.Type_Vendor_Index
                     $CardId = $_.CardId
+                    $BusId = if ($_.BusId) {"$($_.BusId)"} elseif ($_.OpenCL.PCIBusId) {"$($_.OpenCL.PCIBusId)"} else {""}
                     $Id = if ($Config.OCProfiles."$($this.OCprofile.$DeviceModel)-$($_.Index)" -ne $null) {$_.Index} elseif ($Config.OCProfiles."$($this.OCprofile.$DeviceModel)-$($_.Name)" -ne $null) {$_.Name} elseif ($Config.OCProfiles."$($this.OCprofile.$DeviceModel)-$($_.OpenCL.PCIBusId)" -ne $null) {$_.OpenCL.PCIBusId}
                     if ($Id) {
                         $DeviceModelId = "$($DeviceModel)[$($Id)]"
-                        $this.Profiles | Add-Member $DeviceModelId ([PSCustomObject]@{Index = [System.Collections.Generic.List[int]]@(); CardId = [System.Collections.Generic.List[string]]@(); Profile = $Config.OCProfiles."$($this.OCprofile.$DeviceModel)-$($Id)"; x = $x}) -Force
+                        $this.Profiles | Add-Member $DeviceModelId ([PSCustomObject]@{Index = [System.Collections.Generic.List[int]]@(); CardId = [System.Collections.Generic.List[string]]@(); BusId = [System.Collections.Generic.List[string]]@(); Profile = $Config.OCProfiles."$($this.OCprofile.$DeviceModel)-$($Id)"; x = $x}) -Force
                         [void]$this.Profiles.$DeviceModelId.Index.Add($VendorIndex)
                         [void]$this.Profiles.$DeviceModelId.CardId.Add($CardId)
+                        [void]$this.Profiles.$DeviceModelId.BusId.Add($BusId)
                     } else {
                         [void]$DeviceIds.Add($VendorIndex)
                         [void]$CardIds.Add($CardId)
+                        [void]$BusIds.Add($BusId)
                     }
                 }
                 if ($DeviceIds.Count -gt 0) {
                     $Profile = if ($Config.OCprofiles."$($this.OCprofile.$DeviceModel)-$($DeviceModel)" -ne $null) {$Config.OCprofiles."$($this.OCprofile.$DeviceModel)-$($DeviceModel)"} elseif ($Config.OCprofiles."$($this.OCprofile.$DeviceModel)" -ne $null) {$Config.OCprofiles."$($this.OCprofile.$DeviceModel)"} else {[PSCustomObject]@{PowerLimit = 0;ThermalLimit = 0;PriorizeThermalLimit = "0";MemoryClockBoost = "*";CoreClockBoost = "*";LockVoltagePoint = "*";LockMemoryClock = "*";LockCoreClock = "*"}}
                     if ($Profile) {
-                        $this.Profiles | Add-Member $DeviceModel ([PSCustomObject]@{Index = $DeviceIds; CardId = $CardIds; Profile = $Profile; x = $x}) -Force
+                        $this.Profiles | Add-Member $DeviceModel ([PSCustomObject]@{Index = $DeviceIds; CardId = $CardIds; BusId = $BusIds; Profile = $Profile; x = $x}) -Force
                     }
                 }
             }
@@ -976,10 +980,57 @@ class Miner {
                     if ($NvmlArgs.Count) {Set-OCDaemon "python3 `"$(Get-NvmlOCHelper)`" set --bus $($NvBusId) $($NvmlArgs -join ' ')" -OnEmptyAdd $Global:Session.OCDaemonOnEmptyAdd -Check}
                 }
 
-            } elseif ($DeviceVendor -eq "AMD" -and $Global:IsLinux) {
+            } elseif ($DeviceVendor -eq "AMD" -and $Global:IsLinux -and "$($Global:Session.Config.LinuxAmdOCMethod)" -eq "amdgpu-sysfs") {
 
-                foreach($CardId in $this.Profiles.$DeviceModel.CardId) {
-                    #if ($Profile.PowerLimit -gt 0) {$val=[Math]::Max([Math]::Min($Profile.PowerLimit,200),20);if ($Global:IsLinux) {Set-NvidiaPowerLimit $DeviceId $val} else {[void]$NvCmd.Add("-setPowerTarget:$($DeviceId),$($val)")};$applied_any=$true}
+                if (-not (Test-OCDaemon)) {
+                    Write-Log -Level Warn "AMD Linux OC requires the running ocdaemon; skipping AMD profile application"
+                    continue
+                }
+                $AmdOCHelper = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\IncludesLinux\bash\amd-oc.sh")
+                foreach($BusId in $this.Profiles.$DeviceModel.BusId) {
+                    if ($BusId -notmatch '^[A-Fa-f0-9]{2}:[A-Fa-f0-9]{2}$') {
+                        Write-Log -Level Warn "Cannot apply AMD Linux OC to $($DeviceModel): PCI bus id is unavailable"
+                        continue
+                    }
+                    [System.Collections.Generic.List[string]]$AmdArgs = @("--bus",$BusId)
+                    if (-not $Config) {
+                        [void]$AmdArgs.Add("--reset")
+                        $applied_any = $true
+                    }
+                    if ($Config) {
+                        if ($Profile.PowerLimit -gt 0) {
+                            $val = [Math]::Max([Math]::Min([int]$Profile.PowerLimit,200),20)
+                            [void]$AmdArgs.Add("--power-percent"); [void]$AmdArgs.Add("$val")
+                            $applied_any = $true
+                            $this.SetOCprofileValue($DeviceModel,"PowerLimit",$val)
+                        }
+                        if ($Profile.LockCoreClock -match '^[0-9]+$' -and [int]$Profile.LockCoreClock -gt 0) {
+                            $val = [int]$Profile.LockCoreClock
+                            [void]$AmdArgs.Add("--core-max"); [void]$AmdArgs.Add("$val")
+                            $applied_any = $true
+                            $this.SetOCprofileValue($DeviceModel,"LockCoreClock",$val)
+                        }
+                        if ($Profile.LockMemoryClock -match '^[0-9]+$' -and [int]$Profile.LockMemoryClock -gt 0) {
+                            $val = [int]$Profile.LockMemoryClock
+                            [void]$AmdArgs.Add("--mem-max"); [void]$AmdArgs.Add("$val")
+                            $applied_any = $true
+                            $this.SetOCprofileValue($DeviceModel,"LockMemoryClock",$val)
+                        }
+                        if ($Profile.AmdVoltageOffset -match '^-?[0-9]+$') {
+                            $val = [int]$Profile.AmdVoltageOffset
+                            [void]$AmdArgs.Add("--voltage-offset")
+                            [void]$AmdArgs.Add("$val")
+                            $applied_any = $true
+                            $this.SetOCprofileValue($DeviceModel,"AmdVoltageOffset",$val)
+                        }
+                        if ($Profile.ThermalLimit -gt 0) {Write-Log -Level Warn "$DeviceModel AMD Linux thermal target is not implemented"}
+                        if ($Profile.CoreClockBoost -match '^\-*[0-9]+$') {Write-Log -Level Warn "$DeviceModel does not support CoreClockBoost overclocking on AMD Linux"}
+                        if ($Profile.MemoryClockBoost -match '^\-*[0-9]+$') {Write-Log -Level Warn "$DeviceModel does not support MemoryClockBoost overclocking on AMD Linux"}
+                        if ($Profile.LockVoltagePoint -match '^[0-9]+$') {Write-Log -Level Warn "$DeviceModel does not support LockVoltagePoint overclocking on AMD Linux"}
+                    }
+                    if ($AmdArgs.Count -gt 2) {
+                        Set-OCDaemon "`"$AmdOCHelper`" $($AmdArgs -join ' ')" -OnEmptyAdd $Global:Session.OCDaemonOnEmptyAdd -Check
+                    }
                 }
             
             } elseif ($Pattern.$DeviceVendor -ne $null) {

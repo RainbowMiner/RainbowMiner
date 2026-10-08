@@ -851,7 +851,7 @@
               "key": "LinuxOCMethod",
               "id": "inputLinuxOCMethod",
               "label": {
-                "html": "Linux OC method",
+                "html": "Linux NVIDIA OC method",
                 "class": "col-sm-2 col-form-label"
               },
               "rowClasses": [
@@ -859,7 +859,7 @@
               ],
               "colClass": "col-sm-10",
               "help": {
-                "html": "How core/memory offsets are set on Linux: nvidia-settings (needs an X server), nvml (no X server needed) or auto (nvml only if nvidia-settings cannot reach an X server).",
+                "html": "NVIDIA only: select nvidia-settings (requires X), nvml (headless) or auto. AMD uses the separate selector below.",
                 "id": "inputLinuxOCMethodHelp"
               },
               "control": "select",
@@ -877,6 +877,29 @@
                   "value": "nvml",
                   "label": "nvml"
                 }
+              ]
+            },
+            {
+              "kind": "field",
+              "key": "LinuxAmdOCMethod",
+              "id": "inputLinuxAmdOCMethod",
+              "label": {
+                "html": "Linux AMD OC method",
+                "class": "col-sm-2 col-form-label"
+              },
+              "rowClasses": [
+                "is--ocprofiles"
+              ],
+              "colClass": "col-sm-10",
+              "help": {
+                "html": "AMD Linux OC backend: disabled (default), or native amdgpu sysfs with RainbowMiner's privileged OC daemon. Controls supported clocks, power cap and hardware-supported voltage offsets; does not modify PowerPlay tables or fan controls.",
+                "id": "inputLinuxAmdOCMethodHelp"
+              },
+              "control": "select",
+              "attrs": {},
+              "options": [
+                {"value": "disabled", "label": "disabled (default)"},
+                {"value": "amdgpu-sysfs", "label": "amdgpu-sysfs"}
               ]
             }
           ]
