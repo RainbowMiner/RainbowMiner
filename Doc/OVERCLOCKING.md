@@ -496,3 +496,14 @@ board is not automatically safe for all boards.
 One trap on a client rig: `EnableLinuxHeadless` is an ordinary config value, so a server
 config can overwrite it. If overclocking stops working right after a config sync, check
 whether the setting is still there and add it to `ExcludeServerConfigVars` if needed.
+
+
+**Linux AMD algorithm switching:** RainbowMiner invokes the AMDGPU helper
+with `--replace-profile` whenever applying a named OC profile. Within the
+existing per-PCI lock, the helper restores any previous RainbowMiner-managed
+core/memory maxima, supported voltage offset and power cap to the pre-mining
+baseline, then applies the new profile. Thus an omitted, `0` or `*` setting
+does **not** leave a previous algorithm's clock or voltage in effect. A
+fully neutral profile restores the original settings. This uses regular OD
+commits only; it never writes a PowerPlay table or uses the driver-wide
+`r` reset. Keep the helper available via the privileged `ocdaemon`.

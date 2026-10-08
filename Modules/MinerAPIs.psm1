@@ -998,6 +998,10 @@ class Miner {
                         $applied_any = $true
                     }
                     if ($Config) {
+                        # Serialize the full GPU profile replacement under the helper's PCI lock.
+                        # Otherwise omitted/zero fields retain the preceding algorithm's clocks.
+                        [void]$AmdArgs.Add("--replace-profile")
+                        $applied_any = $true
                         if ($Profile.PowerLimit -gt 0) {
                             $val = [Math]::Max([Math]::Min([int]$Profile.PowerLimit,200),20)
                             [void]$AmdArgs.Add("--power-percent"); [void]$AmdArgs.Add("$val")

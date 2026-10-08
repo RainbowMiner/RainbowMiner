@@ -10,9 +10,10 @@ mem_max=""
 voltage_offset=""
 dry_run=0
 reset=0
+replace_profile=0
 
 usage() {
-    echo "Usage: $0 --bus BB:DD [--power-percent 20..200] [--core-max MHz] [--mem-max MHz] [--voltage-offset signed-mV] [--reset] [--dry-run]" >&2
+    echo "Usage: $0 --bus BB:DD [--power-percent 20..200] [--core-max MHz] [--mem-max MHz] [--voltage-offset signed-mV] [--reset] [--replace-profile] [--dry-run]" >&2
 }
 
 while (($#)); do
@@ -29,11 +30,15 @@ while (($#)); do
             shift 2 ;;
         --dry-run) dry_run=1; shift ;;
         --reset) reset=1; shift ;;
+        --replace-profile) replace_profile=1; shift ;;
         -h|--help) usage; exit 0 ;;
         *) echo "Unknown argument: $1" >&2; usage; exit 2 ;;
     esac
 done
 
+if ((reset && replace_profile)); then
+    echo "--reset and --replace-profile cannot be combined" >&2; exit 2
+fi
 if ((reset)) && [[ -n "$power_percent" || -n "$core_max" || -n "$mem_max" || -n "$voltage_offset" ]]; then
     echo "--reset cannot be combined with OC adjustments" >&2; exit 2
 fi
@@ -104,12 +109,12 @@ verify_readback() {
         [[ "$actual" == "$desired_offset" ]] || { echo "AMD voltage-offset readback mismatch for PCI $bus: expected $desired_offset, got $actual" >&2; return 1; }
     fi
 }
-# Never use AMD PowerPlay table writes or the driver-wide 'r' reset:
-# restoring known previous max clocks is the only reset path here.
-if ((reset)); then
+# Restore all RainbowMiner-managed controls to the pre-mining baseline.
+# Never write an AMD PowerPlay table or invoke the driver-wide OD 'r' reset.
+restore_baseline() {
     if [[ ! -f "$state" ]]; then
         echo "AMD OC reset PCI $bus: no saved baseline; nothing to restore"
-        exit 0
+        return 0
     fi
     [[ ! -L "$state" ]] || { echo "Refusing symlinked baseline" >&2; exit 1; }
     read -r saved_cap saved_core saved_mem saved_perf saved_clocks saved_offset saved_voltage saved_power < "$state"
@@ -137,7 +142,7 @@ if ((reset)); then
     fi
     if ((dry_run)); then
         echo "DRY-RUN RESET PCI $bus: cap=${saved_cap}uW core=${saved_core}MHz mem=${saved_mem}MHz mode=$saved_perf"
-        exit 0
+        return 0
     fi
     [[ -w "$od" && -w "$perf" ]] && { ((!saved_power)) || [[ -w "$cap_path" ]]; } || {
         echo "AMD OC reset requires privileged access on PCI $bus; baseline kept" >&2; exit 1
@@ -162,6 +167,11 @@ if ((reset)); then
     fi
     rm -f -- "$state"
     echo "AMD OC reset PCI $bus: previous settings restored"
+    return 0
+}
+
+if ((reset)); then
+    restore_baseline
     exit 0
 fi
 if [[ -n "$power_percent" ]]; then
@@ -241,7 +251,7 @@ if [[ -n "$core_max" || -n "$mem_max" || -n "$voltage_offset" ]]; then
 fi
 
 if ((dry_run)); then
-    echo "DRY-RUN PCI $bus: power-cap=${cap_target:-unchanged}uW core-max=${core_max:-unchanged}MHz mem-max=${mem_max:-unchanged}MHz voltage-offset=${voltage_offset:-unchanged}mV"
+    echo "DRY-RUN PCI $bus: replace-profile=$replace_profile power-cap=${cap_target:-unchanged}uW core-max=${core_max:-unchanged}MHz mem-max=${mem_max:-unchanged}MHz voltage-offset=${voltage_offset:-unchanged}mV"
     exit 0
 fi
 
@@ -252,6 +262,14 @@ if [[ -n "$cap_path" && ! -w "$cap_path" ]]; then
 fi
 if ((clock_change || voltage_change)) && [[ ! -w "$od" || ! -w "$perf" ]]; then
     echo "No permission to set AMD clocks on PCI $bus" >&2; exit 1
+fi
+
+# Switching between algorithms replaces the whole per-GPU profile.
+# Restore first (under the existing PCI flock) so omitted/zero/"*" values
+# never inherit the previous algorithm's core/memory/voltage/power setting.
+# Requested settings have already passed range/permissions preflight above.
+if ((replace_profile)); then
+    restore_baseline
 fi
 
 # Capture a per-GPU baseline before any live writes. Repeated applications retain
