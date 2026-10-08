@@ -1309,11 +1309,11 @@ function Update-DeviceInformation {
                                         [PSCustomObject]@{
                                             BusId       = "$($busHex.Substring(0,2)):$($busHex.Substring(2,2))"
                                             Name        = $gpu.name
-                                            Clock       = $gpu.gpu_clock_input
-                                            ClockMem    = $gpu.mem_clock_input
-                                            PowerDraw   = $gpu.power1_input
-                                            Temperature = $gpu.temp1_input
-                                            FanSpeed    = $gpu.fan1_input
+                                            Clock       = if ($null -ne $gpu.sclk.freq1_input) {[Math]::Round([double]$gpu.sclk.freq1_input / 1e6)} else {$gpu.gpu_clock_input}
+                                            ClockMem    = if ($null -ne $gpu.mclk.freq2_input) {[Math]::Round([double]$gpu.mclk.freq2_input / 1e6)} else {$gpu.mem_clock_input}
+                                            PowerDraw   = if ($null -ne $gpu.PPT.power1_average) {$gpu.PPT.power1_average} elseif ($null -ne $gpu.power1_average) {$gpu.power1_average} else {$gpu.power1_input}
+                                            Temperature = if ($null -ne $gpu.edge.temp1_input) {$gpu.edge.temp1_input} else {$gpu.temp1_input}
+                                            FanSpeed    = if ($null -ne $gpu.fan1.fan1_input) {$gpu.fan1.fan1_input} else {$gpu.fan1_input}
                                         }
                                     } | Sort-Object -Property BusId
                                 )
