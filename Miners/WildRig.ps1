@@ -147,7 +147,7 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
                     #}
                 } elseif ($Miner_Vendor -eq "AMD") {
                     if ($_.AmdCapability) {
-                        $AmdCapability = $_.AmdCapability
+                        $AmdCapability = @($_.AmdCapability) -join "|"
                         $Miner_Device = $Miner_Device | Where-Object {$_.OpenCL.DeviceCapability -match $AmdCapability}
                     }
                     if ($_.ExcludeAmdCapability) {
