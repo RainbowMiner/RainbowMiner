@@ -44,6 +44,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
 
     $ok = $true
+    $UseWTM = $false
     if (-not $InfoOnly) {
         $Pool_Request = [PSCustomObject]@{}
         $Pool_RequestWorkers = [PSCustomObject]@{}
@@ -51,14 +52,13 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
 
         try {
             $Pool_Request = Invoke-RestMethodAsync "https://api.nanopool.org/v1/$($_.rpc)/approximated_earnings/1000" -tag $Name -retry 5 -retrywait 200 -cycletime 120
-            if (-not $Pool_Request.status) {$ok = $false}
+            if (-not $Pool_Request.status) {$UseWTM = $true}
         }
         catch {
-            $ok = $false
+            $UseWTM = $true
         }
-        if (-not $ok) {
-            Write-Log -Level Warn "Pool API ($Name) for $($Pool_Currency) has failed. "
-            return
+        if ($UseWTM) {
+            Write-Log -Level Warn "Pool API ($Name) profitability for $($Pool_Currency) has failed. Using RainbowMiner profitability fallback. "
         }
 
         try {
@@ -74,7 +74,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         $Pool_TSL = (Get-UnixTimestamp) - $(if ($Pool_RequestLastBlock.status -eq "True" -and ($Pool_RequestLastBlock.data | Measure-Object).Count -eq 1) {$Pool_RequestLastBlock.data[0].date})
 
         if ($ok) {
-            $Pool_ExpectedEarning = $(if ($Global:Rates.$Pool_Currency) {[double]$Pool_Request.data.day.coins / $Global:Rates.$Pool_Currency} else {[double]$Pool_Request.data.day.bitcoins}) / $_.divisor / 1000
+            $Pool_ExpectedEarning = if ($UseWTM) {0} else {$(if ($Global:Rates.$Pool_Currency) {[double]$Pool_Request.data.day.coins / $Global:Rates.$Pool_Currency} else {[double]$Pool_Request.data.day.bitcoins}) / $_.divisor / 1000}
             $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value $Pool_ExpectedEarning -Duration $StatSpan -Hashrate ([double]$Pool_RequestHashrate.data * $_.divisor) -BlockRate $Pool_RequestBlocks.data.count -ChangeDetection $true -Quiet
             if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
         }
@@ -90,8 +90,8 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                     CoinName      = $Pool_Coin.Name
                     CoinSymbol    = $Pool_Currency
                     Currency      = $Pool_Currency
-                    Price         = $Stat.$StatAverage #instead of .Live
-                    StablePrice   = $Stat.$StatAverageStable
+                    Price         = if ($UseWTM) {0} else {$Stat.$StatAverage} #instead of .Live
+                    StablePrice   = if ($UseWTM) {0} else {$Stat.$StatAverageStable}
                     MarginOfError = $Stat.Week_Fluctuation
                     Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
                     Host          = "$($_.rpc)-$($Pool_Region)1.nanopool.org"
@@ -113,6 +113,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                     PenaltyFactor = 1
 					Disabled      = $false
 					HasMinerExclusions = $false
+                    WTM           = $UseWTM
                     Price_0       = 0.0
 					Price_Bias    = 0.0
 					Price_Unbias  = 0.0
