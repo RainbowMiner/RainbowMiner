@@ -469,7 +469,9 @@ clock/voltage auto-tuning for the same card to avoid conflicting writes.
 | `LockMemoryClock` | maximum `OD_MCLK` clock | MHz |
 | `AmdVoltageOffset` | `OD_VDDGFX_OFFSET`, only when the hardware advertises a valid `OD_RANGE` | signed mV |
 
-The `*` value leaves a field unchanged. AMD `AmdVoltageOffset` is **not** an
+On profile replacement, `*` or `0` leaves that field at the saved pre-mining baseline
+rather than inheriting a previous algorithm's setting; numeric nonzero values
+request tuning. AMD `AmdVoltageOffset` is **not** an
 absolute core voltage target: `-100` means a negative 100 mV offset, *not*
 100 mV VDDC. `LockVoltagePoint`, `CoreClockBoost` and `MemoryClockBoost` retain
 their non-AMD meaning and must not be used as substitute AMD voltages.

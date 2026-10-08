@@ -1020,7 +1020,7 @@ class Miner {
                             $applied_any = $true
                             $this.SetOCprofileValue($DeviceModel,"LockMemoryClock",$val)
                         }
-                        if ($Profile.AmdVoltageOffset -match '^-?[0-9]+$') {
+                        if ($Profile.AmdVoltageOffset -match '^-?[0-9]+$' -and [int]$Profile.AmdVoltageOffset -ne 0) {
                             $val = [int]$Profile.AmdVoltageOffset
                             [void]$AmdArgs.Add("--voltage-offset")
                             [void]$AmdArgs.Add("$val")
