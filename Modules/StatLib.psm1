@@ -133,6 +133,8 @@ function Set-Stat {
                         Version            = $Version
                         LogFile            = $LogFile
                         IsFL               = [Bool]$Stat.IsFL
+                        Failed_Value       = [Double]$Stat.Failed_Value
+                        Failed_Streak      = [Int]$Stat.Failed_Streak
                         #Ratio_Average      = [Double]$Stat.Ratio_Average
                     }
                     Break
@@ -223,10 +225,11 @@ function Set-Stat {
             if ($Value -gt 0 -and $ToleranceMax -eq 0) {$ToleranceMax = $Value}
 
             if ($Value -lt $ToleranceMin -or $Value -gt $ToleranceMax) {
-                $StatResetValue = $null
+                $StatResetValue  = $null
+                $StatResetStreak = $null
 
                 $Stat.Failed += 10
-                
+
                 if ($Stat.Failed -ge 30) {
                     $Stat.Failed = 30
 
@@ -237,9 +240,35 @@ function Set-Stat {
                     }
                 }
 
+                if ($Stat -and $mode -eq "Miners" -and $Value -gt 0) {
+                    # self-heal: a stat can be wrong by orders of magnitude (a miner api that reported garbage while the benchmark ran)
+                    # or stale after a lasting change (a card dropped out of the set), every real sample then stays outside the
+                    # tolerance for good. Three rejected samples in a row that agree with each other restart the stat from the current
+                    # sample. A single off sample, a zero (miner api not answering) or samples that disagree cannot do that
+                    $StatRejectMatch = $false
+                    if ($Stat.Failed_Value -gt 0) {
+                        if ($FaultTolerance -lt 1) {
+                            $StatRejectMatch = [Math]::Abs($Value / $Stat.Failed_Value - 1) -le [Math]::Min(2 * [Math]::Max($FaultTolerance, 0.1), 0.5)
+                        } else {
+                            $StatRejectFactor = [Math]::Max($FaultTolerance, 2)
+                            $StatRejectMatch  = ($Value -ge $Stat.Failed_Value / $StatRejectFactor) -and ($Value -le $Stat.Failed_Value * $StatRejectFactor)
+                        }
+                    }
+                    $Stat.Failed_Streak = if ($StatRejectMatch) {$Stat.Failed_Streak + 1} else {1}
+                    $Stat.Failed_Value  = $Value
+                    if ($Stat.Failed_Streak -ge 3) {
+                        $StatResetValue  = $Stat.Week
+                        $StatResetStreak = $Stat.Failed_Streak
+                        $IsFastlaneValue = $false
+                        $Stat = $null
+                    }
+                }
+
                 if (-not $Quiet) {
                     if ($mode -eq "Miners") {
-                        if ($StatResetValue -ne $null) {
+                        if ($StatResetStreak) {
+                            Write-Log -Level $LogLevel "Stat file ($Name) will be reset, because the stored value $($StatResetValue | ConvertTo-Hash) is too far off of the last $($StatResetStreak) measured values (now $($Value | ConvertTo-Hash)). "
+                        } elseif ($StatResetValue -ne $null) {
                             Write-Log -Level $LogLevel "Stat file ($Name) will be reset, because the seeded value $($StatResetValue | ConvertTo-Hash) (fastlane or derived from another device set) is too far off of $($Value | ConvertTo-Hash). "
                         } else {
                             Write-Log -Level $LogLevel "Stat file ($Name) was not updated because the value $($Value | ConvertTo-Hash) is outside fault tolerance $($ToleranceMin | ConvertTo-Hash) to $($ToleranceMax | ConvertTo-Hash). "
@@ -290,6 +319,8 @@ function Set-Stat {
                             Version            = $Version
                             LogFile            = $LogFile
                             IsFL               = $false
+                            Failed_Value       = 0
+                            Failed_Streak      = 0
                             #Ratio_Average      = if ($Stat.Ratio_Average -gt 0) {[Math]::Round($Stat.Ratio_Average - $Span_Hour * ($Ratio - $Stat.Ratio_Average),4)} else {$Ratio}
                         }
                         Break
@@ -397,6 +428,8 @@ function Set-Stat {
                     Version            = $Version
                     LogFile            = $LogFile
                     IsFL               = $IsFastlaneValue
+                    Failed_Value       = 0
+                    Failed_Streak      = 0
                     #Ratio_Average      = $Ratio
                 }
                 Break
@@ -506,6 +539,8 @@ function Set-Stat {
                     Version            = [String]$Stat.Version
                     LogFile            = [String]$Stat.LogFile
                     IsFL               = [Bool]$Stat.IsFL
+                    Failed_Value       = [Double]$Stat.Failed_Value
+                    Failed_Streak      = [Int]$Stat.Failed_Streak
                     #Ratio_Average      = [Double]$Stat.Ratio_Average
                 }
                 Break
