@@ -247,8 +247,9 @@ if [[ -n "$core_max" || -n "$mem_max" || -n "$voltage_offset" ]]; then
             # Navi 23 (RX 6650 XT) reports OD_VDDGFX_OFFSET but omits its
             # range on some amdgpu kernels. Both 0x73ef boards were verified
             # to accept -25mV and restore 0mV. Restrict the unadvertised
-            # range to a conservative undervolt and require exact readback.
-            offset_min=-250
+            # range to the -25mV demonstrated by hardware tests and require
+            # exact readback. Larger undervolts require separate validation.
+            offset_min=-25
             offset_max=0
         else
             echo "AMD voltage-offset range unavailable for PCI $bus; cannot safely set voltage" >&2

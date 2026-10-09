@@ -159,7 +159,8 @@ with tempfile.TemporaryDirectory(prefix="amd-oc-tests-") as tmp:
 
     # Missing-range fallback is restricted to tested Navi 23 device ID,
     # with a conservative undervolt bound. Unknown GPUs must still fail.
-    for bus, value in (("06:00", "-300"), ("06:00", "25"),
+    for bus, value in (("06:00", "-300"), ("06:00", "-26"),
+                       ("06:00", "-100"), ("06:00", "25"),
                        ("0c:00", "-25"), ("0d:00", "-25"),
                        ("03:00", "-700")):
         run(bus, "--voltage-offset", value, ok=False)

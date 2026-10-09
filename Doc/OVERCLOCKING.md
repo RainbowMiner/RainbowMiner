@@ -478,12 +478,14 @@ their non-AMD meaning and must not be used as substitute AMD voltages.
 On tested Navi 23 / RX 6650 XT cards (`0x73ef`), Linux may expose
 `OD_VDDGFX_OFFSET` and a readable numeric current offset but omit its
 `OD_RANGE` bounds. In that specific case only, this helper permits
-`-250..0 mV` as a *conservative software policy*, **not** a driver-advertised
+`-25..0 mV` as a *conservative software policy*, **not** a driver-advertised
 range. Both MSI and Gigabyte RX 6650 XT boards accepted `-25 mV` and
 returned to `0 mV` in supervised hardware tests; larger offsets have **not**
 been hardware-validated. Every apply still requires an exact driver readback
-and saves an independent restoration baseline. Other device IDs without
-advertised ranges, and malformed advertised ranges, remain rejected.
+and saves an independent restoration baseline. Larger undervolts require
+specific validation before extending this fallback; no range beyond `-25 mV`
+is claimed to be supported. Other device IDs without advertised ranges, and
+malformed advertised ranges, remain rejected.
 
 Absolute VDDC, MVDD, MVDDCI, SOCV and PowerPlay editing are outside the scope
 of this backend; unsupported offset requests are rejected before any OC write.
