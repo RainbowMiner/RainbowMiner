@@ -2548,6 +2548,32 @@
             "step": "1",
             "placeholder": "Enter hours until re-enable"
           }
+        },
+        {
+          "kind": "field",
+          "key": "EnableStallDetection",
+          "id": "inputEnableStallDetection",
+          "label": {
+            "html": "Stop stalled GPU miners",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "Stop a GPU miner that keeps reporting a hashrate while its GPUs sit at idle power for three rounds, and count it as crashed. Only active for GPUs that deliver measured power readings."
+          },
+          "control": "select",
+          "attrs": {},
+          "options": [
+            {
+              "value": "0",
+              "label": "Disable"
+            },
+            {
+              "value": "1",
+              "label": "Enable"
+            }
+          ]
         }
       ]
     }

@@ -353,6 +353,7 @@ function Get-Device {
                                         FanSpeed          = 0  #amd/nvidia
                                         Temperature       = 0  #amd/nvidia
                                         PowerDraw         = 0  #amd/nvidia
+                                        PowerDrawEstimated = $false #amd/nvidia/intel: true if PowerDraw is a TDP estimate, not a sensor reading
                                         PowerLimit        = 0  #nvidia
                                         PowerLimitPercent = 0  #amd/nvidia
                                         PowerMaxLimit     = 0  #nvidia
@@ -1191,7 +1192,7 @@ function Update-DeviceInformation {
 
                 if ($Script:AmdCardsTDP -eq $null) {$Script:AmdCardsTDP = Get-ContentByStreamReader ".\Data\amd-cards-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
 
-                $Devices | Foreach-Object {$_.Data.Method = "";$_.Data.Clock = $_.Data.ClockMem = $_.Data.FanSpeed = $_.Data.Temperature = $_.Data.PowerDraw = 0}
+                $Devices | Foreach-Object {$_.Data.Method = "";$_.Data.Clock = $_.Data.ClockMem = $_.Data.FanSpeed = $_.Data.Temperature = $_.Data.PowerDraw = 0;$_.Data.PowerDrawEstimated = $false}
 
                 if ($IsWindows) {
 
@@ -1231,6 +1232,7 @@ function Update-DeviceInformation {
 
                                         # AMD seems to work somewhat with ab beta, so lets parse power - tested RX9060XT
                                         $PowerDrawCur   = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?power$").Data
+                                        $PowerDrawEstimated = $PowerDrawCur -eq 0
                                         if ($PowerDrawCur -eq 0) {
                                             $PowerDrawCur = $Script:AmdCardsTDP."$($_.Model_Name)" * ((100 + $PowerLimitPercent) * 0.01) * ($Utilization * 0.01)
                                         }
@@ -1254,6 +1256,7 @@ function Update-DeviceInformation {
 
                                             if ($Changed) {
                                                 $_.Data.Method = "$(if ($_.Data.Method) {"$($_.Data.Method);"})ab"
+                                                $_.Data.PowerDrawEstimated = $PowerDrawEstimated
                                             }
                                         }
                                         $DeviceId++
@@ -1302,6 +1305,7 @@ function Update-DeviceInformation {
 
                                                 if ($Changed) {
                                                     $_.Data.Method = "$(if ($_.Data.Method) {"$($_.Data.Method);"})odvii8"
+                                                    if ($Data.PowerDraw -gt 0) {$_.Data.PowerDrawEstimated = $false}
                                                 }
                                             }
 
@@ -1410,7 +1414,7 @@ function Update-DeviceInformation {
 
                 if ($Script:IntelCardsTDP -eq $null) {$Script:IntelCardsTDP = Get-ContentByStreamReader ".\Data\intel-cards-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
 
-                $Devices | Foreach-Object {$_.Data.Method = "";$_.Data.Clock = $_.Data.ClockMem = $_.Data.FanSpeed = $_.Data.Temperature = $_.Data.PowerDraw = $_.Data.Utilization = 0}
+                $Devices | Foreach-Object {$_.Data.Method = "";$_.Data.Clock = $_.Data.ClockMem = $_.Data.FanSpeed = $_.Data.Temperature = $_.Data.PowerDraw = $_.Data.Utilization = 0;$_.Data.PowerDrawEstimated = $false}
 
                 if ($IsWindows) {
 
@@ -1448,6 +1452,7 @@ function Update-DeviceInformation {
 
                                         # AMD seems to work somewhat with ab beta, so lets parse power - tested RX9060XT
                                         $PowerDrawCur   = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?power$").Data
+                                        $PowerDrawEstimated = $PowerDrawCur -eq 0
                                         if ($PowerDrawCur -eq 0) {
                                             $PowerDrawCur = $Script:AmdCardsTDP."$($_.Model_Name)" * ((100 + $PowerLimitPercent) * 0.01) * ($Utilization * 0.01)
                                         }
@@ -1471,6 +1476,7 @@ function Update-DeviceInformation {
 
                                             if ($Changed) {
                                                 $_.Data.Method = "$(if ($_.Data.Method) {"$($_.Data.Method);"})ab"
+                                                $_.Data.PowerDrawEstimated = $PowerDrawEstimated
                                             }
                                         }
                                         $DeviceId++
@@ -1519,7 +1525,7 @@ function Update-DeviceInformation {
                                         $_.Data.Method      = "sysinfo"
                                         $INTEL_Ok = $true
 
-                                        if (-not $_.Data.PowerDraw -and $Script:IntelCardsTDP."$($_.Model_Name)") {$_.Data.PowerDraw = $Script:IntelCardsTDP."$($_.Model_Name)" * ([double]$_.Data.Utilization / 100)}
+                                        if (-not $_.Data.PowerDraw -and $Script:IntelCardsTDP."$($_.Model_Name)") {$_.Data.PowerDraw = $Script:IntelCardsTDP."$($_.Model_Name)" * ([double]$_.Data.Utilization / 100);$_.Data.PowerDrawEstimated = $true}
                                     }
                                     $DeviceId++
                                 }
@@ -1556,9 +1562,10 @@ function Update-DeviceInformation {
                         $_.Data.PowerMaxLimit     = $smi.power_max_limit
                         $_.Data.PowerDefaultLimit = $smi.power_default_limit
                         $_.Data.Method            = "smi"
+                        $_.Data.PowerDrawEstimated = $false
 
                         if ($_.Data.PowerDefaultLimit) {$_.Data.PowerLimitPercent = [Math]::Floor(($_.Data.PowerLimit * 100) / $_.Data.PowerDefaultLimit)}
-                        if (-not $_.Data.PowerDraw -and $Script:NvidiaCardsTDP."$($_.Model_Name)") {$_.Data.PowerDraw = $Script:NvidiaCardsTDP."$($_.Model_Name)" * ([double]$_.Data.PowerLimitPercent / 100) * ([double]$_.Data.Utilization / 100)}
+                        if (-not $_.Data.PowerDraw -and $Script:NvidiaCardsTDP."$($_.Model_Name)") {$_.Data.PowerDraw = $Script:NvidiaCardsTDP."$($_.Model_Name)" * ([double]$_.Data.PowerLimitPercent / 100) * ([double]$_.Data.Utilization / 100);$_.Data.PowerDrawEstimated = $true}
                     }
                     $DeviceId++
                 }
@@ -2234,6 +2241,66 @@ function Get-DevicePowerDraw {
         [String[]]$DeviceName = @()
     )
     (($Global:GlobalCachedDevices | Where-Object {-not $DeviceName -or $DeviceName -icontains $_.Name}).Data.PowerDraw | Measure-Object -Sum).Sum
+}
+
+function Get-DevicePowerState {
+    [cmdletbinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [String[]]$DeviceName = @(),
+        [Parameter(Mandatory = $false)]
+        [Double]$IdleRatio = 0.12,
+        [Parameter(Mandatory = $false)]
+        [Int]$IdleUtilization = 20
+    )
+    # judges the GPUs of a miner by their sensor readings only. IsReal is true when every device has a
+    # measured (not TDP-estimated) power draw and a reference power (nvidia-smi limits, else the TDP
+    # tables). IsIdle is true when the readings sum up to less than IdleRatio of the reference and no
+    # device reports a utilization above IdleUtilization - the state of a miner whose GPUs do nothing.
+    $Devices = @($Global:GlobalCachedDevices | Where-Object {$_.Type -eq "GPU" -and (-not $DeviceName -or $DeviceName -icontains $_.Name)})
+
+    $PowerDraw   = [Double]0
+    $Reference   = [Double]0
+    $Utilization = 0
+    $IsReal      = $Devices.Count -gt 0
+
+    foreach ($Device in $Devices) {
+        $Data = $Device.Data
+        $DeviceReference = [Double]0
+        foreach ($Field in @("PowerDefaultLimit","PowerLimit","PowerMaxLimit")) {
+            if ([Double]$Data.$Field -gt 0) {$DeviceReference = [Double]$Data.$Field; break}
+        }
+        if ($DeviceReference -le 0) {
+            $TDP = Switch ($Device.Vendor) {
+                "NVIDIA" {
+                    if ($Script:NvidiaCardsTDP -eq $null) {$Script:NvidiaCardsTDP = Get-ContentByStreamReader ".\Data\nvidia-cards-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
+                    $Script:NvidiaCardsTDP."$($Device.Model_Name)"
+                }
+                "AMD" {
+                    if ($Script:AmdCardsTDP -eq $null) {$Script:AmdCardsTDP = Get-ContentByStreamReader ".\Data\amd-cards-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
+                    $Script:AmdCardsTDP."$($Device.Model_Name)"
+                }
+                "INTEL" {
+                    if ($Script:IntelCardsTDP -eq $null) {$Script:IntelCardsTDP = Get-ContentByStreamReader ".\Data\intel-cards-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
+                    $Script:IntelCardsTDP."$($Device.Model_Name)"
+                }
+            }
+            if ($TDP -ne $null) {$DeviceReference = [Double]$TDP}
+        }
+        if ($DeviceReference -le 0 -or [Double]$Data.PowerDraw -le 0 -or $Data.PowerDrawEstimated) {$IsReal = $false}
+        $PowerDraw += [Double]$Data.PowerDraw
+        $Reference += $DeviceReference
+        if ([Int]$Data.Utilization -gt $Utilization) {$Utilization = [Int]$Data.Utilization}
+    }
+
+    [PSCustomObject]@{
+        Devices     = $Devices.Count
+        IsReal      = $IsReal
+        PowerDraw   = $PowerDraw
+        Reference   = $Reference
+        Utilization = $Utilization
+        IsIdle      = $IsReal -and ($PowerDraw -lt $Reference * $IdleRatio) -and ($Utilization -le $IdleUtilization)
+    }
 }
 
 function Get-NormalizedDeviceName {

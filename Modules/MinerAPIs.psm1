@@ -60,6 +60,7 @@ class Miner {
     [int]$Rounds = 0
     [int]$MinSamples = 1
     [int]$ZeroRounds = 0
+    [int]$PowerIdleRounds = 0
     [int]$CrashCount = 0
     [int]$MaxBenchmarkRounds = 3
     [double]$MaxRejectedShareRatio = 0.3
@@ -159,6 +160,7 @@ class Miner {
         $this.New = $true
         $this.Activated++
         $this.Rounds = 0
+        $this.PowerIdleRounds = 0
         $this.IntervalBegin = 0
         $this.BenchmarkedOffset = 0
         if (-not $this.StartPort) {$this.StartPort = $this.Port}

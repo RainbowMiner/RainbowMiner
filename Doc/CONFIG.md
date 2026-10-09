@@ -298,6 +298,7 @@ after **AutoDisableResetHours**.
 - **MaxCrashesBeforeDisable** = if EnableAutoDisableMiners="1": number of crashes within the tracking window, until a miner/algorithm gets disabled [default=5]
 - **CrashTrackingWindowMinutes** = if EnableAutoDisableMiners="1": sliding window in minutes for counting miner crashes [default=60]
 - **AutoDisableResetHours** = if EnableAutoDisableMiners="1": re-enable an auto-disabled miner/algorithm after this many hours, set to 0 to never re-enable automatically [default=24]
+- **EnableStallDetection** = set to 1 to stop a GPU miner that keeps reporting a hashrate while its GPUs sit at idle power (below 12% of their power limit) for three rounds in a row. The stop counts as a crash, so MaxCrashesDuringBenchmark and EnableAutoDisableMiners apply. Only active for GPUs that deliver measured power readings; TDP estimates are ignored [default=1]
 - **MinerFaultToleranceGPU** = set the GPU miner fault tolerance in % (10..100) [default=10]
 - **MinerFaultToleranceCPU** = set the CPU miner fault tolerance in % (10..100) [default=25]
 - **MaxRejectedShareRatio** = set max. allowed ratio "bad shares/found shares" until a miner gets disabled [default=0.3]

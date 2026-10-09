@@ -501,6 +501,8 @@ which devices, and how RainbowMiner reads its hashrate.
 - a miner/algorithm that crashes repeatedly is put on hold by the watchdog, and disabled
   permanently, if **EnableAutoDisableMiners** is set. Both can be released again on the
   **Miners** page of the web interface
+- a GPU miner that keeps reporting a hashrate while its GPUs sit at idle power is stopped
+  and counted as crashed (**EnableStallDetection**, needs measured GPU power readings)
 - the miner Excavator mines on NiceHash pool, only
 - miners Excavator & Excavator1.4.4 run in their own miner window, even if you select to hide
   miner windows
