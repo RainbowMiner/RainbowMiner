@@ -878,6 +878,35 @@
                   "label": "nvml"
                 }
               ]
+            },
+            {
+              "kind": "field",
+              "key": "EnableOCLinuxAmd",
+              "id": "inputEnableOCLinuxAmd",
+              "label": {
+                "html": "AMD OC on Linux",
+                "class": "col-sm-2 col-form-label"
+              },
+              "rowClasses": [
+                "is--ocprofiles"
+              ],
+              "colClass": "col-sm-10",
+              "help": {
+                "html": "Overclock AMD GPUs on Linux through the amdgpu OverDrive interface (power limit, clock locks, voltage offset). Needs the ocdaemon and the kernel parameter amdgpu.ppfeaturemask=0xffffffff, see Doc/OVERCLOCKING.md.",
+                "id": "inputEnableOCLinuxAmdHelp"
+              },
+              "control": "select",
+              "attrs": {},
+              "options": [
+                {
+                  "value": "0",
+                  "label": "Disable"
+                },
+                {
+                  "value": "1",
+                  "label": "Enable"
+                }
+              ]
             }
           ]
         }

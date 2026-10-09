@@ -367,6 +367,7 @@ The two overclocking options and how to choose between them are described in
 - **EnableOCVoltage** = set to 1, if you plan to set voltage for overclocking [default=0]
 - **EnableOCFullReset** = set to 1, to reset all possible overclocking settings (instead of the prior set values, only), when a miner is closed. [default=1]
 - **EnableOCLinuxForcePState** = set to 1, to force all GPU into their workload powerstate to avoid crashes due to P2-P0 switching [default=1]
+- **EnableOCLinuxAmd** = set to 1, to apply the overclocking profiles to AMD GPUs on Linux through the amdgpu OverDrive interface (needs the ocdaemon and amdgpu.ppfeaturemask=0xffffffff, see Doc/OVERCLOCKING.md) [default=0]
 - **EnableOCLinuxSetAllPStates** = set to 1, to set mem/core clock offsets to all PStates, instead to the highest, only [default=0]
 - **OCResetInterval** = set the interval to reset the overclocking settings of running miners, in seconds (0 to disable) [default=0]
 - **MSIApath** = absolute windows path to MSI Afterburner executable [default=c:\Program Files (x86)\MSI Afterburner\MSIAfterburner.exe]

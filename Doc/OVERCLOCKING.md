@@ -450,3 +450,50 @@ passed to NVML with the same number as to nvidia-settings.
 One trap on a client rig: `EnableLinuxHeadless` is an ordinary config value, so a server
 config can overwrite it. If overclocking stops working right after a config sync, check
 whether the setting is still there and add it to `ExcludeServerConfigVars` if needed.
+
+## AMD overclocking on Linux
+
+RainbowMiner can apply the overclocking profiles to AMD GPUs on Linux through the amdgpu
+OverDrive interface in sysfs, without CoreCtrl, LACT or a PowerPlay table. It is off by
+default; switch it on with `"EnableOCLinuxAmd": "1"` next to `"EnableOCProfiles": "1"`
+(setup: `[C]onfiguration->[C]ommon`, or the web setup). Two things have to be in place:
+
+- the ocdaemon must be running (`ocdaemon status`, otherwise run `./install.sh` again), all
+  writes go through it as root
+- OverDrive must be enabled in the driver with the kernel parameter
+  `amdgpu.ppfeaturemask=0xffffffff` (e.g. appended to `GRUB_CMDLINE_LINUX_DEFAULT` in
+  /etc/default/grub, then `sudo update-grub` and a reboot). Without it the driver does not
+  create `pp_od_clk_voltage` and only the power limit can be changed
+
+The profile fields map to the OverDrive controls as follows:
+
+| Field              | AMD on Linux                                                                   |
+| ------------------ | ------------------------------------------------------------------------------ |
+| `PowerLimit`       | power cap in percent of the card's default, clamped to the driver's min/max    |
+| `LockCoreClock`    | maximum core clock in MHz (Vega20, RDNA1, RDNA2, RDNA3)                        |
+| `CoreClockBoost`   | core clock offset in MHz (RDNA4 only, these cards take no maximum)             |
+| `LockMemoryClock`  | maximum memory clock in MHz (the memory controller clock the driver shows, not the effective data rate) |
+| `VoltageOffset`    | GFX voltage offset in mV, negative values undervolt (RDNA2 and newer, needs `"EnableOCVoltage": "1"`) |
+| `MemoryClockBoost`, `ThermalLimit`, `LockVoltagePoint` | not available on AMD, a warning is logged  |
+
+Polaris and Vega10 cards (RX 400/500, Vega 56/64) use a per-state OverDrive table that
+RainbowMiner does not touch: only the power limit applies there. RDNA2 cards print no range for
+the voltage offset and the driver does not check it, so RainbowMiner limits it to -200..0 mV on
+those cards; RDNA3 and RDNA4 report a range and it is enforced. Everything else is checked
+against the ranges the driver reports, and the result is read back after every change.
+
+The first change records the card's current clocks, voltage offset, power cap and performance
+level in `/run/rainbowminer/amd-oc/<bus>.state`. Every later profile puts back the fields it
+does not set, so a switch from a core-heavy to a memory-heavy algorithm never keeps the old core
+clock, and a miner stop, the OC reset and the exit of RainbowMiner restore the recorded values.
+The state lives in /run and is gone after a reboot, which resets the driver as well.
+
+A refused or unsupported setting is reported in the log and leaves the card as it was, e.g.:
+
+    OC RX6600-...: ERROR: AMD OC 03:00: the voltage offset -300 is outside the allowed range -200..0
+    OC RX580-...: AMD OC 05:00: the core clock is not supported on this GPU (per-state OverDrive table)
+    OC RX7600-...: AMD OC 04:00: the core clock is not supported: OverDrive is not enabled, boot with amdgpu.ppfeaturemask=0xffffffff
+
+To see what the driver offers for a card and what RainbowMiner has recorded, run as root:
+
+    bash IncludesLinux/bash/amd_oc.sh --bus 03:00 --query

@@ -2181,6 +2181,10 @@ function Get-NvmlOCHelper {
     $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\IncludesLinux\bash\nvml_oc.py")
 }
 
+function Get-AmdOCHelper {
+    $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\IncludesLinux\bash\amd_oc.sh")
+}
+
 function Test-NvmlOC {
     # LinuxOCMethod: "nvidia-settings" (default, unchanged behavior), "nvml" (always
     # set core/memory offsets through NVML) or "auto" (NVML only if nvidia-settings

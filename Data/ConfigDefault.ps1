@@ -16,6 +16,7 @@
     EnableOCVoltage = $false
     EnableOCFullReset = $true
     EnableOCLinuxForcePState = $true
+    EnableOCLinuxAmd = $false
     EnableAutoUpdate = $true
     EnableUpdateDuringPause = $true
     EnableErrorRatio = $true
