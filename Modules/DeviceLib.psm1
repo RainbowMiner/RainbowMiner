@@ -1116,6 +1116,43 @@ function Get-DeviceName {
 # Device data update
 #
 
+function Get-AmdSensorValue {
+    [CmdletBinding()]
+    param(
+        $Sensor,
+        [string[]]$Keys
+    )
+    # lm-sensors nests the amdgpu readings in labelled blocks ("edge": {"temp1_input": ..}, "PPT": {"power1_average": ..}),
+    # but the block names and subkeys differ by GPU generation and kernel. $Keys lists "blockregex/subkeyregex" pairs in
+    # order of preference; an empty block regex matches any block as well as the chip's top-level values.
+    foreach ($Key in $Keys) {
+        $BlockRegex,$SubRegex = $Key -split '/',2
+        foreach ($Prop in $Sensor.PSObject.Properties) {
+            if ($Prop.Value -is [PSCustomObject]) {
+                if ($Prop.Name -match $BlockRegex) {
+                    foreach ($Sub in $Prop.Value.PSObject.Properties) {
+                        if ($Sub.Name -match $SubRegex -and $Sub.Value -is [ValueType]) {return [double]$Sub.Value}
+                    }
+                }
+            } elseif (-not $BlockRegex -and $Prop.Name -match $SubRegex -and $Prop.Value -is [ValueType]) {
+                return [double]$Prop.Value
+            }
+        }
+    }
+    $null
+}
+
+function Get-AmdSensorClock {
+    [CmdletBinding()]
+    param(
+        $Sensor,
+        [string[]]$Keys
+    )
+    # hwmon frequencies arrive in Hz, the old flat layout carried MHz
+    $Value = Get-AmdSensorValue $Sensor $Keys
+    if ($Value -gt 100000) {[Math]::Round($Value / 1e6)} else {$Value}
+}
+
 function Update-DeviceInformation {
     [cmdletbinding()]
     param(
@@ -1309,11 +1346,11 @@ function Update-DeviceInformation {
                                         [PSCustomObject]@{
                                             BusId       = "$($busHex.Substring(0,2)):$($busHex.Substring(2,2))"
                                             Name        = $gpu.name
-                                            Clock       = $gpu.gpu_clock_input
-                                            ClockMem    = $gpu.mem_clock_input
-                                            PowerDraw   = $gpu.power1_input
-                                            Temperature = $gpu.temp1_input
-                                            FanSpeed    = $gpu.fan1_input
+                                            Clock       = Get-AmdSensorClock $gpu @('^sclk$/^freq\d+_input$','/^freq1_input$','/^gpu_clock_input$')
+                                            ClockMem    = Get-AmdSensorClock $gpu @('^mclk$/^freq\d+_input$','/^freq2_input$','/^mem_clock_input$')
+                                            PowerDraw   = Get-AmdSensorValue $gpu @('^(PPT|power1)$/^power1_(average|input)$','/^power\d+_(average|input)$')
+                                            Temperature = Get-AmdSensorValue $gpu @('^edge$/^temp\d+_input$','^temp1$/^temp1_input$','/^temp1_input$')
+                                            FanSpeed    = Get-AmdSensorValue $gpu @('^fan1$/^fan1_input$','/^fan\d+_input$')
                                         }
                                     } | Sort-Object -Property BusId
                                 )
