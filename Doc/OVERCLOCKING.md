@@ -467,7 +467,7 @@ clock/voltage auto-tuning for the same card to avoid conflicting writes.
 | `PowerLimit` | `power1_cap`, based on the GPU's default cap | % of default |
 | `LockCoreClock` | maximum `OD_SCLK` clock, **not** a fixed clock | MHz |
 | `LockMemoryClock` | maximum `OD_MCLK` clock | MHz |
-| `AmdVoltageOffset` | `OD_VDDGFX_OFFSET`, only when the hardware advertises a valid `OD_RANGE` | signed mV |
+| `AmdVoltageOffset` | `OD_VDDGFX_OFFSET`; driver range where available, otherwise a conservative Navi 23 fallback | signed mV |
 
 On profile replacement, `*` or `0` leaves that field at the saved pre-mining baseline
 rather than inheriting a previous algorithm's setting; numeric nonzero values
@@ -475,6 +475,16 @@ request tuning. AMD `AmdVoltageOffset` is **not** an
 absolute core voltage target: `-100` means a negative 100 mV offset, *not*
 100 mV VDDC. `LockVoltagePoint`, `CoreClockBoost` and `MemoryClockBoost` retain
 their non-AMD meaning and must not be used as substitute AMD voltages.
+On tested Navi 23 / RX 6650 XT cards (`0x73ef`), Linux may expose
+`OD_VDDGFX_OFFSET` and a readable numeric current offset but omit its
+`OD_RANGE` bounds. In that specific case only, this helper permits
+`-250..0 mV` as a *conservative software policy*, **not** a driver-advertised
+range. Both MSI and Gigabyte RX 6650 XT boards accepted `-25 mV` and
+returned to `0 mV` in supervised hardware tests; larger offsets have **not**
+been hardware-validated. Every apply still requires an exact driver readback
+and saves an independent restoration baseline. Other device IDs without
+advertised ranges, and malformed advertised ranges, remain rejected.
+
 Absolute VDDC, MVDD, MVDDCI, SOCV and PowerPlay editing are outside the scope
 of this backend; unsupported offset requests are rejected before any OC write.
 

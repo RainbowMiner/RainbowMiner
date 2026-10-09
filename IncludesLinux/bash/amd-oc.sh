@@ -236,13 +236,24 @@ if [[ -n "$core_max" || -n "$mem_max" || -n "$voltage_offset" ]]; then
     fi
     if [[ -n "$voltage_offset" ]]; then
         [[ "$od_text" == *"OD_VDDGFX_OFFSET:"* ]] || { echo "AMD voltage offset not supported by this GPU" >&2; exit 1; }
-        if ! read -r offset_min offset_max < <(get_range VDDGFX_OFFSET); then
+        advertised_offset_range=$(get_range VDDGFX_OFFSET)
+        if [[ -n "$advertised_offset_range" ]]; then
+            read -r offset_min offset_max <<< "$advertised_offset_range"
+            [[ "$offset_min" =~ ^-?[0-9]+$ && "$offset_max" =~ ^-?[0-9]+$ ]] || {
+                echo "Invalid AMD voltage offset range on PCI $bus" >&2; exit 1
+            }
+        elif [[ -r "$dev/device" && "$(<"$dev/device")" == "0x73ef" ]] &&
+             [[ "$(get_current_offset)" =~ ^-?[0-9]+$ ]]; then
+            # Navi 23 (RX 6650 XT) reports OD_VDDGFX_OFFSET but omits its
+            # range on some amdgpu kernels. Both 0x73ef boards were verified
+            # to accept -25mV and restore 0mV. Restrict the unadvertised
+            # range to a conservative undervolt and require exact readback.
+            offset_min=-250
+            offset_max=0
+        else
             echo "AMD voltage-offset range unavailable for PCI $bus; cannot safely set voltage" >&2
             exit 1
         fi
-        [[ "$offset_min" =~ ^-?[0-9]+$ && "$offset_max" =~ ^-?[0-9]+$ ]] || {
-            echo "No supported AMD voltage offset range on PCI $bus" >&2; exit 1
-        }
         (( voltage_offset >= offset_min && voltage_offset <= offset_max )) || {
             echo "Voltage offset ${voltage_offset}mV outside ${offset_min}..${offset_max}mV on PCI $bus" >&2; exit 1
         }

@@ -38,11 +38,12 @@ assert SOURCE.count('state_dir="/run/rainbowminer-amd-oc"') == 1
 old_dev = 'dev="/sys/bus/pci/devices/0000:' + '$' + '{bus,,}.0"'
 assert SOURCE.count(old_dev) == 1
 
-def make_gpu(base, bus, core, mem, offset=False, power=True):
+def make_gpu(base, bus, core, mem, offset=False, power=True, device_id="0x73ef"):
     dev = base / ("0000:" + bus + ".0")
     h = dev / "hwmon" / "hwmon0"
     h.mkdir(parents=True)
     (dev / "vendor").write_text("0x1002\n")
+    (dev / "device").write_text(device_id + "\n")
     (dev / "power_dpm_force_performance_level").write_text("auto\n")
     v_range = "VDDGFX_OFFSET: -500mv 0mv\n" if offset else ""
     initial = (
@@ -80,9 +81,14 @@ with tempfile.TemporaryDirectory(prefix="amd-oc-tests-") as tmp:
     fake = t / "pci"
     msi, old_msi = make_gpu(fake, "06:00", 2699, 1094)
     giga, old_giga = make_gpu(fake, "0a:00", 2694, 1094)
-    rx7600, old_7600 = make_gpu(fake, "03:00", 2900, 1125, offset=True)
+    rx7600, old_7600 = make_gpu(fake, "03:00", 2900, 1125, offset=True, device_id="0x7480")
     # Test missing power hwmon: clock-only changes should be possible.
     no_power, _ = make_gpu(fake, "0b:00", 2699, 1094, power=False)
+    unknown, _ = make_gpu(fake, "0c:00", 2699, 1094, device_id="0xabcd")
+    malformed, _ = make_gpu(fake, "0d:00", 2699, 1094)
+    malformed_od = malformed / "pp_od_clk_voltage"
+    malformed_od.write_text(malformed_od.read_text() +
+                            "VDDGFX_OFFSET: invalid 0mv\n")
 
     candidate = SOURCE.replace(orig_func, FAKE_OD_WRITER)
     candidate = candidate.replace(old_dev, 'dev="' + str(fake) + '/0000:' + '$' + '{bus,,}.0"')
@@ -127,12 +133,45 @@ with tempfile.TemporaryDirectory(prefix="amd-oc-tests-") as tmp:
     assert (rx7600 / "power_dpm_force_performance_level").read_text().strip() == "auto"
     print("PASS: voltage/core apply, repeated profile switch, original baseline restoration")
 
-    # Missing voltage capability must fail before any changes.
-    run("06:00", "--voltage-offset", "-100", ok=False)
-    assert not state(t, "06:00").exists() and limits(msi) == (2699, 1094, 0)
-    run("03:00", "--voltage-offset", "-700", ok=False)
-    assert not state(t, "03:00").exists()
-    print("PASS: unsupported voltage request rejects without device changes")
+    # Navi 23 advertises an offset value but not its allowed range on some
+    # kernels. Real MSI and Gigabyte RX6650XT cards accepted -25mV through
+    # LACT's sysfs backend; apply and restore that offset independently.
+    for bus, card in (("06:00", msi), ("0a:00", giga)):
+        run(bus, "--voltage-offset", "-25")
+        assert limits(card)[2] == -25
+        run(bus, "--reset")
+        assert limits(card)[2] == 0
+        assert not state(t, bus).exists()
+    print("PASS: both Navi23 GPUs allow bounded voltage offset and restore")
+
+    # Switching Navi23 from an undervolted profile to an omitted-voltage
+    # profile must clear the voltage offset without touching other GPUs.
+    run("06:00", "--replace-profile", "--core-max", "1800",
+        "--voltage-offset", "-25")
+    assert limits(msi) == (1800, 1094, -25)
+    run("06:00", "--replace-profile", "--core-max", "2000")
+    assert limits(msi) == (2000, 1094, 0)
+    assert limits(giga) == (2694, 1094, 0)
+    run("06:00", "--replace-profile")
+    assert limits(msi) == (2699, 1094, 0)
+    assert not state(t, "06:00").exists()
+    print("PASS: Navi23 voltage switching clears prior undervolt")
+
+    # Missing-range fallback is restricted to tested Navi 23 device ID,
+    # with a conservative undervolt bound. Unknown GPUs must still fail.
+    for bus, value in (("06:00", "-300"), ("06:00", "25"),
+                       ("0c:00", "-25"), ("0d:00", "-25"),
+                       ("03:00", "-700")):
+        run(bus, "--voltage-offset", value, ok=False)
+        assert not state(t, bus).exists()
+    print("PASS: out-of-range and unknown-device offsets rejected preflight")
+
+    # Missing advertised range is not permission to silently accept writes
+    # ignored by the kernel. Readback must fail and preserve the baseline.
+    run("06:00", "--voltage-offset", "-25", reject=True, ok=False)
+    assert state(t, "06:00").exists() and limits(msi)[2] == 0
+    run("06:00", "--reset")
+    print("PASS: unadvertised offset requires real driver readback")
 
     run("06:00", "--core-max", "1800", reject=True, ok=False)
     assert state(t, "06:00").exists(), "readback failed but baseline was dropped"
@@ -205,7 +244,7 @@ with tempfile.TemporaryDirectory(prefix="amd-oc-tests-") as tmp:
     assert limits(rx7600) == (2900, 1125, 0)
     print("PASS: profile replacement drops stale power caps and preserves reset")
 
-    # Do not demand an unsupported voltage offset for RX6650XT; switching on
+    # Preserve per-device isolation while switching on
     # one card cannot disturb another card's clocks or original snapshot.
     run("06:00", "--replace-profile", "--core-max", "1800", "--mem-max", "1150")
     run("0a:00", "--replace-profile", "--core-max", "2000", "--mem-max", "1190")
@@ -219,7 +258,7 @@ with tempfile.TemporaryDirectory(prefix="amd-oc-tests-") as tmp:
     assert limits(giga) == (2000, 1190, 0)
     run("0a:00", "--reset")
     assert limits(giga) == (2694, 1094, 0)
-    print("PASS: independent cards, unsupported voltage preserved, no-write dry-run")
+    print("PASS: independent cards, baseline voltage preserved, no-write dry-run")
 
     run("03:00", "--reset", "--replace-profile", ok=False)
     assert not state(t, "03:00").exists()
@@ -245,8 +284,8 @@ with tempfile.TemporaryDirectory(prefix="amd-oc-tests-") as tmp:
     run("03:00", "--reset")
     run("06:00", "--replace-profile", "--core-max", "1800")
     run("06:00", "--replace-profile", "--core-max", "1900",
-        "--voltage-offset", "-100", ok=False)
-    assert limits(msi) == (1800, 1094, 0), "Unsupported voltage request altered previous profile"
+        "--voltage-offset", "-300", ok=False)
+    assert limits(msi) == (1800, 1094, 0), "Invalid voltage request altered previous profile"
     run("06:00", "--reset")
     print("PASS: invalid incoming profile leaves current known-good settings intact")
 
