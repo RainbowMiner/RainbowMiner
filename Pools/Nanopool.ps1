@@ -58,7 +58,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             $UseWTM = $true
         }
         if ($UseWTM) {
-            Write-Log -Level Warn "Pool API ($Name) profitability for $($Pool_Currency) has failed. Using RainbowMiner profitability fallback. "
+            Write-Log -Level Info "Pool API ($Name) profitability for $($Pool_Currency) has failed. Using WhatToMine fallback. "
         }
 
         try {
@@ -73,11 +73,19 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
 
         $Pool_TSL = (Get-UnixTimestamp) - $(if ($Pool_RequestLastBlock.status -eq "True" -and ($Pool_RequestLastBlock.data | Measure-Object).Count -eq 1) {$Pool_RequestLastBlock.data[0].date})
 
-        if ($ok) {
-            $Pool_ExpectedEarning = if ($UseWTM) {0} else {$(if ($Global:Rates.$Pool_Currency) {[double]$Pool_Request.data.day.coins / $Global:Rates.$Pool_Currency} else {[double]$Pool_Request.data.day.bitcoins}) / $_.divisor / 1000}
+        if ($UseWTM) {
+            # leave the profit stat untouched during the outage, WhatToMine supplies the price
+            $Stat = [PSCustomObject]@{
+                HashRate_Live     = [double]$Pool_RequestHashrate.data * $_.divisor
+                BlockRate_Average = [double]$Pool_RequestBlocks.data.count
+                Week_Fluctuation  = 0
+                Updated           = (Get-Date).ToUniversalTime()
+            }
+        } else {
+            $Pool_ExpectedEarning = $(if ($Global:Rates.$Pool_Currency) {[double]$Pool_Request.data.day.coins / $Global:Rates.$Pool_Currency} else {[double]$Pool_Request.data.day.bitcoins}) / $_.divisor / 1000
             $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value $Pool_ExpectedEarning -Duration $StatSpan -Hashrate ([double]$Pool_RequestHashrate.data * $_.divisor) -BlockRate $Pool_RequestBlocks.data.count -ChangeDetection $true -Quiet
-            if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
         }
+        if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
     if ($ok) {
