@@ -17,6 +17,7 @@
     EnableOCFullReset = $true
     EnableOCLinuxForcePState = $true
     EnableOCLinuxAmd = $false
+    EnableOCWindowsAmd = $false
     EnableAutoUpdate = $true
     EnableUpdateDuringPause = $true
     EnableErrorRatio = $true

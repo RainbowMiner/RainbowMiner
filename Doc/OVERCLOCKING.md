@@ -497,3 +497,36 @@ A refused or unsupported setting is reported in the log and leaves the card as i
 To see what the driver offers for a card and what RainbowMiner has recorded, run as root:
 
     bash IncludesLinux/bash/amd_oc.sh --bus 03:00 --query
+
+## AMD overclocking on Windows
+
+On Windows, AMD GPUs are overclocked through MSI Afterburner, like NVIDIA cards. As an
+alternative, `"EnableOCWindowsAmd": "1"` (with `"EnableOCProfiles": "1"`) applies the profiles
+through the AMD driver itself with the helper `Includes\amdoc\amdoc.exe`, which uses AMD's
+ADLX interface. Nothing else has to be installed: the Adrenalin driver 22.x or newer brings
+the ADLX library, and MSI Afterburner is not needed for AMD cards then. amdoc.exe is a
+separate program with its own license, see `Includes\amdoc\LICENSE.txt`.
+
+The profile fields map to the Adrenalin tuning controls as follows:
+
+| Field              | AMD on Windows                                                                |
+| ------------------ | ----------------------------------------------------------------------------- |
+| `PowerLimit`       | power limit in percent of the default, within the driver's range (e.g. 80 = -20%) |
+| `LockCoreClock`    | maximum core clock in MHz, within the driver's range                          |
+| `LockMemoryClock`  | maximum memory clock in MHz, on the scale Adrenalin shows it                  |
+| `VoltageOffset`    | GFX voltage in mV, negative values undervolt: added to the card's default voltage on RDNA2/RDNA3, an offset on RDNA4 (needs `"EnableOCVoltage": "1"`) |
+| `CoreClockBoost`, `MemoryClockBoost`, `ThermalLimit`, `LockVoltagePoint` | not available, a warning is logged |
+
+Cards older than RDNA get the power limit only. The baseline of every card is recorded in
+`%LOCALAPPDATA%\RainbowMiner\amdoc\<bus>.state` before the first change and the same
+restore rules as on Linux apply. Note that the Adrenalin software keeps tuning values across
+restarts, so a card that was left overclocked by a crash is put back by the next miner start,
+stop or OC reset, or by hand with `amdoc.exe --bus <bus> --reset`.
+
+To see the cards ADLX reports and what the driver offers for one of them:
+
+    Includes\amdoc\amdoc.exe --list
+    Includes\amdoc\amdoc.exe --bus 03:00 --query
+
+This path is new and was written without AMD hardware at hand: please report the `--query`
+output and the log lines of the first runs, good or bad.

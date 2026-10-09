@@ -2189,7 +2189,8 @@ function Get-NvmlOCHelper {
 }
 
 function Get-AmdOCHelper {
-    $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\IncludesLinux\bash\amd_oc.sh")
+    if ($Global:IsWindows) {$Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Includes\amdoc\amdoc.exe")}
+    else {$Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\IncludesLinux\bash\amd_oc.sh")}
 }
 
 function Test-NvmlOC {

@@ -907,6 +907,35 @@
                   "label": "Enable"
                 }
               ]
+            },
+            {
+              "kind": "field",
+              "key": "EnableOCWindowsAmd",
+              "id": "inputEnableOCWindowsAmd",
+              "label": {
+                "html": "AMD OC on Windows",
+                "class": "col-sm-2 col-form-label"
+              },
+              "rowClasses": [
+                "is--ocprofiles"
+              ],
+              "colClass": "col-sm-10",
+              "help": {
+                "html": "Overclock AMD GPUs on Windows through the AMD driver (ADLX, Adrenalin 22.x or newer): power limit, clock locks, voltage offset. Disabled = MSI Afterburner as before. See Doc/OVERCLOCKING.md.",
+                "id": "inputEnableOCWindowsAmdHelp"
+              },
+              "control": "select",
+              "attrs": {},
+              "options": [
+                {
+                  "value": "0",
+                  "label": "Disable"
+                },
+                {
+                  "value": "1",
+                  "label": "Enable"
+                }
+              ]
             }
           ]
         }

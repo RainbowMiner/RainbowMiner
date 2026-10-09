@@ -1,0 +1,167 @@
+amdoc.exe - RainbowMiner AMD GPU overclocking helper for Windows
+================================================================
+
+amdoc.exe is a separate helper program shipped with RainbowMiner. It is built with the
+AMD Device Library eXtra (ADLX) SDK and therefore contains code licensed to the
+RainbowMiner project by Advanced Micro Devices, Inc. It is NOT covered by RainbowMiner's
+GNU General Public License. amdoc.exe is licensed to you under the end user license
+agreement below, as required by the ADLX SDK license. RainbowMiner only starts amdoc.exe
+as an external program; removing the folder Includes\amdoc leaves RainbowMiner fully
+functional, the AMD overclocking on Windows is then unavailable.
+
+amdoc.exe talks to the AMD Adrenalin driver (amdadlx64.dll) on the local machine only
+and may only be used together with AMD graphics products.
+
+----------------------------------------------------------------
+
+END USER LICENSE AGREEMENT
+
+IMPORTANT-READ CAREFULLY: DO NOT INSTALL, COPY OR USE THE ENCLOSED SOFTWARE,
+DOCUMENTATION (AS DEFINED BELOW), OR ANY PORTION THEREOF, (COLLECTIVELY "SOFTWARE") UNTIL
+YOU HAVE CAREFULLY READ AND AGREED TO THE FOLLOWING TERMS AND CONDITIONS. IF YOU ARE
+ENTERING INTO THIS AGREEMENT ON BEHALF OF A COMPANY OR OTHER LEGAL ENTITY, YOU REPRESENT
+THAT YOU HAVE THE LEGAL AUTHORITY TO BIND THE ENTITY TO THIS AGREEMENT, IN WHICH CASE "YOU"
+WILL MEAN THE ENTITY YOU REPRESENT. THIS IS A LEGAL AGREEMENT BETWEEN YOU AND THE LICENSOR
+OF THE SOFTWARE ("LICENSOR"). THE SOFTWARE CONTAINS CODE LICENSED TO LICENSOR BY ADVANCED
+MICRO DEVICES, INC ("AMD"), WHO IS EXPRESSLY MADE A THIRD PARTY BENEFICIARY TO THIS AGREEMENT.
+
+IF YOU DO NOT AGREE TO THE TERMS OF THIS AGREEMENT, DO NOT INSTALL, COPY OR USE THIS SOFTWARE.
+BY INSTALLING, COPYING OR USING THE SOFTWARE YOU AGREE TO ALL THE TERMS AND CONDITIONS OF
+THIS AGREEMENT.
+
+1. DEFINITIONS.
+
+a) "Documentation" means install scripts and online or electronic documentation associated, included, or
+provided in connection with the Software, or any portion thereof.
+b) "Intellectual Property Rights" means all copyrights, trademarks, trade secrets, patents, mask works,
+and all related, similar, or other intellectual property rights recognized in any jurisdiction worldwide,
+including all applications and registrations with respect thereto.
+
+2. LICENSE. Subject to the terms and conditions of this Agreement, You are hereby granted a non-
+exclusive, royalty-free, revocable, non-transferable, limited, copyright license to install and use the Software
+solely in conjunction with AMD product-based systems or AMD components, as applicable.
+
+3. RESTRICTIONS. Except for the limited license expressly granted in Section 2 herein, You have no
+other rights in the Software, whether express, implied, arising by estoppel or otherwise. Further restrictions
+regarding Your use of the Software are set forth below. You may not:
+
+a) modify or create derivative works of the Software;
+b) distribute, publish, display, sublicense, assign or otherwise transfer the Software;
+c) decompile, reverse engineer, disassemble or otherwise reduce the Software to a human-perceivable
+form (except as allowed by applicable law);
+d) alter or remove any copyright, trademark or patent notice(s) in the Software; or
+e) use the Software to: (i) develop inventions directly derived from Confidential Information to seek patent
+protection; (ii) assist in the analysis of Your patents and patent applications; or (iii) modify existing
+patents.
+
+4. FEEDBACK. You have no obligation to give any suggestions, comments or other feedback ("Feedback")
+relating to the Software. However, Licensor may use and include any Feedback that it receives from You to
+improve the Software or other products, software and technologies, and Licensor shall have the right to provide
+any Feedback it receives from You to AMD. Accordingly, for any Feedback You provide to Licensor, You grant
+Licensor, AMD, and their affiliates and subsidiaries a worldwide, non-exclusive, irrevocable, royalty-free,
+perpetual license to, directly or indirectly, use, reproduce, license, sublicense, distribute, make, have made, sell
+and otherwise commercialize the Feedback in the Software or other products, software and technologies. You
+further agree not to provide any Feedback that (a) You know is subject to any Intellectual Property Rights of
+any third party or (b) is subject to license terms which seek to require any products incorporating or derived
+from such Feedback, or other Licensor or AMD intellectual property, to be licensed to or otherwise shared with
+any third party.
+
+5. OWNERSHIP AND COPYRIGHT OF SOFTWARE. The Software, including all Intellectual Property Rights
+therein, is and remains the sole and exclusive property of Licensor or its licensors (including AMD), and You shall
+have no right, title or interest therein except as expressly set forth in this Agreement.
+
+6. SUPPORT AND UPDATES. Licensor is under no obligation to provide any kind of support under this
+Agreement. Licensor may, in its sole discretion, provide to You updates to the Software, and such updates will
+be covered as Software under this Agreement.
+
+7. THIRD PARTY MATERIALS. The Software may include third party components for which You must
+obtain licenses from parties other than Licensor (collectively, "Third Party Materials"). These Third Party
+Materials are not licensed as part of the Software licensed under this Agreement and are used at Your sole
+discretion. You are solely responsible for obtaining all applicable Intellectual Property Rights to use the Third
+Party Materials. In addition, the Software may include code or content subject to an open source or similar
+license ("Open Source Component"). To the extent that an Open Source Component is subject to a license that
+is inconsistent with this Agreement, then such Open Source Component shall be governed solely by the
+applicable open source license.
+
+8. CONFIDENTIALITY. You shall protect the Software and any information related thereto (collectively,
+"Confidential Information") by using the same degree of care, but no less than a reasonable degree of care, to
+prevent the unauthorized use, dissemination or publication of the Confidential Information as You use to
+protect Your own confidential information of a like nature. You shall not disclose any Confidential Information
+disclosed hereunder to any third party and shall limit disclosure of Confidential Information to only those of
+Your employees and contractors with a need to know and who are bound by confidentiality obligations with
+You at least as restrictive as those contained in this Agreement. You shall be responsible for Your employees
+and contractors adherence to the terms of this Agreement. You may disclose Confidential Information in
+accordance with a judicial or other governmental order, provided that You either (a) give Licensor reasonable
+notice prior to such disclosure to allow Licensor a reasonable opportunity to seek a protective order or equivalent
+or (b) obtain written assurance from the applicable judicial or governmental entity that You will afford the
+Confidential Information the highest level of protection afforded under applicable law or regulation.
+
+9. WARRANTY DISCLAIMER: THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND.
+LICENSOR DISCLAIMS ALL WARRANTIES, EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED
+TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, NON-
+INFRINGEMENT, THAT THE SOFTWARE WILL RUN UNINTERRUPTED OR ERROR-FREE OR WARRANTIES ARISING
+FROM CUSTOM OF TRADE OR COURSE OF USAGE. THE ENTIRE RISK ASSOCIATED WITH THE USE OF THE
+SOFTWARE IS ASSUMED BY YOU. Some jurisdictions do not allow the exclusion of implied warranties, so the
+above exclusion may not apply to You.
+
+10. LIMITATION OF LIABILITY AND INDEMNIFICATION: LICENSOR AND ITS LICENSORS
+(INCLUDING AMD) WILL NOT, UNDER ANY CIRCUMSTANCES BE LIABLE TO YOU FOR ANY PUNITIVE, DIRECT,
+INCIDENTAL, INDIRECT, SPECIAL OR CONSEQUENTIAL DAMAGES ARISING FROM USE OF THE SOFTWARE OR
+THIS AGREEMENT EVEN IF LICENSOR AND ITS LICENSORS (INCLUDING AMD) HAVE BEEN ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGES. In no event shall Licensor's or any of its licensors' total liability to You for all
+damages, losses, and causes of action (whether in contract, tort (including negligence) or otherwise) exceed
+the amount of $100 USD. You agree to defend, indemnify and hold harmless Licensor and its licensors (including
+AMD), and any of their directors, officers, employees, affiliates or agents from and against any and all loss,
+damage, liability and other expenses (including reasonable attorneys' fees), resulting from Your use of the
+Software or violation of the terms and conditions of this Agreement.
+
+11. EXPORT RESTRICTIONS: You shall adhere to all applicable U.S. import/export laws and regulations,
+as well as the import/export control laws and regulations of other countries as applicable. You further agree to
+not export, re-export, or transfer, directly or indirectly, any product, technical data, software or source code
+received from Licensor under this license, or the direct product of such technical data or software to any country
+for which the United States or any other applicable government requires an export license or other governmental
+approval without first obtaining such licenses or approvals; or in violation of any applicable laws or regulations
+of the United States or the country where the technical data or software was obtained. You acknowledge the
+technical data and software received will not, in the absence of authorization from U.S. or local law and
+regulations as applicable, be used by or exported, re-exported or transferred to: (i) any sanctioned or
+embargoed country, or to nationals or residents of such countries; (ii) any restricted end-user as identified on
+any applicable government end-user list; or (iii) any party where the end-use involves nuclear,
+chemical/biological weapons, rocket systems, or unmanned air vehicles. For the most current Country Group
+listings, or for additional information about the EAR or Your obligations under those regulations, please refer to
+the U.S. Bureau of Industry and Security's website at http://www.bis.doc.gov/.
+
+12. NOTICE TO U.S. GOVERNMENT END USERS. The Software and related documentation are
+"commercial items", as that term is defined at 48 C.F.R. Section 2.101, consisting of "commercial computer software"
+and "commercial computer software documentation", as such terms are used in 48 C.F.R. Section 12.212 and 48 C.F.R.
+Section 227.7202, respectively. Consistent with 48 C.F.R. Section 12.212 or 48 C.F.R. Section 227.7202-1 through 227.7202-4, as
+applicable, the commercial computer software and commercial computer software documentation are being
+licensed to U.S. Government end users (a) only as commercial items and (b) with only those rights as are
+granted to all other end users pursuant to the terms and conditions set forth in this Agreement. Unpublished
+rights are reserved under the copyright laws of the United States.
+
+13. TERMINATION OF LICENSE. This Agreement will terminate immediately without notice from Licensor
+or judicial resolution if (1) You fail to comply with any provisions of this Agreement, or (2) You provide Licensor
+with notice that You would like to terminate this Agreement. Upon termination of this Agreement, You must
+delete or destroy all copies of the Software. Upon termination or expiration of this Agreement, all provisions
+survive except for Section 2.
+
+14. GOVERNING LAW. This Agreement is made under and shall be construed according to the laws of the
+State of Texas, excluding conflicts of law rules. Each party submits to the jurisdiction of the state and federal
+courts of Travis County and the Western District of Texas for the purposes of this Agreement. You acknowledge
+that Your breach of this Agreement may cause irreparable damage and agree that Licensor (or its licensors,
+including AMD) shall be entitled to seek injunctive relief under this Agreement, as well as such further relief as
+may be granted by a court of competent jurisdiction.
+
+15. GENERAL PROVISIONS. You may not assign this Agreement without the prior written consent of
+Licensor and any assignment without such consent will be null and void. The parties do not intend that any
+agency or partnership relationship be created between them by this Agreement. Each provision of this
+Agreement shall be interpreted in such a manner as to be effective and valid under applicable law. However,
+in the event that any provision of this Agreement becomes or is declared unenforceable by any court of
+competent jurisdiction, such provision shall be deemed deleted and the remainder of this Agreement shall
+remain in full force and effect.
+
+16. ENTIRE AGREEMENT. This Agreement sets forth the entire agreement and understanding between
+the parties with respect to the Software and supersedes and merges all prior oral and written agreements,
+discussions and understandings between them regarding the subject matter of this Agreement. No waiver or
+modification of any provision of this Agreement shall be binding unless made in writing and signed by an
+authorized representative of each party.

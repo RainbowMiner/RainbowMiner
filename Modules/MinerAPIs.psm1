@@ -1017,6 +1017,37 @@ class Miner {
                     }
                 }
 
+            } elseif ($DeviceVendor -eq "AMD" -and $Global:IsWindows -and $Global:Session.Config.EnableOCWindowsAmd) {
+
+                # AMD driver (ADLX) through Includes\amdoc\amdoc.exe: the same arguments and baseline logic as the Linux
+                # helper, the calls run synchronously further down. With the switch off, MSI Afterburner is used as before.
+                $AmdOCHelper = Get-AmdOCHelper
+                if (-not (Test-Path $AmdOCHelper)) {
+                    if ($Config) {Write-Log -Level Warn "AMD overclocking on Windows: $AmdOCHelper is missing, $DeviceModel profile skipped"}
+                } else {
+                    foreach($BusId in $this.Profiles.$DeviceModel.BusId) {
+                        if ($BusId -notmatch '^[0-9a-fA-F]{2}:[0-9a-fA-F]{2}$') {
+                            if ($Config) {Write-Log -Level Warn "AMD overclocking on Windows: no PCI bus id for $DeviceModel, profile skipped"}
+                            continue
+                        }
+                        [System.Collections.Generic.List[string]]$AmdArgs = @("--bus",$BusId)
+                        if (-not $Config) {
+                            [void]$AmdArgs.Add("--reset")
+                        } else {
+                            if ($Profile.PowerLimit -gt 0) {$val=[Math]::Max([Math]::Min([int]$Profile.PowerLimit,200),20);[void]$AmdArgs.Add("--power-percent $($val)");$this.SetOCprofileValue($DeviceModel,"PowerLimit",$val)}
+                            if ($Profile.LockCoreClock -match '^[0-9]+$' -and [int]$Profile.LockCoreClock -gt 0) {[void]$AmdArgs.Add("--core-max $([int]$Profile.LockCoreClock)");$this.SetOCprofileValue($DeviceModel,"LockCoreClock",[int]$Profile.LockCoreClock)}
+                            elseif ($Profile.CoreClockBoost -match '^\-?[0-9]+$') {Write-Log -Level Warn "$DeviceModel does not support CoreClockBoost on Windows, use LockCoreClock"}
+                            if ($Profile.LockMemoryClock -match '^[0-9]+$' -and [int]$Profile.LockMemoryClock -gt 0) {[void]$AmdArgs.Add("--mem-max $([int]$Profile.LockMemoryClock)");$this.SetOCprofileValue($DeviceModel,"LockMemoryClock",[int]$Profile.LockMemoryClock)}
+                            if ($Profile.VoltageOffset -match '^\-?[0-9]+$') {[void]$AmdArgs.Add("--voltage-offset $([int]$Profile.VoltageOffset)");$this.SetOCprofileValue($DeviceModel,"VoltageOffset",[int]$Profile.VoltageOffset)}
+                            if ($Profile.MemoryClockBoost -match '^\-?[0-9]+$') {Write-Log -Level Warn "$DeviceModel does not support MemoryClockBoost with the AMD driver, use LockMemoryClock"}
+                            if ($Profile.ThermalLimit -gt 0) {Write-Log -Level Warn "$DeviceModel does not support ThermalLimit with the AMD driver"}
+                            if ($Profile.LockVoltagePoint -match '^[0-9]+$') {Write-Log -Level Warn "$DeviceModel does not support LockVoltagePoint with the AMD driver, use VoltageOffset"}
+                        }
+                        [void]$AmdCmd.Add("$($AmdArgs -join ' ')")
+                        $applied_any = $true
+                    }
+                }
+
             } elseif ($Pattern.$DeviceVendor -ne $null) {
                 if ($IsAfterburner) {
                     $DeviceId = 0
@@ -1065,7 +1096,12 @@ class Miner {
                         $NvSmiCmd | Foreach-Object {Invoke-NvidiaSmi -Arguments $_ -Runas > $null}
                     }
                 } elseif ($DeviceVendor -eq "AMD" -and $AmdCmd.Count) {
-                    #t.b.i
+                    $AmdOCHelper = Get-AmdOCHelper
+                    foreach ($AmdCmdLine in $AmdCmd) {
+                        Invoke-Exe $AmdOCHelper -ArgumentList $AmdCmdLine -WaitForExit 60 -ExpandLines -ExcludeEmptyLines | Foreach-Object {
+                            if ($_ -match "^ERROR:|is not supported") {Write-Log -Level Warn "OC $($this.Name): $_"} else {Write-Log -Level Info "OC $($this.Name): $_"}
+                        }
+                    }
                 } elseif ($DeviceVendor -eq "INTEL" -and $IntelCmd.Count) {
                     #t.b.i
                 } elseif ($IsAfterburner) {
