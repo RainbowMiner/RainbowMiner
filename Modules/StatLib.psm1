@@ -95,8 +95,6 @@ function Set-Stat {
 
     if (-not $Reset -and ($Stat = Get-StatFromFile -Path $Path -Name $Name -Cached:$Cached -Check $Check)) {
         try {
-            if ($Mode -in @("Pools","Profit") -and $Stat.Week_Fluctuation -and [Double]$Stat.Week_Fluctuation -ge 0.8) {throw "Fluctuation out of range ($Name)"}
-
             if ($Mode -eq "Miners") {
                 $Benchmarked = if ($Stat.Benchmarked -ne $null) {$Stat.Benchmarked} else {[DateTime]$Stat.Updated - [TimeSpan]$Stat.Duration}
             }
@@ -202,6 +200,10 @@ function Set-Stat {
                     }
                 }
             }
+
+            # a history that fluctuates this much is worthless and restarts - but only once the stat is old enough to have one:
+            # a young stat has nothing to protect and would only reset again and again while it is at its most volatile
+            if ($Mode -in @("Pools","Profit") -and [Double]$Stat.Week_Fluctuation -ge 0.8 -and $Stat.Duration -ge [TimeSpan]::FromHours(1)) {throw "Fluctuation out of range ($Name)"}
 
             if ($ResetIfZero -and -not $Stat.Live) {throw}
 
@@ -312,19 +314,19 @@ function Set-Stat {
                         [RBMMinerStat]@{
                             Live = $Value
                             Minute = $Stat.Minute + $Span_Minute * ($Value - $Stat.Minute)
-                            Minute_Fluctuation = $Stat.Minute_Fluctuation + $Span_Minute * ([Math]::Abs($Value - $Stat.Minute) / [Math]::Max([Math]::Abs($Stat.Minute), $SmallestValue) - $Stat.Minute_Fluctuation)
+                            Minute_Fluctuation = $Stat.Minute_Fluctuation + $Span_Minute * ([Math]::Min([Math]::Abs($Value - $Stat.Minute) / [Math]::Max([Math]::Abs($Stat.Minute), $SmallestValue), 1) - $Stat.Minute_Fluctuation)
                             Minute_5 = $Stat.Minute_5 + $Span_Minute_5 * ($Value - $Stat.Minute_5)
-                            Minute_5_Fluctuation = $Stat.Minute_5_Fluctuation + $Span_Minute_5 * ([Math]::Abs($Value - $Stat.Minute_5) / [Math]::Max([Math]::Abs($Stat.Minute_5), $SmallestValue) - $Stat.Minute_5_Fluctuation)
+                            Minute_5_Fluctuation = $Stat.Minute_5_Fluctuation + $Span_Minute_5 * ([Math]::Min([Math]::Abs($Value - $Stat.Minute_5) / [Math]::Max([Math]::Abs($Stat.Minute_5), $SmallestValue), 1) - $Stat.Minute_5_Fluctuation)
                             Minute_10 = $Stat.Minute_10 + $Span_Minute_10 * ($Value - $Stat.Minute_10)
-                            Minute_10_Fluctuation = $Stat.Minute_10_Fluctuation + $Span_Minute_10 * ([Math]::Abs($Value - $Stat.Minute_10) / [Math]::Max([Math]::Abs($Stat.Minute_10), $SmallestValue) - $Stat.Minute_10_Fluctuation)
+                            Minute_10_Fluctuation = $Stat.Minute_10_Fluctuation + $Span_Minute_10 * ([Math]::Min([Math]::Abs($Value - $Stat.Minute_10) / [Math]::Max([Math]::Abs($Stat.Minute_10), $SmallestValue), 1) - $Stat.Minute_10_Fluctuation)
                             Hour = $Stat.Hour + $Span_Hour * ($Value - $Stat.Hour)
-                            Hour_Fluctuation = $Stat.Hour_Fluctuation + $Span_Hour * ([Math]::Abs($Value - $Stat.Hour) / [Math]::Max([Math]::Abs($Stat.Hour), $SmallestValue) - $Stat.Hour_Fluctuation)
+                            Hour_Fluctuation = $Stat.Hour_Fluctuation + $Span_Hour * ([Math]::Min([Math]::Abs($Value - $Stat.Hour) / [Math]::Max([Math]::Abs($Stat.Hour), $SmallestValue), 1) - $Stat.Hour_Fluctuation)
                             Day = $Stat.Day + $Span_Day * ($Value - $Stat.Day)
-                            Day_Fluctuation = $Stat.Day_Fluctuation + $Span_Day * ([Math]::Abs($Value - $Stat.Day) / [Math]::Max([Math]::Abs($Stat.Day), $SmallestValue) - $Stat.Day_Fluctuation)
+                            Day_Fluctuation = $Stat.Day_Fluctuation + $Span_Day * ([Math]::Min([Math]::Abs($Value - $Stat.Day) / [Math]::Max([Math]::Abs($Stat.Day), $SmallestValue), 1) - $Stat.Day_Fluctuation)
                             ThreeDay = $Stat.ThreeDay + $Span_ThreeDay * ($Value - $Stat.ThreeDay)
-                            ThreeDay_Fluctuation = $Stat.ThreeDay_Fluctuation + $Span_ThreeDay * ([Math]::Abs($Value - $Stat.ThreeDay) / [Math]::Max([Math]::Abs($Stat.ThreeDay), $SmallestValue) - $Stat.ThreeDay_Fluctuation)
+                            ThreeDay_Fluctuation = $Stat.ThreeDay_Fluctuation + $Span_ThreeDay * ([Math]::Min([Math]::Abs($Value - $Stat.ThreeDay) / [Math]::Max([Math]::Abs($Stat.ThreeDay), $SmallestValue), 1) - $Stat.ThreeDay_Fluctuation)
                             Week = $Stat.Week + $Span_Week * ($Value - $Stat.Week)
-                            Week_Fluctuation = $Stat.Week_Fluctuation + $Span_Week * ([Math]::Abs($Value - $Stat.Week) / [Math]::Max([Math]::Abs($Stat.Week), $SmallestValue) - $Stat.Week_Fluctuation)
+                            Week_Fluctuation = $Stat.Week_Fluctuation + $Span_Week * ([Math]::Min([Math]::Abs($Value - $Stat.Week) / [Math]::Max([Math]::Abs($Stat.Week), $SmallestValue), 1) - $Stat.Week_Fluctuation)
                             Duration = $Stat.Duration + $Duration
                             Updated = $Updated
                             Failed = [Math]::Max($Stat.Failed-1,0)
@@ -349,19 +351,19 @@ function Set-Stat {
                         [RBMPoolStat]@{
                             Live = $Value
                             Minute = $Stat.Minute + $Span_Minute * ($Value - $Stat.Minute)
-                            Minute_Fluctuation = $Stat.Minute_Fluctuation + $Span_Minute * ([Math]::Abs($Value - $Stat.Minute) / [Math]::Max([Math]::Abs($Stat.Minute), $SmallestValue) - $Stat.Minute_Fluctuation)
+                            Minute_Fluctuation = $Stat.Minute_Fluctuation + $Span_Minute * ([Math]::Min([Math]::Abs($Value - $Stat.Minute) / [Math]::Max([Math]::Abs($Stat.Minute), $SmallestValue), 1) - $Stat.Minute_Fluctuation)
                             Minute_5 = $Stat.Minute_5 + $Span_Minute_5 * ($Value - $Stat.Minute_5)
-                            Minute_5_Fluctuation = $Stat.Minute_5_Fluctuation + $Span_Minute_5 * ([Math]::Abs($Value - $Stat.Minute_5) / [Math]::Max([Math]::Abs($Stat.Minute_5), $SmallestValue) - $Stat.Minute_5_Fluctuation)
+                            Minute_5_Fluctuation = $Stat.Minute_5_Fluctuation + $Span_Minute_5 * ([Math]::Min([Math]::Abs($Value - $Stat.Minute_5) / [Math]::Max([Math]::Abs($Stat.Minute_5), $SmallestValue), 1) - $Stat.Minute_5_Fluctuation)
                             Minute_10 = $Stat.Minute_10 + $Span_Minute_10 * ($Value - $Stat.Minute_10)
-                            Minute_10_Fluctuation = $Stat.Minute_10_Fluctuation + $Span_Minute_10 * ([Math]::Abs($Value - $Stat.Minute_10) / [Math]::Max([Math]::Abs($Stat.Minute_10), $SmallestValue) - $Stat.Minute_10_Fluctuation)
+                            Minute_10_Fluctuation = $Stat.Minute_10_Fluctuation + $Span_Minute_10 * ([Math]::Min([Math]::Abs($Value - $Stat.Minute_10) / [Math]::Max([Math]::Abs($Stat.Minute_10), $SmallestValue), 1) - $Stat.Minute_10_Fluctuation)
                             Hour = $Stat.Hour + $Span_Hour * ($Value - $Stat.Hour)
-                            Hour_Fluctuation = $Stat.Hour_Fluctuation + $Span_Hour * ([Math]::Abs($Value - $Stat.Hour) / [Math]::Max([Math]::Abs($Stat.Hour), $SmallestValue) - $Stat.Hour_Fluctuation)
+                            Hour_Fluctuation = $Stat.Hour_Fluctuation + $Span_Hour * ([Math]::Min([Math]::Abs($Value - $Stat.Hour) / [Math]::Max([Math]::Abs($Stat.Hour), $SmallestValue), 1) - $Stat.Hour_Fluctuation)
                             Day = $Stat.Day + $Span_Day * ($Value - $Stat.Day)
-                            Day_Fluctuation = $Stat.Day_Fluctuation + $Span_Day * ([Math]::Abs($Value - $Stat.Day) / [Math]::Max([Math]::Abs($Stat.Day), $SmallestValue) - $Stat.Day_Fluctuation)
+                            Day_Fluctuation = $Stat.Day_Fluctuation + $Span_Day * ([Math]::Min([Math]::Abs($Value - $Stat.Day) / [Math]::Max([Math]::Abs($Stat.Day), $SmallestValue), 1) - $Stat.Day_Fluctuation)
                             ThreeDay = $Stat.ThreeDay + $Span_ThreeDay * ($Value - $Stat.ThreeDay)
-                            ThreeDay_Fluctuation = $Stat.ThreeDay_Fluctuation + $Span_ThreeDay * ([Math]::Abs($Value - $Stat.ThreeDay) / [Math]::Max([Math]::Abs($Stat.ThreeDay), $SmallestValue) - $Stat.ThreeDay_Fluctuation)
+                            ThreeDay_Fluctuation = $Stat.ThreeDay_Fluctuation + $Span_ThreeDay * ([Math]::Min([Math]::Abs($Value - $Stat.ThreeDay) / [Math]::Max([Math]::Abs($Stat.ThreeDay), $SmallestValue), 1) - $Stat.ThreeDay_Fluctuation)
                             Week = $Stat.Week + $Span_Week * ($Value - $Stat.Week)
-                            Week_Fluctuation = $Stat.Week_Fluctuation + $Span_Week * ([Math]::Abs($Value - $Stat.Week) / [Math]::Max([Math]::Abs($Stat.Week), $SmallestValue) - $Stat.Week_Fluctuation)
+                            Week_Fluctuation = $Stat.Week_Fluctuation + $Span_Week * ([Math]::Min([Math]::Abs($Value - $Stat.Week) / [Math]::Max([Math]::Abs($Stat.Week), $SmallestValue), 1) - $Stat.Week_Fluctuation)
                             Duration = $Stat.Duration + $Duration
                             Updated = $Updated
                             Failed = [Math]::Max($Stat.Failed-1,0)
@@ -383,19 +385,19 @@ function Set-Stat {
                         [PSCustomObject]@{
                             Live = $Value
                             Minute = $Stat.Minute + $Span_Minute * ($Value - $Stat.Minute)
-                            Minute_Fluctuation = $Stat.Minute_Fluctuation + $Span_Minute * ([Math]::Abs($Value - $Stat.Minute) / [Math]::Max([Math]::Abs($Stat.Minute), $SmallestValue) - $Stat.Minute_Fluctuation)
+                            Minute_Fluctuation = $Stat.Minute_Fluctuation + $Span_Minute * ([Math]::Min([Math]::Abs($Value - $Stat.Minute) / [Math]::Max([Math]::Abs($Stat.Minute), $SmallestValue), 1) - $Stat.Minute_Fluctuation)
                             Minute_5 = $Stat.Minute_5 + $Span_Minute_5 * ($Value - $Stat.Minute_5)
-                            Minute_5_Fluctuation = $Stat.Minute_5_Fluctuation + $Span_Minute_5 * ([Math]::Abs($Value - $Stat.Minute_5) / [Math]::Max([Math]::Abs($Stat.Minute_5), $SmallestValue) - $Stat.Minute_5_Fluctuation)
+                            Minute_5_Fluctuation = $Stat.Minute_5_Fluctuation + $Span_Minute_5 * ([Math]::Min([Math]::Abs($Value - $Stat.Minute_5) / [Math]::Max([Math]::Abs($Stat.Minute_5), $SmallestValue), 1) - $Stat.Minute_5_Fluctuation)
                             Minute_10 = $Stat.Minute_10 + $Span_Minute_10 * ($Value - $Stat.Minute_10)
-                            Minute_10_Fluctuation = $Stat.Minute_10_Fluctuation + $Span_Minute_10 * ([Math]::Abs($Value - $Stat.Minute_10) / [Math]::Max([Math]::Abs($Stat.Minute_10), $SmallestValue) - $Stat.Minute_10_Fluctuation)
+                            Minute_10_Fluctuation = $Stat.Minute_10_Fluctuation + $Span_Minute_10 * ([Math]::Min([Math]::Abs($Value - $Stat.Minute_10) / [Math]::Max([Math]::Abs($Stat.Minute_10), $SmallestValue), 1) - $Stat.Minute_10_Fluctuation)
                             Hour = $Stat.Hour + $Span_Hour * ($Value - $Stat.Hour)
-                            Hour_Fluctuation = $Stat.Hour_Fluctuation + $Span_Hour * ([Math]::Abs($Value - $Stat.Hour) / [Math]::Max([Math]::Abs($Stat.Hour), $SmallestValue) - $Stat.Hour_Fluctuation)
+                            Hour_Fluctuation = $Stat.Hour_Fluctuation + $Span_Hour * ([Math]::Min([Math]::Abs($Value - $Stat.Hour) / [Math]::Max([Math]::Abs($Stat.Hour), $SmallestValue), 1) - $Stat.Hour_Fluctuation)
                             Day = $Stat.Day + $Span_Day * ($Value - $Stat.Day)
-                            Day_Fluctuation = $Stat.Day_Fluctuation + $Span_Day * ([Math]::Abs($Value - $Stat.Day) / [Math]::Max([Math]::Abs($Stat.Day), $SmallestValue) - $Stat.Day_Fluctuation)
+                            Day_Fluctuation = $Stat.Day_Fluctuation + $Span_Day * ([Math]::Min([Math]::Abs($Value - $Stat.Day) / [Math]::Max([Math]::Abs($Stat.Day), $SmallestValue), 1) - $Stat.Day_Fluctuation)
                             ThreeDay = $Stat.ThreeDay + $Span_ThreeDay * ($Value - $Stat.ThreeDay)
-                            ThreeDay_Fluctuation = $Stat.ThreeDay_Fluctuation + $Span_ThreeDay * ([Math]::Abs($Value - $Stat.ThreeDay) / [Math]::Max([Math]::Abs($Stat.ThreeDay), $SmallestValue) - $Stat.ThreeDay_Fluctuation)
+                            ThreeDay_Fluctuation = $Stat.ThreeDay_Fluctuation + $Span_ThreeDay * ([Math]::Min([Math]::Abs($Value - $Stat.ThreeDay) / [Math]::Max([Math]::Abs($Stat.ThreeDay), $SmallestValue), 1) - $Stat.ThreeDay_Fluctuation)
                             Week = $Stat.Week + $Span_Week * ($Value - $Stat.Week)
-                            Week_Fluctuation = $Stat.Week_Fluctuation + $Span_Week * ([Math]::Abs($Value - $Stat.Week) / [Math]::Max([Math]::Abs($Stat.Week), $SmallestValue) - $Stat.Week_Fluctuation)
+                            Week_Fluctuation = $Stat.Week_Fluctuation + $Span_Week * ([Math]::Min([Math]::Abs($Value - $Stat.Week) / [Math]::Max([Math]::Abs($Stat.Week), $SmallestValue), 1) - $Stat.Week_Fluctuation)
                             Duration = $Stat.Duration + $Duration
                             Updated = $Updated
                             Failed = [Math]::Max($Stat.Failed-1,0)
