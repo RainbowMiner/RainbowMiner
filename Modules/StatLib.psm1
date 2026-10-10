@@ -193,6 +193,8 @@ function Set-Stat {
                         Duration = [TimeSpan]$Stat.Duration
                         Updated = [DateTime]$Stat.Updated
                         Failed = [Int]$Stat.Failed
+                        Failed_Value = [Double]$Stat.Failed_Value
+                        Failed_Streak = [Int]$Stat.Failed_Streak
 
                         # Profit Part
                         PowerDraw_Live     = [Double]$Stat.PowerDraw_Live
@@ -224,7 +226,25 @@ function Set-Stat {
         
             if ($Value -gt 0 -and $ToleranceMax -eq 0) {$ToleranceMax = $Value}
 
-            if ($Value -lt $ToleranceMin -or $Value -gt $ToleranceMax) {
+            $StatRejected   = ($Value -lt $ToleranceMin -or $Value -gt $ToleranceMax)
+            $StatKeepStreak = $false
+
+            if ($StatRejected -and $mode -eq "Profit" -and $UplimProtection -gt 1.0 -and $Value -gt 0) {
+                # spike protection self-heal: a single spike stays out, but a level that holds for three rounds in a row is real
+                # (a better miner was benchmarked, the pools came back). The value is then accepted without a reset, so the stat
+                # keeps its age for the MiningRigRentals price reference. The streak survives the acceptance, so the following
+                # rounds at the new level pass at once while the averages catch up
+                $StatRejectMatch    = $Stat.Failed_Value -gt 0 -and [Math]::Abs($Value / $Stat.Failed_Value - 1) -le 0.5
+                $Stat.Failed_Streak = if ($StatRejectMatch) {$Stat.Failed_Streak + 1} else {1}
+                $Stat.Failed_Value  = $Value
+                if ($Stat.Failed_Streak -ge 3) {
+                    if (-not $Quiet) {Write-Log -Level $LogLevel "Stat file ($Name) accepts the value $($Value.ToString()), it held for $($Stat.Failed_Streak) rounds above the spike protection. "}
+                    $StatRejected   = $false
+                    $StatKeepStreak = $true
+                }
+            }
+
+            if ($StatRejected) {
                 $StatResetValue  = $null
                 $StatResetStreak = $null
 
@@ -379,6 +399,8 @@ function Set-Stat {
                             Duration = $Stat.Duration + $Duration
                             Updated = $Updated
                             Failed = [Math]::Max($Stat.Failed-1,0)
+                            Failed_Value = if ($StatKeepStreak) {$Stat.Failed_Value} else {0}
+                            Failed_Streak = if ($StatKeepStreak) {$Stat.Failed_Streak} else {0}
 
                             # Profit part
                             PowerDraw_Live     = $PowerDraw
@@ -497,6 +519,8 @@ function Set-Stat {
                     Duration = $Duration
                     Updated = $Updated
                     Failed = 0
+                    Failed_Value = 0
+                    Failed_Streak = 0
 
                     # Profit part
                     PowerDraw_Live     = $PowerDraw
@@ -612,6 +636,8 @@ function Set-Stat {
                     # Profit part
                     PowerDraw_Live     = [Decimal]$Stat.PowerDraw_Live
                     PowerDraw_Average  = [Double]$Stat.PowerDraw_Average
+                    Failed_Value       = [Double]$Stat.Failed_Value
+                    Failed_Streak      = [Int]$Stat.Failed_Streak
                 }
             }
         }
