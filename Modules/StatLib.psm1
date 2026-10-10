@@ -168,6 +168,7 @@ function Set-Stat {
                         Actual24h_Week     = [Double]$Stat.Actual24h_Week
                         Estimate24h_Week   = [Double]$Stat.Estimate24h_Week
                         ErrorRatio         = [Double]$Stat.ErrorRatio
+                        Deviation_Streak   = [Int]$Stat.Deviation_Streak
                     }
                     Break
                 }
@@ -193,6 +194,7 @@ function Set-Stat {
                         Failed = [Int]$Stat.Failed
                         Failed_Value = [Double]$Stat.Failed_Value
                         Failed_Streak = [Int]$Stat.Failed_Streak
+                        Deviation_Streak = [Int]$Stat.Deviation_Streak
 
                         # Profit Part
                         PowerDraw_Live     = [Double]$Stat.PowerDraw_Live
@@ -203,7 +205,14 @@ function Set-Stat {
 
             # a history that fluctuates this much is worthless and restarts - but only once the stat is old enough to have one:
             # a young stat has nothing to protect and would only reset again and again while it is at its most volatile
-            if ($Mode -in @("Pools","Profit") -and [Double]$Stat.Week_Fluctuation -ge 0.8 -and $Stat.Duration -ge [TimeSpan]::FromHours(1)) {throw "Fluctuation out of range ($Name)"}
+            if ($Mode -in @("Pools","Profit")) {
+                # two reasons to throw a history away: it fluctuates too much (only once the stat is an hour old, a young stat
+                # has nothing to protect and would reset again and again), or the values stayed off the long average by more
+                # than 5x for 15 rounds in a row (a wrong coin quote arrived or got fixed, a new price level), which a capped
+                # fluctuation of an old stat would need weeks to notice
+                if ([Double]$Stat.Week_Fluctuation -ge 0.8 -and $Stat.Duration -ge [TimeSpan]::FromHours(1)) {throw "Fluctuation out of range ($Name)"}
+                if ([Int]$Stat.Deviation_Streak -ge 15) {throw "Deviation out of range ($Name)"}
+            }
 
             if ($ResetIfZero -and -not $Stat.Live) {throw}
 
@@ -301,6 +310,14 @@ function Set-Stat {
                 }
 
             } else {
+                # consecutive rounds whose value is more than 5x above or below the long average (pool and profit stats only,
+                # zero values do not count): 15 of them restart the stat at the next load, see the throw above
+                $StatDeviationStreak = 0
+                if ($Mode -ne "Miners" -and $Value -gt 0 -and $Stat.Week -gt 0) {
+                    $StatRatio = $Value / $Stat.Week
+                    if ($StatRatio -gt 5 -or $StatRatio -lt 0.2) {$StatDeviationStreak = [Int]$Stat.Deviation_Streak + 1}
+                }
+
                 $Span_Minute = [Math]::Min($Duration.TotalMinutes / [Math]::Min($Stat.Duration.TotalMinutes, 1), 1)
                 $Span_Minute_5 = [Math]::Min(($Duration.TotalMinutes / 5) / [Math]::Min(($Stat.Duration.TotalMinutes / 5), 1), 1)
                 $Span_Minute_10 = [Math]::Min(($Duration.TotalMinutes / 10) / [Math]::Min(($Stat.Duration.TotalMinutes / 10), 1), 1)
@@ -378,6 +395,7 @@ function Set-Stat {
                             Actual24h_Week     = $Stat.Actual24h_Week + $Span_Day * ($Actual24h - $Stat.Actual24h_Week)
                             Estimate24h_Week   = $Stat.Estimate24h_Week + $Span_Day * ($Estimate24h - $Stat.Estimate24h_Week)
                             ErrorRatio         = $Stat.ErrorRatio
+                            Deviation_Streak   = $StatDeviationStreak
                         }
                         Break
                     }
@@ -403,6 +421,7 @@ function Set-Stat {
                             Failed = [Math]::Max($Stat.Failed-1,0)
                             Failed_Value = if ($StatKeepStreak) {$Stat.Failed_Value} else {0}
                             Failed_Streak = if ($StatKeepStreak) {$Stat.Failed_Streak} else {0}
+                            Deviation_Streak = $StatDeviationStreak
 
                             # Profit part
                             PowerDraw_Live     = $PowerDraw
@@ -418,6 +437,8 @@ function Set-Stat {
                 # the two deliberate resets above throw as well, give them their own words: "corrupt" is for files that really cannot be read
                 if ("$($_.Exception.Message)" -match "^Fluctuation out of range") {
                     Write-Log -Level Warn "Stat file ($Name) will be reset, because its values fluctuate too much (week fluctuation $([Math]::Round([Double]$Stat.Week_Fluctuation * 100))%). "
+                } elseif ("$($_.Exception.Message)" -match "^Deviation out of range") {
+                    Write-Log -Level Warn "Stat file ($Name) will be reset, because its values stayed more than 5x off the average for $([Int]$Stat.Deviation_Streak) rounds. "
                 } elseif ($ResetIfZero -and $Stat -and -not $Stat.Live) {
                     Write-Log -Level Warn "Stat file ($Name) will be reset, because its last value is zero. "
                 } else {
@@ -498,6 +519,7 @@ function Set-Stat {
                     Actual24h_Week     = 0
                     Estimate24h_Week   = 0
                     ErrorRatio         = 0
+                    Deviation_Streak   = 0
                 }
                 Break
             }
@@ -523,6 +545,7 @@ function Set-Stat {
                     Failed = 0
                     Failed_Value = 0
                     Failed_Streak = 0
+                    Deviation_Streak = 0
 
                     # Profit part
                     PowerDraw_Live     = $PowerDraw
@@ -611,6 +634,7 @@ function Set-Stat {
                     Actual24h_Week     = [Decimal]$Stat.Actual24h_Week
                     Estimate24h_Week   = [Decimal]$Stat.Estimate24h_Week
                     ErrorRatio         = [Decimal]$Stat.ErrorRatio
+                    Deviation_Streak   = [Int]$Stat.Deviation_Streak
                 }
                 Break
             }
@@ -640,6 +664,7 @@ function Set-Stat {
                     PowerDraw_Average  = [Double]$Stat.PowerDraw_Average
                     Failed_Value       = [Double]$Stat.Failed_Value
                     Failed_Streak      = [Int]$Stat.Failed_Streak
+                    Deviation_Streak   = [Int]$Stat.Deviation_Streak
                 }
             }
         }

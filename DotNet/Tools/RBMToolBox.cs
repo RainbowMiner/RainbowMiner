@@ -1295,6 +1295,9 @@ public class RBMPoolStat
     public double Estimate24h_Week { get; set; }
     public double ErrorRatio { get; set; }
 
+    // consecutive rounds whose value was more than 5x off the week average; 15 restart the stat (StatLib Set-Stat)
+    public int Deviation_Streak { get; set; }
+
     private static readonly Dictionary<string, PropertyInfo> Props = RBMStatConverter.PropertyMap(typeof(RBMPoolStat));
 
     public static RBMPoolStat FromObject(object source)
