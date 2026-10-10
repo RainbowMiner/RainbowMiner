@@ -70,6 +70,7 @@ The following documents are the source of truth and are kept up to date with eve
 | [Doc/REPORTAPI.md](Doc/REPORTAPI.md)                             | the status report a rig sends to the central monitoring, for your own monitoring        |
 | [Doc/LINUX-PREREQUISITES.md](Doc/LINUX-PREREQUISITES.md)         | GPU driver, OpenCL and huge pages on a Linux rig                                        |
 | [Doc/LINUX-SETUP-SHORTGUIDE.md](Doc/LINUX-SETUP-SHORTGUIDE.md)   | short guide to running RainbowMiner on Linux with Nvidia GPUs                          |
+| [Doc/DOCKER.md](Doc/DOCKER.md)                                   | run RainbowMiner in a Docker container: Dockerfiles for AMD, NVIDIA or both, clean stop |
 
 The rest of this README covers the pre-requisites, the installation, the day-to-day
 operation and the remaining configuration files.
