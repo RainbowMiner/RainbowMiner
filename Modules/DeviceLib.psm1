@@ -1154,6 +1154,40 @@ function Get-AmdSensorClock {
     if ($Value -gt 100000) {[Math]::Round($Value / 1e6)} else {$Value}
 }
 
+function Get-AmdSysfsDevice {
+    [CmdletBinding()]
+    param(
+        [string]$BusHex
+    )
+    # lm-sensors names the chip amdgpu-pci-BBSS with the bus BB and the slot SS = device<<3|function. The sysfs
+    # folder carries the full address including the PCI domain, which the chip name lacks, so match by wildcard.
+    $Slot = [Convert]::ToInt32($BusHex.Substring(2,2),16)
+    $Filter = "*:$($BusHex.Substring(0,2)):{0:x2}.{1}" -f ($Slot -shr 3),($Slot -band 7)
+    Get-ChildItem "/sys/bus/pci/devices" -Filter $Filter -ErrorAction Ignore | Select-Object -First 1 -ExpandProperty FullName
+}
+
+function Get-AmdSysfsValue {
+    [CmdletBinding()]
+    param(
+        [string]$Device,
+        [string]$Name,
+        [switch]$Hwmon
+    )
+    # reads one numeric attribute from the amdgpu sysfs device folder or from its hwmon subfolder. Both are
+    # world-readable, so no ocdaemon round trip is needed.
+    if (-not $Device) {return $null}
+    $Paths = if ($Hwmon) {@(Get-ChildItem "$Device/hwmon" -Directory -ErrorAction Ignore | Foreach-Object {"$($_.FullName)/$Name"})} else {@("$Device/$Name")}
+    foreach ($Path in $Paths) {
+        if (Test-Path $Path) {
+            try {
+                $Value = [System.IO.File]::ReadAllText($Path).Trim()
+                if ($Value -match '^-?\d+(\.\d+)?$') {return [double]$Value}
+            } catch {}
+        }
+    }
+    $null
+}
+
 function Update-DeviceInformation {
     [cmdletbinding()]
     param(
@@ -1192,7 +1226,7 @@ function Update-DeviceInformation {
 
                 if ($Script:AmdCardsTDP -eq $null) {$Script:AmdCardsTDP = Get-ContentByStreamReader ".\Data\amd-cards-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
 
-                $Devices | Foreach-Object {$_.Data.Method = "";$_.Data.Clock = $_.Data.ClockMem = $_.Data.FanSpeed = $_.Data.Temperature = $_.Data.PowerDraw = 0;$_.Data.PowerDrawEstimated = $false}
+                $Devices | Foreach-Object {$_.Data.Method = "";$_.Data.Clock = $_.Data.ClockMem = $_.Data.FanSpeed = $_.Data.Temperature = $_.Data.PowerDraw = $_.Data.Utilization = 0;$_.Data.PowerDrawEstimated = $false}
 
                 if ($IsWindows) {
 
@@ -1243,6 +1277,7 @@ function Update-DeviceInformation {
                                             FanSpeed    = $FanSpeedCur
                                             Temperature = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?temperature$").Data
                                             PowerDraw   = $PowerDrawCur
+                                            Utilization = $Utilization
                                         }
 
                                         $PCIBusId    = if ($_.GpuId -match "&BUS_(\d+)&DEV_(\d+)") {"{0:x2}:{1:x2}" -f [int]$Matches[1],[int]$Matches[2]} else {$null}
@@ -1347,6 +1382,13 @@ function Update-DeviceInformation {
                                     $sensorsJson.PSObject.Properties.Name | Where-Object {$_ -match "^amdgpu-pci-([0-9a-f]{4})$"} | Foreach-Object {
                                         $gpu = $sensorsJson.$_
                                         $busHex = $matches[1]
+                                        # lm-sensors reports the fan in rpm and knows nothing about the load; the fan duty (pwm1, 0-255)
+                                        # and gpu_busy_percent come from the card's sysfs folder instead. Without pwm1 the rpm is scaled
+                                        # by fan1_max, a fanless card ends up at 0.
+                                        $dev    = Get-AmdSysfsDevice $busHex
+                                        $FanPwm = Get-AmdSysfsValue $dev "pwm1" -Hwmon
+                                        $FanRpm = Get-AmdSensorValue $gpu @('^fan1$/^fan1_input$','/^fan\d+_input$')
+                                        $FanMax = Get-AmdSensorValue $gpu @('^fan1$/^fan1_max$','/^fan\d+_max$')
                                         [PSCustomObject]@{
                                             BusId       = "$($busHex.Substring(0,2)):$($busHex.Substring(2,2))"
                                             Name        = $gpu.name
@@ -1354,7 +1396,8 @@ function Update-DeviceInformation {
                                             ClockMem    = Get-AmdSensorClock $gpu @('^mclk$/^freq\d+_input$','/^freq2_input$','/^mem_clock_input$')
                                             PowerDraw   = Get-AmdSensorValue $gpu @('^(PPT|power1)$/^power1_(average|input)$','/^power\d+_(average|input)$')
                                             Temperature = Get-AmdSensorValue $gpu @('^edge$/^temp\d+_input$','^temp1$/^temp1_input$','/^temp1_input$')
-                                            FanSpeed    = Get-AmdSensorValue $gpu @('^fan1$/^fan1_input$','/^fan\d+_input$')
+                                            FanSpeed    = if ($FanPwm -ne $null) {[Math]::Round($FanPwm * 100 / 255)} elseif ($FanRpm -gt 0 -and $FanMax -gt 0) {[Math]::Round([Math]::Min($FanRpm / $FanMax,1) * 100)} else {0}
+                                            Utilization = Get-AmdSysfsValue $dev "gpu_busy_percent"
                                         }
                                     } | Sort-Object -Property BusId
                                 )
@@ -1368,6 +1411,7 @@ function Update-DeviceInformation {
                                         $_.Data.Temperature = [decimal]$gpu.Temperature
                                         $_.Data.PowerDraw   = [decimal]$gpu.PowerDraw
                                         $_.Data.FanSpeed    = [decimal]$gpu.FanSpeed
+                                        $_.Data.Utilization = [decimal]$gpu.Utilization
                                         $_.Data.Method      = "sensors"
                                         $AMD_Ok = $true
                                     }
@@ -1382,7 +1426,7 @@ function Update-DeviceInformation {
                     
                     if (-not $AMD_Ok -and (Get-Command "rocm-smi" -ErrorAction Ignore)) {
                         try {
-                            $Rocm = Invoke-Exe -FilePath "rocm-smi" -ArgumentList "-f -t -P --json" | ConvertFrom-Json -ErrorAction Ignore
+                            $Rocm = Invoke-Exe -FilePath "rocm-smi" -ArgumentList "-f -t -P -u --json" | ConvertFrom-Json -ErrorAction Ignore
                         } catch {
                         }
 
@@ -1396,6 +1440,7 @@ function Update-DeviceInformation {
                                     $_.Data.Temperature = [decimal]($Data.PSObject.Properties | Where-Object {$_.Name -match "Temperature" -and $_.Name -notmatch "junction" -and $_.Value -match "[\d\.]+"} | Foreach-Object {[decimal]$_.Value} | Measure-Object -Average).Average
                                     $_.Data.PowerDraw   = [decimal]($Data.PSObject.Properties | Where-Object {$_.Name -match "Power" -and $_.Value -match "[\d\.]+"} | Select-Object -First 1).Value
                                     $_.Data.FanSpeed    = [int]($Data.PSObject.Properties | Where-Object {$_.Name -match "Fan.+%" -and $_.Value -match "[\d\.]+"} | Select-Object -First 1).Value
+                                    $_.Data.Utilization = [int]($Data.PSObject.Properties | Where-Object {$_.Name -match "GPU use" -and $_.Value -match "[\d\.]+"} | Select-Object -First 1).Value
                                     $_.Data.Method      = "rocm"
                                 }
                                 $DeviceId++
@@ -1463,6 +1508,7 @@ function Update-DeviceInformation {
                                             FanSpeed    = $FanSpeedCur
                                             Temperature = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?temperature$").Data
                                             PowerDraw   = $PowerDrawCur
+                                            Utilization = $Utilization
                                         }
 
                                         $PCIBusId    = if ($_.GpuId -match "&BUS_(\d+)&DEV_(\d+)") {"{0:x2}:{1:x2}" -f [int]$Matches[1],[int]$Matches[2]} else {$null}
