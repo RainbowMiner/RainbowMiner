@@ -390,7 +390,16 @@ function Set-Stat {
             }
         }
         catch {
-            if (-not $Quiet -and (Test-Path $Path)) {Write-Log -Level Warn "Stat file ($Name) is corrupt and will be reset. "}
+            if (-not $Quiet -and (Test-Path $Path)) {
+                # the two deliberate resets above throw as well, give them their own words: "corrupt" is for files that really cannot be read
+                if ("$($_.Exception.Message)" -match "^Fluctuation out of range") {
+                    Write-Log -Level Warn "Stat file ($Name) will be reset, because its values fluctuate too much (week fluctuation $([Math]::Round([Double]$Stat.Week_Fluctuation * 100))%). "
+                } elseif ($ResetIfZero -and $Stat -and -not $Stat.Live) {
+                    Write-Log -Level Warn "Stat file ($Name) will be reset, because its last value is zero. "
+                } else {
+                    Write-Log -Level Warn "Stat file ($Name) is corrupt and will be reset. "
+                }
+            }
             $Stat = $null
         }
     }
