@@ -1784,7 +1784,11 @@ function Set-ContentJson {
         try {
             $Exists = $false
             if ([System.IO.File]::Exists($PathToFile)) {
-                    if ((Get-ChildItem $PathToFile -File).IsReadOnly) {
+                    # Windows only: on Linux .NET derives IsReadOnly from the mode bits of the caller's uid class
+                    # with no exception for root, so root over a user-owned 644 file (a Config folder copied from
+                    # another rig, a Docker bind mount) would be refused although it can write. The Open below is
+                    # the real test there
+                    if ($IsWindows -and (Get-ChildItem $PathToFile -File).IsReadOnly) {
                         if (-not $Quiet) {Write-Log -Level Warn "Unable to write to read-only file $PathToFile"}
                         return $false
                     }
