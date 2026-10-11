@@ -106,7 +106,7 @@ function Get-DeviceDebug {
                 $Vendor_Index."$($Device_OpenCL.Vendor)"++
                 $Type_Vendor_Index."$($Device_OpenCL.Type)"."$($Device_OpenCL.Vendor)"++
                 $Type_Index."$($Device_OpenCL.Type)"++
-                if (@("NVIDIA","AMD") -icontains $Vendor_Name) {$Type_Mineable_Index."$($Device_OpenCL.Type)"++}
+                if (@("NVIDIA","AMD","INTEL") -icontains $Vendor_Name) {$Type_Mineable_Index."$($Device_OpenCL.Type)"++}
             }
 
             $PlatformId++

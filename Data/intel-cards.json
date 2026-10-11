@@ -1,15 +1,20 @@
-﻿{
-    "Arc Graphics":  {
-                          "56a0":  "Arc A770",
-                          "56a1":  "Arc A750",
-                          "56a2":  "Arc A580",
-                          "56a5":  "Arc A380",
-                          "9a60":  "UHD Graphics 750",
-                          "9a68":  "UHD Graphics 750",
-                          "9a70":  "UHD Graphics 750",
-                          "9bc5":  "UHD Graphics 770",
-                          "9a40":  "Iris Xe Graphics",
-                          "9a49":  "Iris Xe Graphics",
-                          "46c0":  "UHD Graphics 730"
-                      }
+{
+    "56a0": "Intel(R) Arc(TM) A770 Graphics",
+    "56a1": "Intel(R) Arc(TM) A750 Graphics",
+    "56a2": "Intel(R) Arc(TM) A580 Graphics",
+    "56a5": "Intel(R) Arc(TM) A380 Graphics",
+    "56a6": "Intel(R) Arc(TM) A310 Graphics",
+    "5690": "Intel(R) Arc(TM) A770M Graphics",
+    "5691": "Intel(R) Arc(TM) A730M Graphics",
+    "5692": "Intel(R) Arc(TM) A550M Graphics",
+    "5693": "Intel(R) Arc(TM) A370M Graphics",
+    "5694": "Intel(R) Arc(TM) A350M Graphics",
+    "e20b": "Intel(R) Arc(TM) B580 Graphics",
+    "e20c": "Intel(R) Arc(TM) B570 Graphics",
+    "64a0": "Intel(R) Arc(TM) 140V GPU",
+    "64b0": "Intel(R) Arc(TM) 130V GPU",
+    "7d55": "Intel(R) Arc(TM) Graphics",
+    "7dd5": "Intel(R) Arc(TM) Graphics",
+    "9a40": "Intel(R) Iris(R) Xe Graphics",
+    "9a49": "Intel(R) Iris(R) Xe Graphics"
 }

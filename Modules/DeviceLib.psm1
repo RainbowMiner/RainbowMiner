@@ -269,7 +269,14 @@ function Get-Device {
                             $Device_OpenCL.Architecture = "$($Device_OpenCL.Architecture -replace ":.+$" -replace "[^A-Za-z0-9]+")"
                         }
                     } elseif ($Vendor_Name -eq "INTEL") {
-                        # nothing to fix yet
+                        # the Linux compute runtime calls a card it has no marketing name for "Intel(R) Graphics [0x64a0]":
+                        # map the PCI device id to the name the Windows driver reports, so that Model, stats and the TDP
+                        # table are the same on both systems
+                        if ($Device_Name -match "\[0x([0-9A-Fa-f]{4})\]") {
+                            if ($Script:IntelCardNames -eq $null) {$Script:IntelCardNames = Get-ContentByStreamReader ".\Data\intel-cards.json" | ConvertFrom-Json -ErrorAction Ignore}
+                            $IntelCardName = $Script:IntelCardNames."$($Matches[1].ToLower())"
+                            if ($IntelCardName) {$Device_Name = Get-NormalizedDeviceName $IntelCardName -Vendor $Vendor_Name}
+                        }
                     } elseif ($Vendor_Name -eq "NVIDIA") {
                         if ($GPUDeviceNameFound) {
                             $SubId       = $GPUDeviceNameFound.SubId
@@ -377,7 +384,8 @@ function Get-Device {
                             if ($AmdModels.ContainsKey($Device.Model) -and $AmdModels[$Device.Model] -ne $AmdGb) {[void]$AmdModelsEx.Add($Device.Model)}
                             else {$AmdModels[$Device.Model]=$AmdGb}
                         }
-                        if ($Vendor_Name -in @("NVIDIA","AMD")) {$Type_Mineable_Index."$($Device_OpenCL.Type)"++}
+                        # lolMiner and Nanominer number Intel cards along with AMD and NVIDIA
+                        if ($Vendor_Name -in @("NVIDIA","AMD","INTEL")) {$Type_Mineable_Index."$($Device_OpenCL.Type)"++}
                         if ($Device_OpenCL.PCIBusId -match "([A-F0-9]+:[A-F0-9]+)$") {
                             $Device.BusId = $Matches[1]
                             if ($PCIBusIds.Contains($Device.BusId)) {$Device = $null} else {[void]$PCIBusIds.Add($Device.BusId)}
@@ -517,7 +525,7 @@ function Get-Device {
             $BusId_Type_Codec_Index."$($_.Type)"."$($_.Codec)"++
             $BusId_Type_Vendor_Index."$($_.Type)"."$($_.Vendor)"++
             $BusId_Vendor_Index."$($_.Vendor)"++
-            if ($_.Vendor -in @("AMD","NVIDIA")) {$BusId_Type_Mineable_Index."$($_.Type)"++}
+            if ($_.Vendor -in @("AMD","NVIDIA","INTEL")) {$BusId_Type_Mineable_Index."$($_.Type)"++}
         }
 
         #CPU detection
@@ -1559,9 +1567,11 @@ function Update-DeviceInformation {
                             }
                             if ($intelJson.GPUs) {
                                 $DeviceId = 0
-                                $intelGPUs.GPUs | Foreach-Object {
+                                $intelJson.GPUs | Foreach-Object {
                                     $gpu = $_
-                                    $Devices | Where-Object {($_.BusId -and ($_.BusId -eq $gpu.BusId)) -or (-not $_.BusId -and ($DeviceId -eq $_.BusId_Vendor_Index))} | Foreach-Object {
+                                    # sysinfo.sh reports the PCI slot name (0000:03:00.0), the device carries bus:device only
+                                    $gpuBusId = if ("$($gpu.BusId)" -match "([0-9a-f]{2}:[0-9a-f]{2})(\.[0-9a-f])?$") {$Matches[1]} else {"$($gpu.BusId)"}
+                                    $Devices | Where-Object {($_.BusId -and ($_.BusId -eq $gpuBusId)) -or (-not $_.BusId -and ($DeviceId -eq $_.BusId_Vendor_Index))} | Foreach-Object {
                                         $_.Data.Clock       = [int]$gpu.Clock
                                         $_.Data.ClockMem    = [int]$gpu.ClockMem
                                         $_.Data.Temperature = [decimal]$gpu.Temperature

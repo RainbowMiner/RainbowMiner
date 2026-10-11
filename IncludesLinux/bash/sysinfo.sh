@@ -349,11 +349,8 @@ collect_gpu_data() {
                         intel_fan=$(echo "$sensors_data_intel" | jq -r '.["xe-pci-*"].fan1_input // "null"' 2>/dev/null)
                     fi
 
-                    # Try reading power from `/sys/class/powercap`
-                    if [ "$intel_power" = "null" ] && [ -f "/sys/class/powercap/intel-rapl:0/energy_uj" ]; then
-                        energy_uj=$(cat "/sys/class/powercap/intel-rapl:0/energy_uj" 2>/dev/null)
-                        intel_power=$(awk "BEGIN {print $energy_uj / 1000000}")  # Convert µJ to Watts
-                    fi
+                    # no RAPL fallback: intel-rapl:0/energy_uj is the CPU package's cumulative energy counter
+                    # in microjoules, a single read is joules since boot, not watts
 
                     # Estimate power if no direct reading is available
                     if [ "$intel_power" = "null" ] && [ "$intel_load" != "null" ]; then

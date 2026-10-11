@@ -1,8 +1,11 @@
-﻿{
-    "Arc A770": 225,
-    "Arc A750": 190,
-    "Arc A580": 175,
-    "Arc A380": 75,
+{
+    "Arc A770 Graphics": 225,
+    "Arc A750 Graphics": 190,
+    "Arc A580 Graphics": 175,
+    "Arc A380 Graphics": 75,
+    "Arc A310 Graphics": 75,
+    "Arc B580 Graphics": 190,
+    "Arc B570 Graphics": 150,
     "UHD Graphics 770": 15,
     "UHD Graphics 750": 15,
     "UHD Graphics 730": 12,
