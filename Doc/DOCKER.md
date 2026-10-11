@@ -18,6 +18,7 @@ Contents
    - [AMD](#amd)
    - [NVIDIA](#nvidia)
    - [AMD and NVIDIA in one image](#amd-and-nvidia-in-one-image)
+   - [CPU only](#cpu-only)
 2. [The entrypoint](#the-entrypoint)
 3. [The compose file](#the-compose-file)
 4. [First start](#first-start)
@@ -27,17 +28,25 @@ Contents
 
 ## The Dockerfiles
 
-All three variants share the same skeleton: Ubuntu 24.04 as the base, because AMD does not
+All variants share the same skeleton: Ubuntu 24.04 as the base, because AMD does not
 ship ROCm packages for newer Ubuntu releases yet and the miner binaries are built against
 the glibc of the LTS releases; the packages `install.sh` cannot install itself; the latest
 RainbowMiner release unpacked to `/RainbowMiner`; and the entrypoint from the next
 section. Only the GPU runtime differs.
 
-Three things apply to all of them:
+Four things apply to all of them:
 
 - `install.sh` installs PowerShell and the packages the miners need. It also tries to
-  install the `ocdaemon` service and prints that systemd is missing. That is expected in a
-  container and harmless.
+  install the `ocdaemon` service and complains that systemd is missing. That is expected
+  in a container and harmless.
+- `install.sh` calls `apt-get install` for the miner libraries (`libjansson4`, `libnuma1`,
+  `libuv1`, `libomp`, ...) and for `tmux` and `screen`, but never `apt-get update`. The
+  Ubuntu base image ships without package lists, so the `apt-get update` in front of
+  `install.sh` is not optional: without it every one of these installs fails silently and
+  the miners die at start with "error while loading shared libraries". The lists are
+  removed again at the end of the same step to keep the image small.
+- `procps` is in the package list because the base image has no `ps` and `pgrep`, which
+  RainbowMiner's shutdown and the miner guard use.
 - No GPU is visible while an image is built, so everything that depends on hardware
   detection has to be forced. That is why the NVIDIA variants call `install.sh -nv`: the
   CUDA runtime libraries the miners link against are only fetched when `install.sh` sees
@@ -55,7 +64,7 @@ container only needs the user-space part, which `amdgpu-install` installs with
 
     ENV DEBIAN_FRONTEND=noninteractive
     RUN apt-get update && apt-get install -y --no-install-recommends \
-            ca-certificates curl wget unzip xz-utils pciutils libicu74 \
+            ca-certificates curl wget unzip xz-utils pciutils procps libicu74 \
             ocl-icd-libopencl1 clinfo \
         && rm -rf /var/lib/apt/lists/*
 
@@ -66,11 +75,12 @@ container only needs the user-space part, which `amdgpu-install` installs with
         && amdgpu-install -y --usecase=opencl --no-dkms --no-32 \
         && rm -f amdgpu-install_*.deb && rm -rf /var/lib/apt/lists/*
 
-    RUN mkdir /RainbowMiner \
+    RUN apt-get update && mkdir /RainbowMiner \
         && curl -s https://api.github.com/repos/RainbowMiner/RainbowMiner/releases/latest \
            | grep -o 'https://[^"]*RainbowMiner[^"]*linux.zip' | head -1 | xargs curl -sL -o /tmp/rbm.zip \
         && unzip -q /tmp/rbm.zip -d /RainbowMiner && rm /tmp/rbm.zip \
-        && bash /RainbowMiner/install.sh
+        && bash /RainbowMiner/install.sh \
+        && rm -rf /var/lib/apt/lists/*
 
     COPY entrypoint.sh /entrypoint.sh
     ENTRYPOINT ["bash", "/entrypoint.sh"]
@@ -104,7 +114,7 @@ The Dockerfile:
 
     ENV DEBIAN_FRONTEND=noninteractive
     RUN apt-get update && apt-get install -y --no-install-recommends \
-            ca-certificates curl wget unzip xz-utils pciutils libicu74 \
+            ca-certificates curl wget unzip xz-utils pciutils procps libicu74 \
             ocl-icd-libopencl1 clinfo \
         && rm -rf /var/lib/apt/lists/*
 
@@ -113,11 +123,12 @@ The Dockerfile:
     ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
 
     # -nv fetches the CUDA runtime bundles (one per CUDA generation) into /opt/rainbowminer/lib
-    RUN mkdir /RainbowMiner \
+    RUN apt-get update && mkdir /RainbowMiner \
         && curl -s https://api.github.com/repos/RainbowMiner/RainbowMiner/releases/latest \
            | grep -o 'https://[^"]*RainbowMiner[^"]*linux.zip' | head -1 | xargs curl -sL -o /tmp/rbm.zip \
         && unzip -q /tmp/rbm.zip -d /RainbowMiner && rm /tmp/rbm.zip \
-        && bash /RainbowMiner/install.sh -nv
+        && bash /RainbowMiner/install.sh -nv \
+        && rm -rf /var/lib/apt/lists/*
 
     COPY entrypoint.sh /entrypoint.sh
     ENTRYPOINT ["bash", "/entrypoint.sh"]
@@ -141,7 +152,7 @@ NVIDIA libraries.
 
     ENV DEBIAN_FRONTEND=noninteractive
     RUN apt-get update && apt-get install -y --no-install-recommends \
-            ca-certificates curl wget unzip xz-utils pciutils libicu74 \
+            ca-certificates curl wget unzip xz-utils pciutils procps libicu74 \
             ocl-icd-libopencl1 clinfo \
         && rm -rf /var/lib/apt/lists/*
 
@@ -155,17 +166,63 @@ NVIDIA libraries.
     ENV NVIDIA_VISIBLE_DEVICES=all
     ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
 
-    RUN mkdir /RainbowMiner \
+    RUN apt-get update && mkdir /RainbowMiner \
         && curl -s https://api.github.com/repos/RainbowMiner/RainbowMiner/releases/latest \
            | grep -o 'https://[^"]*RainbowMiner[^"]*linux.zip' | head -1 | xargs curl -sL -o /tmp/rbm.zip \
         && unzip -q /tmp/rbm.zip -d /RainbowMiner && rm /tmp/rbm.zip \
-        && bash /RainbowMiner/install.sh -nv
+        && bash /RainbowMiner/install.sh -nv \
+        && rm -rf /var/lib/apt/lists/*
 
     COPY entrypoint.sh /entrypoint.sh
     ENTRYPOINT ["bash", "/entrypoint.sh"]
 
 The compose file for the mixed image needs both vendor blocks: the NVIDIA runtime and the
 AMD device passthrough combine without conflict.
+
+### CPU only
+
+A CPU rig needs no GPU runtime, the skeleton alone is the image. `install.sh` sees no
+NVIDIA card and skips the CUDA bundles on its own, and `clinfo` and the OpenCL loader can
+stay out.
+
+    FROM ubuntu:24.04
+
+    ENV DEBIAN_FRONTEND=noninteractive
+    RUN apt-get update && apt-get install -y --no-install-recommends \
+            ca-certificates curl wget unzip xz-utils pciutils procps libicu74 \
+        && rm -rf /var/lib/apt/lists/*
+
+    RUN apt-get update && mkdir /RainbowMiner \
+        && curl -s https://api.github.com/repos/RainbowMiner/RainbowMiner/releases/latest \
+           | grep -o 'https://[^"]*RainbowMiner[^"]*linux.zip' | head -1 | xargs curl -sL -o /tmp/rbm.zip \
+        && unzip -q /tmp/rbm.zip -d /RainbowMiner && rm /tmp/rbm.zip \
+        && bash /RainbowMiner/install.sh \
+        && rm -rf /var/lib/apt/lists/*
+
+    COPY entrypoint.sh /entrypoint.sh
+    ENTRYPOINT ["bash", "/entrypoint.sh"]
+
+The compose file gets neither vendor block. Instead, pin the container to the cores it may
+use:
+
+        cpuset: "0-7"
+
+RainbowMiner reads the cpuset of its own process and offers the miners only those cores,
+so `CPUMiningThreads` and `CPUMiningAffinity` in `config.txt` can stay at their defaults.
+`cpus: 8` (a CFS quota) works too, but it throttles instead of pinning, which costs
+hashrate on RandomX. In the setup wizard answer `CPU` for the devices (`DeviceName = CPU`
+in `config.txt`), nothing else is CPU specific.
+
+RandomX miners run noticeably faster with huge pages and the MSR mod, both are host
+matters:
+
+- huge pages: reserve them on the host, e.g. `sysctl -w vm.nr_hugepages=1280` (xmrig's
+  recommendation, 2.5 GB), the container sees them without further flags. 1 GB pages
+  (`EnableRandomX1GBPages`) need `hugepagesz=1G hugepages=<n>` on the host's kernel
+  command line.
+- MSR mod: the miner writes the registers itself when it can reach `/dev/cpu/*/msr`, which
+  needs the `msr` module loaded on the host and `privileged: true` in the compose file.
+  Without it the miner prints a warning and runs 5-15% slower.
 
 ## The entrypoint
 
@@ -230,6 +287,14 @@ pools or starts miners at the beginning of a round, and stopping the miners take
 seconds on its own. With the default, Docker kills the container before the shutdown is
 through.
 
+`restart: unless-stopped` restarts the container after every exit that was not a
+`docker stop`, a clean exit with code 0 included. That is what a rig wants after a host
+reboot or a crash, but it also means that the web interface's stop button and `stopp.sh`
+do not stop the container, they restart RainbowMiner (see
+[Stopping the container](#stopping-the-container)). `restart: on-failure` only restarts
+after a non-zero exit, so a stop from inside stays a stop, but the container then does not
+come back after a host reboot.
+
 If the host runs the AMD container runtime, `runtime: amd` together with `gpus: all`
 replaces the `devices` and `group_add` lines. Either way, `clinfo` inside the container
 has to list an AMD platform.
@@ -240,7 +305,7 @@ The first start of RainbowMiner opens the setup wizard, which needs a terminal. 
 container has none, so do the setup once interactively:
 
     docker compose build
-    docker compose run --rm -it --entrypoint bash rainbowminer /RainbowMiner/setup.sh
+    docker compose run --rm --entrypoint bash rainbowminer /RainbowMiner/setup.sh
     docker compose up -d
 
 `setup.sh` writes `Config/config.txt` and the pool configuration into the mounted `Config`
@@ -257,13 +322,20 @@ ends. Expect it to take between a few seconds and about a minute, depending on w
 RainbowMiner was doing when the signal arrived.
 
 Without the entrypoint, or with a shell-form `ENTRYPOINT`, nothing happens on SIGTERM and
-Docker kills the container with SIGKILL after the grace period. The miners die with it
-(RainbowMiner's miner guard ends them when the controller disappears), but the shutdown is
-not clean: tmux sessions and the pid file stay behind.
+Docker kills the container with SIGKILL after the grace period. The kernel then ends every
+process in the container at once, miners included, so nothing keeps running, but the
+shutdown is not clean: the pool never sees the miners leave, and `Data/rbm.pid` survives
+in the container layer, so the next start reports "Checking last shutdown .. crashed"
+once.
 
-A clean stop from outside, independent of signals, is always
+A stop from inside, independent of signals, is
 
     docker exec rainbowminer bash /RainbowMiner/stopp.sh
+
+RainbowMiner shuts down cleanly and the container exits with code 0, but with
+`restart: unless-stopped` Docker starts it again right away. The same holds for the stop
+button of the web interface. Use it as a restart; the stop that stays stopped is
+`docker compose stop`.
 
 ## What to persist
 
@@ -273,6 +345,9 @@ A clean stop from outside, independent of signals, is always
 | `Stats`  | the benchmark results and the profit history. Without it every rebuild starts a full re-benchmark of all miners |
 | `Bin`    | the downloaded miner binaries. Optional, saves the download after a rebuild                                     |
 | `Logs`   | the RainbowMiner log and one file per miner run. This is where you look when a miner crashes                   |
+
+`Data` is not worth a mount: it holds caches RainbowMiner refreshes on its own (pool and
+coin data, DAG sizes) and the `rbm.pid` marker.
 
 An automatic update inside the running container updates the files in the container
 layer, which is thrown away at the next rebuild. Rebuilding the image from the latest
@@ -286,7 +361,9 @@ and rebuild when a new release is out.
   in a container is the GPU runtime: run `clinfo` inside the container, it has to show an
   AMD platform (ROCm) or an NVIDIA platform. A platform named `rusticl` or `Clover` is
   Mesa and does not run miners. For NVIDIA also check that `nvidia-smi` works inside the
-  container and that the image was built with `install.sh -nv`.
+  container and that the image was built with `install.sh -nv`. If the miner log ends in
+  `error while loading shared libraries`, the apt step of `install.sh` did not run: the
+  Dockerfile lacks the `apt-get update` in front of it.
 - **No GPU found.** `clinfo` shows no device: for AMD check that `/dev/kfd` and `/dev/dri`
   are passed through and that the container user is in the `video` and `render` groups.
   For NVIDIA run `nvidia-smi` inside the container, which tests the container toolkit and
@@ -297,4 +374,6 @@ and rebuild when a new release is out.
 - **The setup wizard loops or errors at the first start.** The container was started
   detached without a `Config/config.txt`. Run the interactive setup from
   [First start](#first-start) once.
+- **RainbowMiner restarts instead of stopping.** `stopp.sh` or the web stop button were
+  used with `restart: unless-stopped`. Stop with `docker compose stop`.
 - **Benchmarks start from zero after every rebuild.** The `Stats` folder is not mounted.
