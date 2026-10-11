@@ -3149,7 +3149,9 @@ class SrbMinerMulti : Miner {
     }
 
     [Bool]IsBenchmarking() {
-        return ([Miner]$this).IsBenchmarking() -or ($this.MinerInfo -and $this.MinerInfo.algo_count -eq 1 -and -not $this.MinerInfo.failed -and -not $this.MinerInfo.tuning_done -and $this.RunningTime.TotalMinutes -lt 10)
+        # wait up to 10 minutes for the auto tune results, but only while the miner really tunes: with NoAutoTune the
+        # results stay 0 and tuning_done can never flip, the grace would cost 10 minutes of zero hashrate at every start
+        return ([Miner]$this).IsBenchmarking() -or ($this.MinerInfo -and $this.MinerInfo.autotune -and $this.MinerInfo.algo_count -eq 1 -and -not $this.MinerInfo.failed -and -not $this.MinerInfo.tuning_done -and $this.RunningTime.TotalMinutes -lt 10)
     }
 
     [Void]UpdateMinerData () {
