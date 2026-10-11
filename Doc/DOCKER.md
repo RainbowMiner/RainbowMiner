@@ -18,6 +18,7 @@ Contents
    - [AMD](#amd)
    - [NVIDIA](#nvidia)
    - [AMD and NVIDIA in one image](#amd-and-nvidia-in-one-image)
+   - [Intel](#intel)
    - [CPU only](#cpu-only)
 2. [The entrypoint](#the-entrypoint)
 3. [The compose file](#the-compose-file)
@@ -178,6 +179,68 @@ NVIDIA libraries.
 
 The compose file for the mixed image needs both vendor blocks: the NVIDIA runtime and the
 AMD device passthrough combine without conflict.
+
+### Intel
+
+Intel cards need the OpenCL compute runtime (NEO). Intel's own apt repository for Ubuntu
+24.04 stops at version 24.39, which predates the Xe2 generation (Lunar Lake, Arc B-series),
+so the image takes the runtime from the Ubuntu Intel graphics PPA instead. The kernel side
+(`i915` or `xe`) stays on the host.
+
+    FROM ubuntu:24.04
+
+    ENV DEBIAN_FRONTEND=noninteractive
+    RUN apt-get update && apt-get install -y --no-install-recommends \
+            ca-certificates curl wget unzip xz-utils pciutils procps libicu74 \
+            ocl-icd-libopencl1 clinfo software-properties-common \
+        && rm -rf /var/lib/apt/lists/*
+
+    # Intel: the OpenCL compute runtime from the Ubuntu Intel graphics PPA
+    RUN add-apt-repository -y ppa:kobuk-team/intel-graphics \
+        && apt-get install -y --no-install-recommends intel-opencl-icd libze-intel-gpu1 libze1 \
+        && rm -rf /var/lib/apt/lists/*
+
+    RUN apt-get update && mkdir /RainbowMiner \
+        && curl -s https://api.github.com/repos/RainbowMiner/RainbowMiner/releases/latest \
+           | grep -o 'https://[^"]*RainbowMiner[^"]*linux.zip' | head -1 | xargs curl -sL -o /tmp/rbm.zip \
+        && unzip -q /tmp/rbm.zip -d /RainbowMiner && rm /tmp/rbm.zip \
+        && bash /RainbowMiner/install.sh \
+        && rm -rf /var/lib/apt/lists/*
+
+    COPY entrypoint.sh /entrypoint.sh
+    ENTRYPOINT ["bash", "/entrypoint.sh"]
+
+The compose file passes the render nodes:
+
+        devices:
+          - /dev/dri
+
+As with AMD, the container runs as root and needs no `group_add`. `clinfo` inside the
+container has to list the `Intel(R) OpenCL Graphics` platform.
+
+Which miners run on the card is a question of the miner, not of the container: the
+miners carry their own list of supported Intel generations. On an Arc 140V (Lunar Lake,
+Xe2) in October 2026, SRBMiner-MULTI 3.7.1 reports the card as `unknown_intel`, WildRig
+0.51.3 skips it as unsupported, Nanominer and BzMiner exit at once, and Xmrig's OpenCL
+backend opens it but fails on DAG algorithms with `CL_INVALID_BUFFER_SIZE`, because the
+runtime limits a single allocation to 1 GB. Arc A-series cards are supported by all of
+them.
+
+**WSL2.** The Intel image was verified in Docker under WSL2 (Ubuntu 24.04, Windows driver
+32.0.101.8626), where the GPU reaches the container through the `/dev/dxg` bridge instead
+of `/dev/dri`. For that, add to the Dockerfile
+
+    RUN echo /usr/lib/wsl/lib > /etc/ld.so.conf.d/ld.wsl.conf
+
+and replace the `devices` block in the compose file with
+
+        devices:
+          - /dev/dxg
+        volumes:
+          - /usr/lib/wsl:/usr/lib/wsl:ro
+
+in addition to the regular volumes. Sensor readings (power, temperature, clocks) come
+from the host's sysfs and are not available through the bridge.
 
 ### CPU only
 
