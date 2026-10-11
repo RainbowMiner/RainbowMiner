@@ -81,6 +81,18 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                     }
 				    $Pool_Port = if ($Pools.$MainAlgorithm_Norm.Ports -ne $null -and $Pools.$MainAlgorithm_Norm.Ports.GPU) {$Pools.$MainAlgorithm_Norm.Ports.GPU} else {$Pools.$MainAlgorithm_Norm.Port}
 
+                    # OneZeroMiner 1.8.x rewrites the pearlhash login on a kryptex host: it appends ".<worker>" to the wallet, which turns
+                    # RainbowMiner's "wallet/worker" into "wallet/worker.worker" and Kryptex answers [20,"Invalid login"]. A wallet that
+                    # already carries a dot is sent unchanged, so hand over "wallet.worker" (Kryptex accepts it) plus the worker name.
+                    $Pool_User      = $Pools.$MainAlgorithm_Norm.User
+                    $Pool_WorkerArg = ""
+                    if ($_.MainAlgorithm -eq "pearlhash" -and $Pools.$MainAlgorithm_Norm.Host -match "kryptex" -and $Pool_User -match "^([^/]+)/([^/]+)$") {
+                        $Pool_User      = "$($Matches[1]).$($Matches[2])"
+                        $Pool_WorkerArg = " --worker $($Matches[2])"
+                    } elseif ($Pools.$MainAlgorithm_Norm.Worker -and $Pool_User -eq $Pools.$MainAlgorithm_Norm.Wallet) {
+                        $Pool_WorkerArg = " --worker $($Pools.$MainAlgorithm_Norm.Worker)"
+                    }
+
                     if ($SecondAlgorithm_Norm_0) {
 
                         $Miner_Intensity = $Session.Config.Miners."$($Name)-$($Miner_Model)-$($MainAlgorithm_Norm_0)-$($SecondAlgorithm_Norm_0)".Intensity
@@ -107,7 +119,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 					                    DeviceName     = $Miner_Device.Name
 					                    DeviceModel    = $Miner_Model
 					                    Path           = $Path
-					                    Arguments      = "$($DisableCommand) -d $($DeviceIDsAll) --d2 $($DeviceIDsAll)$(if ($DeviceIntensitiesAll) {" --dual-intensity $DeviceIntensitiesAll"}) -a $($_.MainAlgorithm) -w $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" -p $($Pools.$MainAlgorithm_Norm.Pass)"}) -o $(if ($Pools.$MainAlgorithm_Norm.SSL) {"$($Pools.$MainAlgorithm_Norm.Protocol)://"})$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port)$(if ($Pools.$MainAlgorithm_Norm.Worker -and $Pools.$MainAlgorithm_Norm.User -eq $Pools.$MainAlgorithm_Norm.Wallet) {" --worker $($Pools.$MainAlgorithm_Norm.Worker)"}) --a2 $($_.SecondaryAlgorithm) --w2 $($Pools.$SecondAlgorithm_Norm.User)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {" --p2 $($Pools.$SecondAlgorithm_Norm.Pass)"}) --o2 $(if ($Pools.$SecondAlgorithm_Norm.SSL) {"$($Pools.$SecondAlgorithm_Norm.Protocol)://"})$($Pools.$SecondAlgorithm_Norm.Host):$($SecondPool_Port)$(if ($Pools.$SecondAlgorithm_Norm.Worker -and $Pools.$SecondAlgorithm_Norm.User -eq $Pools.$SecondAlgorithm_Norm.Wallet) {" --worker2 $($Pools.$SecondAlgorithm_Norm.Worker)"}) --api-port `$mport --disable-telemetry$($_.Params)"
+					                    Arguments      = "$($DisableCommand) -d $($DeviceIDsAll) --d2 $($DeviceIDsAll)$(if ($DeviceIntensitiesAll) {" --dual-intensity $DeviceIntensitiesAll"}) -a $($_.MainAlgorithm) -w $($Pool_User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" -p $($Pools.$MainAlgorithm_Norm.Pass)"}) -o $(if ($Pools.$MainAlgorithm_Norm.SSL) {"$($Pools.$MainAlgorithm_Norm.Protocol)://"})$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port)$($Pool_WorkerArg) --a2 $($_.SecondaryAlgorithm) --w2 $($Pools.$SecondAlgorithm_Norm.User)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {" --p2 $($Pools.$SecondAlgorithm_Norm.Pass)"}) --o2 $(if ($Pools.$SecondAlgorithm_Norm.SSL) {"$($Pools.$SecondAlgorithm_Norm.Protocol)://"})$($Pools.$SecondAlgorithm_Norm.Host):$($SecondPool_Port)$(if ($Pools.$SecondAlgorithm_Norm.Worker -and $Pools.$SecondAlgorithm_Norm.User -eq $Pools.$SecondAlgorithm_Norm.Wallet) {" --worker2 $($Pools.$SecondAlgorithm_Norm.Worker)"}) --api-port `$mport --disable-telemetry$($_.Params)"
 					                    HashRates      = [PSCustomObject]@{
                                                             $MainAlgorithm_Norm = $Global:StatsCache."$($Miner_Name_Dual)_$($MainAlgorithm_Norm_0)_HashRate".Week
                                                             $SecondAlgorithm_Norm = $Global:StatsCache."$($Miner_Name_Dual)_$($SecondAlgorithm_Norm_0)_HashRate".Week
@@ -141,7 +153,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 					        DeviceName     = $Miner_Device.Name
 					        DeviceModel    = $Miner_Model
 					        Path           = $Path
-					        Arguments      = "$($DisableCommand) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -w $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" -p $($Pools.$MainAlgorithm_Norm.Pass)"}) -o $(if ($Pools.$MainAlgorithm_Norm.SSL) {"$($Pools.$MainAlgorithm_Norm.Protocol)://"})$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port)$(if ($Pools.$MainAlgorithm_Norm.Worker -and $Pools.$MainAlgorithm_Norm.User -eq $Pools.$MainAlgorithm_Norm.Wallet) {" --worker $($Pools.$MainAlgorithm_Norm.Worker)"}) --api-port `$mport --disable-telemetry$($_.Params)"
+					        Arguments      = "$($DisableCommand) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -w $($Pool_User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" -p $($Pools.$MainAlgorithm_Norm.Pass)"}) -o $(if ($Pools.$MainAlgorithm_Norm.SSL) {"$($Pools.$MainAlgorithm_Norm.Protocol)://"})$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port)$($Pool_WorkerArg) --api-port `$mport --disable-telemetry$($_.Params)"
 					        HashRates      = [PSCustomObject]@{$MainAlgorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Week}
 					        API            = "OneZeroMiner"
 					        Port           = $Miner_Port
