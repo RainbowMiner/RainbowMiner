@@ -105,6 +105,7 @@ namespace OpenCl
         private const uint CL_DEVICE_PCI_BUS_ID_NV =                          0x4008;
         private const uint CL_DEVICE_PCI_SLOT_ID_NV =                         0x4009;
         private const uint CL_DEVICE_TOPOLOGY_AMD =                           0x4037;
+        private const uint CL_DEVICE_PCI_BUS_INFO_KHR =                       0x410F;
         private const uint CL_DEVICE_BOARD_NAME_AMD =                         0x4038;
 
         internal Device(IntPtr handle) : base(handle) { }
@@ -455,6 +456,20 @@ namespace OpenCl
                         }
                     }
                     catch (OpenClException) {
+                    }
+                    if (!ok) {
+                        try {
+                            // cl_khr_pci_bus_info (Intel NEO, newer AMD and Mesa runtimes): cl_uint domain, bus, device, function
+                            uint[] PCIBus_KHR = Cl.GetInfoArray<uint>(NativeMethods.clGetDeviceInfo, this.handle, CL_DEVICE_PCI_BUS_INFO_KHR);
+
+                            if (PCIBus_KHR != null && PCIBus_KHR.Length == 4) {
+                                BusId = PCIBus_KHR[1];
+                                DevId = PCIBus_KHR[2];
+                                ok = true;
+                            }
+                        }
+                        catch (OpenClException) {
+                        }
                     }
                 }
                 return ok? string.Format("{0:X2}:{1:X2}",BusId,DevId) : null;
