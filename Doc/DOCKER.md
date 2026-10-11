@@ -236,11 +236,32 @@ and exits with code 0, which ends the loop in `start.sh`.
     cd /RainbowMiner
     bash start.sh &
     child=$!
-    trap 'echo adios > /RainbowMiner/stopp.txt; wait $child' TERM INT
-    wait $child
+
+    # RainbowMiner deletes a stop file it finds while it is still starting up, so one write
+    # is not enough: keep writing it until the loop has seen it and the process is gone
+    stopped=
+    stop() {
+      stopped=1
+      while kill -0 $child 2>/dev/null; do
+        echo adios > /RainbowMiner/stopp.txt
+        sleep 1
+      done
+    }
+    trap stop TERM INT
+
+    # the signal makes the first wait return early (status > 128), so wait once more for
+    # the real exit code of RainbowMiner
+    wait $child; rc=$?
+    [ -n "$stopped" ] && { wait $child; rc=$?; }
+    exit $rc
 
 A `trap` installed in PID 1 counts as a signal handler, so bash receives the SIGTERM here
-even without `init: true`.
+even without `init: true`. The loop in `stop` is what makes `docker compose restart` and a
+`stop` right after `up` work: a `docker compose stop` that arrives during the first 15 to
+30 seconds of a start hits RainbowMiner's startup phase, which removes a stale stop file,
+and with a single write the container would run into the grace period and be killed. The
+loop's last write lands after RainbowMiner has cleaned up, so a `stopp.txt` left in the
+container is normal, the next start removes it.
 
 ## The compose file
 
@@ -263,9 +284,6 @@ even without `init: true`.
         devices:
           - /dev/kfd
           - /dev/dri
-        group_add:
-          - video
-          - render
         security_opt:
           - seccomp=unconfined
 
@@ -281,11 +299,18 @@ are there so that a compose file with an image from elsewhere works as well. The
 `deploy.resources.reservations.devices` syntax with `driver: nvidia` and
 `capabilities: [gpu]` does the same as `runtime: nvidia`.
 
+ROCm's own examples add `--group-add video --group-add render`. That is for containers
+running as a user: Docker resolves the names in the image's `/etc/group`, and the image has
+no `render` group, so the container is not even created ("Unable to find group render").
+This container runs as root, which opens the device nodes regardless of their group. If
+you do run it as a user, put the host's numeric GIDs under `group_add`
+(`getent group video render | cut -d: -f3`).
+
 `stop_grace_period` matters. Docker's default of 10 seconds is not enough for a clean stop:
 the stop file is polled once per second while RainbowMiner waits, but not while it fetches
-pools or starts miners at the beginning of a round, and stopping the miners takes a few
-seconds on its own. With the default, Docker kills the container before the shutdown is
-through.
+pools or starts miners at the beginning of a round, not during its startup, and stopping
+the miners takes a few seconds on its own. With the default, Docker kills the container
+before the shutdown is through.
 
 `restart: unless-stopped` restarts the container after every exit that was not a
 `docker stop`, a clean exit with code 0 included. That is what a rig wants after a host
@@ -296,7 +321,7 @@ after a non-zero exit, so a stop from inside stays a stop, but the container the
 come back after a host reboot.
 
 If the host runs the AMD container runtime, `runtime: amd` together with `gpus: all`
-replaces the `devices` and `group_add` lines. Either way, `clinfo` inside the container
+replaces the `devices` lines. Either way, `clinfo` inside the container
 has to list an AMD platform.
 
 ## First start
@@ -310,7 +335,8 @@ container has none, so do the setup once interactively:
 
 `setup.sh` writes `Config/config.txt` and the pool configuration into the mounted `Config`
 folder, where every later start finds them. The alternative is to copy a `Config` folder
-from an existing rig into place before the first `up`.
+from an existing rig into place before the first `up`; `chown -R root:root Config` after
+the copy, see the read-only entry in [Troubleshooting](#troubleshooting).
 
 The web interface is reachable at `http://<host>:4000` as usual.
 
@@ -318,8 +344,9 @@ The web interface is reachable at `http://<host>:4000` as usual.
 
 `docker compose stop` or `docker compose down` send SIGTERM to the entrypoint, the
 entrypoint writes the stop file, RainbowMiner stops the miners and exits, the container
-ends. Expect it to take between a few seconds and about a minute, depending on what
-RainbowMiner was doing when the signal arrived.
+ends. Measured on a CPU container: 3 seconds when RainbowMiner was waiting for the next
+round, 18 seconds when the stop arrived 3 seconds after the start. Expect up to about a
+minute when it hits the pool and miner loading at the beginning of a round.
 
 Without the entrypoint, or with a shell-form `ENTRYPOINT`, nothing happens on SIGTERM and
 Docker kills the container with SIGKILL after the grace period. The kernel then ends every
@@ -365,9 +392,18 @@ and rebuild when a new release is out.
   `error while loading shared libraries`, the apt step of `install.sh` did not run: the
   Dockerfile lacks the `apt-get update` in front of it.
 - **No GPU found.** `clinfo` shows no device: for AMD check that `/dev/kfd` and `/dev/dri`
-  are passed through and that the container user is in the `video` and `render` groups.
-  For NVIDIA run `nvidia-smi` inside the container, which tests the container toolkit and
-  the `runtime: nvidia` line.
+  are passed through and, if the container runs as a user, that `group_add` carries the
+  numeric GIDs of the host's `video` and `render` groups. For NVIDIA run `nvidia-smi`
+  inside the container, which tests the container toolkit and the `runtime: nvidia` line.
+- **"Unable to write to read-only file ./Config/config.txt"** and settings do not save.
+  The `Config` files belong to a host user and lack the write bit for others. Releases up
+  to v5.0.3.5 trust .NET's `IsReadOnly`, which has no exception for root, and do not even
+  try to write. `chown -R root:root Config` on the host. Fixed in the release after
+  v5.0.3.5.
+- **"Checking for VM .. found (some miners will be excluded)"** at start. `virt-what`
+  reports `docker`. The only miner this excludes is CryptoDredge, everything else runs.
+- **"TERM environment variable not set."** at the top of `docker logs`. PowerShell's
+  `Clear-Host` without a terminal, harmless.
 - **The container does not stop.** The `ENTRYPOINT` has to be in exec form and has to be
   the entrypoint shown above. Check with `docker top rainbowminer` that `bash /entrypoint.sh`
   is the first process, not `sh -c`.
