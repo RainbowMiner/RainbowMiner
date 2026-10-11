@@ -704,6 +704,7 @@
     "nimiq": "Argon2dNim",
     "ninja": "Polytimos",
     "nist5": "Nist5",
+    "noid": "Poseidon2b",
     "nrghash": "NrgHash",
     "nscrypt": "ScryptN11",
     "nscryptv": "ScryptN2",
