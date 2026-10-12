@@ -1997,6 +1997,11 @@ try {
         }
     }
 
+    if ($Version -le (Get-Version "5.0.3.5")) {
+        # the Linux wrapper miners read their log through an in-process tail now (RBMLogTail in ProcLib)
+        if (Test-Path "Scripts\Wrapper.ps1") {Remove-Item "Scripts\Wrapper.ps1" -Force -ErrorAction Ignore; $ChangesTotal++}
+    }
+
     ###
     ### END OF VERSION CHECKS
     ###

@@ -284,8 +284,7 @@ class Miner {
 
         if ($this.WrapperJob) {
             Write-Log "Stopping WrapperJob"
-            if ($this.WrapperJob.State -eq "Running") {$this.WrapperJob | Stop-Job}
-            $this.WrapperJob | Remove-Job -Force
+            Stop-Wrapper $this.WrapperJob
             $this.WrapperJob = $null
         }
 

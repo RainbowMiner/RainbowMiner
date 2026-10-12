@@ -77,6 +77,8 @@ function Read-MinerJobOutput {
     if ($MJob -ne $null) {
         if ($MJob -is [System.Management.Automation.Job]) {
             if ($MJob.HasMoreData) {$MJob | Receive-Job}
+        } elseif ($MJob.Tail) {
+            $MJob.Tail.ReadLines()
         } elseif ($MJob.Output -and $MJob.Output.Count -gt 0) {
             $MJob.Output.ReadAll()
         }
@@ -1261,6 +1263,115 @@ function Stop-SubProcess {
     }
 }
 
+# In-process log tail for the Linux wrapper miners: their stdout lands in the
+# log file through tee (screen/tmux/console start paths) and the console parsers
+# in MinerAPIs read it from here, inside the core loop. It replaces the former
+# Scripts\Wrapper.ps1 Start-Job, which cost two pwsh child processes (the job
+# plus its Get-Content -Wait job) for every running wrapper miner.
+class RBMLogTail {
+    [String]$Path
+    [Bool]$Closed = $false
+    hidden [System.IO.FileStream]$Stream = $null
+    hidden [System.Text.Decoder]$Decoder
+    hidden [byte[]]$Bytes
+    hidden [char[]]$Chars
+    hidden [System.Text.StringBuilder]$Partial
+    hidden [System.Collections.Generic.Queue[string]]$Lines
+    hidden [Bool]$PendingCR = $false
+    hidden [Bool]$SkipPartial = $false
+
+    # bounded buffers: the parsers drain every round, these only cap a flood
+    static [Int]$MaxLines = 2000
+    static [Int]$MaxLineLength = 16384
+    static [Int]$MaxChunksPerPoll = 16
+    static [Int]$SeedBytes = 32768
+
+    RBMLogTail([String]$Path) {
+        $this.Path    = $Path
+        $this.Bytes   = [byte[]]::new(65536)
+        $this.Chars   = [char[]]::new(65536)
+        $this.Partial = [System.Text.StringBuilder]::new()
+        $this.Lines   = [System.Collections.Generic.Queue[string]]::new()
+        $this.Decoder = [System.Text.Encoding]::UTF8.GetDecoder()
+    }
+
+    hidden [Bool]Open() {
+        if ($this.Stream) {return $true}
+        if (-not [System.IO.File]::Exists($this.Path)) {return $false}
+        try {
+            $this.Stream = [System.IO.FileStream]::new($this.Path, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, ([System.IO.FileShare]::ReadWrite -bor [System.IO.FileShare]::Delete))
+        } catch {
+            return $false
+        }
+        # like Get-Content -Tail: an already large file is picked up near its end and the cut line is dropped
+        if ($this.Stream.Length -gt [RBMLogTail]::SeedBytes) {
+            $this.Stream.Position = $this.Stream.Length - [RBMLogTail]::SeedBytes
+            $this.SkipPartial = $true
+        }
+        return $true
+    }
+
+    hidden [Void]Emit() {
+        $Line = $this.Partial.ToString()
+        [void]$this.Partial.Clear()
+        if ($this.SkipPartial) {$this.SkipPartial = $false; return}
+        if ($Line.Length -gt 0) {
+            if ($this.Lines.Count -ge [RBMLogTail]::MaxLines) {[void]$this.Lines.Dequeue()}
+            $this.Lines.Enqueue($Line)
+        }
+    }
+
+    # reads what the miner appended since the last call, returns the number of buffered lines.
+    # Line ends like StreamReader.ReadLine: CRLF, LF and a bare CR (progress lines) all terminate
+    [Int]Poll() {
+        if ($this.Closed -or -not $this.Open()) {return $this.Lines.Count}
+        try {
+            $Chunks = 0
+            while ($Chunks -lt [RBMLogTail]::MaxChunksPerPoll) {
+                $n = $this.Stream.Read($this.Bytes, 0, $this.Bytes.Length)
+                if ($n -le 0) {break}
+                $Chunks++
+                $c = $this.Decoder.GetChars($this.Bytes, 0, $n, $this.Chars, 0)
+                $s = [string]::new($this.Chars, 0, $c)
+                if ($this.PendingCR) {
+                    $this.PendingCR = $false
+                    if ($s.Length -gt 0 -and $s[0] -eq [char]10) {$s = $s.Substring(1)}
+                }
+                if ($s.Length -gt 0 -and $s[0] -eq [char]0xFEFF) {$s = $s.Substring(1)}
+                if ($s.Length -gt 0) {
+                    if ($s[$s.Length - 1] -eq [char]13) {$this.PendingCR = $true}
+                    $Parts = @($s -split "\r\n|\r|\n")
+                    $Last  = $Parts.Count - 1
+                    for ($i = 0; $i -lt $Last; $i++) {
+                        [void]$this.Partial.Append($Parts[$i])
+                        $this.Emit()
+                    }
+                    if ($Parts[$Last].Length -gt 0 -and $this.Partial.Length -lt [RBMLogTail]::MaxLineLength) {
+                        [void]$this.Partial.Append($Parts[$Last])
+                    }
+                }
+                if ($n -lt $this.Bytes.Length) {break}
+            }
+        } catch {}
+        return $this.Lines.Count
+    }
+
+    [String[]]ReadLines() {
+        $Out = $this.Lines.ToArray()
+        $this.Lines.Clear()
+        return $Out
+    }
+
+    [Void]Close() {
+        $this.Closed = $true
+        if ($this.Stream) {
+            try {$this.Stream.Dispose()} catch {}
+            $this.Stream = $null
+        }
+        $this.Lines.Clear()
+    }
+}
+
 function Start-Wrapper {
     [CmdletBinding()]
     param(
@@ -1271,5 +1382,36 @@ function Start-Wrapper {
     )
     if (-not $ProcessId -or -not $LogPath) {return}
 
-    Start-Job -FilePath .\Scripts\Wrapper.ps1 -ArgumentList $PID, $ProcessId, $LogPath
+    $LogPath = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($LogPath)
+
+    # duck-typed like the pooled XJob record: MinerAPIs reads HasMoreData/State
+    # and hands the record to Read-MinerJobOutput, which drains the tail
+    $WJob = [PSCustomObject]@{
+        Tail      = [RBMLogTail]::new($LogPath)
+        ProcessId = $ProcessId
+        StartTime = (Get-Date)
+    }
+    $WJob | Add-Member -MemberType ScriptProperty -Name HasMoreData -Value {
+        [bool]($this.Tail -and $this.Tail.Poll() -gt 0)
+    }
+    $WJob | Add-Member -MemberType ScriptProperty -Name State -Value {
+        if ($this.Tail -and -not $this.Tail.Closed) {"Running"} else {"Completed"}
+    }
+    $WJob | Add-Member -MemberType ScriptProperty -Name PSBeginTime -Value {$this.StartTime}
+    $WJob
+}
+
+function Stop-Wrapper {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        $WrapperJob
+    )
+    if ($WrapperJob -eq $null) {return}
+    if ($WrapperJob -is [System.Management.Automation.Job]) {
+        if ($WrapperJob.State -eq "Running") {$WrapperJob | Stop-Job}
+        $WrapperJob | Remove-Job -Force
+    } elseif ($WrapperJob.Tail) {
+        $WrapperJob.Tail.Close()
+    }
 }
