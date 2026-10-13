@@ -40,19 +40,19 @@ $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 $Pools_Data = @(
     [PSCustomObject]@{algo = "autolykos";  coin = "ERG"; port = @(3333,4444); ethproxy = $null;           rpc = "autolykos";  divisor = 1e6; mh = 1e6; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "beamhash";   coin = "BEAM"; port = @(3333,4444); ethproxy = $null;          rpc = "beamhash";   divisor = 1;   mh = 1e6; region = @("us","ca","eu","asia")}
-    [PSCustomObject]@{algo = "blake3alephium"; coin = "ALPH"; port = @(3333,4444); ethproxy = $null;      rpc = "blake3";     divisor = 1;   mh = 1e15; region = @("us","ca","eu","asia"); rewardalgo = "blake3"}
-    [PSCustomObject]@{algo = "equihash";   coin = "ZEC"; port = @(3333,4444); ethproxy = $null;           rpc = "equihash";   divisor = 1;   mh = 1e9; region = @("us","ca","eu","asia")}
+    [PSCustomObject]@{algo = "blake3alephium"; coin = "ALPH"; port = @(3333,4444); ethproxy = $null;      rpc = "blake3";     divisor = 1;   mh = 1e15; region = @("us","eu","asia"); rewardalgo = "blake3"}
+    [PSCustomObject]@{algo = "equihash";   coin = "ZEC"; port = @(3333,4444); ethproxy = $null;           rpc = "equihash";   divisor = 1;   mh = 1e9; region = @("us","eu","asia")}
     [PSCustomObject]@{algo = "etchash";    coin = "ETC"; port = @(3333,4444); ethproxy = "ethstratumnh";  rpc = "etchash";    divisor = 1e6; mh = 1e6; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "ethash";     coin = "ETHW"; port = @(3333,4444); ethproxy = "ethstratumnh"; rpc = "ethash";     divisor = 1e6; mh = 1e6; region = @("us","ca","eu","asia")}
-    [PSCustomObject]@{algo = "fishhash";   coin = "IRON"; port = @(3333,4444); ethproxy = "stratum";      rpc = "fishhash";   divisor = 1;   mh = 1e12; region = @("us","ca","eu","asia")}
-    [PSCustomObject]@{algo = "ghostrider"; coin = "RTM"; port = @(3333,4444); ethproxy = $null;           rpc = "ghostrider"; divisor = 1;   mh = 1e9; region = @("us","ca","eu","asia")}
+    [PSCustomObject]@{algo = "fishhash";   coin = "IRON"; port = @(3333,4444); ethproxy = "stratum";      rpc = "fishhash";   divisor = 1;   mh = 1e12; region = @("us","eu","asia")}
+    #[PSCustomObject]@{algo = "ghostrider"; coin = "RTM"; port = @(3333,4444); ethproxy = $null;           rpc = "ghostrider"; divisor = 1;   mh = 1e9; region = @("us","ca","eu","asia")} #ghostrider is gone from unmineable.com 2026-10: the stratum hosts refuse connections, the simulator api answers INACTIVE_ALGORITHM
     #[PSCustomObject]@{algo = "kawpow";     coin = "RVN"; port = @(3333,4444); ethproxy = "stratum";       rpc = "kp";         divisor = 1e6; mh = 1e6; region = @("us","ca","eu","asia")} #kawpow is INACTIVE_ALGORITHM at the unMineable simulator api 2026-08
-    [PSCustomObject]@{algo = "kheavyhash"; coin = "KAS"; port = @(3333,4444); ethproxy = $null;           rpc = "kheavyhash"; divisor = 1;   mh = 1e15; region = @("us","ca","eu","asia")}
-    [PSCustomObject]@{algo = "nexapow";    coin = "NEXA"; port = @(3333,4444); ethproxy = $null;          rpc = "nexapow";    divisor = 1;   mh = 1e12; region = @("us","ca","eu","asia")}
-    [PSCustomObject]@{algo = "octopus";    coin = "CFX"; port = @(3333,4444); ethproxy = $null;           rpc = "octopus";    divisor = 1;   mh = 1e12; region = @("us","ca","eu","asia")}
-    [PSCustomObject]@{algo = "pearlhash";  coin = "PRL"; port = @(3333,4444); ethproxy = $null;           rpc = "pearlpow";   divisor = 1;   mh = 1e18; region = @("us","ca","eu","asia"); rewardalgo = "pearlpow"}
-    [PSCustomObject]@{algo = "randomx";    coin = "XMR"; port = @(3333,4444); ethproxy = $null;           rpc = "rx";         divisor = 1;   mh = 1e9; region = @("us","ca","eu","asia")}    
-    [PSCustomObject]@{algo = "xelishashv3";coin = "XEL"; port = @(3333,4444); ethproxy = $null;           rpc = "xelishash";  divisor = 1;   mh = 1e9; region = @("us","ca","eu","asia"); rewardalgo = "xelishash"}
+    [PSCustomObject]@{algo = "kheavyhash"; coin = "KAS"; port = @(3333,4444); ethproxy = $null;           rpc = "kheavyhash"; divisor = 1;   mh = 1e15; region = @("us","eu","asia")}
+    [PSCustomObject]@{algo = "nexapow";    coin = "NEXA"; port = @(3333,4444); ethproxy = $null;          rpc = "nexapow";    divisor = 1;   mh = 1e12; region = @("us","eu","asia")}
+    [PSCustomObject]@{algo = "octopus";    coin = "CFX"; port = @(3333,4444); ethproxy = $null;           rpc = "octopus";    divisor = 1;   mh = 1e12; region = @("us","eu","asia")}
+    [PSCustomObject]@{algo = "pearlhash";  coin = "PRL"; port = @(3333,4444); ethproxy = $null;           rpc = "pearlpow";   divisor = 1;   mh = 1e18; region = @("us","eu","asia"); rewardalgo = "pearlpow"}
+    [PSCustomObject]@{algo = "randomx";    coin = "XMR"; port = @(3333,4444); ethproxy = $null;           rpc = "rx";         divisor = 1;   mh = 1e9; region = @("us","eu","asia")}    
+    [PSCustomObject]@{algo = "xelishashv3";coin = "XEL"; port = @(3333,4444); ethproxy = $null;           rpc = "xelishash";  divisor = 1;   mh = 1e9; region = @("us","eu","asia"); rewardalgo = "xelishash"}
 )
 
 #$Pools_Data | Foreach-Object {
