@@ -92,11 +92,39 @@ $Payout_Currencies | Where-Object {
             $Pool_Currency = $_.aesymbol
         }
 
-        try {
-            $Request_Url = "https://$($_.rpc).2miners.com/api/accounts/$(Get-WalletWithPaymentId $Pool_Wallet -pidchar '.')"
-            $Request = Invoke-RestMethodAsync $Request_Url -cycletime ($Config.BalanceUpdateMinutes*60)
+        $Request_Url = "https://$($_.rpc).2miners.com/api/accounts/$(Get-WalletWithPaymentId $Pool_Wallet -pidchar '.')"
+        $Request_Job = $null
+        $Request_Ok  = $true
 
-            if (-not $Request.stats -or -not $Divisor) {
+        # 2Miners answers 404 for a wallet that has never mined on that pool (the usual case for the
+        # autoexchange logins): that is "no account", not an error. Park the async job for a day, so the
+        # asyncloader does not retry and log a failed request every cycle
+        if (Test-Path Variable:Global:AsyncLoader) {
+            $Request_Job = $AsyncLoader.Jobs.Values | Where-Object {$_.Url -eq $Request_Url} | Select-Object -First 1
+            if ($Request_Job -and $Request_Job.Paused -and $Request_Job.Error -match ": 404 |\(404\)" -and $Request_Job.LastRequest -gt (Get-Date).ToUniversalTime().AddHours(-24)) {
+                Write-Log -Level Verbose "Pool Balance API ($($Pool_Name)) for $($Pool_Currency) has no account yet. "
+                return
+            }
+        }
+
+        try {
+            $Request = Invoke-RestMethodAsync $Request_Url -cycletime ($Config.BalanceUpdateMinutes*60)
+        }
+        catch {
+            $Request_Ok = $false
+        }
+
+        if (-not $Request_Job -and (Test-Path Variable:Global:AsyncLoader)) {
+            $Request_Job = $AsyncLoader.Jobs.Values | Where-Object {$_.Url -eq $Request_Url} | Select-Object -First 1
+        }
+
+        try {
+            if ($Request_Job -and $Request_Job.Error -match ": 404 |\(404\)") {
+                $Request_Job.Paused = $true
+                Write-Log -Level Verbose "Pool Balance API ($($Pool_Name)) for $($Pool_Currency) has no account yet. "
+            } elseif (-not $Request_Ok) {
+                Write-Log -Level Verbose "Pool Balance API ($($Pool_Name)) for $($Pool_Currency) has failed. "
+            } elseif (-not $Request.stats -or -not $Divisor) {
                 Write-Log -Level Info "Pool Balance API ($($Pool_Name)) for $($Pool_Currency) returned nothing. "
             } else {
                 [PSCustomObject]@{
