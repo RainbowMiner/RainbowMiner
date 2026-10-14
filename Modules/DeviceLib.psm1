@@ -384,8 +384,11 @@ function Get-Device {
                             if ($AmdModels.ContainsKey($Device.Model) -and $AmdModels[$Device.Model] -ne $AmdGb) {[void]$AmdModelsEx.Add($Device.Model)}
                             else {$AmdModels[$Device.Model]=$AmdGb}
                         }
-                        # lolMiner and Nanominer number Intel cards along with AMD and NVIDIA
-                        if ($Vendor_Name -in @("NVIDIA","AMD","INTEL")) {$Type_Mineable_Index."$($Device_OpenCL.Type)"++}
+                        # lolMiner and Nanominer number discrete Intel cards along with AMD and NVIDIA, but neither
+                        # lists an integrated Intel GPU (always PCI bus 00): counting it would shift the indices of
+                        # every card behind it by one (magicminer 2026-10-14: lolMiner mined the RTX 3070 twice
+                        # and left GPU#00 idle)
+                        if ($Vendor_Name -in @("NVIDIA","AMD") -or ($Vendor_Name -eq "INTEL" -and $Device_OpenCL.PCIBusId -notmatch "(^|[^0-9A-F])00:[0-9A-F]{2}(\.[0-9A-F])?$")) {$Type_Mineable_Index."$($Device_OpenCL.Type)"++}
                         if ($Device_OpenCL.PCIBusId -match "([A-F0-9]+:[A-F0-9]+)$") {
                             $Device.BusId = $Matches[1]
                             if ($PCIBusIds.Contains($Device.BusId)) {$Device = $null} else {[void]$PCIBusIds.Add($Device.BusId)}
@@ -525,7 +528,8 @@ function Get-Device {
             $BusId_Type_Codec_Index."$($_.Type)"."$($_.Codec)"++
             $BusId_Type_Vendor_Index."$($_.Type)"."$($_.Vendor)"++
             $BusId_Vendor_Index."$($_.Vendor)"++
-            if ($_.Vendor -in @("AMD","NVIDIA","INTEL")) {$BusId_Type_Mineable_Index."$($_.Type)"++}
+            # integrated Intel GPUs (PCI bus 00) are not listed by lolMiner/Nanominer, see Type_Mineable_Index above
+            if ($_.Vendor -in @("AMD","NVIDIA") -or ($_.Vendor -eq "INTEL" -and $_.BusId -notmatch "^00:")) {$BusId_Type_Mineable_Index."$($_.Type)"++}
         }
 
         #CPU detection

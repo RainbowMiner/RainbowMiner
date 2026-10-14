@@ -106,7 +106,8 @@ function Get-DeviceDebug {
                 $Vendor_Index."$($Device_OpenCL.Vendor)"++
                 $Type_Vendor_Index."$($Device_OpenCL.Type)"."$($Device_OpenCL.Vendor)"++
                 $Type_Index."$($Device_OpenCL.Type)"++
-                if (@("NVIDIA","AMD","INTEL") -icontains $Vendor_Name) {$Type_Mineable_Index."$($Device_OpenCL.Type)"++}
+                # integrated Intel GPUs (PCI bus 00) are not listed by lolMiner/Nanominer, see Get-Device in DeviceLib.psm1
+                if ($Vendor_Name -in @("NVIDIA","AMD") -or ($Vendor_Name -eq "INTEL" -and $Device_OpenCL.PCIBusId -notmatch "(^|[^0-9A-F])00:[0-9A-F]{2}(\.[0-9A-F])?$")) {$Type_Mineable_Index."$($Device_OpenCL.Type)"++}
             }
 
             $PlatformId++
