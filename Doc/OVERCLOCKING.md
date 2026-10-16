@@ -349,13 +349,16 @@ LockCoreClock/LockMemoryClock take the same numbers on both systems.
 Since Turing, most miners lock the core clock instead of using an offset: a locked core plus a
 positive CoreClockBoost runs the card at a lower voltage (an undervolt), and memory locked at
 810 MHz, its lowest state, saves a lot of power on algorithms that do not need memory speed.
-The presets do not use locks, because they have side effects:
+The presets do not use locks, because they do not work everywhere:
 
-- on Windows, RainbowMiner can only set locks when it runs as administrator
-- a lock stays in place until something unlocks it. `"*"` leaves a lock untouched, so once one
-  profile of a card sets a lock, **all other profiles of that card must set LockCoreClock and
-  LockMemoryClock to "0"** - otherwise the next algorithm runs with the old lock
+- on Windows, RainbowMiner can only set and release locks when it runs as administrator
 - Pascal (GTX10xx, P10x) does not support locks on most drivers
+
+A lock does not outlive its miner: when a miner stops, RainbowMiner releases the locks its
+profile has set (with `EnableOCFullReset` = 1, the default, it resets all clock settings of
+the card). The next algorithm starts from stock clocks, so the other profiles of that card can
+leave LockCoreClock and LockMemoryClock at `"*"`. Only when RainbowMiner is killed while a
+miner runs, the lock stays on the card until the next miner stops.
 
 If you want them, these are good starting points (LockCoreClock / LockMemoryClock in MHz,
 "-" means leave it "*" and use the offset preset):
@@ -371,6 +374,11 @@ If you want them, these are good starting points (LockCoreClock / LockMemoryCloc
 - For more efficiency on Ampere, use 1305 instead of 1400 for Profile4.
 - NexaPow uses Profile2, but prefers memory locked at 5000 instead of an offset.
 - Autolykos2 with memory locked at 5000 loses about 13% hashrate for about 20% less power.
+- PearlHash does not need memory speed: WildRig, SRBMiner and OneZeroMiner all recommend memory
+  locked at 810 on Ampere and newer. OneZeroMiner then picks its compact kernel by itself (about
+  the same hashrate, 10-20% better efficiency), because RainbowMiner sets the lock before the
+  miner starts. Give PearlHash its own profile in algorithms.config.txt, e.g. a copy of Profile2
+  with MemoryClockBoost "0" and LockMemoryClock "810".
 
 ## The Nvidia P2 state
 
