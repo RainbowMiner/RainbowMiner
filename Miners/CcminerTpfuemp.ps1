@@ -14,14 +14,14 @@ $ManualUri = "https://github.com/tpfuemp/ccminer-tpfuemp/releases"
 $Port = "147{0:d2}"
 $DevFee = 0.0
 $Cuda = "11.8"
-$Version = "2026.09.2"
+$Version = "2026.10"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CcminerTpfuemp\ccminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2026.09.2-ccminertpfuemp/ccminer-tpfuemp-2026.09.2-linux-x64.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2026.10-ccminertpfuemp/ccminer-tpfuemp-2026.10-linux-x64.tar.gz"
 } else {
     $Path = ".\Bin\NVIDIA-CcminerTpfuemp\ccminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2026.09.2-ccminertpfuemp/ccminer-tpfuemp-2026.09.2-windows-x64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2026.10-ccminertpfuemp/ccminer-tpfuemp-2026.10-windows-x64.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -29,6 +29,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "argon2d1000"; Params = "-a argon2d1000"; ExtendInterval = 2} #Argon2D1000/0DYNC
     [PSCustomObject]@{MainAlgorithm = "argon2d16000"; Params = "-a argon2d16000"; ExtendInterval = 2} #Argon2d16000/ADOT
     [PSCustomObject]@{MainAlgorithm = "balloon"; Params = "-a balloon"; ExtendInterval = 2} #Balloon/DEFT
+    [PSCustomObject]@{MainAlgorithm = "bc3hash"; Params = "-a bc3hash"; ExtendInterval = 2} #BC3Hash/BC3
     [PSCustomObject]@{MainAlgorithm = "blake2s"; Params = "-a blake2s"; ExtendInterval = 2} #Blake2s/KDA
     [PSCustomObject]@{MainAlgorithm = "blake3decred"; Params = "-a decred"; ExtendInterval = 2} #Blake3Decred/DCR
     [PSCustomObject]@{MainAlgorithm = "curvehash"; Params = "-a curvehash"; ExtendInterval = 2} #CurveHash/CURVE
@@ -44,7 +45,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "odocrypt"; Params = "-a odocrypt"; ExtendInterval = 2} #Odocrypt/DGB
     [PSCustomObject]@{MainAlgorithm = "power2b"; Params = "-a power2b"; ExtendInterval = 2} #Yespower2b/MBC
     [PSCustomObject]@{MainAlgorithm = "rinhash"; Params = "-a rinhash"; ExtendInterval = 2} #Rinhash/RIN
-    [PSCustomObject]@{MainAlgorithm = "sha3t"; Params = "-a sha3t"; ExtendInterval = 2} #SHA3t/BC3
+    [PSCustomObject]@{MainAlgorithm = "sha3t"; Params = "-a sha3t"; ExtendInterval = 2} #SHA3t/FJAR
     [PSCustomObject]@{MainAlgorithm = "skydoge"; Params = "-a skydoge"; ExtendInterval = 2} #SkyDoge/SKYDOGE
     [PSCustomObject]@{MainAlgorithm = "soterg"; Params = "-a soterg"; ExtendInterval = 2} #SoterG/SOTER
     [PSCustomObject]@{MainAlgorithm = "verus"; Params = "-a verus"; ExtendInterval = 2} #VerusHash/VRSC
