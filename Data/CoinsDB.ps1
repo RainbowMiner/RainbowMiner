@@ -70,7 +70,7 @@
     "BBR" = [PSCustomObject]@{Algo = "Wildkeccak"; Name = "Boolberry"; Symbol = "BBR"}
     "BBS" = [PSCustomObject]@{Algo = "CryptoNightLiteV7"; Name = "BBSCoin"; Symbol = "BBS"}
     "BC2" = [PSCustomObject]@{Algo = "SHA256d"; Name = "BitCoin II"; Symbol = "BC2"}
-    "BC3" = [PSCustomObject]@{Algo = "SHA3t"; Name = "BitCoiniii"; Symbol = "BC3"}
+    "BC3" = [PSCustomObject]@{Algo = "BC3Hash"; Name = "BitCoiniii"; Symbol = "BC3"}
     "BCA" = [PSCustomObject]@{Algo = "SHA256d"; Name = "Atom"; Symbol = "BCA"}
     "BCD" = [PSCustomObject]@{Algo = "Bcd"; Name = "Bitdiamond"; Symbol = "BCD"}
     "BCH" = [PSCustomObject]@{Algo = "SHA256d"; Name = "Bitcoincash"; Symbol = "BCH"}
