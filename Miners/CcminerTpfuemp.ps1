@@ -14,7 +14,7 @@ $ManualUri = "https://github.com/tpfuemp/ccminer-tpfuemp/releases"
 $Port = "147{0:d2}"
 $DevFee = 0.0
 $Cuda = "11.8"
-$Version = "2026.09.2"
+$Version = "2026.10"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CcminerTpfuemp\ccminer"
