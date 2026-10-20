@@ -77,13 +77,9 @@ $Pool_Request | ForEach-Object {
 
     if ($Wallets.$Pool_Currency) {
         if ($Pool_DirectMining) {
-            $Pool_ExCurrency = try {
-                [mailaddress]$Wallets.$Pool_Currency > $null
-                "BTC"
-            }
-            catch {
-                $Pool_Currency
-            }
+            # a pattern check instead of a [mailaddress] cast: the cast's exception is caught, but it
+            # stays in $Error and is written to errors_*.main.txt in every round
+            $Pool_ExCurrency = if ("$($Wallets.$Pool_Currency)" -match '^\s*[^@\s]+@[^@\s]+\s*$') {"BTC"} else {$Pool_Currency}
         } else {
             $Pool_ExCurrency = $Pool_Currency
         }
@@ -94,12 +90,7 @@ $Pool_Request | ForEach-Object {
         $Pool_Wallet = $MiningUsername
     } elseif ($Email -ne "") {
         if ($Pool_DirectMining) {
-            $Pool_ExCurrency = try {
-                [mailaddress]$Email > $null
-                "BTC"
-            }
-            catch {
-            }
+            $Pool_ExCurrency = if ("$Email" -match '^\s*[^@\s]+@[^@\s]+\s*$') {"BTC"}
         } else {
             $Pool_ExCurrency = $null
         }
