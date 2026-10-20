@@ -831,6 +831,7 @@
     "VECO" = [PSCustomObject]@{Algo = "Yespower"; Name = "Veco"; Symbol = "VECO"}
     "VEGI" = [PSCustomObject]@{Algo = "HMQ1725"; Name = "Veggie"; Symbol = "VEGI"}
     "VEIL" = [PSCustomObject]@{Algo = "ProgPowVeil"; Name = "Veil"; Symbol = "VEIL"}
+    "VELA" = [PSCustomObject]@{Algo = "Vela"; Name = "Vela"; Symbol = "VELA"}
     "VELK" = [PSCustomObject]@{Algo = "Velkarhash"; Name = "Velkar"; Symbol = "VELK"}
     "VGC" = [PSCustomObject]@{Algo = "X16rv2"; Name = "5G-CASH"; Symbol = "VGC"}
     "VIA" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Viacoin"; Symbol = "VIA"}
