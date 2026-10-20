@@ -66,6 +66,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "RTM"    ; port = @(6273)                                        ; regions = @("eu")}
     [PSCustomObject]@{symbol = "RVN"    ; port = @(8888,8889)                                   ; regions = @("eu")}
     [PSCustomObject]@{symbol = "TSC"    ; port = @(3309)                                        ; regions = @("eu")}
+    [PSCustomObject]@{symbol = "VELA"   ; port = @(7601,7604)                                   ; regions = @("eu")}
     [PSCustomObject]@{symbol = "VTC"    ; port = @(1777,1780)                                   ; regions = @("eu")}
     [PSCustomObject]@{symbol = "XEL"    ; port = @(3333)                                        ; regions = @("eu","us-east","asia")}
     [PSCustomObject]@{symbol = "XNT"    ; port = @([PSCustomObject]@{CPU=@(3832);GPU=@(3833)})  ; regions = @("eu")}
