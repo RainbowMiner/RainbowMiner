@@ -25,13 +25,6 @@ catch {
     return
 }
 
-try {
-    $Timestamp24h = (Get-Date).AddHours(-24).ToUniversalTime()
-    $PoolBlocks_Request = (Invoke-RestMethodAsync "https://explorer.raptoreum.com/api/getblocks?start=0&length=100&search[value]=&search[regex]=false" -tag $Name -cycletime 120).data | Where-Object {$_.Miner.name -eq "flockpool"} | Foreach-Object {Get-Date $_.Timestamp} | Where-Object {$_ -ge $Timestamp24h}
-} catch {
-    Write-Log -Level Info "Pool Blocks API ($Name) has failed. "
-}
-
 [hashtable]$Pool_RegionsTable = @{}
 
 $Pool_Regions = @("eu","us","us-west","asia")
@@ -51,13 +44,8 @@ $Pool_User           = $Wallets.$Pool_Currency
 
 if (-not $InfoOnly) {
 
-    if ($PoolBlocks_Request) {
-        $blocks_measure = $PoolBlocks_Request | Measure-Object -Minimum -Maximum
-        $Pool_BLK       = [int]$($(if ($blocks_measure.Count -gt 1 -and ($blocks_measure.Maximum - $blocks_measure.Minimum).TotalDays) {1/($blocks_measure.Maximum - $blocks_measure.Minimum).TotalDays} else {1})*$blocks_measure.Count)
-        $Pool_TSL       = ((Get-Date).ToUniversalTime() - $blocks_measure.Maximum).TotalSeconds
-    } else {
-        $Pool_BLK = $Pool_TSL = $null
-    }
+    # explorer.raptoreum.com retired its block list API (HTTP 410), so there is no per-pool block data any more
+    $Pool_BLK = $Pool_TSL = $null
 
     $Pool_Hashrate = $null
     $Pool_Request.regions | Foreach-Object {
