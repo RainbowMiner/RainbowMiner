@@ -65,7 +65,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethash";  DAG = $true; MinMemGb = 3; Params = ""; Vendor = @("AMD","NVIDIA");         ExtendInterval = 2; Fee = 0.5} #Ethash/ETHW
     [PSCustomObject]@{MainAlgorithm = "kawpow";  DAG = $true; MinMemGb = 3; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0} #KawPow
     [PSCustomObject]@{MainAlgorithm = "nexa";    DAG = $true; MinMemGb = 2; Params = ""; Vendor = @("CPU","NVIDIA");         ExtendInterval = 2; Fee = 2.0} #NexaPoW/NEXA
-    [PSCustomObject]@{MainAlgorithm = "pearl";                MinMemGb = 2; Params = ""; Vendor = @("AMD","CPU","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 2.0; ExcludePoolName = "84.32.220.219|129.226.55.135"} #PearlHash/PRL
+    [PSCustomObject]@{MainAlgorithm = "pearl";                MinMemGb = 2; Params = ""; Vendor = @("AMD","CPU","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 2.0; ExcludePoolName = "^Pearlhash"} #PearlHash/PRL
     [PSCustomObject]@{MainAlgorithm = "quantus";              MinMemGb = 2; Params = ""; Vendor = @("AMD","CPU","NVIDIA");   ExtendInterval = 2; Fee = 2.0} #Quantus/QUAN
     [PSCustomObject]@{MainAlgorithm = "randomx";              MinMemGb = 2; Params = ""; Vendor = @("CPU");                  ExtendInterval = 2; Fee = 1.0} #RandomX/XMR
     [PSCustomObject]@{MainAlgorithm = "verus";                MinMemGb = 1; Params = ""; Vendor = @("CPU");                  ExtendInterval = 2; Fee = 1.0} #VerusHash/VRSC
