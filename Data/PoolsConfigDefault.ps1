@@ -44,6 +44,12 @@
         "BlocxZone" = [PSCustomObject]@{
             Currencies=@("BLOCX")
         }
+        "BumbleBeam" = [PSCustomObject]@{
+            Currencies=@("BEAM")
+        }
+        "BumbleBeamSolo" = [PSCustomObject]@{
+            Currencies=@("BEAM")
+        }
         "C3pool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{Password="x"}
             SetupFields=[PSCustomObject]@{Password="Enter your C3pool password (eMail or Password)"}
