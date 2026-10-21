@@ -39,6 +39,10 @@ Invoke-MinerFamily -Name $Name -Pools $Pools -InfoOnly $InfoOnly -Setup @{
     CpuParams = $true
     UseExcludePool = $true
     ExtendDefault = 2
+    # hoo_cpu answers the ccminer summary with KHS=0 for a variable 1.5-3+ minutes after start,
+    # while it prints "Rolling hashrate: 27.37 KH/s" within the first minute. A profit switch in
+    # that window found the watchdog never kicked and disabled the miner, so read the console instead
+    API = "Wrapper"
     InfoTypes = @("CPU","ARMCPU")
     Path = $Path; ManualUri = $ManualUri; Port = $Port; DevFee = $DevFee; Version = $Version
     Uri = $Uri
