@@ -579,7 +579,12 @@ class Miner {
                                         $Device_Type = ($Words | Select-Object -Index $i)
                                     }
 
-                                    [void]$Devices.Add("{0}#{1:d2}" -f $Device_Type, $Device)
+                                    # the format must be parenthesized: inside the Add() call the comma separated
+                                    # the method arguments, so -f ran with the type alone and threw on {1} for every
+                                    # line that named a device - the line was lost and the wrapper never delivered a
+                                    # hashrate. A device word without an index ("CPU: ???" in the hoo_cpu status
+                                    # line) is not tagged at all instead of producing an empty "CPU#"
+                                    if ($Device -ne $null) {[void]$Devices.Add(("{0}#{1:d2}" -f $Device_Type, $Device))}
                                 }
                             }
                         }

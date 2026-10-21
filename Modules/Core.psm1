@@ -4105,10 +4105,24 @@ function Invoke-Core {
             return $true
         }
 
-        # Apply Watchdog filters
-        $Miner_WatchdogTimers = $Global:WatchdogTimers.Where({ $_.MinerName -eq $Miner.Name -and $_.Kicked -lt $WDIntervalTime -and $_.Kicked -gt $WDResetTime })    
-        if ($Miner_WatchdogTimers.Count -ge 2) { return $true }
-        if ($Miner_WatchdogTimers.Where({ $Miner.HashRates.PSObject.Properties.Name -contains $_.Algorithm }).Count -ge 1) { return $true }
+        # Apply Watchdog filters. A timer carries the algorithm key of the round its miner was
+        # started in, and with pool alternates that is "PearlHash" while the pool wins the algorithm
+        # or "PearlHash-@Pearlhash" while another pool does - for the very same process. Compare
+        # with the -@<Pool> suffix stripped and on the pool name, so a failure at one pool does not
+        # exclude the miner at its alternate (and a stale timer cannot hit only every other round),
+        # and count distinct pool/algorithm pairs so two spellings of one failure are not two strikes
+        $Miner_WatchdogKeys = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+        foreach ($wdTimer in $Global:WatchdogTimers) {
+            if ($wdTimer.MinerName -eq $Miner.Name -and $wdTimer.Kicked -lt $WDIntervalTime -and $wdTimer.Kicked -gt $WDResetTime) {
+                [void]$Miner_WatchdogKeys.Add("$($wdTimer.PoolName)|$($wdTimer.Algorithm -replace '\-@.*$')")
+            }
+        }
+        if ($Miner_WatchdogKeys.Count -ge 2) { return $true }
+        if ($Miner_WatchdogKeys.Count) {
+            foreach ($Miner_Key in $Miner.HashRates.PSObject.Properties.Name) {
+                if ($Miner_WatchdogKeys.Contains("$($Miner.Pools.$Miner_Key.Name)|$($Miner_Key -replace '\-@.*$')")) { return $true }
+            }
+        }
     })
 
     #Give API access to the miners information
@@ -4169,11 +4183,15 @@ function Invoke-Core {
         if ($Miner.Status -eq [MinerStatus]::Running) {
             $m = $null
             foreach ($m in $Miners) {
+                # the algorithm keys are compared with the pool-alternate suffix stripped: the running
+                # miner keeps the spelling of the round it was started in ("PearlHash"), the candidate
+                # is emitted as "PearlHash-@Kryptex" once another pool wins the algorithm - identical
+                # arguments mean the identical process, and it must keep its hysteresis and first-rounds bonus
                 if ($m.Name -eq $Miner.Name -and
                     $m.Path -eq $Miner.Path -and
                     $m.Arguments -eq $Miner.Arguments -and
                     $m.API -eq $Miner.API -and
-                    -not (Compare-Object $Miner.Algorithm ($m.HashRates.PSObject.Properties.Name | Select-Object))) {
+                    -not (Compare-Object @($Miner.Algorithm -replace '\-@.*$') @($m.HashRates.PSObject.Properties.Name -replace '\-@.*$'))) {
 
                     $m.Profit_Bias = $m.Profit_Unbias * $MinerSwitchingHysteresis
                     if ($Miner.IsRunningFirstRounds) {$m.Profit_Bias *= 100}
