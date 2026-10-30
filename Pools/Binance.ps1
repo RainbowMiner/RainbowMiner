@@ -29,6 +29,11 @@ $Pools_Data = @(
     [PSCustomObject]@{coin="ZEC"; port=5300;stratum="zec"}
 )
 
+if ((Get-Date).ToUniversalTime() -ge [datetime]::new(2026,11,10,7,0,0,[DateTimeKind]::Utc)) {
+    if (-not $InfoOnly) {Write-Log -Level Warn "Pool $($Name) has been shut down by Binance on 2026-11-10, please remove it from your pools."}
+    return
+}
+
 $Pools_Request = [PSCustomObject]@{}
 try {
     $Pools_Request = Invoke-RestMethodAsync "https://pool.binance.com/mining-api/v1/public/pool/index" -tag $Name -timeout 15 -cycletime 120
