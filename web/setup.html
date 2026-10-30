@@ -52,6 +52,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         function markLoaded() {
             loaded++;
             if (loaded >= 2) {
+                // both /loadconfig and /getdeviceconfig are in: a thread count above
+                // this CPU (e.g. a server config written for a bigger rig) would make
+                // the browser's own range check refuse the whole form, so clamp it
+                // here the way the core clamps it at runtime
+                const threads = document.getElementById("inputCPUMiningThreads");
+                const maxthreads = parseInt(threads?.getAttribute("max"));
+                if (maxthreads > 0 && parseInt(threads.value) > maxthreads) threads.value = maxthreads;
                 document.getElementById("formConfig").classList.remove("d-none");
                 document.getElementById("loadingMessage").classList.add("d-none");
             }
@@ -155,7 +162,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 document.getElementById("devices").innerHTML = devices.join('');
                 document.getElementById("excludedevices").innerHTML = excludedevices.join('');
                 rbmToggleDisplay('.is--cpu', cpuenabled && !cpudisabled);
-                document.getElementById('inputCPUMiningThreads').setAttribute('max', maxthreads);
+                if (maxthreads > 0) document.getElementById('inputCPUMiningThreads').setAttribute('max', maxthreads);
                 markLoaded();
             } catch (error) {
                 console.error("getdeviceconfig:", error);
