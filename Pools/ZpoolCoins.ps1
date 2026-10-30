@@ -92,7 +92,13 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$PoolCoins_Request.$
 	$Pool_TSL = $PoolCoins_Request.$Pool_CoinSymbol.timesincelast
 	
 	if (-not $InfoOnly) {
-		$Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true -HashRate $PoolCoins_Request.$Pool_CoinSymbol.hashrate -BlockRate $PoolCoins_Request.$Pool_CoinSymbol."24h_blocks" -Quiet
+		# the per-coin estimate follows the coin's difficulty and price, which for a thin coin
+		# can sit far above what the algorithm port actually paid (EPPE: 30x). Apply the 10x rule
+		# of Get-YiiMPValue here as well: cap the estimate at the port's actual_last24h
+		$Pool_Estimate  = [Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate
+		$Pool_Actual24h = if ($Pool_Request.$Pool_Algorithm.actual_last24h) {[Double]$Pool_Request.$Pool_Algorithm.actual_last24h / 1000} else {0}
+		if ($Pool_Actual24h -gt 0 -and $Pool_Estimate -gt $Pool_Actual24h * 10) {$Pool_Estimate = $Pool_Actual24h}
+		$Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value ($Pool_Estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true -HashRate $PoolCoins_Request.$Pool_CoinSymbol.hashrate -BlockRate $PoolCoins_Request.$Pool_CoinSymbol."24h_blocks" -Quiet
 		if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
 	}
 
