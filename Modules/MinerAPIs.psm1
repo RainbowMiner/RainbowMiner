@@ -3112,6 +3112,7 @@ class SrbMinerMulti : Miner {
                     tuning_done = $false
                     failed      = $false
                     autotune    = $Parameters.AutoTune
+                    autotune_check = $false
                     intensities = @{}   # Hashtable: "$algoIndex|$deviceId" -> int
                 }
             }
@@ -3140,6 +3141,12 @@ class SrbMinerMulti : Miner {
             Write-Log -Level Warn "Reading config file failed ($($this.BaseName) $($this.BaseAlgorithm -join '-')@$($this.Pool -join '-')}) [Error: '$($_.Exception.Message)']."
         }
 
+        # the static NoAutoTune flag is only the fallback: CheckAutoTune decides again at every start from the miner log
+        if ($this.MinerInfo) {
+            $this.MinerInfo.autotune       = [bool]$Parameters.AutoTune
+            $this.MinerInfo.autotune_check = $this.MinerInfo.algo_count -eq 1 -and $this.DeviceModel -ne "CPU"
+        }
+
         if ($this.MinerInfo.tuning_done -and $Parameters.Arguments -notmatch "--gpu-intensity") {
             for ($i = 0; $i -lt $this.MinerInfo.algo_count; $i++) {
                 $IntensityList = for ($j = 0; $j -lt $this.MinerInfo.gpu_count; $j++) { $this.MinerInfo.intensities["$i|$j"] }
@@ -3150,6 +3157,54 @@ class SrbMinerMulti : Miner {
         }
 
         return "$($Parameters.Arguments.Trim())$($AddParams)"
+    }
+
+    [Void]CheckAutoTune() {
+        # SRBMiner prints one "GPU5 |A0|noid |INTENSITY:   10551296|" line per device during init, before the API
+        # comes up. Only "INTENSITY: AUTO" means the miner tunes and publishes gpu_autotune_results; a number or no
+        # INTENSITY field at all (pearlhash) is a fixed intensity, the results stay 0 and the hashrate gate below
+        # would never open. Which algorithms tune is undocumented and changes between versions (noid with 3.8.x)
+        if (-not $this.LogFile) {return}
+        $Auto  = 0
+        $Fixed = 0
+        $InitDone = $false
+        $stream = $null
+        $reader = $null
+        try {
+            if (Test-Path $this.LogFile) {
+                $stream = [System.IO.FileStream]::new($this.LogFile,[System.IO.FileMode]::Open,[System.IO.FileAccess]::Read,[System.IO.FileShare]::ReadWrite)
+                $reader = [System.IO.StreamReader]::new($stream)
+                $LineCount = 0
+                while ($LineCount -lt 500 -and -not $InitDone -and -not $reader.EndOfStream) {
+                    $Line = $reader.ReadLine()
+                    $LineCount++
+                    if ($Line -match "GPU\d+\s*\|A0\|[^|]*\|(.*)$") {
+                        if ($Matches[1] -match "INTENSITY:\s*AUTO") {$Auto++} else {$Fixed++}
+                    } elseif ($Line -match "Finished init of worker threads") {
+                        $InitDone = $true
+                    }
+                }
+            }
+        }
+        catch {
+            Write-Log -Level Info "$($this.Name): reading the miner log for the autotune check failed [Error: '$($_.Exception.Message)']."
+        }
+        finally {
+            if ($reader) {$reader.Dispose()}
+            if ($stream) {$stream.Dispose()}
+        }
+
+        if ($Auto + $Fixed -gt 0 -and ($InitDone -or $Auto + $Fixed -ge $this.MinerInfo.gpu_count)) {
+            $this.MinerInfo.autotune_check = $false
+            $AutoTune = $Auto -gt 0
+            if ($AutoTune -ne [bool]$this.MinerInfo.autotune) {
+                Write-Log -Level Info "$($this.Name): miner log shows $(if ($AutoTune) {"INTENSITY AUTO, waiting for the autotune results"} else {"a fixed intensity, hashrate is not held back for autotune"}) ($($this.BaseAlgorithm -join '-'))."
+            }
+            $this.MinerInfo.autotune = $AutoTune
+        } elseif (((Get-Date).ToUniversalTime() - $this.StartTime).TotalMinutes -ge 3) {
+            # no INTENSITY line after 3 minutes (no log, unknown format): keep the static NoAutoTune setting
+            $this.MinerInfo.autotune_check = $false
+        }
     }
 
     [Bool]IsBenchmarking() {
@@ -3180,6 +3235,8 @@ class SrbMinerMulti : Miner {
             Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
+
+        if ($this.MinerInfo -and $this.MinerInfo.autotune_check) {$this.CheckAutoTune()}
 
         $BaseAlgorithm0 = [String]$this.BaseAlgorithm[0]
 
