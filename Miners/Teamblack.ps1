@@ -12,7 +12,7 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.De
 
 $ManualURI = "https://github.com/sp-hash/TeamBlackMiner"
 $Port = "365{0:d2}"
-$Version = "2.44"
+$Version = "2.45"
 
 if ($IsLinux) {
     $Path     = ".\Bin\GPU-Teamblack\TBMiner"
@@ -20,9 +20,9 @@ if ($IsLinux) {
 
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.44-teamblack/TeamBlackMiner_2_44_Ubuntu_22_04_Cuda_12_9.tar.xz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.45-teamblack/TeamBlackMiner_2_45_Ubuntu_24_04_Cuda_12_9.tar.gz"
             Cuda = "12.9"
-            Linux = "Ubuntu 22.04"
+            Linux = "Ubuntu 24.04"
         }
     )
 } else {
@@ -32,13 +32,14 @@ if ($IsLinux) {
 
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.44-teamblack/TeamBlackMiner_2_44_cuda_12.9.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.45-teamblack/TeamBlackMiner_2_45_cuda_12.9.7z"
             Cuda = "12.9"
         }
     )
 }
 
 $Commands = [PSCustomObject[]]@(
+    [PSCustomObject]@{MainAlgorithm = "autolykos2";      DAG = $true; Params = ""; MinMemGb = 2;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5} #Autolykos2/ERG
     [PSCustomObject]@{MainAlgorithm = "ethash";          DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5} #Ethash
     [PSCustomObject]@{MainAlgorithm = "ethash2g";        DAG = $true; Params = ""; MinMemGb = 1;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5;Algorithm = "ethash"} #Ethash
     [PSCustomObject]@{MainAlgorithm = "ethash3g";        DAG = $true; Params = ""; MinMemGb = 2;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; Algorithm = "ethash"} #Ethash
@@ -55,6 +56,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "kawpow4g";        DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; Algorithm = "kawpow"} #KawPow
     [PSCustomObject]@{MainAlgorithm = "kawpow5g";        DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; Algorithm = "kawpow"} #KawPow
     [PSCustomObject]@{MainAlgorithm = "meowpow";         DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5} #MeowPow
+    [PSCustomObject]@{MainAlgorithm = "pearlhash";                     Params = ""; MinMemGb = 2;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; Algorithm = "pearl"; ExcludePoolName = "^Pearlhash"} #PearlHash/PRL
     [PSCustomObject]@{MainAlgorithm = "verthash";                     Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5} #Verthash/VTC
 )
 
