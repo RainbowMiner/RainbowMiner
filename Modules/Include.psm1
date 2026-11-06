@@ -2501,6 +2501,25 @@ function Get-CustomMinerDefinitions {
     })
 }
 
+function Get-CustomMinerPoolLogin {
+    # Keep the pool-selected account/wallet login; remove only its known worker suffix.
+    # This supports both `user/worker` and `user.worker` without guessing the login type.
+    [CmdletBinding()]
+    param(
+        [string]$User = "",
+        [string]$Worker = ""
+    )
+    if ($Worker) {
+        foreach ($Separator in @("/", ".")) {
+            $Suffix = "$Separator$Worker"
+            if ($User.EndsWith($Suffix, [System.StringComparison]::OrdinalIgnoreCase)) {
+                return $User.Substring(0, $User.Length - $Suffix.Length)
+            }
+        }
+    }
+    $User
+}
+
 function Expand-CustomMinerArguments {
     # Substitutes the %TOKEN% placeholders of a custom miner argument template.
     # Unknown tokens stay literal; $mport / $memsizegb are left for Miner.GetArguments()
