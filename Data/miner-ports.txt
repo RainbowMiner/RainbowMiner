@@ -179,5 +179,6 @@
 418	FiroPOWAmd
 419	WildRig0340
 420	WildRig0445
+421	WildrigNg
 
 4068    CcminerSpModTribus
