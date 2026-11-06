@@ -39,7 +39,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "kawpow3g";    DAG = $true;               Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 1.00; ExcludePoolName = "unMineable"; Algorithm = "kawpow"} #KawPOW
     [PSCustomObject]@{MainAlgorithm = "kawpow4g";    DAG = $true;               Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 1.00; ExcludePoolName = "unMineable"; Algorithm = "kawpow"} #KawPOW
     [PSCustomObject]@{MainAlgorithm = "kawpow5g";    DAG = $true;               Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 1.00; ExcludePoolName = "unMineable"; Algorithm = "kawpow"} #KawPOW
-    [PSCustomObject]@{MainAlgorithm = "nexapow";     DAG = $true;               Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 1.00; ExcludeAmdCapability = "GCN[123]"} #NexaPow/NEXA
+    [PSCustomObject]@{MainAlgorithm = "nexapow";     DAG = $true;               Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 1.00; ExcludeAmdCapability = "GCN[123]"; ExcludeNvCompute = "Pascal"} #NexaPow/NEXA - 1.0.0u never finishes the window table on Pascal (GTX1070: "blocked in the driver", watchdog restarts), Ampere works
     [PSCustomObject]@{MainAlgorithm = "octopus";     DAG = $true; MinMemGb = 4; Vendor = @("NVIDIA");               Params = ""; ExtendInterval = 3; DevFee = 0.00} #Octopus/CFX
     [PSCustomObject]@{MainAlgorithm = "pearlhash";                              Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; DevFee = 0.00; ExcludePoolName = "BaikalMine|F2pool|HeroMiners|K1Pool|K1PoolSolo|Kryptex|KryptexSolo|LuckyPool|Mining4people|RPlant|RPlantSolo|SuprNova|unMineable"; AmdCompute = "RDNA"} #Pearlhash/PRL, NVIDIA Pascal+ (except Tesla P100), AMD RDNA1-4, Intel Arc
     [PSCustomObject]@{MainAlgorithm = "poseidon2b";                             Vendor = @("AMD","NVIDIA");         Params = ""; ExtendInterval = 2; DevFee = 2.00; Algorithm = "noid"; AmdCompute = "RDNA"; ExcludeNvCompute = "Pascal"} #Noid/NOID, NVIDIA Volta+, AMD RDNA1-4
@@ -47,7 +47,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "qhash";                                  Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; DevFee = 2.00; FaultTolerance = 0.4; ExcludeAmdCapability = "GCN[123]"} #Qhash/QTC
     [PSCustomObject]@{MainAlgorithm = "quantus";                                Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 2; DevFee = 2.00; ExcludeAmdCapability = "GCN[123]"} #Quantus/QUAN
     [PSCustomObject]@{MainAlgorithm = "sha256d";                                Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; DevFee = 0.00; ExcludeAmdCapability = "GCN[123]"; NeverProfitable = $true} #SHA256d/BTC
-    [PSCustomObject]@{MainAlgorithm = "xelishashv3";                            Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 1.00; ExcludeAmdCapability = "GCN[123]"} #XelisHashV3/XEL
+    [PSCustomObject]@{MainAlgorithm = "xelishashv3";                            Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 1.00; ExcludeAmdCapability = "GCN[123]"; ExcludePoolName = "unMineable"} #XelisHashV3/XEL - unMineable labels its jobs "xel/3", 1.0.0u only accepts "xel/v3" and ignores every job
 )
 
 # $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
