@@ -21,7 +21,7 @@ if ($IsLinux) {
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8.4-srbminermulti/SRBMiner-Multi-3-8-4-Linux.tar.gz"
 } else {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8.4-srbminermulti/SRBMiner-Multi-3-8-4-win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8.4-srbminermulti/SRBMiner-Multi-3-8-4-win64.7z"
 }
 
 $Commands = [PSCustomObject[]]@(
