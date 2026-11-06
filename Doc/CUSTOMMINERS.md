@@ -160,9 +160,9 @@ device model when it builds the miner list:
 | `%URL%` | `host:port` of the pool |
 | `%HOST%`, `%PORT%` | host and port separately |
 | `%PROTOCOL%` | `stratum+tcp`, `stratum+ssl` or what the pool module reports |
-| `%WAL%`, `%USER%` | the pool user, usually `wallet.workername` |
-| `%WALLET%` | the configured coin wallet address (may be empty when the pool selects an account username) |
-| `%POOL_LOGIN%` | the pool-selected login without a matching trailing `/worker` or `.worker` suffix; preserves account usernames and `solo:` wallet prefixes. Pair with `%WORKER_NAME%` for miners requiring separate worker arguments |
+| `%WAL%`, `%USER%` | the complete pool login, usually `wallet.workername` or `wallet/workername` |
+| `%LOGIN%`, `%POOL_LOGIN%` | the pool login without the trailing worker name: the wallet, an account name or `solo:wallet`, whatever the pool module put in front of the worker |
+| `%WALLET%` | the wallet address from the config; empty when the pool logs in with an account name or e-mail instead (Kryptex, for example) |
 | `%PASS%` | the pool password |
 | `%WORKER_NAME%` | the worker name |
 | `%COIN%` | the coin symbol of the pool, if known |
@@ -188,6 +188,16 @@ a rig with two RTX 3070 mining KawPOW at 2Miners starts the miner as
 ```
 -a kawpow -o stratum+tcp://rvn.2miners.com:6060 -u RVNWALLET.rig01 -p x -d 0,1 --api-port 4028
 ```
+
+Miners that take the wallet and the worker as separate options get the login without the
+worker from `%LOGIN%`:
+
+```
+--wallet %LOGIN% --worker %WORKER_NAME%
+```
+
+This also works where `%WALLET%` is empty, because the pool logs in with an account name
+instead of a wallet address.
 
 ## Reading the hashrate
 

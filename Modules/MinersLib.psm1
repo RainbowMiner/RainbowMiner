@@ -403,7 +403,8 @@ function Invoke-CustomMiner {
                                  else       {if ($Pool.Ports -ne $null -and $Pool.Ports.CPU) {$Pool.Ports.CPU} else {$Pool.Port}}
                     $Pool_Protocol = if ($Pool.Protocol) {$Pool.Protocol} else {"stratum+$(if ($Pool.SSL) {"ssl"} else {"tcp"})"}
 
-                    $PoolWorker = if ($Pool.Worker) {$Pool.Worker} else {$Session.Config.WorkerName}
+                    $Pool_Worker = if ($Pool.Worker) {$Pool.Worker} else {$Session.Config.WorkerName}
+                    $Pool_Login  = Get-CustomMinerPoolLogin -User "$($Pool.User)" -Worker "$Pool_Worker"
                     $Values = @{
                         ALGO          = $Cmd.Algo
                         URL           = "$($Pool.Host)$(if ($Pool_Port -and $Pool.Host -notmatch "/") {":$($Pool_Port)"})"
@@ -412,10 +413,11 @@ function Invoke-CustomMiner {
                         PROTOCOL      = $Pool_Protocol
                         WAL           = $Pool.User
                         USER          = $Pool.User
-                        POOL_LOGIN    = Get-CustomMinerPoolLogin -User "$($Pool.User)" -Worker "$PoolWorker"
+                        LOGIN         = $Pool_Login
+                        POOL_LOGIN    = $Pool_Login
                         WALLET        = $Pool.Wallet
                         PASS          = $Pool.Pass
-                        WORKER_NAME   = $PoolWorker
+                        WORKER_NAME   = $Pool_Worker
                         COIN          = $Pool.CoinSymbol
                         ETHMODE       = $Pool.EthMode
                         DEVICES       = $DeviceIDsAll
