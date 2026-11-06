@@ -72,12 +72,18 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
 
     # --gpu-list takes the miner's own GPU numbers: the GPUs it enumerates, in PCI bus
     # order. The other vendors are switched off per instance, so the numbers are the
-    # vendor-local bus order. Integrated GPUs are skipped by the miner (no
-    # --gpu-allow-igpu), so they are left out of the map as well - the same bus 00
-    # rule DeviceLib applies for BusId_Type_Mineable_Index.
+    # vendor-local bus order of every card of that vendor, selected or not - that is
+    # DeviceLib's BusId_Type_Vendor_Index. Integrated GPUs are skipped by the miner (no
+    # --gpu-allow-igpu), so Intel bus 00 iGPUs are left out and the cards behind them
+    # move up by their count (the bus 00 rule of BusId_Type_Mineable_Index).
     $DeviceIndex = @{}
-    $Index = 0
-    $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Type -eq "GPU" -and ($_.Vendor -ne "INTEL" -or $_.BusId -notmatch "^00:")} | Sort-Object {[int]"0x0$($_.BusId -replace "[^0-9A-F]+")"},Index | ForEach-Object {$DeviceIndex[$_.Name] = $Index; $Index++}
+    $iGPUs = 0
+    if ($Miner_Vendor -eq "INTEL") {
+        $iGPUs = @($Global:DeviceCache.AllDevices | Where-Object {$_.Type -eq "GPU" -and $_.Vendor -eq "INTEL" -and $_.BusId -match "^00:"}).Count
+    }
+    foreach ($Dev in @($Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Type -eq "GPU" -and ($_.Vendor -ne "INTEL" -or $_.BusId -notmatch "^00:")})) {
+        $DeviceIndex[$Dev.Name] = [int]$Dev.BusId_Type_Vendor_Index - $iGPUs
+    }
 
     $DeviceParams = Switch ($Miner_Vendor) {
         "AMD"    {"--gpu-no-intel --gpu-no-nvidia"}
