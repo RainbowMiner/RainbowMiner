@@ -161,7 +161,8 @@ device model when it builds the miner list:
 | `%HOST%`, `%PORT%` | host and port separately |
 | `%PROTOCOL%` | `stratum+tcp`, `stratum+ssl` or what the pool module reports |
 | `%WAL%`, `%USER%` | the pool user, usually `wallet.workername` |
-| `%WALLET%` | the plain wallet address |
+| `%WALLET%` | the configured coin wallet address (may be empty when the pool selects an account username) |
+| `%POOL_LOGIN%` | the pool-selected login without a matching trailing `/worker` or `.worker` suffix; preserves account usernames and `solo:` wallet prefixes. Pair with `%WORKER_NAME%` for miners requiring separate worker arguments |
 | `%PASS%` | the pool password |
 | `%WORKER_NAME%` | the worker name |
 | `%COIN%` | the coin symbol of the pool, if known |
