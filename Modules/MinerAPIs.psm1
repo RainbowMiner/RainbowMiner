@@ -845,6 +845,7 @@ class Miner {
         [System.Collections.Generic.List[string]]$applied = @()
         [System.Collections.Generic.List[string]]$NvCmd = @()
         [System.Collections.Generic.List[string]]$NvSmiCmd = @()
+        [System.Collections.Generic.List[object]]$NvSmiLocks = @()
         [System.Collections.Generic.List[string]]$AmdCmd = @()
         [System.Collections.Generic.List[string]]$IntelCmd = @()
         [System.Collections.Generic.List[object]]$RunCmd = @()
@@ -919,11 +920,13 @@ class Miner {
 
         foreach ($DeviceModel in @($this.Profiles.PSObject.Properties.Name | Select-Object)) {
             if (-not $Config) {
-                $Profile = [PSCustomObject]@{PowerLimit = 0;ThermalLimit = 0;PriorizeThermalLimit = "0";MemoryClockBoost = "";CoreClockBoost = "";LockVoltagePoint = "";LockMemoryClock = "";LockCoreClock = ""}
+                # EnableOCFullReset releases every lock on the miner's cards (also locks a miner sets itself),
+                # otherwise only the locks recorded in Get-OCLocks are released and hand-set locks stay
+                $Profile =[PSCustomObject]@{PowerLimit = 0;ThermalLimit = 0;PriorizeThermalLimit = "0";MemoryClockBoost = "";CoreClockBoost = "";LockVoltagePoint = "";LockMemoryClock = "";LockCoreClock = ""}
                 if ($Global:Session.Config.EnableOCFullReset) {
                     $Profile.MemoryClockBoost = $Profile.CoreClockBoost = $Profile.LockVoltagePoint = $Profile.LockMemoryClock = $Profile.LockCoreClock = "0"
                 } elseif ($this.OCprofileSet.$DeviceModel) {
-                    $this.OCprofileSet.$DeviceModel.PSObject.Properties.Name | Where-Object {$Profile.$_ -ne $null -and $Profile.$_ -eq ""} | Foreach-Object {$Profile.$_ = "0"}
+                    $this.OCprofileSet.$DeviceModel.PSObject.Properties.Name | Where-Object {$_ -notmatch "^Lock(Core|Memory)Clock$" -and $Profile.$_ -ne $null -and $Profile.$_ -eq ""} | Foreach-Object {$Profile.$_ = "0"}
                 }
                 if ($this.Profiles.$DeviceModel.Profile.PostCmd) {
                     [void]$RunCmd.Add([PSCustomObject]@{FilePath = $this.Profiles.$DeviceModel.Profile.PostCmd;ArgumentList=$this.Profiles.$DeviceModel.Profile.PostCmdArguments})
@@ -982,8 +985,27 @@ class Miner {
                         $applied_any=$true
                         if ($Config) {$this.SetOCprofileValue($DeviceModel,"MemoryClockBoost",$val)}
                     }
-                    if ($Profile.LockCoreClock -match '^[0-9]+$') {if ($CanLockClocks) {$applied_any=$true};[void]$NvSmiCmd.Add("-i $($DeviceId) $(if ($Profile.LockCoreClock -eq 0) {"-rgc"} else {"-lgc $($Profile.LockCoreClock)"})");if ($Config) {$this.SetOCprofileValue($DeviceModel,"LockCoreClock",$Profile.LockCoreClock)}}
-                    if ($Profile.LockMemoryClock -match '^[0-9]+$') {if ($CanLockClocks) {$applied_any=$true};[void]$NvSmiCmd.Add("-i $($DeviceId) $(if ($Profile.LockMemoryClock -eq 0) {"-rmc"} else {"-lmc $($Profile.LockMemoryClock)"})");if ($Config) {$this.SetOCprofileValue($DeviceModel,"LockMemoryClock",$Profile.LockMemoryClock)}}
+                    # every -lgc/-lmc/-rgc/-rmc is mirrored in Get-OCLocks; a recorded lock this profile
+                    # does not set itself is released first. "*" means no change and never touches
+                    # a lock outside the record, so hand-set locks stay
+                    $NvDevBusId = ""
+                    $NvDevPos = $this.Profiles.$DeviceModel.Index.IndexOf($DeviceId)
+                    if ($NvDevPos -ge 0 -and $this.Profiles.$DeviceModel.BusId.Count -gt $NvDevPos) {$NvDevBusId = "$($this.Profiles.$DeviceModel.BusId[$NvDevPos])"}
+                    $NvLock = [PSCustomObject]@{BusId = $NvDevBusId; Index = $DeviceId; Model = $DeviceModel; LockCoreClock = $null; LockMemoryClock = $null}
+                    $Leftover = if ($NvDevBusId -and $CanLockClocks) {(Get-OCLocks)[$NvDevBusId]} else {$null}
+                    if ($Leftover) {
+                        if ($Profile.LockCoreClock -notmatch '^[0-9]+$' -and $Leftover.LockCoreClock -gt 0) {
+                            [void]$NvSmiCmd.Add("-i $($DeviceId) -rgc");$NvLock.LockCoreClock = 0;$applied_any=$true
+                            if ($Config) {Write-Log -Level Info "Releasing the core clock lock ($($Leftover.LockCoreClock) MHz) that $($Leftover.Miner) left on $($DeviceModel) [$($NvDevBusId)]"}
+                        }
+                        if ($Profile.LockMemoryClock -notmatch '^[0-9]+$' -and $Leftover.LockMemoryClock -gt 0) {
+                            [void]$NvSmiCmd.Add("-i $($DeviceId) -rmc");$NvLock.LockMemoryClock = 0;$applied_any=$true
+                            if ($Config) {Write-Log -Level Info "Releasing the memory clock lock ($($Leftover.LockMemoryClock) MHz) that $($Leftover.Miner) left on $($DeviceModel) [$($NvDevBusId)]"}
+                        }
+                    }
+                    if ($Profile.LockCoreClock -match '^[0-9]+$') {if ($CanLockClocks) {$applied_any=$true};[void]$NvSmiCmd.Add("-i $($DeviceId) $(if ($Profile.LockCoreClock -eq 0) {"-rgc"} else {"-lgc $($Profile.LockCoreClock)"})");$NvLock.LockCoreClock = [int]$Profile.LockCoreClock;if ($Config) {$this.SetOCprofileValue($DeviceModel,"LockCoreClock",$Profile.LockCoreClock)}}
+                    if ($Profile.LockMemoryClock -match '^[0-9]+$') {if ($CanLockClocks) {$applied_any=$true};[void]$NvSmiCmd.Add("-i $($DeviceId) $(if ($Profile.LockMemoryClock -eq 0) {"-rmc"} else {"-lmc $($Profile.LockMemoryClock)"})");$NvLock.LockMemoryClock = [int]$Profile.LockMemoryClock;if ($Config) {$this.SetOCprofileValue($DeviceModel,"LockMemoryClock",$Profile.LockMemoryClock)}}
+                    if ($NvDevBusId -and ($NvLock.LockCoreClock -ne $null -or $NvLock.LockMemoryClock -ne $null)) {[void]$NvSmiLocks.Add($NvLock)}
                     if ($NvmlArgs.Count) {Set-OCDaemon "python3 `"$(Get-NvmlOCHelper)`" set --bus $($NvBusId) $($NvmlArgs -join ' ')" -OnEmptyAdd $Global:Session.OCDaemonOnEmptyAdd -Check}
                 }
 
@@ -1097,7 +1119,9 @@ class Miner {
                 if ($DeviceVendor -eq "NVIDIA") {
                     Invoke-NvidiaSettings $NvCmd
                     if ($Global:IsLinux -or (Test-IsElevated)) {
-                        $NvSmiCmd | Foreach-Object {Invoke-NvidiaSmi -Arguments $_ -Runas > $null}
+                        # nvidia-smi output is captured (Windows direct, Linux via ocdaemon) so a refusal reaches the log
+                        $NvSmiCmd | Foreach-Object {Invoke-NvidiaSmi -Arguments $_ -Runas | Write-OCDaemonResult -Name "OC $($this.Name)"}
+                        $NvSmiLocks | Foreach-Object {Set-OCLock -BusId $_.BusId -Index $_.Index -Model $_.Model -Miner $this.BaseName -LockCoreClock $_.LockCoreClock -LockMemoryClock $_.LockMemoryClock}
                     }
                 } elseif ($DeviceVendor -eq "AMD" -and $AmdCmd.Count) {
                     $AmdOCHelper = Get-AmdOCHelper

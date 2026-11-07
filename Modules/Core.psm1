@@ -1206,6 +1206,8 @@ function Invoke-Core {
 
     #Start/stop services
     if ($Session.RoundCounter -eq 0) {
+        # release clock locks left over from a session that ended without Stop-Core; before autoexec.txt, so locks set there stay
+        if ($Session.Config.EnableOCProfiles) {Reset-OCLocks}
         Start-Autoexec -Priority $Session.Config.AutoexecPriority
     }
     if ($Session.RoundCounter -eq 0 -or $Session.Config.PowerCPUtdp -ne $ConfigBackup.PowerCPUtdp) {

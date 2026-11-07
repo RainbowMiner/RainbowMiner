@@ -2078,6 +2078,120 @@ param(
     }
 }
 
+function Get-OCLocks {
+    # NVIDIA clock locks set by RainbowMiner, per PCI bus id, persisted in Data\oclocks.json
+    # so that a session ending without Stop-Core can be cleaned up at the next start.
+    # nvidia-smi cannot read a lock back, so locks set by hand or in autoexec.txt are unknown here.
+    if ($Global:OCLocks -eq $null) {
+        $Global:OCLocks = @{}
+        if (Test-Path ".\Data\oclocks.json") {
+            try {
+                $Data = Get-ContentByStreamReader ".\Data\oclocks.json" | ConvertFrom-Json -ErrorAction Stop
+                if ($Data) {
+                    foreach ($p in $Data.PSObject.Properties) {
+                        if ($p.Name -and $p.Value -and ($p.Value.LockCoreClock -gt 0 -or $p.Value.LockMemoryClock -gt 0)) {
+                            $Global:OCLocks[$p.Name] = [PSCustomObject]@{
+                                Index           = [int]$p.Value.Index
+                                Model           = "$($p.Value.Model)"
+                                Miner           = "$($p.Value.Miner)"
+                                Time            = "$($p.Value.Time)"
+                                LockCoreClock   = [int]$p.Value.LockCoreClock
+                                LockMemoryClock = [int]$p.Value.LockMemoryClock
+                            }
+                        }
+                    }
+                }
+            } catch {
+                Write-Log -Level Warn "Could not read Data\oclocks.json: $($_.Exception.Message)"
+            }
+        }
+    }
+    $Global:OCLocks
+}
+
+function Save-OCLocks {
+    if ($Global:OCLocks -eq $null) {return}
+    if ($Global:OCLocks.Count) {
+        Set-ContentJson -PathToFile ".\Data\oclocks.json" -Data ([PSCustomObject]$Global:OCLocks) -Quiet > $null
+    } elseif (Test-Path ".\Data\oclocks.json") {
+        Remove-Item ".\Data\oclocks.json" -Force -ErrorAction Ignore
+    }
+}
+
+function Set-OCLock {
+    # record a lock just set (> 0) or released (0); $null leaves the field, an empty entry is dropped
+    [cmdletbinding()]
+    param(
+        [Parameter(Mandatory = $True)]
+        [String]$BusId,
+        [Parameter(Mandatory = $False)]
+        [int]$Index = 0,
+        [Parameter(Mandatory = $False)]
+        [String]$Model = "",
+        [Parameter(Mandatory = $False)]
+        [String]$Miner = "",
+        [Parameter(Mandatory = $False)]
+        $LockCoreClock = $null,
+        [Parameter(Mandatory = $False)]
+        $LockMemoryClock = $null
+    )
+    if (-not $BusId) {return}
+    $Locks = Get-OCLocks
+    $Lock = $Locks[$BusId]
+    if ($Lock -eq $null) {
+        $Lock = [PSCustomObject]@{Index = $Index; Model = $Model; Miner = $Miner; Time = ""; LockCoreClock = 0; LockMemoryClock = 0}
+    }
+    if ($LockCoreClock -ne $null)   {$Lock.LockCoreClock   = [int]$LockCoreClock}
+    if ($LockMemoryClock -ne $null) {$Lock.LockMemoryClock = [int]$LockMemoryClock}
+    if ($Lock.LockCoreClock -gt 0 -or $Lock.LockMemoryClock -gt 0) {
+        $Lock.Index = $Index
+        if ($Model) {$Lock.Model = $Model}
+        if ($Miner) {$Lock.Miner = $Miner}
+        $Lock.Time  = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+        $Locks[$BusId] = $Lock
+    } else {
+        $Locks.Remove($BusId)
+    }
+    Save-OCLocks
+}
+
+function Reset-OCLocks {
+    # startup: release the locks the record still lists; runs before autoexec.txt
+    $Locks = Get-OCLocks
+    if (-not $Locks.Count) {return}
+
+    if (-not $IsLinux -and -not (Test-IsElevated)) {
+        Write-Log -Level Warn "$($Locks.Count) clock lock(s) from the last session are still on the card(s), but RainbowMiner is not running as administrator and cannot release them"
+        return
+    }
+
+    $Devices = @($Global:GlobalCachedDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -eq "NVIDIA"})
+    $Released = 0
+    foreach ($BusId in @($Locks.Keys)) {
+        $Lock = $Locks[$BusId]
+        $Device = $Devices | Where-Object {$_.BusId -eq $BusId} | Select-Object -First 1
+        $Index = if ($Device) {$Device.Type_Vendor_Index} elseif (-not $Devices.Count) {$Lock.Index} else {$null}
+        if ($Index -ne $null) {
+            $What = [System.Collections.Generic.List[string]]::new()
+            if ($Lock.LockCoreClock -gt 0) {
+                Invoke-NvidiaSmi -Arguments "-i $($Index) -rgc" -Runas | Write-OCDaemonResult -Name "OC lock release"
+                [void]$What.Add("core $($Lock.LockCoreClock) MHz")
+            }
+            if ($Lock.LockMemoryClock -gt 0) {
+                Invoke-NvidiaSmi -Arguments "-i $($Index) -rmc" -Runas | Write-OCDaemonResult -Name "OC lock release"
+                [void]$What.Add("memory $($Lock.LockMemoryClock) MHz")
+            }
+            Write-Log -Level Info "Released the $($What -join ' and ') lock on $($Lock.Model) [$($BusId)] that $($Lock.Miner) left behind when the last session ended"
+            $Released++
+        }
+        $Locks.Remove($BusId)
+    }
+    Save-OCLocks
+    if ($Released -and $IsLinux) {
+        Invoke-OCDaemon | Write-OCDaemonResult -Name "OC lock release"
+    }
+}
+
 function Update-DeviceVRAMReservation {
     # Measure the real per-GPU VRAM reservation once at startup, BEFORE any miner
     # is started. On Windows the WDDM/driver reservation is roughly constant per

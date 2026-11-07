@@ -355,10 +355,25 @@ The presets do not use locks, because they do not work everywhere:
 - Pascal (GTX10xx, P10x) does not support locks on most drivers
 
 A lock does not outlive its miner: when a miner stops, RainbowMiner releases the locks its
-profile has set (with `EnableOCFullReset` = 1, the default, it resets all clock settings of
-the card). The next algorithm starts from stock clocks, so the other profiles of that card can
-leave LockCoreClock and LockMemoryClock at `"*"`. Only when RainbowMiner is killed while a
-miner runs, the lock stays on the card until the next miner stops.
+profile has set. With `EnableOCFullReset` = 1, the default, it goes further and releases
+every lock on the miner's cards and resets the offsets and the voltage point, which also
+catches a lock a miner has set on its own (some do for pearlhash) - nothing can read a lock
+back from the driver, so a full reset is the only way to get rid of one RainbowMiner does
+not know about. The next algorithm starts from stock clocks, so the other profiles of that
+card can leave LockCoreClock and LockMemoryClock at `"*"`.
+
+`"*"` means "no change": RainbowMiner never sets a lock for such a profile, and when the
+profile starts it only releases a lock it has set itself and not released yet. For that it
+keeps the locks it sets on record in `Data/oclocks.json`. The record covers the one case
+where a lock could outlive its miner, a session that ends without a clean stop (a closed
+window, a kill, a crash, a watchdog restart): at the next start RainbowMiner releases what
+the record still lists, before `autoexec.txt` runs, and a profile with `"*"` releases a
+recorded leftover before it starts.
+
+If you lock clocks by hand, before the start or in `autoexec.txt`, set `EnableOCFullReset`
+to 0: then a miner stop releases only the locks RainbowMiner recorded, and your locks stay
+untouched on every card whose profiles leave the lock fields at `"*"`. A card that gets a
+locking profile ends up unlocked when that profile's miner stops, with either setting.
 
 If you want them, these are good starting points (LockCoreClock / LockMemoryClock in MHz,
 "-" means leave it "*" and use the offset preset):
