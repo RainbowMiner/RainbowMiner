@@ -844,7 +844,7 @@ class Miner {
         [System.Collections.Generic.List[string]]$IntelCmd = @()
         [System.Collections.Generic.List[object]]$RunCmd = @()
 
-        $IsAfterburner = Test-Afterburner
+        $IsAfterburner = (Test-Afterburner) -eq 1
 
         $CanLockClocks = $Global:IsLinux -or (Test-IsElevated)
         $UseNvml       = $Global:IsLinux -and (Test-NvmlOC)
