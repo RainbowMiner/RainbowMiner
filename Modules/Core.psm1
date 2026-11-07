@@ -6360,11 +6360,12 @@ function Set-MinerStats {
         if (($Miner.Status -eq [Minerstatus]::Running) -or $Miner.New) { #GetStatus() check?
             $Miner_PowerDraw = $Miner.GetPowerDraw()
 
-            # stall detection: a GPU miner reporting a hashrate at idle power is dead (measured power readings only)
+            # stall detection: a GPU miner reporting a hashrate at idle power is dead (measured power readings only).
+            # Epic Cash rotates its PoW per block, so ProgPowEpic GPUs idle without a job in between
             $Miner_PowerState = $null
             $Miner_PowerIdle  = $false
             $Miner_Stalled    = $false
-            if ($Session.Config.EnableStallDetection -and $Miner.Status -eq [MinerStatus]::Running -and $Miner.DeviceName -notlike "CPU*") {
+            if ($Session.Config.EnableStallDetection -and $Miner.Status -eq [MinerStatus]::Running -and $Miner.DeviceName -notlike "CPU*" -and $Miner.BaseAlgorithm -notcontains "ProgPowEpic") {
                 $Miner_PowerState = Get-DevicePowerState -DeviceName $Miner.DeviceName
                 $Miner_PowerIdle  = [bool]$Miner_PowerState.IsIdle
             }
