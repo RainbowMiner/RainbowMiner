@@ -72,8 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     last_uptime = parseInt(result.Uptime.Seconds);
                 }
 
-                // #country--data/--flag only exist on the dashboard page -
-                // the old jQuery code silently no-opped elsewhere, so guard here
+                // #country--data/--flag only exist on the dashboard page
                 const cdata = document.getElementById("country--data");
                 const cflag = document.getElementById("country--flag");
                 if (cdata && cflag && result.RemoteIP && (last_iso != result.RemoteIP.country.code)) {

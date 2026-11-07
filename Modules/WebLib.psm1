@@ -434,7 +434,7 @@ Param(
                     port          = $Config.APIPort
                 }
                 #Write-ToFile -FilePath "Logs\geturl_$(Get-Date -Format "yyyy-MM-dd").txt" -Message "http://$($ServerHost):$($Config.ServerPort)/getjob $(ConvertTo-Json $serverbody)" -Append -Timestamp
-                # a relay that throws (tls handshake refused, connection reset) must not fail the job: fetch directly, as after a "Status = false"
+                # a relay that throws must not fail the job: fetch directly, as after "Status = false"
                 try {
                     $Result = Invoke-GetUrl (Get-ServerUrl -ServerHost $ServerHost -Port $Config.ServerPort -Path "getjob" -SSL:(Get-Yes $Config.ServerSSL) -CertHash "$($Config.ServerCertHash)") -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal -ForceHttpClient:(Get-Yes $Config.ServerSSL) -Timeout 30
                     #Write-ToFile -FilePath "Logs\geturl_$(Get-Date -Format "yyyy-MM-dd").txt" -Message ".. $(if ($Result.Status) {"ok!"} else {"failed"})" -Append -Timestamp
@@ -590,11 +590,8 @@ Param(
                         } catch {}
                     }
                     if ("$Data" -ne "") {
-                        # a body ConvertFrom-Json rejects is handed on as a string for the caller to
-                        # deal with. Keys that differ only in case (xrpscan's ownerCount/OwnerCount)
-                        # are an API quirk the callers handle, so that one record is dropped from
-                        # $Error to keep it out of the errors_*.txt flush; every other decode failure
-                        # (truncated body, HTML error page) stays visible there
+                        # an undecodable body is handed on as a string; only the case-duplicate-keys
+                        # error (an API quirk the callers handle) is dropped from $Error
                         try {$Data = ConvertFrom-Json $Data -ErrorAction Stop} catch { $method = "WEB"; if ($_.FullyQualifiedErrorId -match "^(KeysWithDifferentCasing|DuplicateKeys)InJsonString" -and $Global:Error.Count) {$Global:Error.RemoveAt(0)} }
                     } else { $method = "WEB" }
                 }

@@ -58,10 +58,8 @@ param (
             }
 
 	        if ($PostCommand) {
-                # Split the still-encoded POST data into key-value pairs first, then URL-decode each
-                # token separately. Decoding before the split would corrupt values containing encoded
-                # & or =, and the former unordered replacement map turned encoded plus signs into
-                # spaces on some machines (issue #3095)
+                # split the still-encoded POST data first, then URL-decode each token:
+                # decoding first corrupts values with encoded & or = (#3095)
 		        foreach ($Post in ($PostCommand -split "&")) {
 			        $PostContent = $Post -split "=", 2
 

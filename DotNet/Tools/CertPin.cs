@@ -4,11 +4,9 @@ using System.Net.Security;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
-// Certificate checks for https servers (ServerSSL / ServerCertHash). A registered host either
-// carries a fingerprint (SHA-256 = 64 hex, SHA-1 = 40 hex) that the presented certificate must
-// match, or the marker CHAIN, which means the normal chain validation must pass (a public
-// certificate such as Let's Encrypt). Every other host is accepted unchanged: the pool and api
-// requests never verified certificates before, and that stays as it is.
+// Certificate checks for registered https servers (ServerSSL / ServerCertHash): either a
+// fingerprint pin (SHA-256 or SHA-1 hex) or CHAIN for normal chain validation. Every other
+// host is accepted unchanged, as before.
 public static class RBMCertPin
 {
     public const string Chain = "CHAIN";

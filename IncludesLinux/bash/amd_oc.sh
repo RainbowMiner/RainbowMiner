@@ -1,28 +1,12 @@
 #!/usr/bin/env bash
-# RainbowMiner - AMD GPU overclocking on Linux through the amdgpu OverDrive sysfs interface
-#
-# Runs as root through the ocdaemon, one call per GPU, the GPU is addressed by its PCI bus id:
-#
+# RainbowMiner - AMD GPU overclocking on Linux via the amdgpu OverDrive sysfs interface,
+# run as root through the ocdaemon, one call per GPU:
 #   bash amd_oc.sh --bus 03:00 [--core-max MHz] [--core-offset MHz] [--mem-max MHz]
 #                              [--voltage-offset mV] [--power-percent 20..200] [--dry-run]
-#   bash amd_oc.sh --bus 03:00 --reset
-#   bash amd_oc.sh --bus 03:00 --query
-#
-# The first change records the GPU's current clocks, voltage offset, power cap and performance
-# level in a state file. A later call that leaves a field out puts that field back to the
-# recorded value, so a profile switch never inherits the previous profile, and --reset restores
-# everything and removes the state file.
-#
-# What the driver prints in pp_od_clk_voltage differs by generation, so the script reads the
-# layout instead of guessing it from the model:
-#   Vega20, RDNA1 (Navi1x)  OD_SCLK 0:/1: min/max, OD_MCLK 1: max only, OD_VDDC_CURVE (not used)
-#   RDNA2, RDNA3            OD_SCLK 0:/1:, OD_MCLK 0:/1:, OD_VDDGFX_OFFSET (RDNA2 prints no range for it)
-#   RDNA4                   OD_SCLK_OFFSET (a core clock offset instead of a maximum), OD_MCLK 0:/1:, OD_VDDGFX_OFFSET
-#   Polaris, Vega10         per-state tables with voltages: the clocks are left alone, only the power cap is set
-# OverDrive must be enabled in the driver (kernel parameter amdgpu.ppfeaturemask=0xffffffff),
-# otherwise pp_od_clk_voltage is missing and only the power cap can be changed.
-#
-# Every refused or unsupported setting is reported in one line and leaves the GPU as it was.
+#   bash amd_oc.sh --bus 03:00 --reset | --query
+# The first change saves the current values as baseline: a field left out returns to it, --reset
+# restores all. The pp_od_clk_voltage layout is read, not guessed from the model (Polaris/Vega10:
+# power cap only). Clocks need OverDrive enabled (amdgpu.ppfeaturemask=0xffffffff).
 
 set -u -o pipefail
 export LC_ALL=C

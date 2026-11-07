@@ -2,9 +2,8 @@
 # Miner module functions
 #
 
-# In-memory compiled ScriptBlock cache for the miner modules (BaseName -> entry).
-# Opt-out escape hatch: create an empty "nominerscache.txt" in the RainbowMiner
-# folder and restart to fall back to per-round file invocation.
+# compiled ScriptBlock cache for the miner modules (BaseName -> entry),
+# an empty "nominerscache.txt" in the RainbowMiner folder turns it off
 $Script:MinerScriptBlockCache = @{}
 $Script:MinerScriptBlockCacheDisabled = $null
 
@@ -27,11 +26,8 @@ function Confirm-Cuda {
 }
 
 function Test-VRAM {
-    # Hot path: called per device per pool key from ~55 miner modules. Deliberately
-    # plain parameters (see Get-PoolAlgorithmKeys). The usable memory is static per
-    # device within a round, so resolve it once per device (measured reservation or
-    # config override via Get-DeviceUsableVRAMGB, else the historic static factors)
-    # and keep the comparison arithmetic byte for byte
+    # hot path, plain parameters on purpose. Usable memory is resolved once per device
+    # (Get-DeviceUsableVRAMGB, else the static factors)
     param(
         $Device,
         $MinMemGB = 0.0
@@ -48,19 +44,13 @@ function Test-VRAM {
 }
 
 function Reset-TestVRAM {
-    # Clears the per-device memoization. Call after anything that changes the
-    # inputs of Test-VRAM mid-session: a config re-read (GPUReservedVRAMGB may
-    # have changed) or a future Get-Device -Refresh (device list rebuild).
+    # call after a config re-read or device list rebuild changed the inputs of Test-VRAM
     $Script:TestVRAMMem = @{}
 }
 
 #
-# Pool selection helpers for miner modules
-#
-# $Pools may carry more than one entry per base algorithm: the device-model variants
-# built in PoolsLib (Algorithm-GPU, Algorithm-<Model>) and the pool alternates
-# registered by Core (Algorithm-@<PoolName>). Every key starts with the base
-# algorithm followed by a dash, so "-replace '\-.*$'" always yields the base name.
+# Pool selection helpers for miner modules. $Pools keys are the base algorithm, optionally followed
+# by "-GPU", "-<Model>" or "-@<PoolName>" (pool alternate), so "-replace '\-.*$'" yields the base name
 #
 
 function Get-PoolAlgorithmBase {
@@ -82,9 +72,7 @@ function Test-PoolConstraint {
         [Switch]$ExcludeYiimp
     )
     if (-not $Pool -or -not $Pool.Host) {return $false}
-    # matched against Host AND Name: most miner modules historically listed pool names
-    # but tested them against the hostname, which silently misses every pool that does
-    # not carry its own name in its host (or exposes a bare IP)
+    # match Host AND Name, a pool's host need not contain its name (or is a bare IP)
     if ($ExcludePoolName -and (($Pool.Host -match $ExcludePoolName) -or ($Pool.Name -match $ExcludePoolName))) {return $false}
     if ($PoolName -and -not (($Pool.Host -match $PoolName) -or ($Pool.Name -match $PoolName))) {return $false}
     if ($CoinSymbols -and $Pool.CoinSymbol -notin $CoinSymbols) {return $false}
@@ -93,9 +81,7 @@ function Test-PoolConstraint {
 }
 
 function Get-PoolAlgorithmKeys {
-    # Called once per $Commands entry per device model, i.e. a few thousand times per round.
-    # Deliberately a simple function with untyped parameters: [CmdletBinding()], typed
-    # parameters and [Parameter()] attributes cost more than this function's entire body.
+    # called thousands of times per round: untyped parameters and no [CmdletBinding()] on purpose
     param(
         $Pools,
         $Algorithm,
@@ -113,10 +99,7 @@ function Get-PoolAlgorithmKeys {
         if ($Model) {@($Algorithm,"$($Algorithm)-$($Model)","$($Algorithm)-GPU")} else {@($Algorithm,"$($Algorithm)-GPU")}
     }
 
-    # Fast path: no pool constraint on this entry, feature off, or no alternates registered.
-    # Returns the exact same literal the miner modules used before this feature existed.
-    # Note $CoinSymbols is compared truthy, not by .Count: @($_.CoinSymbols) on an entry
-    # without CoinSymbols yields a one-element array holding $null, whose .Count is 1.
+    # fast path. $CoinSymbols is tested truthy, not by .Count: @($null) has a Count of 1
     if (-not ($ExcludePoolName -or $PoolName -or $CoinSymbols -or $ExcludeYiimp)) {return $Keys}
     if (-not $Session.Config.EnablePoolAlternates) {return $Keys}
     $MaxAlternates = [int]$Session.Config.MaxPoolAlternates
@@ -146,9 +129,8 @@ function Get-PoolAlgorithmKeys {
 $Script:MinerFamilySBCache = @{}
 
 function Get-MinerFamilySB {
-    # A {..} literal written in a miner stub is bound to that file's session state;
-    # dot-sourced as-is it would not see the driver's loop variables. Recreating the
-    # block from its source text detaches the binding; cached per stub and slot.
+    # a stub's {..} literal is bound to its file's session state; recreate it from its text
+    # so it sees the driver's loop variables (cached per stub and slot)
     param($Name, $Slot, $Block)
     $CacheKey = "$Name|$Slot"
     $Source = $Block.ToString()
@@ -161,12 +143,8 @@ function Get-MinerFamilySB {
 }
 
 function Invoke-MinerFamily {
-    # Shared device/Commands/emission body for the Ccminer/Cpuminer module family.
-    # The stubs keep their platform guards, header variables and $Commands table and
-    # pass everything through -Setup (a module function cannot see the caller's
-    # variables), so this body is compiled and promoted once for the whole family.
-    # Every Setup flag reproduces the exact emission of one original per-file body;
-    # values a body never referenced stay un-emitted (dead Commands data stays dead).
+    # shared body for the Ccminer/Cpuminer module family: the stubs keep their guards, header
+    # variables and $Commands and pass them via -Setup (a module function cannot see the caller's variables)
     param(
         [String]$Name,
         [PSCustomObject]$Pools,
@@ -174,8 +152,7 @@ function Invoke-MinerFamily {
         [Hashtable]$Setup
     )
 
-    # direct assignments instead of a Set-Variable loop: the cmdlet costs ~10us per
-    # key and this function runs once per module per round
+    # direct assignments, a Set-Variable loop is too slow here
     $Vendor = $Setup["Vendor"]; $SuffixMode = $Setup["SuffixMode"]; $InfoTypes = $Setup["InfoTypes"]
     $Path = $Setup["Path"]; $Uri = $Setup["Uri"]; $UriCuda = $Setup["UriCuda"]; $ManualUri = $Setup["ManualUri"]
     $Port = $Setup["Port"]; $DevFee = $Setup["DevFee"]; $Version = $Setup["Version"]; $Commands = $Setup["Commands"]
@@ -315,10 +292,8 @@ function Invoke-MinerFamily {
 }
 
 function Invoke-CustomMiner {
-    # Emission body for the user-defined miners of Config\customminers.config.txt
-    # (one definition, normalized by Get-CustomMinerDefinitions). Mirrors the object
-    # shape of Invoke-MinerFamily; the argument line comes from the definition's
-    # %TOKEN% template (see Expand-CustomMinerArguments in Include.psm1).
+    # body for the custom miners (Config\customminers.config.txt), same object shape as Invoke-MinerFamily;
+    # arguments come from the %TOKEN% template (Expand-CustomMinerArguments)
     param(
         [String]$Name,
         [PSCustomObject]$Pools,
@@ -332,8 +307,7 @@ function Invoke-CustomMiner {
     $Uri  = "$($OS.Uri)"
 
     if ($InfoOnly) {
-        # Get-MinersContent gates ARM rigs on ARM-prefixed device types (ARMCPU, ARMNVIDIA, ..):
-        # a definition with an ARM build declares them, like the InfoTypes of the built-in modules
+        # ARM builds declare ARM-prefixed types (ARMCPU, ARMNVIDIA, ..), Get-MinersContent gates on them
         $Types = @($Def.Vendors)
         if ($Def.LinuxArm.Uri -and $Def.LinuxArm.Path) {$Types += @($Def.Vendors | Foreach-Object {"ARM$($_)"})}
         [PSCustomObject]@{
@@ -462,10 +436,7 @@ function Invoke-CustomMiner {
 }
 
 function Get-MinerScriptBlock {
-    # Returns a cached, compiled ScriptBlock for a miner file (or the file path as
-    # fallback when the file cannot be read - both are invocable via &). Reusing the
-    # same ScriptBlock instance each round removes the per-round parse cost and lets
-    # PowerShell promote hot miner code to compiled delegates.
+    # cached compiled ScriptBlock for a miner file, or the file path if it cannot be read (both work with &)
     param($File)
 
     $Entry = $Script:MinerScriptBlockCache[$File.BaseName]
@@ -476,9 +447,7 @@ function Get-MinerScriptBlock {
     $Text = Get-ContentByStreamReader $File.FullName
     if (-not $Text) {return $File.FullName}
 
-    # comment out (not remove) the "using module" line: its relative path cannot
-    # resolve without a file context, Include.psm1 is already loaded in the session,
-    # and keeping the line preserves the file's line numbers in error messages
+    # comment out "using module" (no file context to resolve it), keeping the line numbers intact
     $Text = $Text -replace '(?m)^(\s*using\s+module\s.*)$','#$1'
 
     $ScriptBlock = [ScriptBlock]::Create($Text)
@@ -517,8 +486,7 @@ function Get-MinersContent {
         for($i=0; $i -lt $possibleDevices.Count; $i++) { $possibleDevices[$i] = "ARM" + $possibleDevices[$i] }
     }
 
-    # hoisted out of the per-object pipeline below: FullComboModels is stable during
-    # one call, but PSObject.Properties.Name would be reflection per emitted object
+    # built once per call, PSObject.Properties.Name per emitted object would be slow
     $FullComboLookup = @{}
     if ($Global:DeviceCache.DevicesByTypes.FullComboModels) {
         foreach ($p in $Global:DeviceCache.DevicesByTypes.FullComboModels.PSObject.Properties) {$FullComboLookup[$p.Name] = $p.Value}

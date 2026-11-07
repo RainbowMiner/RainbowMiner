@@ -36,8 +36,7 @@ if (-not ($Pool_Request | Measure-Object).Count) {
 $Pool_Regions = @("eu","ru","sg","us")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
-# Kryptex lists Quantus Network as QTC, colliding with Qubitcoin (Qhash) in CoinsDB, and
-# calls its algorithm "Poseidon2"; translate by the unique rpc id to our QUAN/Quantus
+# Kryptex lists Quantus as QTC/Poseidon2 (QTC is Qubitcoin here): translate by rpc id to QUAN/Quantus
 [hashtable]$Pool_Xlat = @{
     "qtc" = [PSCustomObject]@{symbol = "QUAN"; algo = "Quantus"}
 }

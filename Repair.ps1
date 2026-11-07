@@ -134,9 +134,8 @@ try {
     if ($PreserveMiners) {$PreserveMiners | Foreach-Object {if (Test-Path "MinersOldVersions\$_") {Copy-Item "MinersOldVersions\$_" "Miners\$_" -Force}}}
 
     if ($IsWindows) {
-        # Handle write locks: the helper binaries are staged in .\Includes\dist by the
-        # archive and synced to their live positions here - the extracting 7z.exe has
-        # exited at this point, so even 7z.exe/7z.dll can be overwritten
+        # sync the helper binaries staged in .\Includes\dist: the extracting 7z.exe has exited,
+        # so even 7z.exe/7z.dll can be overwritten now
         try {
             $DistPath = Join-Path $ToFullPath "Includes\dist"
             if (Test-Path $DistPath) {

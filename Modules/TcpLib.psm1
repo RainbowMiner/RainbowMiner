@@ -232,9 +232,8 @@ function Get-ServerAddress {
             Write-Log -Level Info "Server $($ServerName):$($Port) is reached at the announced address $($ServerHost)"
         }
     } else {
-        # a name is resolved here and its ipv4 addresses are probed one by one: TcpClient on pwsh 7 walks the whole
-        # address list itself, ipv6 first, and a stale or unreachable ipv6 address eats the complete timeout - the same
-        # would happen to the http calls later on, so the working ip goes into the urls
+        # probe the ipv4 addresses one by one: TcpClient on pwsh 7 tries ipv6 first and a stale
+        # ipv6 eats the whole timeout. The working ip then goes into the urls
         $Candidates = @()
         if ($ServerName -notmatch '^\d{1,3}(\.\d{1,3}){3}$' -and $ServerName -ne "localhost") {
             try {

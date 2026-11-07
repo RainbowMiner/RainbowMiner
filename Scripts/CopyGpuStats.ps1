@@ -1,16 +1,14 @@
 ﻿#
 # CopyGpuStats.ps1 - copy the single-device miner stats of one GPU to another GPU
 #
-# Useful if a card drops out and the device numbers shift: the remaining cards
-# keep their benchmarks instead of starting over.
+# Useful if a card drops out and the device numbers shift.
 #
 #   .\Scripts\CopyGpuStats.ps1                       asks for the GPU numbers, lists the files, asks before copying
-#   .\Scripts\CopyGpuStats.ps1 -From 5 -To 3         lists the files, asks before copying
-#   .\Scripts\CopyGpuStats.ps1 -From 5 -To 3 -Apply  copies without asking
+#   .\Scripts\CopyGpuStats.ps1 -From 2 -To 1         lists the files, asks before copying
+#   .\Scripts\CopyGpuStats.ps1 -From 2 -To 1 -Apply  copies without asking
 #
-# Only stats of exactly one device are copied (e.g. NVIDIA-BzMiner-GPU#05_KawPOW_HashRate.txt),
-# multi-device stats (GPU#03-GPU#05_...) stay untouched. Existing target files are moved to
-# Stats\Miners-backup-<timestamp> first. Stop RainbowMiner before running this script.
+# Only single-device stats are copied (e.g. ...-GPU#02_KawPOW_HashRate.txt). Existing target files
+# are moved to Stats\Miners-backup-<timestamp> first. Stop RainbowMiner before running this script.
 #
 
 param(

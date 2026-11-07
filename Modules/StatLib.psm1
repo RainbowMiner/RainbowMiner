@@ -5,9 +5,7 @@
 $Script:StatFluctuationFields = @("Minute_Fluctuation","Minute_5_Fluctuation","Minute_10_Fluctuation","Hour_Fluctuation","Day_Fluctuation","ThreeDay_Fluctuation","Week_Fluctuation")
 $Script:StatDirsChecked = @{}
 $Script:Utf8NoBomEncoding = [System.Text.UTF8Encoding]::new($false)
-# state of the last Get-Stat -Miners pass: the folder's write time (NTFS and
-# ext4 bump it on every file add/remove, not on a rewrite) and the present
-# device names - unchanged means the cache already mirrors the folder
+# last Get-Stat -Miners pass: folder write time (changes on file add/remove) and device names
 $Script:MinerStatsStamp = $null
 
 function Test-StatDir {
@@ -203,13 +201,9 @@ function Set-Stat {
                 }
             }
 
-            # a history that fluctuates this much is worthless and restarts - but only once the stat is old enough to have one:
-            # a young stat has nothing to protect and would only reset again and again while it is at its most volatile
             if ($Mode -in @("Pools","Profit")) {
-                # two reasons to throw a history away: it fluctuates too much (only once the stat is an hour old, a young stat
-                # has nothing to protect and would reset again and again), or the values stayed off the long average by more
-                # than 5x for 15 rounds in a row (a wrong coin quote arrived or got fixed, a new price level), which a capped
-                # fluctuation of an old stat would need weeks to notice
+                # restart the history if it fluctuates too much (stats older than an hour only, a young one would reset
+                # again and again) or if it stayed off the long average by more than 5x for 15 rounds (a new price level)
                 if ([Double]$Stat.Week_Fluctuation -ge 0.8 -and $Stat.Duration -ge [TimeSpan]::FromHours(1)) {throw "Fluctuation out of range ($Name)"}
                 if ([Int]$Stat.Deviation_Streak -ge 15) {throw "Deviation out of range ($Name)"}
             }
@@ -241,10 +235,8 @@ function Set-Stat {
             $StatKeepStreak = $false
 
             if ($StatRejected -and $mode -eq "Profit" -and $UplimProtection -gt 1.0 -and $Value -gt 0) {
-                # spike protection self-heal: a single spike stays out, but a level that holds for three rounds in a row is real
-                # (a better miner was benchmarked, the pools came back). The value is then accepted without a reset, so the stat
-                # keeps its age for the MiningRigRentals price reference. The streak survives the acceptance, so the following
-                # rounds at the new level pass at once while the averages catch up
+                # spike protection self-heal: a level that holds for three rounds is real and accepted without a reset,
+                # so the stat keeps its age for the MiningRigRentals price reference
                 $StatRejectMatch    = $Stat.Failed_Value -gt 0 -and [Math]::Abs($Value / $Stat.Failed_Value - 1) -le 0.5
                 $Stat.Failed_Streak = if ($StatRejectMatch) {$Stat.Failed_Streak + 1} else {1}
                 $Stat.Failed_Value  = $Value
@@ -272,10 +264,8 @@ function Set-Stat {
                 }
 
                 if ($Stat -and $mode -eq "Miners" -and $Value -gt 0) {
-                    # self-heal: a stat can be wrong by orders of magnitude (a miner api that reported garbage while the benchmark ran)
-                    # or stale after a lasting change (a card dropped out of the set), every real sample then stays outside the
-                    # tolerance for good. Three rejected samples in a row that agree with each other restart the stat from the current
-                    # sample. A single off sample, a zero (miner api not answering) or samples that disagree cannot do that
+                    # self-heal for a wrong or stale stat: three rejected samples in a row that agree with each other
+                    # restart the stat from the current sample (a single off sample or a zero cannot)
                     $StatRejectMatch = $false
                     if ($Stat.Failed_Value -gt 0) {
                         if ($FaultTolerance -lt 1) {
@@ -310,8 +300,7 @@ function Set-Stat {
                 }
 
             } else {
-                # consecutive rounds whose value is more than 5x above or below the long average (pool and profit stats only,
-                # zero values do not count): 15 of them restart the stat at the next load, see the throw above
+                # rounds off the long average by more than 5x (pool and profit stats, zeros excluded), see the throw above
                 $StatDeviationStreak = 0
                 if ($Mode -ne "Miners" -and $Value -gt 0 -and $Stat.Week -gt 0) {
                     $StatRatio = $Value / $Stat.Week
@@ -709,7 +698,7 @@ function Get-StatFromFile {
                 } elseif ($Cached -and $Name -match '_Profit$') {
                     $Stat = [RBMPoolStat]::FromObject($Stat)
                 } else {
-                    # rebuild with interned property names: ConvertFrom-Json allocates fresh name strings per file, otherwise each stat keeps its own copy of the recurring field names
+                    # rebuild with interned property names, ConvertFrom-Json allocates fresh name strings per file
                     $StatInterned = [PSCustomObject]@{}
                     foreach ($StatProperty in $Stat.PSObject.Properties) {
                         $StatInterned.PSObject.Properties.Add([System.Management.Automation.PSNoteProperty]::new([string]::Intern($StatProperty.Name), $StatProperty.Value))
@@ -818,15 +807,8 @@ function Get-Stat {
         $MatchStr = if ($MatchArray.Count -gt 1) {$MatchArray -join "|"} else {$MatchArray}
         if ($MatchStr -match "|") {$MatchStr = "($MatchStr)"}
 
-        # miner stats are only cached for devices the system detects: a stat
-        # file names its devices (BzMiner-GPU#00-GPU#01_KawPOW_HashRate), and a
-        # rig accumulates files for every device set it ever ran - a card that
-        # dropped out for a while leaves the sets of the remaining cards behind
-        # for good. Every set of detected devices stays, selected or not: the
-        # benchmark seeding in Invoke-Core takes sibling sets of the same model
-        # as its source, and it rejects a set naming an undetected device by
-        # the same rule. The files stay untouched, so a returning card gets its
-        # stats back on the next pass
+        # cache only miner stats whose devices are all detected (selected or not: the benchmark seeding in
+        # Invoke-Core uses sibling sets as its source). Files stay untouched, a returning card gets its stats back
         $PresentDevices = $null
         if ($Miners -and $Cached -and (Test-Path Variable:Global:GlobalCachedDevices) -and $Global:GlobalCachedDevices) {
             $PresentDevices = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
@@ -834,13 +816,8 @@ function Get-Stat {
             if (-not $PresentDevices.Count) {$PresentDevices = $null}
         }
 
-        # a pass that cannot find anything new is skipped: with the folder
-        # unchanged and the same devices the cache already mirrors the folder.
-        # The result is only requested by callers that need it (-Quiet is the
-        # per-round refresh), so the skip is limited to those. The stamp is
-        # armed only once the folder has been quiet for a few seconds: on a
-        # file system with coarse timestamps (ext3, FAT) a later change could
-        # otherwise land in the same window as the recorded one
+        # skip the per-round (-Quiet) pass when folder and devices are unchanged. The stamp is armed only once
+        # the folder has been quiet for a few seconds, coarse timestamps (ext3, FAT) could hide a later change
         if ($Miners -and $Cached -and $Quiet) {
             $Stamp = $null
             try {
@@ -1038,8 +1015,7 @@ function Restore-MinerStatsBackup {
         if ($Zip) {$Zip.Dispose()}
     }
 
-    # reload each restored stat into the cache in place: dropping the cache would let the
-    # running round see all miners as unbenchmarked; vanished stats leave with the next round
+    # reload restored stats in place, dropping the cache would show all miners as unbenchmarked
     foreach ($Target in $Restored) {
         $Key = [System.IO.Path]::GetFileNameWithoutExtension($Target) -replace "^(AMD|CPU|INTEL|NVIDIA)-"
         if ($Global:StatsCache.ContainsKey($Key)) {[void]$Global:StatsCache.Remove($Key)}
@@ -1062,13 +1038,8 @@ function Remove-MinerStatsBackup {
 }
 
 function Update-MinerAlgorithmsInfo {
-    # algorithms per miner module for the stats cleanup (Get-MinerStatsStale):
-    # the normalized main and secondary algorithms of the module's InfoOnly
-    # command list, keyed by module name and stamped with the module file's
-    # write time, so an updated module is read again. Stored in
-    # Data\mineralgorithms.json next to minerinfo.json. A module without a
-    # command list (custom miners, a module that fails) gets no entry, and the
-    # cleanup then never lists its benchmarks as "algorithm"
+    # algorithms per miner module (from its InfoOnly command list) for Get-MinerStatsStale, stored in
+    # Data\mineralgorithms.json and re-read when the module file changes. Modules without a list get no entry
     [CmdletBinding()]
     param()
 
@@ -1119,19 +1090,10 @@ function Update-MinerAlgorithmsInfo {
 }
 
 function Get-MinerStatsStale {
-    # benchmarks that cannot be used any more and that have not been updated
-    # for -Days: a rig keeps the stat file of every miner, device set and
-    # algorithm it ever benchmarked. Each file gets the first matching reason:
-    #   device    - names a device the system does not detect
-    #   miner     - the miner module does not exist
-    #   algorithm - the miner module does not list this algorithm any more
-    #   set       - the device set is neither a model group of the detected
-    #               devices nor a combination of model groups (e.g. the sets
-    #               of the remaining cards while one had dropped out)
-    # Nothing here depends on the current miner list, the pools or exclusions:
-    # a miner or algorithm that is merely not offered right now stays. Reasons
-    # without their input (no devices, no miner list, no algorithm list) are
-    # skipped
+    # unusable benchmarks not updated for -Days, first matching reason per file:
+    #   device = undetected device, miner = module missing, algorithm = not listed by the module,
+    #   set = neither a model group nor a combination of model groups
+    # Pools, exclusions and the current miner list do not matter; reasons without their input are skipped
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $false)]
@@ -1193,9 +1155,7 @@ function Get-MinerStatsStale {
         $StatDevices = @($Matches[2].TrimStart('-') -split '-')
         $StatAlgo    = $Matches[3]
 
-        # a dual mining instance carries its algorithms in the name
-        # (BzMiner-Autolykos2-SHA512256d-GPU#05): the miner is the longest
-        # leading part that is a known module
+        # dual mining names carry the algorithms (Miner-Algo1-Algo2-GPU#nn): the miner is the longest known prefix
         $StatBase = $StatMiner
         if ($Avail.Count -and -not $Avail.Contains($StatBase)) {
             $StatParts = $StatMiner -split '-'

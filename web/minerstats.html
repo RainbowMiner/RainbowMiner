@@ -151,11 +151,10 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('benchmarkselected').addEventListener('click', async (e) => {
         e.preventDefault();
         const table = RbmTables.getTable('#minerstats');
-        // selected AND still listed: Tabulator keeps rows selected after a header
-        // filter hides them, and rebenchmarking invisible rows would surprise
+        // only visible rows: Tabulator keeps rows selected after a filter hides them
         const sel = table ? table.getRows("active").filter(row => row.isSelected()).map(row => row.getData()) : [];
         if (sel.length && confirm("Do you really want to rebench all selected miners?")) {
-            // wire format matches jQuery.param's array serialization: name[]=..&name[]=..
+            // name[]=..&name[]=..
             const params = new URLSearchParams();
             for (const item of sel) {
                 params.append('name[]', item.Name);
@@ -245,8 +244,7 @@ function formatMinerstats(data) {
         item.tSpeed = speed.join(" / ");
         item.tRatio = ratio.join(" / ");
 
-        // display name only - item.Name has to stay raw, the reset scripts need
-        // the full miner name incl. the -GPU... suffix to find the stat files
+        // display only: the reset scripts need the raw item.Name incl. the -GPU suffix
         item.tName = item.Name.replace(/-GPU.+$/,'');
         item.tStatus = 'Ok';
         if (item.Benchmarking) item.tStatus = 'Benchmarking';

@@ -238,11 +238,8 @@ class Miner {
             $Now = Get-Date
             $this.StartTime = $Now.ToUniversalTime()
             $this.LogFile   = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Logs\$($this.Name)-$($this.Port)_$($Now.ToString("yyyy-MM-dd_HH-mm-ss")).txt")
-            # a miner that block-buffers its stdout when it is a pipe (SRBMiner: 4 KB
-            # chunks, the last one lost on kill) writes the log file itself on
-            # Windows: LogFileArgs carries its command line fragment with the
-            # $logfile placeholder, and the background launcher then drains the
-            # pipe without appending it to the file
+            # miners that block-buffer stdout on a pipe write the log file themselves on Windows:
+            # LogFileArgs holds that command line fragment with a $logfile placeholder
             $PipeToLog = $true
             if ($Global:IsWindows -and $this.LogFileArgs) {
                 $this.ArgumentList = "$($this.ArgumentList) $($this.LogFileArgs.Replace('$logfile', $this.LogFile))".Trim()
@@ -579,11 +576,8 @@ class Miner {
                                         $Device_Type = ($Words | Select-Object -Index $i)
                                     }
 
-                                    # the format must be parenthesized: inside the Add() call the comma separated
-                                    # the method arguments, so -f ran with the type alone and threw on {1} for every
-                                    # line that named a device - the line was lost and the wrapper never delivered a
-                                    # hashrate. A device word without an index ("CPU: ???" in the hoo_cpu status
-                                    # line) is not tagged at all instead of producing an empty "CPU#"
+                                    # keep the format parenthesized, inside Add() the comma would split the arguments.
+                                    # A device word without an index is not tagged (no empty "CPU#")
                                     if ($Device -ne $null) {[void]$Devices.Add(("{0}#{1:d2}" -f $Device_Type, $Device))}
                                 }
                             }
@@ -985,9 +979,8 @@ class Miner {
                         $applied_any=$true
                         if ($Config) {$this.SetOCprofileValue($DeviceModel,"MemoryClockBoost",$val)}
                     }
-                    # every -lgc/-lmc/-rgc/-rmc is mirrored in Get-OCLocks; a recorded lock this profile
-                    # does not set itself is released first. "*" means no change and never touches
-                    # a lock outside the record, so hand-set locks stay
+                    # -lgc/-lmc/-rgc/-rmc are recorded in Get-OCLocks, recorded locks this profile does not set
+                    # are released first. "*" means no change and leaves hand-set locks alone
                     $NvDevBusId = ""
                     $NvDevPos = $this.Profiles.$DeviceModel.Index.IndexOf($DeviceId)
                     if ($NvDevPos -ge 0 -and $this.Profiles.$DeviceModel.BusId.Count -gt $NvDevPos) {$NvDevBusId = "$($this.Profiles.$DeviceModel.BusId[$NvDevPos])"}
@@ -1011,9 +1004,8 @@ class Miner {
 
             } elseif ($DeviceVendor -eq "AMD" -and $Global:IsLinux) {
 
-                # amdgpu OverDrive through IncludesLinux/bash/amd_oc.sh, run as root by the ocdaemon. The helper reads
-                # the GPU's own OverDrive layout, keeps a baseline per GPU and puts back every field a profile leaves
-                # out, so a profile switch never inherits the previous settings and --reset restores the baseline.
+                # amdgpu OverDrive via IncludesLinux/bash/amd_oc.sh (run as root by the ocdaemon): fields a profile
+                # leaves out come from a per-GPU baseline, --reset restores the whole baseline
                 if ($Global:Session.Config.EnableOCLinuxAmd) {
                     if (-not (Test-OCDaemon)) {
                         if ($Config) {Write-Log -Level Warn "AMD overclocking on Linux needs the running ocdaemon (run install.sh again): $DeviceModel profile skipped"}
@@ -1045,8 +1037,7 @@ class Miner {
 
             } elseif ($DeviceVendor -eq "AMD" -and $Global:IsWindows -and $Global:Session.Config.EnableOCWindowsAmd) {
 
-                # AMD driver (ADLX) through Includes\amdoc\amdoc.exe: the same arguments and baseline logic as the Linux
-                # helper, the calls run synchronously further down. With the switch off, MSI Afterburner is used as before.
+                # AMD driver (ADLX) via Includes\amdoc\amdoc.exe, same arguments and baseline logic as the Linux helper
                 $AmdOCHelper = Get-AmdOCHelper
                 if (-not (Test-Path $AmdOCHelper)) {
                     if ($Config) {Write-Log -Level Warn "AMD overclocking on Windows: $AmdOCHelper is missing, $DeviceModel profile skipped"}
@@ -1276,20 +1267,10 @@ class BzMiner : Miner {
 }
 
 class BzMinerWrapper : BzMiner {
-    # BzMiner v100 keeps hashing while its status endpoint stops answering for good
-    # on some rigs (pearl and ergo on a busy 2-core rig: curl waited 60s for nothing),
-    # and every unanswered poll costs the core loop the full 10s timeout. The API stays
-    # the primary source; after three failed polls in a row it is only retried every
-    # sixth poll, and in between the hashrates come from the console tables that the
-    # log output reprints every 30s:
-    #   |    # | cfg |   tbs | a/r/p |      eff |  pool hr | miner hr | status | pool |
-    #   |  9:0 |  i0 | 1m42s | 2/0/0 | 426.2ghw |  82.99th |  71.47th | Mining | ...  |
-    #   | smry |     | 1m42s | 2/0/0 | 426.2ghw |  82.99th |  71.47th | connected: yes |
-    # the "smry" row carries the rig total, the device table above it the power draw
-    # ("| 9:0 | RTX 3070 | 6.55gb | 8.00gb | 1620 (+100) | 8001 (+2000) | 61% | 167.7w | 62C |").
-    # The columns are located from the header rows, so a custom --mining-columns
-    # still works as long as it keeps "miner hr". The wrapper name makes the Linux
-    # side tail the log file (WrapperJob) exactly like the other console wrappers.
+    # BzMiner v100's status endpoint can stop answering while the miner keeps hashing. After three
+    # failed polls the API is only retried every sixth poll; in between the hashrates come from the
+    # console tables ("miner hr" column of the "smry" row, power from the device table). Columns are
+    # located by their header, the wrapper name makes Linux tail the log file like other wrappers.
 
     hidden [Int]$ApiFailures   = 0
     hidden [Int]$ApiSkipped    = 0
@@ -1329,9 +1310,7 @@ class BzMinerWrapper : BzMiner {
             $ApiOk = $this.UpdateFromApi()
             if ($ApiOk) {
                 if ($this.ConsoleMode) {
-                    # an endpoint that answers once in a while is not back: the console
-                    # mode is left after two answered retries in a row only, otherwise
-                    # every stray answer buys three more 10s timeouts before the next backoff
+                    # leave console mode only after two answered retries in a row, a stray answer is not a recovery
                     $this.ApiRecovered++
                     if ($this.ApiRecovered -ge 2) {
                         Write-Log "$($this.Name): status API answers again, back to API hashrates"
@@ -1354,9 +1333,8 @@ class BzMinerWrapper : BzMiner {
             }
         }
 
-        # the console output is drained every poll (the base class does that at the end
-        # of a round for non-wrapper miners only); its samples are used while the API
-        # fails, so a working API never gets doubled up by the 30s table
+        # drain the console every poll (the base class does it for non-wrapper miners only),
+        # its samples count only while the API fails
         $MJob = if ($Global:IsLinux) {$this.WrapperJob} else {$this.Job.XJob}
         if ($MJob.HasMoreData) {
             $UseConsole = -not $ApiOk
@@ -1438,7 +1416,7 @@ class BzMinerWrapper : BzMiner {
             return $true
         }
 
-        # a device row of the device table: "| 9:0 | RTX 3070 | ... | 167.7w | 62C |"
+        # a device row of the device table: "| 0:0 | <model> | ... | <power>w | <temp>C |"
         if ($Cells[0] -match "^\d+:\d+$" -and $this.PowerColumn -ge 0 -and $this.PowerColumn -lt $Cells.Count -and $Cells[$this.PowerColumn] -match "^((?:\d+[\.,])?\d+)\s*w$") {
             $this.ConsolePower += [Double]($Matches[1] -replace ',','.')
         }
@@ -3184,10 +3162,8 @@ class SrbMinerMulti : Miner {
     }
 
     [Void]CheckAutoTune() {
-        # SRBMiner prints one "GPU5 |A0|noid |INTENSITY:   10551296|" line per device during init, before the API
-        # comes up. Only "INTENSITY: AUTO" means the miner tunes and publishes gpu_autotune_results; a number or no
-        # INTENSITY field at all (pearlhash) is a fixed intensity, the results stay 0 and the hashrate gate below
-        # would never open. Which algorithms tune is undocumented and changes between versions (noid with 3.8.x)
+        # SRBMiner prints "GPUn |A0|algo |INTENSITY: ...|" per device during init. Only "INTENSITY: AUTO" means it
+        # tunes and publishes gpu_autotune_results, otherwise they stay 0 and the hashrate gate would never open
         if (-not $this.LogFile) {return}
         $Auto  = 0
         $Fixed = 0
@@ -3232,8 +3208,7 @@ class SrbMinerMulti : Miner {
     }
 
     [Bool]IsBenchmarking() {
-        # wait up to 10 minutes for the auto tune results, but only while the miner really tunes: with NoAutoTune the
-        # results stay 0 and tuning_done can never flip, the grace would cost 10 minutes of zero hashrate at every start
+        # wait up to 10 minutes for the auto tune results, but only while the miner really tunes (not with NoAutoTune)
         return ([Miner]$this).IsBenchmarking() -or ($this.MinerInfo -and $this.MinerInfo.autotune -and $this.MinerInfo.algo_count -eq 1 -and -not $this.MinerInfo.failed -and -not $this.MinerInfo.tuning_done -and $this.RunningTime.TotalMinutes -lt 10)
     }
 
@@ -3699,10 +3674,8 @@ class TTminerWrapper : Miner {
                 $Line = $_ -replace "`n|`r", ""
                 $Line_Simple = $Line -replace "\x1B\[[0-?]*[ -/]*[@-~]", ""
 
-                # TT-Miner prints a summary block every report interval. Only the
-                # whole-rig line counts: an asterisk marks live values
-                # ("All[EPIC]: *59.38 MH/s [A47:R0:S1 2.1%] 626 W"), a minus
-                # repeats stale values while the GPUs sit idle between jobs
+                # only the "All[algo]:" summary line counts: "*" marks live values,
+                # "-" repeats stale values while the GPUs idle between jobs
                 if ($Line_Simple -match "All\[[^\]]*\]:\s+([\*-])((?:\d+[\.,])?\d+)\s*([kMGTP]?)H/s") {
                     $Line_Live = $Matches[1] -eq "*"
                     $HashRate = [Double]($Matches[2] -replace ',','.')
@@ -3718,12 +3691,8 @@ class TTminerWrapper : Miner {
                         $PowerDraw = if ($Line_Simple -match "\]\s+((?:\d+[\.,])?\d+)\s+W\s") {[Double]($Matches[1] -replace ',','.')} else {$null}
                         if ($PowerDraw -gt $this.MaxPowerDraw) {$this.MaxPowerDraw = $PowerDraw}
 
-                        # TT-Miner's workers can die silently (seen after a pool event):
-                        # the stats thread keeps printing the frozen averages while the
-                        # GPUs sit at idle clocks - once with a live asterisk, once as
-                        # an endless stale-minus tail, so check both variants. Only the
-                        # share age ("last: MM:SS") and the power draw stay honest,
-                        # so require both signals before flagging the miner crashed
+                        # dead TT-Miner workers keep printing frozen averages (with "*" or "-"); only the
+                        # share age ("last: MM:SS") and the power draw are honest, so require both to flag a crash
                         $LastShare_Sec = if ($Line_Simple -match "last:\s+(\d+):(\d+)\s*$") {[int]$Matches[1] * 60 + [int]$Matches[2]} else {-1}
 
                         if ($LastShare_Sec -gt 300 -and $PowerDraw -gt 0 -and $PowerDraw -lt $this.MaxPowerDraw * 0.25) {
@@ -3753,10 +3722,8 @@ class Wrapper : Miner {
 
 
 class CustomWrapper : Miner {
-    # Generic stdout wrapper for user-defined miners (Config\customminers.config.txt)
-    # with a HashRateRegex: value = named group "hashrate" or "value", else group 1;
-    # unit = named group "unit", else group 2 (k/M/G/T/P prefix, "h/s" optional);
-    # optional named groups "accepted" / "rejected" feed the share counters.
+    # stdout wrapper for custom miners with a HashRateRegex: value = group "hashrate"/"value" or 1,
+    # unit = group "unit" or 2, optional groups "accepted"/"rejected" feed the share counters.
     # An invalid regex is reported once and the base parser takes over.
 
     hidden [Bool]$RegexFailed = $false
@@ -4127,8 +4094,7 @@ class Xmrig3 : Miner {
                         $n = $_.Name; $v = $_.Value
                         $Parameters.Config.$Device | Add-Member $n $v -Force
                     }
-                    # xmrig stores profile aliases as strings ("rx/arq": "rx/wow"): follow them to the real
-                    # thread list, or RandomArq and friends end up with a single thread on CPU 0
+                    # xmrig profile aliases are strings ("rx/arq": "rx/wow"): follow them, or the algo gets one thread
                     $AlgoSource = $Algo
                     $AlgoHops   = 0
                     while ($ThreadsConfig.$AlgoSource -is [string] -and $AlgoHops -lt 3) {$AlgoSource = $ThreadsConfig.$AlgoSource;$AlgoHops++}
@@ -4136,8 +4102,7 @@ class Xmrig3 : Miner {
                     $Algo = if ($ThreadsConfig.$Algo) {$Algo} else {$Algo0}
 
                     if ($Device -eq "cpu") {
-                        # pick CPUs in topology order (one thread per physical core first): the former
-                        # even-first sort assumed Windows sibling numbering and paired siblings on Linux
+                        # pick CPUs in topology order (one thread per physical core first), valid on Windows and Linux
                         $CpuRank = @{}
                         foreach ($CpuNo in @(@($Global:GlobalCPUInfo.RealCores) + @($Global:GlobalCPUInfo.ThreadList))) {
                             if ($CpuNo -ne $null -and -not $CpuRank.ContainsKey([int]$CpuNo)) {$CpuRank[[int]$CpuNo] = $CpuRank.Count}
@@ -4299,8 +4264,7 @@ class Xmrig6 : Miner {
                         $n = $_.Name; $v = $_.Value
                         $Parameters.Config.$Device | Add-Member $n $v -Force
                     }
-                    # xmrig stores profile aliases as strings ("rx/arq": "rx/wow"): follow them to the real
-                    # thread list, or RandomArq and friends end up with a single thread on CPU 0
+                    # xmrig profile aliases are strings ("rx/arq": "rx/wow"): follow them, or the algo gets one thread
                     $AlgoSource = $Algo
                     $AlgoHops   = 0
                     while ($ThreadsConfig.$AlgoSource -is [string] -and $AlgoHops -lt 3) {$AlgoSource = $ThreadsConfig.$AlgoSource;$AlgoHops++}
@@ -4311,8 +4275,7 @@ class Xmrig6 : Miner {
                         if ($Algo -eq "ghostrider") {
                             $Parameters.Config.$Device | Add-Member "max-threads-hint" ([int](100 * $Parameters.Threads / $Global:GlobalCPUInfo.Threads)) -Force
                         }
-                        # pick CPUs in topology order (one thread per physical core first): the former
-                        # even-first sort assumed Windows sibling numbering and paired siblings on Linux
+                        # pick CPUs in topology order (one thread per physical core first), valid on Windows and Linux
                         $CpuRank = @{}
                         foreach ($CpuNo in @(@($Global:GlobalCPUInfo.RealCores) + @($Global:GlobalCPUInfo.ThreadList))) {
                             if ($CpuNo -ne $null -and -not $CpuRank.ContainsKey([int]$CpuNo)) {$CpuRank[[int]$CpuNo] = $CpuRank.Count}

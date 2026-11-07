@@ -1,13 +1,10 @@
 ﻿// RainbowMiner web UI shared library v2.0
-// Consolidates former utilities-1.9.js + inline ConfigLoader, adds theme and
-// clipboard helpers. Classic (non-module) script: bootstrap-table resolves
-// formatters/sorters by name on window.
+// Classic (non-module) script: formatters/sorters are resolved by name on window.
 
 "use strict";
 
 /* ---------------------------------------------------------------------------
  * Theme (localStorage + prefers-color-scheme), applied immediately on load.
- * Migrates the legacy "rbm-theme" cookie once, then the cookie is unused.
  * ------------------------------------------------------------------------- */
 const RbmTheme = (function () {
     const KEY = "rbm-theme";
@@ -45,10 +42,8 @@ const RbmTheme = (function () {
 })();
 
 /* ---------------------------------------------------------------------------
- * Clipboard helper.
- * navigator.clipboard needs a secure context: that includes http://localhost
- * but NOT http://<LAN-IP>, which is how remote rigs are usually opened -
- * hence the hidden-textarea fallback.
+ * Clipboard helper. navigator.clipboard needs a secure context, which
+ * http://<LAN-IP> is not - hence the hidden-textarea fallback.
  * ------------------------------------------------------------------------- */
 function copyToClipboard(text) {
     if (navigator.clipboard && window.isSecureContext) {
@@ -73,7 +68,7 @@ function copyToClipboard(text) {
 }
 
 /* ---------------------------------------------------------------------------
- * ConfigLoader (moved from parts/head.html inline script)
+ * ConfigLoader
  * ------------------------------------------------------------------------- */
 var selected_currency = { currency: null, rate: 0 };
 
@@ -81,8 +76,7 @@ var selected_currency = { currency: null, rate: 0 };
  * Network helpers
  * ------------------------------------------------------------------------- */
 
-// fetch with a timeout: a request hung on flaky WLAN aborts after ~10s
-// instead of freezing its poll loop for the browser's default (30-300s)
+// fetch with a timeout, so a hung request cannot freeze its poll loop
 function rbmFetch(url, options) {
     const opts = Object.assign({}, options);
     const timeout = opts.timeout || 10000;
@@ -93,12 +87,8 @@ function rbmFetch(url, options) {
     return fetch(url, opts).finally(() => clearTimeout(timer));
 }
 
-// Self-scheduling poll loop with exponential backoff:
-// - fn() is awaited; on success the next run is `interval` away
-// - on failure the delay doubles up to 8x interval and only the first
-//   failure of a streak is logged (no console storm while the RainbowMiner
-//   server restarts), recovery is logged once
-// - nothing is fetched while the tab is hidden
+// Self-scheduling poll loop: on failure the delay doubles up to 8x interval and
+// only the first failure of a streak is logged; paused while the tab is hidden.
 function rbmPoll(name, interval, fn) {
     let failures = 0;
     (async function run() {
@@ -180,7 +170,7 @@ const ConfigLoader = (function () {
 })();
 
 /* ---------------------------------------------------------------------------
- * Formatters and sorters (unchanged from utilities-1.9.js)
+ * Formatters and sorters
  * ------------------------------------------------------------------------- */
 function timeSince(date) {
   var seconds = Math.max(Math.floor((new Date() - date) / 1000),0);
@@ -278,7 +268,7 @@ function getSelectedCurrency() {
     }
     if (opt) {
         selcur.rate = parseFloat(opt.dataset.rate);
-    } else if (selcur.currency == "BTC") { // note: fixes the old 'curreny' typo that made this branch dead
+    } else if (selcur.currency == "BTC") {
         selcur.rate = 1
     } else if (selcur.currency == "mBTC") {
         selcur.rate = 1000
@@ -377,9 +367,8 @@ function formatTSL(data) {
     return data.toFixed(1)
 }
 
-// Algorithms RainbowMiner refuses to mine because their memory footprint does not fit
-// into this machine's RAM (RandomX needs a ~2GB dataset). The log says this once per
-// session, so the banner is what tells the user on every page why an algorithm is gone.
+// Banner for algorithms skipped because they do not fit into this machine's RAM
+// (the log reports it only once per session).
 async function renderMemoryNotice() {
     const el = document.getElementById("rbm-notice");
     if (!el) return;
@@ -390,8 +379,7 @@ async function renderMemoryNotice() {
         const list = await res.json();
         if (!Array.isArray(list) || !list.length) { el.classList.add("d-none"); return; }
         const total = list[0].TotalGB, minfree = list[0].MinFreeGB;
-        // Dismissal is remembered per situation, not forever: a newly skipped algorithm
-        // or a changed MinFreeMemoryGB re-opens the notice.
+        // a newly skipped algorithm or a changed MinFreeMemoryGB re-opens a dismissed notice
         const sig = list.map(x => x.Algorithm).join(",") + "|" + total + "|" + minfree;
         let seen = "";
         try { seen = localStorage.getItem(KEY) || ""; } catch (e) { }
@@ -407,18 +395,16 @@ async function renderMemoryNotice() {
             try { localStorage.setItem(KEY, sig); } catch (e) { }
         });
         el.classList.remove("d-none");
-    } catch (e) { /* endpoint missing on an older rig: stay quiet */ }
+    } catch (e) { /* endpoint missing on an older version: stay quiet */ }
 }
 document.addEventListener("DOMContentLoaded", renderMemoryNotice);
 
 function formatAlgorithm(data) {
     const cfg = ConfigLoader.getConfig();
-    // A missing second algorithm must stay empty - String(undefined) would render
-    // a literal "undefined" and end up appended as " + undefined".
+    // a missing second algorithm must not render as "undefined"
     if (data === null || data === undefined || data === "") return "";
-    // Pool alternates arrive as "<Algorithm>-@<PoolName>". The pool is shown in its own
-    // column, so display the plain algorithm - and let it hit the AlgorithmMap lookup.
-    // Display only: never write this back onto item.Algorithm, that is the rebench identity.
+    // strip the pool alternate suffix "-@<PoolName>" for display only; never write it
+    // back onto item.Algorithm, that is the rebench identity
     data = String(data).replace(/-@.*$/, '')
     return (cfg && cfg.EnableAlgorithmMapping && cfg.AlgorithmMap[data]) ? cfg.AlgorithmMap[data] : data;
 }
@@ -434,7 +420,6 @@ function rbmShowModal(body, title, asHtml) {
 }
 
 // Serialize a form and POST it to /saveconfig, honoring the config lock.
-// Wire format is identical to jQuery's $(form).serialize().
 async function rbmSubmitConfig(form, cfg, afterSave) {
     if (cfg.IsLocked) {
         rbmShowModal('To be able to save, manually set parameter "APIlockConfig" to "0" in config.txt', 'Warning: config lock is enabled');
@@ -458,8 +443,7 @@ async function rbmSubmitConfig(form, cfg, afterSave) {
     }
 }
 
-// Show/hide elements via inline display (the hidden attribute loses against
-// Bootstrap display classes like .row/.d-flex).
+// inline display, because the hidden attribute loses against Bootstrap's .row/.d-flex
 function rbmToggleDisplay(selector, visible) {
     for (const el of document.querySelectorAll(selector)) {
         el.style.display = visible ? '' : 'none';
@@ -468,8 +452,7 @@ function rbmToggleDisplay(selector, visible) {
 
 // Escape a string for safe insertion into HTML
 function esc(s) {
-    // null/undefined render as empty string (Handlebars semantics - a coin
-    // without a -Params config entry must not show a literal "undefined")
+    // null/undefined render as empty string
     if (s === null || s === undefined) return "";
     return String(s).replace(/[&<>"']/g, function (c) {
         return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -477,8 +460,7 @@ function esc(s) {
 }
 
 function detailFormatter(index, row) {
-  // JSON.stringify escapes quotes but not angle brackets - esc() both,
-  // since rows may contain data reported by remote workers.
+  // esc() keys and values: rows may contain data reported by remote workers
   var html = [];
   for (const [key, value] of Object.entries(row)) {
     if (key.startsWith('_rbm')) continue; // internal table-layer state

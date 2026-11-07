@@ -110,7 +110,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "oggpow"           ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","INTEL","NVIDIA"); ExcludeCompute = @("Volta")} #OggPoW/OGG
     [PSCustomObject]@{MainAlgorithm = "pearlhash"        ;              Params = ""; Fee = 2.00;               Vendor = @("AMD","NVIDIA"); ExcludePoolName = "^Pearlhash"; ExcludeCompute = @("Volta","Pascal","GCN51","GCN50","8.0","10.3"); NoAutoTune = $true} #PearlHash/PRL
     [PSCustomObject]@{MainAlgorithm = "phihash"          ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","NVIDIA"); ExcludeCompute = @("Volta")} #PhilHashV2/PHI (from 01/30/2025)
-    [PSCustomObject]@{MainAlgorithm = "poseidon2b"       ;              Params = ""; Fee = 2.00;               Vendor = @("AMD","NVIDIA"); Algorithm = "noid"; ExcludePoolName = "RPlant"; ExcludeCompute = @("Volta","Pascal","Turing","RDNA1","GCN51","GCN50"); NoAutoTune = $true} #Noid/NOID, needs a CUDA13 capable NVIDIA driver (580+). RPlant excluded: their stratum sends a truncated 8-byte job_id, SRBMiner refuses the job
+    [PSCustomObject]@{MainAlgorithm = "poseidon2b"       ;              Params = ""; Fee = 2.00;               Vendor = @("AMD","NVIDIA"); Algorithm = "noid"; ExcludePoolName = "RPlant"; ExcludeCompute = @("Volta","Pascal","Turing","RDNA1","GCN51","GCN50"); NoAutoTune = $true} #Noid/NOID, needs NVIDIA driver 580+ (CUDA13). RPlant excluded (truncated job_id)
     [PSCustomObject]@{MainAlgorithm = "progpow_epic"     ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","INTEL","NVIDIA"); ExcludeCompute = $null} #ProgPowEPIC/EPIC
     #[PSCustomObject]@{MainAlgorithm = "progpow_quai"     ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","INTEL","NVIDIA"); ExcludeCompute = @("Volta")} #ProgPowQuai/QUAI
     #[PSCustomObject]@{MainAlgorithm = "progpow_sero"     ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","NVIDIA"); ExcludeCompute = $null} #ProgPowSERO/SERO
@@ -118,7 +118,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "progpow_veil"     ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","NVIDIA"); ExcludeCompute = @("Volta")} #ProgPowVEIL/VEIL
     [PSCustomObject]@{MainAlgorithm = "progpow_zano"     ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","INTEL","NVIDIA"); ExcludeCompute = $null} #ProgPowZANO/ZANO
     [PSCustomObject]@{MainAlgorithm = "qhash"            ;              Params = ""; Fee = 1.50;               Vendor = @("AMD","INTEL","NVIDIA"); ExcludeCompute = @("Volta")} #Qhash/QTC
-    [PSCustomObject]@{MainAlgorithm = "quantus"          ;              Params = ""; Fee = 2.00;               Vendor = @("AMD","INTEL","NVIDIA"); ExcludeCompute = @("GCN51","GCN50"); IncludeCompute = @("GCN4"); NoAutoTune = $true} #Quantus, AMD RDNA plus GCN4/Ellesmere (RX4xx/RX5xx, added with v3.6.8), Intel ARC (added with v3.7.0), every NVIDIA incl. Volta (SM70 improved with v3.6.6, RTX 2000-5000 with v3.6.7), LuckyPool stratum (the QUIC pool protocol is not supported)
+    [PSCustomObject]@{MainAlgorithm = "quantus"          ;              Params = ""; Fee = 2.00;               Vendor = @("AMD","INTEL","NVIDIA"); ExcludeCompute = @("GCN51","GCN50"); IncludeCompute = @("GCN4"); NoAutoTune = $true} #Quantus, AMD RDNA/GCN4, Intel ARC, all NVIDIA. Stratum only (no QUIC)
     [PSCustomObject]@{MainAlgorithm = "sccpow"           ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 3; Vendor = @("AMD","INTEL","NVIDIA"); Algorithm = "firopow"; ExcludeCompute = @("Volta")} #SCCPow/SCC
     [PSCustomObject]@{MainAlgorithm = "sha256d_csd"      ;              Params = ""; Fee = 1.00; MinMemGb = 2; Vendor = @("AMD","INTEL","NVIDIA"); ExcludeCompute = @("Volta","GCN51","GCN50")} #SHA256csd/CSD
     #[PSCustomObject]@{MainAlgorithm = "sha256dt"         ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","INTEL","NVIDIA"); ExcludeCompute = @("Volta")} #SHA256dt/NOVO
@@ -269,7 +269,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                     $DeviceParams = " --disable-gpu$(if ($CPUThreads){" --cpu-threads $CPUThreads"})$(if ($CPUAffinity -and ($CPUThreads -le 64)){" --cpu-affinity $CPUAffinity"})$(if (($Device | Select-Object -First 1).Data.Threads -le $CPUThreads) {" --cpu-threads-priority 1"})"
                 }
                 "AMD" {
-                    # --enable-igpu: since v3.7.0 SRBMiner drops integrated GPUs from its device list by default, keep the --gpu-id numbering of the earlier versions
+                    # --enable-igpu keeps the --gpu-id numbering, SRBMiner skips integrated GPUs by default
                     $DeviceParams = " --disable-cpu --disable-gpu-nvidia --disable-gpu-intel --enable-igpu"
                     $Compute = @($ValidCompute_AMD) + @($IncludeCompute) | Where-Object {$_ -and (-not $ExcludeCompute -or $_ -notin $ExcludeCompute)}
                     $Compute_Param = "DeviceCapability"

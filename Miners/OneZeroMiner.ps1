@@ -82,9 +82,8 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                     }
 				    $Pool_Port = if ($Pools.$MainAlgorithm_Norm.Ports -ne $null -and $Pools.$MainAlgorithm_Norm.Ports.GPU) {$Pools.$MainAlgorithm_Norm.Ports.GPU} else {$Pools.$MainAlgorithm_Norm.Port}
 
-                    # OneZeroMiner 1.8.x rewrites the pearlhash login on a kryptex host: it appends ".<worker>" to the wallet, which turns
-                    # RainbowMiner's "wallet/worker" into "wallet/worker.worker" and Kryptex answers [20,"Invalid login"]. A wallet that
-                    # already carries a dot is sent unchanged, so hand over "wallet.worker" (Kryptex accepts it) plus the worker name.
+                    # on kryptex the miner appends ".<worker>" to a pearlhash wallet without a dot ("wallet/worker.worker" is
+                    # rejected), so hand over "wallet.worker" plus the worker name
                     $Pool_User      = $Pools.$MainAlgorithm_Norm.User
                     $Pool_WorkerArg = ""
                     if ($_.MainAlgorithm -eq "pearlhash" -and $Pools.$MainAlgorithm_Norm.Host -match "kryptex" -and $Pool_User -match "^([^/]+)/([^/]+)$") {

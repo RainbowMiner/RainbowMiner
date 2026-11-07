@@ -131,12 +131,9 @@ function Set-OsFlags {
 }
 
 function Update-HelperBinaries {
-    # Syncs the helper binaries staged in .\Includes\dist to their live positions (the
-    # staged paths mirror the install-relative layout). The release archives keep these
-    # files out of positions that are write-locked while RainbowMiner or 7z.exe runs, so
-    # in-place update extractions succeed with exit code 0. Windows only. Must work before
-    # Set-OsFlags/Initialize-Session have run, so it detects the OS itself and only uses
-    # Write-Host for output.
+    # Syncs the helper binaries staged in .\Includes\dist (install-relative layout) to
+    # their live, possibly write-locked positions. Windows only; runs before
+    # Initialize-Session, so it detects the OS itself and only uses Write-Host.
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $false)]
@@ -637,7 +634,7 @@ Function Write-Log {
                 }
                 $grow_out = $null
             }
-            # Mutex object and resolved log path are cached per runspace; the mutex name is derived from the path, so all runspaces share the same OS mutex
+            # cached per runspace; the mutex name derives from the path, so all runspaces share one OS mutex
             if ($Script:LogFileMutex -eq $null) {
                 $Script:LogsPathAbs  = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Logs")
                 $Script:LogFileMutex = [System.Threading.Mutex]::new($false, "RBM$(Get-MD5Hash $Script:LogsPathAbs)")
@@ -986,11 +983,8 @@ function Invoke-Exe {
                 [void]$process.Start()
             }
 
-            # drain both pipes async: a child that fills the never-read stderr pipe
-            # blocks and never closes stdout, deadlocking a sync ReadToEnd() no
-            # matter the timeout. Without -KillOnTimeout the child may run as long
-            # as it needs (legacy semantics); with it, WaitForExit is a hard bound
-            # and the partial output is kept
+            # drain both pipes async: a full stderr pipe would deadlock a sync ReadToEnd().
+            # -KillOnTimeout makes WaitForExit a hard bound and keeps the partial output
             $outTask = $process.StandardOutput.ReadToEndAsync()
             $errTask = $process.StandardError.ReadToEndAsync()
             if ($process.WaitForExit([Math]::Max($WaitForExit,1)*1000)) {
@@ -998,8 +992,7 @@ function Invoke-Exe {
             } elseif ($KillOnTimeout) {
                 try {$process.Kill()} catch {}
                 $process.WaitForExit(1000)>$null
-                # a grandchild inheriting the stdout handle keeps the pipe open
-                # beyond the child's exit - bound the drain, too
+                # a grandchild may keep the pipe open: bound the drain, too
                 $out = if ($outTask.Wait(2000)) {$outTask.Result} else {""}
             } else {
                 $out = $outTask.Result
@@ -1145,19 +1138,11 @@ function Get-CoinName {
 }
 
 function Get-Algorithm {
-    # Hottest shared helper: called thousands of times per round from every miner
-    # module and many pools. Deliberately plain parameters - cmdlet binding costs
-    # more than the body (see Get-PoolAlgorithmKeys in MinersLib.psm1) - plus a
-    # per-runspace result memo for calls without a CoinSymbol. The memo is bound
-    # to the identity of the $Session.GlobalAlgorithms hashtable: any database
-    # reload (algorithms.json change, -Force, Reset-Session) creates a new object
-    # and thereby drops the memo. Implementation sticks to language intrinsics
-    # (hashtable indexer, -eq) - .NET method calls like ContainsKey/TryGetValue
-    # cost an order of magnitude more under pwsh. The memo hashtable uses an
-    # ORDINAL comparer on purpose: unknown algorithms fall through to ToTitleCase,
-    # whose result depends on the input casing. CoinSymbol calls are never
-    # memoized - their result depends on GlobalEthDAGSizes, which refreshes
-    # independently of the algorithm database.
+    # Hot path: plain parameters and language intrinsics only (cmdlet binding and
+    # .NET method calls cost more than the body). The memo is tied to the identity
+    # of $Session.GlobalAlgorithms, so a database reload drops it; its comparer is
+    # ordinal because ToTitleCase depends on casing. CoinSymbol calls depend on the
+    # DAG sizes and are never memoized.
     param(
         [String]$Algorithm = "",
         [String]$CoinSymbol = ""
@@ -1200,10 +1185,8 @@ function Get-Algorithm {
 }
 
 function Get-Coin {
-    # Deliberately plain parameters (see Get-PoolAlgorithmKeys in MinersLib.psm1).
-    # Intentionally NOT memoized: the returned object is the shared GlobalCoinsDB
-    # entry and the Algo rewrite below must keep re-evaluating against the current
-    # DAG sizes on every call.
+    # Plain parameters for speed. Not memoized: the Algo rewrite must follow the
+    # current DAG sizes.
     param(
         [String]$CoinSymbol = "",
         [String]$Algorithm = ""
@@ -1273,9 +1256,8 @@ function Get-EquihashCoinPers {
 }
 
 function Get-AlgorithmMemory {
-    # Minimum system RAM in GB an algorithm needs on a CPU, from Data\algorithmmemory.json.
-    # 0 = unknown/unconstrained. The OS and RainbowMiner overhead is NOT included here,
-    # the caller adds it (config.txt: MinFreeMemoryGB).
+    # Minimum system RAM in GB a CPU algorithm needs (0 = unknown), without the
+    # OS/RainbowMiner overhead (MinFreeMemoryGB, added by the caller)
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $false)]
@@ -1298,11 +1280,8 @@ function Get-AlgorithmMemory {
 }
 
 function Test-AlgorithmMemory {
-    # $true if the algorithm fits into physical RAM, leaving $MinFreeGB for the OS and
-    # RainbowMiner. Fails open: if the requirement or the total RAM is unknown, allow it.
-    # Deliberately checks TOTAL physical memory, not free memory: miners allocate their
-    # dataset once and free memory swings while mining. It also deliberately ignores the
-    # page/swap file - the miner would "succeed" and then thrash.
+    # $true if the algorithm fits into TOTAL physical RAM minus $MinFreeGB (free memory
+    # swings while mining, swap would only thrash). Fails open when a value is unknown.
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $false)]
@@ -1312,9 +1291,7 @@ function Test-AlgorithmMemory {
     )
     $NeedGB = Get-AlgorithmMemory $Algorithm
     if ($NeedGB -le 0) {return $true}
-    # SysInfo is filled by a background job and on Linux by an external script, so it may
-    # be missing, empty or not even numeric. Never let that throw, and never act on an
-    # implausible value: no machine that runs RainbowMiner has less than half a GB
+    # SysInfo may be missing or not numeric: never throw, ignore implausible values
     $TotalGB = 0.0
     try {$TotalGB = [double]$Session.SysInfo.Memory.TotalGB} catch {$TotalGB = 0.0}
     if ($TotalGB -lt 0.5) {return $true}
@@ -1322,14 +1299,9 @@ function Test-AlgorithmMemory {
 }
 
 function Get-DeviceUsableVRAMGB {
-    # Usable VRAM of a GPU device in GB, honoring (in this order) the
-    # GPUReservedVRAMGB config override ("" = auto, 0 = no reservation, else a
-    # flat per-GPU reservation in GB) and the reservation measured at startup by
-    # Update-DeviceVRAMReservation (DeviceLib.psm1). Returns $null when neither
-    # is available - callers then apply their historic static fallback
-    # (Test-VRAM: 0.865 factor / 0.25GB offset; MiningRigRentals: 0.8652).
-    # Lives in Include.psm1 on purpose: the MiningRigRentals pool code calls it
-    # and must not depend on MinersLib.psm1.
+    # Usable VRAM in GB: GPUReservedVRAMGB override first, else the reservation from
+    # Update-DeviceVRAMReservation; $null if neither, callers then use their static
+    # fallback. Lives here because MiningRigRentals must not depend on MinersLib.
     param($Device)
     if (-not $Device.OpenCL -or -not $Device.OpenCL.GlobalMemsize) {return $null}
     $ReservedGB = $null
@@ -1340,10 +1312,8 @@ function Get-DeviceUsableVRAMGB {
 }
 
 function Get-EthDAGSize {
-    # Hot path: called per pool algorithm key inside every DAG miner module's
-    # loops and reentrantly from Get-Algorithm. Deliberately plain parameters
-    # (see Get-PoolAlgorithmKeys in MinersLib.psm1). The parameter ORDER is part
-    # of the contract - some callers pass the coin symbol positionally.
+    # Hot path, plain parameters. The parameter ORDER is part of the contract:
+    # some callers pass the coin symbol positionally.
     param(
         [String]$CoinSymbol = "",
         [String]$Algorithm = "",
@@ -1505,17 +1475,13 @@ function Get-EthDAGSizes {
     $RequestFields = if ($Request -eq $null) {0} else {($Request.PSObject.Properties.Name | Measure-Object).Count}
 
     if ($RequestFields -gt 10) {
-        # the guard has to hash what is actually written: $Session.GlobalEthDAGSizes holds
-        # the GB-normalized values, so it could never match the raw byte values in $Request
-        # and the file was rewritten on every cycle
+        # hash what is written ($Request), not the GB-normalized session values
         $RequestHash = Get-ContentDataMD5hash $Request
         Set-ContentJson -PathToFile ".\Data\ethdagsizes.json" -Data $Request -MD5hash $Session.GlobalEthDAGSizesHash > $null
         $Session.GlobalEthDAGSizesHash = $RequestHash
     } else {
         if ($EnableRemoteUpdate) {
-            # a response that failed ConvertFrom-Json comes back as a string and is cached
-            # re-encoded, so every later read returns a string, too - without this warning
-            # the database silently stays at whatever is on disk
+            # an unparsable response is cached as a string: warn instead of failing silently
             $RequestInfo = if ($Request -eq $null) {"empty response"} else {"$($Request.GetType().Name) with $($RequestFields) field(s)"}
             Write-Log -Level Warn "EthDAGsize API returned no usable data ($($RequestInfo)), keeping the local database. "
         }
@@ -1531,8 +1497,7 @@ function Get-EthDAGSizes {
     }
 
     if ($RequestFields -le 10) {
-        # neither source delivered: keep the sizes that are already in memory instead of
-        # dropping every DAG size for the rest of the session
+        # neither source delivered: keep the sizes already in memory
         if (-not $Session.GlobalEthDAGSizes) {$Session.GlobalEthDAGSizes = [hashtable]@{}}
         if (-not $Session.GlobalAlgorithms2EthDagSizes) {$Session.GlobalAlgorithms2EthDagSizes = [hashtable]@{}}
         if (-not $Session.GlobalEthDAGSizes.Count) {Write-Log -Level Warn "EthDAGsize database is empty. "}
@@ -1784,10 +1749,7 @@ function Set-ContentJson {
         try {
             $Exists = $false
             if ([System.IO.File]::Exists($PathToFile)) {
-                    # Windows only: on Linux .NET derives IsReadOnly from the mode bits of the caller's uid class
-                    # with no exception for root, so root over a user-owned 644 file (a Config folder copied from
-                    # another rig, a Docker bind mount) would be refused although it can write. The Open below is
-                    # the real test there
+                    # Windows only: on Linux IsReadOnly ignores root's rights, the Open below is the real test
                     if ($IsWindows -and (Get-ChildItem $PathToFile -File).IsReadOnly) {
                         if (-not $Quiet) {Write-Log -Level Warn "Unable to write to read-only file $PathToFile"}
                         return $false
@@ -2276,9 +2238,8 @@ function Initialize-DLLs {
         $CSFile = $_.FullName
         $CSBaseName = $_.BaseName
 
-        # the DLL name carries a hash of its source: a .cs that arrives with an update keeps the write time of the release
-        # archive, which can be older than a DLL the rig built from the previous source, so the write times alone cannot
-        # tell a stale DLL from a current one (a stale RBMToolBox makes every typed stat look corrupt)
+        # the DLL name carries a hash of its source: an updated .cs keeps the archive's write time,
+        # which can be older than the DLL built from the previous source
         $CSHash = $null
         try {$CSHash = (Get-FileHash $CSFile -Algorithm SHA256 -ErrorAction Stop).Hash.Substring(0,8).ToLower()} catch {}
         $DLLName = "$($CSBaseName)_$($PSVersionTable.PSVersion)$(if ($CSHash) {"_$($CSHash)"}).dll"
@@ -2364,9 +2325,8 @@ function Get-MinerInstPath {
 #
 # Custom miners (Config\customminers.config.txt)
 #
-# The definitions are user data: a JSON object keyed by miner name. These helpers
-# live in Include.psm1 on purpose - the miner enumeration runspace
-# (Get-MinersContentRS) and the API threads import Include but not ConfigLib.
+# A JSON object keyed by miner name. Lives here because the miner runspace and
+# the API threads import Include but not ConfigLib.
 #
 
 # names that were already reported as invalid (warn once per session)
@@ -2390,10 +2350,8 @@ function ConvertTo-CustomMinerNumber {
 }
 
 function Get-CustomMinerPlatform {
-    # Name of the download block of a definition that applies to this rig:
-    # Windows, Linux (x64) or LinuxArm. An x64 Linux build never runs on an ARM
-    # rig, so ARM rigs use the LinuxArm block only. $Session.IsARM is set by
-    # Start-Core; the CPU info fallback serves the miner runspace and harnesses.
+    # Download block that applies here: Windows, Linux (x64) or LinuxArm.
+    # The CPU info fallback serves runspaces without $Session.IsARM.
     if (-not $IsLinux) {return "Windows"}
     if ($Session.IsARM -or $Global:GlobalCPUInfo.Vendor -eq "ARM" -or $Global:GlobalCPUInfo.Features.ARM) {"LinuxArm"} else {"Linux"}
 }
@@ -2502,8 +2460,7 @@ function Get-CustomMinerDefinitions {
 }
 
 function Get-CustomMinerPoolLogin {
-    # Keep the pool-selected account/wallet login; remove only its known worker suffix.
-    # This supports both `user/worker` and `user.worker` without guessing the login type.
+    # strip only the known worker suffix ("user/worker" or "user.worker")
     [CmdletBinding()]
     param(
         [string]$User = "",

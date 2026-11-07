@@ -33,9 +33,7 @@ pre {
 
 @media (min-width: 768px) {
     .sidebar {
-        /* !important required: above the breakpoint, .offcanvas-md neutralizes
-         * the panel with width:auto/height:auto/background-color:transparent
-         * (all !important) - we must win those back for the fixed sidebar */
+        /* !important: .offcanvas-md resets size and background with !important above the breakpoint */
         width: 180px !important;
         height: auto !important;
         background: var(--bs-body-bg) !important;
@@ -177,9 +175,7 @@ pre {
 }
 
 @media (min-width: 768px) {
-  /* Above the breakpoint, bootstrap resets .offcanvas-md .offcanvas-body to
-   * display:flex / padding:0 / overflow-y:visible (specificity 0,2,0), which
-   * lays the sidebar content out in a row. Win it back at equal specificity. */
+  /* undo bootstrap's .offcanvas-md .offcanvas-body flex reset at equal specificity */
   .offcanvas-body.sidebar-sticky {
     display: block;
     height: calc(100vh - 48px);
@@ -350,11 +346,8 @@ pre {
 
 .tabulator { font-size: .875rem; }
 
-/* Our tables are full-height page content like bootstrap-table's were: the
- * page scrolls, tables never scroll vertically inside themselves. Tabulator
- * computes and pins the holder height at render time and does not grow it
- * when a detail row expands - take that sizing away (!important also beats
- * the inline styles Tabulator sets). Horizontal scrolling stays. */
+/* full-height tables, the page scrolls (see the scroll model in rbm-tables-1.0.js);
+ * !important beats the holder height Tabulator pins inline */
 .tabulator,
 .tabulator .tabulator-tableholder {
     height: auto !important;
@@ -366,7 +359,7 @@ pre {
 .tabulator .rbm-expander,
 .tabulator .rbm-select { cursor: pointer; }
 
-/* detail view rows (bootstrap-table data-detail-view replacement) */
+/* detail view rows */
 .tabulator-row .rbm-detail {
     display: block;
     clear: both;
@@ -396,9 +389,7 @@ pre {
 [data-bs-theme=dark] .tabulator-row.tabulator-selectable:hover {
     background-color: var(--bs-tertiary-bg);
 }
-/* footer total rows (bottomCalc): restore the classic bootstrap-table
- * bg-primary/text-white footer band - readable in light and dark mode.
- * !important is needed against the theme's higher-specificity holder rules. */
+/* footer total rows (bottomCalc) as a bg-primary band; !important beats the theme's holder rules */
 .tabulator .tabulator-footer .tabulator-calcs-holder,
 .tabulator .tabulator-footer .tabulator-calcs-holder .tabulator-row {
     background: var(--bs-primary) !important;

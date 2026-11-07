@@ -2,39 +2,11 @@
 // Drives Tabulator 6.x from the declarative
 // <table class="rbm-table-init" data-url=...><th data-field=...> page markup.
 //
-// ---------------------------------------------------------------------------
-// SCROLL MODEL - please read before changing any of the four settings below.
-//
-// Tabulator is designed around a table that is its own scroll container: a
-// fixed height with internal scrolling. We deliberately do NOT use that model,
-// because our tables are full-height page content (like bootstrap-table's
-// were) and detail rows must be able to expand the page. The document is the
-// scroller, not the table.
-//
-// That decision is implemented by FOUR pieces that only work together:
-//   1. css/dashboard.css: .tabulator + .tabulator-tableholder are forced to
-//      height:auto !important / max-height:none !important (beats the inline
-//      height Tabulator pins at render time), holder overflow-y:hidden.
-//   2. renderVertical: "basic"  - no vertical virtual DOM, the container
-//      height simply follows its content.
-//   3. autoResize: false       - Tabulator must never redraw itself on a
-//      window resize. On phones the URL bar hides/shows while scrolling,
-//      which fires resize continuously; each redraw rewrote the document
-//      height mid-gesture and the browser clamped the scroll position, i.e.
-//      the page jumped to the top while the user was just scrolling.
-//   4. the central resize listener below, which redraws only when the window
-//      WIDTH changed (URL bar wobble changes the height only; a rotation or
-//      a desktop window resize changes the width).
-//
-// Consequence: Tabulator's own scroll preservation (replaceData keeps the
-// holder's scroll) does nothing for us - it knows only about the holder, not
-// about the document. Refresh stability is therefore handled in
-// refreshKeepScroll(): block redraw -> swap data atomically -> restore the
-// horizontal position. Nothing here ever scrolls the page vertically.
-//
-// Re-enabling autoResize, dropping the height:auto CSS, or switching the
-// renderer back to "virtual" will bring the mobile scroll jumps back.
-// ---------------------------------------------------------------------------
+// Scroll model: the document scrolls, not the table (full-height tables whose
+// detail rows expand the page). Four pieces depend on each other: the
+// height:auto CSS in dashboard.css, renderVertical "basic", autoResize false
+// and the width-only resize listener below. Changing any of them brings back
+// the mobile scroll jumps.
 
 "use strict";
 
@@ -43,30 +15,20 @@ const RbmTables = (function () {
     const registry = new Map();   // container element -> Tabulator instance
     const pending = new Map();     // '#id' -> [resolve callbacks] waiting for creation
 
-    // --- user interaction tracking ------------------------------------------
-    // Swapping table data while the user is touching or (momentum-)scrolling
-    // kills the gesture and causes visible jumps. Track the last interaction
-    // and let auto-refresh wait for a quiet moment (data a few seconds stale
-    // beats a page that fights the user's finger).
+    // auto-refresh waits for a quiet moment: swapping data mid-gesture kills
+    // the scroll and makes the page jump
     let lastInteraction = 0;
     const markInteraction = () => { lastInteraction = Date.now(); };
     for (const ev of ["touchstart", "touchmove", "wheel", "pointerdown", "keydown", "scroll"]) {
         window.addEventListener(ev, markInteraction, { passive: true, capture: true });
     }
     function userIsInteracting() {
-        // iOS momentum scrolling keeps firing scroll events until it settles,
-        // so this also covers the glide after the finger lifts
+        // also covers iOS momentum scrolling, which keeps firing scroll events
         return Date.now() - lastInteraction < 1500;
     }
 
-    // --- resize handling ----------------------------------------------------
-    // Tabulator's autoResize redraws the whole table on every window resize.
-    // On phones the URL bar hides/shows while scrolling, which fires resize
-    // constantly - each redraw rewrites the document height mid-gesture and
-    // the browser clamps the scroll position (page jumps to the top). So
-    // autoResize is off (see createTable) and we redraw only when the width
-    // really changed: URL bar wobble changes the height only, an orientation
-    // change or a desktop window resize changes the width.
+    // redraw on width changes only: the mobile URL bar fires height-only
+    // resizes while scrolling, and a redraw then jumps the page to the top
     let lastWidth = window.innerWidth;
     let resizeTimer = null;
     window.addEventListener("resize", () => {
@@ -84,11 +46,8 @@ const RbmTables = (function () {
         return (typeof name === "string" && typeof window[name] === "function") ? window[name] : null;
     }
 
-    // bootstrap-table style value comparison: numeric when both values parse
-    // as finite numbers (the API delivers many numbers as strings, e.g.
-    // Profit), string compare otherwise. Tabulator's auto-detected sorter
-    // treats numeric strings as non-comparable, which made those columns
-    // silently un-sortable.
+    // numeric compare when both values are finite numbers (the API sends many
+    // numbers as strings, which Tabulator's own sorter cannot order)
     function smartCompare(a, b) {
         const na = parseFloat(a), nb = parseFloat(b);
         if (!isNaN(na) && !isNaN(nb) && isFinite(a) && isFinite(b)) {
@@ -111,11 +70,8 @@ const RbmTables = (function () {
             return {
                 formatter: "rowSelection",
                 // header select-all, opt out with data-checkbox-header="false"
-                // (bootstrap-table's checkboxHeader defaulted to true)
                 titleFormatter: d.checkboxHeader === "false" ? undefined : "rowSelection",
-                // "active" = the rows left after the header filters, i.e. select
-                // all visible entries. Without a rowRange Tabulator selects every
-                // loaded row, including the ones the filters just hid.
+                // select only the rows left after the header filters
                 titleFormatterParams: { rowRange: "active" },
                 hozAlign: "center",
                 headerHozAlign: "center",
@@ -171,11 +127,8 @@ const RbmTables = (function () {
         return col;
     }
 
-    // detail-view expander column (bootstrap-table data-detail-view).
-    // Expansion state is stored in the row data (_rbmexpanded) and the detail
-    // div is injected by the table's rowFormatter, so expanding runs through
-    // Tabulator's own render/size pipeline (the supported nested-content
-    // pattern) instead of post-layout DOM surgery that breaks height calc.
+    // detail-view expander column: the state lives in the row data (_rbmexpanded)
+    // and rowFormatter injects the detail div, so Tabulator sizes the row itself
     function expanderColumn() {
         return {
             title: "",
@@ -272,10 +225,9 @@ const RbmTables = (function () {
     /* Table creation                                                       */
     /* ------------------------------------------------------------------ */
 
-    // Programmatic entry point (also used by the markup translator).
-    // el: <table> or <div> element. opts: subset of Tabulator options plus
-    // rbm extras: responseHandler, detailFormatter, rowStyle, serverPagination,
-    // showColumns, showRefresh, showClearFilters, cacheBust, pageList.
+    // el: <table> or <div>. opts: Tabulator options plus responseHandler,
+    // detailFormatter, rowStyle, serverPagination, showColumns, showRefresh,
+    // showClearFilters, cacheBust, pageList.
     function createTable(el, opts) {
         // Tabulator replaces the element's content; swap <table> for a <div>
         let container = el;
@@ -291,9 +243,8 @@ const RbmTables = (function () {
         const columns = opts.columns.slice();
         if (opts.detailFormatter) columns.unshift(expanderColumn());
 
-        // bootstrap-table allowed data-sort-name to reference raw data fields that
-        // have no rendered column (e.g. "Profit" while the column shows "tProfit").
-        // Tabulator warns and ignores those - pre-sort the data instead.
+        // data-sort-name may name a field without a column, which Tabulator
+        // ignores - pre-sort the data instead
         let initialSort = opts.initialSort;
         if (initialSort && !columns.some((c) => c.field === initialSort[0].column)) {
             const field = initialSort[0].column;
@@ -315,28 +266,17 @@ const RbmTables = (function () {
         }
 
         const config = {
-            // fitDataStretch: size columns by content, stretch the remainder -
             // fitColumns starved narrow columns and truncated header titles
             layout: "fitDataStretch",
-            // basic vertical rendering: no virtual viewport, so the container
-            // grows with content (detail rows expand without an inner scrollbar)
+            // see the scroll model in the header
             renderVertical: "basic",
-            // no automatic redraw on resize - handled centrally above, so that
-            // the mobile URL bar showing/hiding cannot trigger a re-render
             autoResize: false,
-            // bootstrap-table had no column resizing - and on touch the resize
-            // handles hijack the swipe gesture ("resize mode" instead of scroll)
+            // on touch the resize handles hijack the swipe gesture
             resizableColumns: false,
-            // bootstrap-table rendered all cells as HTML and stringified arrays
-            // (API fields like Pool/CoinSymbol can be arrays, one per algorithm).
-            // Remote-sourced fields are esc()'d at build time.
+            // cells render as HTML, arrays are stringified; remote fields are esc()'d at build time
             columnDefaults: {
-                // numeric-aware default sorter (see smartCompare)
                 sorter: (a, b) => smartCompare(a, b),
-                // never squeeze a column below a readable width: when the
-                // columns do not fit, the table scrolls horizontally instead
-                // of ellipsizing content (the expander/select columns set
-                // their own smaller minWidth)
+                // scroll horizontally instead of ellipsizing narrow columns
                 minWidth: 80,
                 formatter: (cell) => {
                     const v = cell.getValue();
@@ -352,8 +292,7 @@ const RbmTables = (function () {
         if (initialSort) config.initialSort = initialSort;
 
         if (opts.serverPagination) {
-            // speak bootstrap-table's server dialect: limit/offset in,
-            // { total, rows } out - the PowerShell API stays unchanged
+            // server dialect: limit/offset in, { total, rows } out
             config.pagination = true;
             config.paginationMode = "remote";
             config.paginationSize = opts.paginationSize || 10;
@@ -425,8 +364,7 @@ const RbmTables = (function () {
         const table = new Tabulator(container, config);
         registry.set(container, table);
 
-        // remember the *latest* horizontal position (not a stale snapshot):
-        // restores stay correct even if the user scrolled during the fetch
+        // track the latest horizontal position, also while a fetch is running
         table.on("tableBuilt", () => {
             const holder = container.querySelector(".tabulator-tableholder");
             if (holder) {
@@ -494,31 +432,13 @@ const RbmTables = (function () {
         return el ? registry.get(el) : undefined;
     }
 
-    // Reload data without ever moving the reading position.
-    //
-    // Background: Tabulator is built around the table being its own scroll
-    // container (fixed height, internal scrolling) - replaceData() then
-    // preserves the holder's scroll natively. Our tables are full-height page
-    // content instead (height:auto, so detail rows can expand), which makes
-    // the *document* the scroller - something Tabulator knows nothing about.
-    // During a data swap the rows leave the DOM for a moment; the document
-    // can then become shorter than the viewport and the browser clamps the
-    // scroll position to 0. That clamp - not any correction of ours - is what
-    // threw the page back to the top.
-    //
-    // Two layers prevent it:
-    //  1. blockRedraw()/restoreRedraw(): Tabulator keeps the existing rows in
-    //     the DOM and applies the new data in one atomic redraw, so the empty
-    //     transient never exists in the first place.
-    //  2. A min-height pin as a safety net, released only once the rendered
-    //     content is actually back to (at least) its previous height - never
-    //     on an intermediate render.
-    // The page is never scrolled programmatically in the vertical axis.
+    // Reload data without moving the reading position. A briefly empty table
+    // shrinks the document and the browser clamps the scroll to 0, so the swap
+    // runs inside blockRedraw() and a min-height pin holds until the content is back.
     function refreshKeepScroll(container, table) {
         if (container._rbmRefreshing) return Promise.resolve(); // fetch overlap guard
         container._rbmRefreshing = true;
-        // safety: a request hung on flaky WLAN must not wedge the refresh
-        // loop until the browser's own timeout - release the guard after 20s
+        // a hung request must not wedge the refresh loop
         setTimeout(() => { container._rbmRefreshing = false; }, 20000);
 
         const pinned = container.offsetHeight;
@@ -567,9 +487,8 @@ const RbmTables = (function () {
         });
     }
 
-    // periodic silent refresh - deferred while the tab is hidden, while the
-    // user is interacting, or while a detail row is open (replaces the
-    // bootstrap-table based rbmAutoRefreshTable)
+    // periodic silent refresh, skipped while the tab is hidden, the user is
+    // interacting or a detail row is open
     function autoRefresh(selector, interval) {
         ConfigLoader.whenReady().then(function () {
             let failures = 0;
@@ -586,8 +505,7 @@ const RbmTables = (function () {
                 refreshKeepScroll(el, table).then((ok) => {
                     if (ok === false) {
                         failures++;
-                        // 2x, 4x, ... up to 8x interval - quiet probing while
-                        // the server restarts instead of firing every tick
+                        // back off up to 8x the interval while the server restarts
                         backoffUntil = Date.now() + Math.min(interval * Math.pow(2, failures), interval * 8);
                     } else if (ok === true) {
                         failures = 0;

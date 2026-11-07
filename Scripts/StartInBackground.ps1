@@ -9,12 +9,9 @@ if ($Priority -ge 10) {$Priority = 0}
 
 $PriorityClass = @{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority]
 
-# kill-on-close job object: once the miner is assigned, the kernel terminates
-# it and its children as soon as the process holding the job handle dies -
-# RainbowMiner itself, since the monitor runs on its pooled runspace. This
-# covers X-close, crash and taskkill; the regular teardown terminates the job
-# explicitly (see the tail of the watch loop), which also takes down worker
-# processes the miner forked.
+# kill-on-close job object: the kernel kills the miner and its children when
+# RainbowMiner dies (X-close, crash, taskkill); the regular teardown terminates
+# the job explicitly, which also takes down forked worker processes
 if (-not ("RBMJob" -as [type])) {
     Add-Type -ErrorAction Ignore -TypeDefinition @'
 using System;
@@ -103,12 +100,9 @@ public static class RBMJob {
         return ok;
     }
 
-    // priority class (Win32 *_PRIORITY_CLASS value, 0 = leave alone) and CPU
-    // affinity mask (0 = leave alone) as job limits: the kernel applies them to
-    // every process in the job, forked workers and later respawns included,
-    // without knowing their PIDs. Returns 0 = applied, 1 = affinity rejected
-    // and dropped (priority applied), 2 = nothing applied. A rejected call
-    // leaves the earlier kill-on-close limit untouched
+    // priority class and affinity mask (0 = leave alone) as job limits, so they
+    // reach every process in the job. Returns 0 = applied, 1 = affinity
+    // rejected (priority applied), 2 = nothing applied
     public static int Limit(IntPtr hJob, uint priorityClass, ulong affinity) {
         if (hJob == IntPtr.Zero) return 2;
         if (Apply(hJob, priorityClass, affinity)) return 0;
@@ -116,8 +110,7 @@ public static class RBMJob {
         return 2;
     }
 
-    // kills every process still assigned to the job - the miner's forked
-    // workers included - and releases the handle
+    // kills every process in the job, forked workers included, and releases the handle
     public static bool Terminate(IntPtr hJob) {
         if (hJob == IntPtr.Zero) return false;
         bool ok = TerminateJobObject(hJob, 1);
@@ -128,8 +121,7 @@ public static class RBMJob {
 '@
 }
 
-# CreateNoWindow gives the miner its own hidden console: nothing for Win11 to
-# hand to Windows Terminal, and no direct console writes into the main screen.
+# own hidden console: nothing for Win11 to hand to Windows Terminal
 $psi = New-Object System.Diagnostics.ProcessStartInfo
 $psi.FileName               = $FilePath
 $psi.Arguments              = $ArgumentList
@@ -137,10 +129,8 @@ $psi.UseShellExecute        = $false
 $psi.CreateNoWindow         = $true
 $psi.RedirectStandardOutput = $true
 $psi.RedirectStandardError  = $true
-# stdin must be a private pipe: without this the miner inherits the console
-# input handle and a hotkey-polling miner (e.g. SRBMiner) silently consumes
-# the keystrokes meant for RainbowMiner - and the .NET KeyAvailable peek/read
-# race can then block the core loop forever inside ReadConsoleInput
+# private stdin pipe: a hotkey-polling miner would otherwise eat RainbowMiner's
+# keystrokes and can block the core loop inside ReadConsoleInput
 $psi.RedirectStandardInput  = $true
 if ($WorkingDirectory) {$psi.WorkingDirectory = $WorkingDirectory}
 
@@ -152,24 +142,11 @@ $EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {
 $MiningProcess = New-Object System.Diagnostics.Process
 $MiningProcess.StartInfo = $psi
 
-# stdout/stderr are queued by reader threads and drained to the log by the
-# watch loop, so a filled redirect pipe can never stall the miner.
-# EOF on a stream (the last handle to its pipe was closed) is counted so the
-# tail wait after the exit can be bounded.
-# RBMOutputPump.Start reads both streams on two dedicated background threads
-# with blocking ReadLine calls. BeginOutputReadLine/BeginErrorReadLine must not
-# be used: the redirect pipes are synchronous handles on Windows, so every
-# pending "async" read blocks a thread-pool worker for as long as the miner
-# runs - two per miner. The pool replaces starved workers only slowly, slower
-# still while the CPU is saturated, and retires them again: every HttpClient
-# call in the process then crawled or ran into its timeout (magicminer,
-# 2026-10-05: 3 miners, all 6 workers blocked, ~100 queued work items).
-# The data handlers are plain .NET delegates as well: a Register-ObjectEvent
-# -Action subscription belongs to this pooled runspace, and an event arriving
-# while it is idle makes the engine pulse it from a thread-pool thread - two
-# colliding pulses kill the whole process (InvalidPipelineStateException in
-# PSLocalEventManager.PulseEngine, exit code 0xE0434352). The event
-# subscriptions stay only as a fallback if the helper cannot be compiled.
+# stdout/stderr are read by two dedicated threads and drained to the log by the
+# watch loop. No BeginOutputReadLine: on Windows each pending read blocks a
+# thread-pool worker for the miner's lifetime and starves HttpClient. No
+# Register-ObjectEvent -Action either: colliding engine pulses on this pooled
+# runspace crash the process (0xE0434352); it stays only as compile fallback.
 if (-not ("RBMOutputPump" -as [type])) {
     Add-Type -ErrorAction Ignore -TypeDefinition @'
 using System.Collections.Concurrent;
@@ -209,10 +186,8 @@ public class RBMOutputPump {
         StartReader(stderr, "stderr");
     }
 
-    // after the final drain: lines are dropped from here on, and the streams
-    // are disposed, so a reader still blocked on a pipe that a foreign process
-    // keeps open ends with that process's next write instead of queueing its
-    // output unread until the process dies
+    // after the final drain: drop further lines and dispose the streams, so a
+    // reader blocked on a pipe held by a foreign process ends on its next write
     public void Stop() {
         stopped = true;
         try { if (stdout != null) stdout.Dispose(); } catch { }
@@ -226,10 +201,8 @@ public class RBMOutputPump {
         thread.Start();
     }
 
-    // ReadLine splits at CR, LF and CRLF like the DataReceived events. The
-    // thread ends with the pipe (EOF = every write handle closed). The reader
-    // is disposed here: Process.Dispose leaves a stream open once it was
-    // accessed, so the pipe handle would otherwise wait for the finalizer
+    // ends at EOF; disposed here because Process.Dispose leaves an accessed
+    // stream open until the finalizer runs
     private void Read(StreamReader reader) {
         try {
             string line;
@@ -281,8 +254,7 @@ try {
     return
 }
 
-# hand the PID back to Start-SubProcessInBackground: single-process miners
-# then need no CIM-based discovery at all
+# hand the PID back: single-process miners then need no CIM discovery
 if ($Comm -ne $null) {$Comm["ProcessId"] = $MiningProcess.Id}
 $MinerStartTime = Get-Date
 try {$MinerStartTime = $MiningProcess.StartTime} catch {}
@@ -291,11 +263,8 @@ $JobHandle = [IntPtr]::Zero
 try {if ("RBMJob" -as [type]) {$JobHandle = [RBMJob]::Guard($MiningProcess.Handle)}} catch {}
 if ($JobHandle -eq [IntPtr]::Zero -and $LogPath) {Add-Content -LiteralPath $LogPath -Value "Warning: kill-on-close job guard not active for $($FilePath)" -ErrorAction Ignore}
 
-# priority class and affinity go on the job as well: a per-PID
-# SetPriorityClass never reaches the workers a miner forks (BzMiner v100+),
-# and a child inherits its parent's class only for Idle/BelowNormal and only
-# if the class was set before the fork. Start-SubProcessInBackground skips
-# the per-PID pass when the job enforces both (JobLimits = 0)
+# priority and affinity as job limits: a per-PID call never reaches forked
+# workers. JobLimits = 0 lets the caller skip its per-PID pass
 if ($JobHandle -ne [IntPtr]::Zero) {
     $Win32PriorityClass = @{-2 = 0x40; -1 = 0x4000; 0 = 0x20; 1 = 0x8000; 2 = 0x80; 3 = 0x100}[[int]$Priority]
     $JobLimits = 2
@@ -304,9 +273,8 @@ if ($JobHandle -ne [IntPtr]::Zero) {
     if ($JobLimits -ne 0 -and $LogPath) {Add-Content -LiteralPath $LogPath -Value "Warning: job limits for $($FilePath) $(if ($JobLimits -eq 1) {"applied without the CPU affinity mask $('0x{0:X}' -f $CPUAffinity) - it is not a subset of the available processors"} else {"could not be applied (priority $($Priority), affinity $('0x{0:X}' -f $CPUAffinity)) - falling back to per-process settings"})" -ErrorAction Ignore}
 }
 
-# the cleanup lives in a finally: if the pipeline is stopped from the outside
-# (PowerShell.Stop() on a pooled runspace), the event subscriptions and a
-# still-running miner must not leak into a runspace that gets reused
+# cleanup in finally: a PowerShell.Stop() must not leak subscriptions or a
+# running miner into the reused runspace.
 # a type compiled by an older script version in this process has no Start
 $AsyncReads = -not ($OutputPump -and $OutputPump.GetType().GetMethod("Start"))
 try {
@@ -320,17 +288,9 @@ try {
     # Set-SubProcessPriority in ProcLib re-applies this to all discovered PIDs
     try {$MiningProcess.PriorityClass = [System.Diagnostics.ProcessPriorityClass]$PriorityClass} catch {}
 
-    # must never throw: if the watch loop died, the event subscriptions would keep
-    # queueing miner output unread until Stop-SubProcess removes the job.
-    # Lines are always emitted to the pipeline output stream as well: the *Wrapper
-    # APIs parse them via Read-MinerJobOutput on Windows (EndOfRoundCleanup
-    # null-drains them for all other miners).
-    # At most MaxLines per call: the pump enqueues at native speed, and a miner
-    # that floods faster than this loop dequeues would otherwise keep it from
-    # ever returning to the watch loop (exit detection, kill on controller exit)
-    # PipeToLog = false: the miner writes the log file itself (LogFileArgs in
-    # MinerAPIs.psm1) - the pipe is still drained so the miner never blocks on
-    # a full pipe, but nothing from it reaches the file
+    # must never throw. Lines also go to the output stream for the *Wrapper APIs.
+    # MaxLines per call keeps a flooding miner from starving the watch loop.
+    # PipeToLog = false: the miner writes its log itself, the pipe is only drained
     $PipeLogPath = if ($PipeToLog) {$LogPath} else {""}
 
     $DrainToLog = {
@@ -344,9 +304,8 @@ try {
         }
     }
 
-    # fallback for a miner outside the job guard: kill the process tree below
-    # the main PID. Only processes younger than the miner qualify, so a
-    # recycled PID can never match
+    # fallback without job guard: kill the tree below the main PID, only
+    # processes younger than the miner (recycled PIDs never match)
     $KillDescendants = {
         param($RootId, $NotBefore)
         $Procs = @(Get-CimInstance -ClassName Win32_Process -ErrorAction Ignore | Select-Object ProcessId, ParentProcessId, CreationDate)
@@ -374,12 +333,8 @@ try {
     # bounded wait for a killed miner
     try {if (-not $MiningProcess.HasExited) {[void]$MiningProcess.WaitForExit(5000)}} catch {}
 
-    # Never WaitForExit() without a timeout here: it returns only once the
-    # async readers hit EOF, and a miner that forks worker processes (BzMiner
-    # v100+) leaves them holding the inherited stdout/stderr pipe after the
-    # main PID is killed - the call would never return, and PowerShell.Stop()
-    # on the core loop would freeze with it. Terminate the job object first
-    # (the workers die and the pipe closes), then wait for EOF with a limit
+    # never WaitForExit() without timeout: forked workers keep the pipe open and
+    # it would never return. Terminate the job first, then wait for EOF bounded
     if ($JobHandle -ne [IntPtr]::Zero) {
         try {[RBMJob]::Terminate($JobHandle) > $null} catch {}
         $JobHandle = [IntPtr]::Zero
@@ -397,8 +352,7 @@ try {
         }
     }
     if ($Streams.Eof -lt 2 -and $LogPath) {Add-Content -LiteralPath $LogPath -Value "Warning: output streams of $($FilePath) did not reach EOF within 10s - a foreign process still holds them" -ErrorAction Ignore}
-    # the tail after the exit can exceed one chunk: drain until the queue is
-    # empty, time-bounded in case a foreign holder of the pipe keeps writing
+    # drain the tail until empty, time-bounded against a foreign writer
     $sw.Restart()
     do {
         try {& $DrainToLog $OutputQueue $PipeLogPath} catch {}
@@ -422,8 +376,7 @@ try {
         if (-not $AsyncReads) {$OutputPump.Stop()}
         $OutputPump = $null
     }
-    # the fallback -Action subscriptions are PSEventJobs: without Remove-Job
-    # they pile up in the reused pooled runspace's job table (2 per miner start)
+    # the fallback subscriptions are PSEventJobs and pile up without Remove-Job
     foreach ($Event_Job in @($OutEvent, $ErrEvent)) {
         if ($Event_Job) {
             Unregister-Event -SourceIdentifier $Event_Job.Name -ErrorAction Ignore

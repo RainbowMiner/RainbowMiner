@@ -84,8 +84,7 @@ if (-not $Process) {
     return
 }
 
-# hand the watch over to the bash guard: it stops the miner when RainbowMiner dies without a
-# clean shutdown, and it costs a few hundred KB instead of a pwsh job host per running miner
+# the bash guard stops the miner when RainbowMiner dies, far cheaper than a pwsh job per miner
 $GuardScript = Join-Path (Join-Path $CurrentPwd "IncludesLinux") "bash/minerguard.sh"
 if (Test-Path $GuardScript) {
     $GuardArgs = @($ControllerProcessID, $Process.Id, $Process.Name, "tmux", $ScreenName, $PIDPath)
@@ -94,8 +93,7 @@ if (Test-Path $GuardScript) {
     try {
         & chmod +x $GuardScript 2>$null
         if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
-            # a root miner lives in the ocdaemon's cgroup: start the guard there as well, so that a
-            # service manager stopping RainbowMiner's own cgroup cannot take the guard with it
+            # root miner: start the guard in the ocdaemon's cgroup, so stopping RainbowMiner's cgroup spares it
             Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd $GuardCmd -Quiet > $null
             $OCDcount++
         } else {

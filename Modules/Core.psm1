@@ -6,14 +6,9 @@ using module .\PauseMiners.psm1
 ##
 
 function Read-ConsoleKeyGuarded {
-    # returns a single [ConsoleKeyInfo] for a genuine keypress, or $null.
-    # a human press is a single pending key per poll, while stray tmux
-    # send-keys text arrives as a burst of many buffered characters - any
-    # mixed batch is discarded as injected input. repeated hits of the same
-    # key (panic presses like [x][x][x], keyboard auto-repeat) count as one
-    # press, up to 10 repeats. Ctrl+C stays single-press only, because the
-    # miner cleanup loops emit the exact pattern C-c C-c and a stray
-    # delivery of it must never stop the core
+    # returns a [ConsoleKeyInfo] for a genuine keypress, or $null. A burst of buffered keys is
+    # injected input (stray tmux send-keys) and dropped, repeats of one key count as one press.
+    # Ctrl+C counts as a single press only: the miner cleanup loops send C-c C-c
     # without a console (systemd unit, nohup, docker) KeyAvailable throws on every poll
     if ($Script:ConsoleKeyUnavailable -or [System.Console]::IsInputRedirected) {return}
     try {
@@ -103,12 +98,8 @@ function Start-Core {
             }
         }
 
-        # floor for the .NET thread pool: HttpClient needs free workers for
-        # connect, TLS and response parsing, and the pool adds workers only
-        # slowly - slower still while the CPU is saturated (CPU mining on a
-        # small CPU). A blocking user of pool threads (the miner output readers
-        # did that until 2026-10-05, two per miner) then stalls every web
-        # request in the process until its timeout
+        # floor for the .NET thread pool: HttpClient needs free workers and the pool adds them
+        # only slowly, so any blocking user of pool threads would stall every web request
         try {
             [int]$MinWorkerThreads = 0
             [int]$MinIOThreads = 0
@@ -774,10 +765,8 @@ function Get-PoolPriorityTier {
         [Parameter(Mandatory = $false)]
         [bool]$LockMiners = $false
     )
-    # MUST mirror the first four Sort-Object expressions that build $SortedPools in
-    # Invoke-Core ("Selecting best pool for each algorithm"). A pool alternate is only
-    # offered inside the same tier as the winner, so an exclusive rental, a focussed
-    # wallet, a miner lock or post-block mining can never be undercut by an alternate.
+    # MUST mirror the first four Sort-Object expressions of $SortedPools in Invoke-Core:
+    # a pool alternate is only offered inside the tier of the winner
     $Pool_Tier = 0
     if ($Pool.Exclusive -and -not $Pool.Idle) {$Pool_Tier += 8}
     $Pool_Name = $Pool.Name
@@ -789,13 +778,11 @@ function Get-PoolPriorityTier {
 
 function ConvertTo-APIJson {
     param($InputObject, $Previous)
-    # RBMToolBox emits the JSON as UTF-8 bytes in a single pass - the API sends
-    # byte data unchanged, so no char string is needed. Previous supplies the
-    # buffer pre-size (last round's payload, or a plain length).
+    # RBMToolBox emits the JSON as UTF-8 bytes, the API sends them unchanged.
+    # Previous pre-sizes the buffer (last round's payload or a plain length)
     $Capacity = if ($Previous -is [byte[]]) {$Previous.Length + 4096} elseif ($Previous -is [int] -and $Previous -gt 0) {$Previous + 4096} else {0}
     try {
-        # -NoEnumerate keeps the byte[] intact: a plain return would enumerate it into
-        # an object[] of boxed bytes, ~20x the memory per snapshot
+        # -NoEnumerate keeps the byte[] intact instead of an object[] of boxed bytes
         Write-Output ([RBMToolBox]::ConvertToJsonBytes($InputObject, 10, $Capacity)) -NoEnumerate
     } catch {
         if ($Error.Count){$Error.RemoveAt(0)}
@@ -2213,18 +2200,14 @@ function Invoke-Core {
         Remove-Variable -Name AllPools -Scope Global
     }
 
-    #remember the device selection of config.txt, so that a runtime override can be reverted.
-    #the config normalization above only runs when config.txt changed, so the snapshot has to be
-    #taken there, while the override below has to be applied in every round
+    #snapshot the device selection of config.txt, so that a runtime override can be reverted
     if ($CheckConfig -or $Session.DeviceNameBase -eq $null) {
         $Session.DeviceNameBase        = @($Session.Config.DeviceName)
         $Session.ExcludeDeviceNameBase = @($Session.Config.ExcludeDeviceName)
     }
 
-    #apply the runtime device override, set via the API command /setdevices. it lives in $Session
-    #(not $API, which is recreated on an API server restart) and is never written to config.txt,
-    #so a restart of RainbowMiner always returns to the configured selection. copy it once: the
-    #API thread may replace it while this round runs
+    #runtime device override from /setdevices: kept in $Session (survives API restarts), never
+    #written to config.txt. Copy it once, the API thread may replace it during the round
     $DeviceOverride = $Session.DeviceOverride
     if ($DeviceOverride) {
         $Session.Config.DeviceName        = @($DeviceOverride.DeviceName)
@@ -2354,12 +2337,9 @@ function Invoke-Core {
         Update-DeviceInformation $Global:DeviceCache.DevicesNames -UseAfterburner (-not $Session.Config.DisableMSIAmonitor) -DeviceConfig $Session.Config.Devices
     }
 
-    #publish the configured selection for the /getdevices and /setdevices commands, also after an
-    #API server restart wiped it. the selector is built from the device itself, because
-    #Data\devices.json matches "gpu#nn" against Index, "cpu#nn" against Type_Index and "nvidia#nn"
-    #against Type_Vendor_Index, while the device's own Name is always Type plus Type_Index - the
-    #API threads must not guess this. an empty DeviceName in config.txt selects nothing, and
-    #Get-Device without a name would return every device, so the list stays empty in that case
+    #publish the configured selection for /getdevices and /setdevices. The selector is built from
+    #the device itself (devices.json matches gpu#, cpu# and nvidia# against different index fields).
+    #An empty DeviceName keeps the list empty, Get-Device without a name returns every device
     if ($DeviceSelectionRefresh -or -not $API.DeviceSelection) {
         $API.DeviceSelection = [PSCustomObject]@{
             Available = @(if ($Session.DeviceNameBase.Count) {Get-Device $Session.DeviceNameBase $Session.ExcludeDeviceNameBase | Sort-Object @{Expression={if ($_.Type -eq "CPU") {1} else {0}}},Index | Foreach-Object {
@@ -2507,9 +2487,7 @@ function Invoke-Core {
         $MinerInfoChanged = $true
     }
     if ($MinerInfoChanged) {Set-ContentJson -PathToFile ".\Data\minerinfo.json" -Data $Global:MinerInfo -Compress > $null}
-    # algorithms per module for the stats cleanup (Data\mineralgorithms.json): read
-    # once per start and whenever the module set changed, a changed module file
-    # is read again
+    # algorithms per module for the stats cleanup (Data\mineralgorithms.json), refreshed on module changes
     if ($Session.RoundCounter -eq 0 -or $MinerInfoChanged) {try {Update-MinerAlgorithmsInfo > $null} catch {if ($Error.Count){$Error.RemoveAt(0)}}}
 
     #Check for GPU failure and reboot, if needed
@@ -2982,9 +2960,8 @@ function Invoke-Core {
                                 @{Expression={$ix = $Session.Config.DefaultPoolRegion.IndexOf($_.Region);[int]($ix -ge 0)*(100-$ix)}; Descending=$true},
                                 @{Expression={$_.SSL -eq $Session.Config.Pools."$($_.Name)".SSL}; Descending=$true} | Foreach-Object { [void]$SortedPools.Add($_) }
 
-        # One ordered pass over the ranked list: the first entry for an algorithm is its
-        # winner (same result as the previous per-algorithm lookup), every later entry may
-        # become an alternate for miners that cannot use the winning pool.
+        # one ordered pass: the first entry per algorithm wins, later entries may become
+        # alternates for miners that cannot use the winning pool
         $MaxPoolAlternates = if ($Session.Config.EnablePoolAlternates) {[int]$Session.Config.MaxPoolAlternates} else {0}
 
         $Pools_AltCount        = @{}
@@ -3021,11 +2998,8 @@ function Invoke-Core {
             # offer the same algorithm for several coins, and MRR emits one entry per SSL mode
             if (-not $Pools_AltSeen[$Algorithm_Name].Add("$($Pool.Name)-$($Pool.Algorithm0)-$($Pool.CoinSymbol)")) {continue}
 
-            # built from $Pool.Algorithm, not from the lowercased $Algorithm_Name: the key
-            # travels verbatim into Miner.HashRates/Pools/Ratios and from there into the
-            # stat file name and every algorithm display, which all use the Get-Algorithm
-            # casing. A lowercased base would show the same algorithm twice in the UI and
-            # split its benchmark into a second stat file on case-sensitive filesystems
+            # built from $Pool.Algorithm (Get-Algorithm casing), not the lowercased name: the key
+            # ends up in stat file names and displays, a lowercased base would split the algorithm
             $Pool_AltKey = "$($Pool.Algorithm)-@$($Pool.Name)"
             if ($Pools.PSObject.Properties[$Pool_AltKey]) {$Pool_AltKey = "$($Pool_AltKey)_$($Pool.CoinSymbol)"}
             if ($Pools.PSObject.Properties[$Pool_AltKey]) {continue}
@@ -3096,13 +3070,11 @@ function Invoke-Core {
 
     $Miner_DontCheckForUnprofitableCpuAlgos = -not $Global:DeviceCache.DevicesByTypes.CPU -or $Session.Config.DisableUnprofitableCpuAlgolist -or $Session.Conifg.EnableNeverprofitableAlgos
 
-    # algorithms with a large fixed memory footprint (RandomX family) are skipped on
-    # machines that cannot hold them in physical RAM: the miner would allocate into the
-    # page file, thrash, and then fail to shut down within the kill timeout
+    # skip algorithms with a large fixed memory footprint (RandomX family) that do not fit into
+    # physical RAM: the miner would thrash the page file and miss the kill timeout
     $Miner_MinFreeMemoryGB = [double]$Session.Config.MinFreeMemoryGB
     $Miner_MemSkipped      = [System.Collections.Specialized.OrderedDictionary]::new()
-    # warn in the log only once per session, not once per round. Reset the memory of that
-    # when MinFreeMemoryGB changes, so a config edit is acknowledged again
+    # log once per session, and again after MinFreeMemoryGB changed
     if ($Global:MemorySkippedLogged -eq $null -or $Global:MemorySkippedLast -ne $Miner_MinFreeMemoryGB) {
         $Global:MemorySkippedLogged = @{}
         $Global:MemorySkippedLast   = $Miner_MinFreeMemoryGB
@@ -3146,8 +3118,7 @@ function Invoke-Core {
                 }
             }
             if ($Session.Config.DisableDualMining -and $Miner.HashRates.PSObject.Properties.Name.Count -gt 1) { return }
-            # Compare-Object was a multiset diff against the deduplicated DevicesNames list: a
-            # device name that is unknown, or listed twice by the miner, made it non-empty
+            # a device name that is unknown, or listed twice by the miner, rejects the miner
             $Miner_DeviceUnknown = $false
             $Miner_DeviceNameArr = @($Miner.DeviceName)
             for ($Miner_DeviceIx = 0; $Miner_DeviceIx -lt $Miner_DeviceNameArr.Count; $Miner_DeviceIx++) {
@@ -3294,11 +3265,8 @@ function Invoke-Core {
             foreach ( $Miner in $AllMiners ) {
                 if ($Miner.DeviceModel -ne "CPU" -and $Miner.HashRates.PSObject.Properties.Value -contains $null -and $Miner.DeviceModel -match '-') {
 
-                    # A combo is only synthesized when every member device has its own miner
-                    # with a successful benchmark (all hashrates > 0). A member whose benchmark
-                    # failed is stored with hashrate 0 and would otherwise silently sum into a
-                    # combo that then wins the selection while the failed member sits idle.
-                    # Leaving the hashrates at $null lets the RemoveAll below drop the combo.
+                    # synthesize a combo only if every member has a successful benchmark: a failed
+                    # member (hashrate 0) would sum into a winning combo and sit idle. $null drops it below
 
                     $ComboMembers  = [System.Collections.Generic.List[object]]::new()
                     $ComboComplete = $true
@@ -3360,11 +3328,8 @@ function Invoke-Core {
         #ConvertTo-Json $AllMiners -Depth 10 | Set-Content ".\Cache\allminers.json"
     }
 
-    #Seed missing benchmarks from an already benchmarked device set of the same model. A miner
-    #instance is named after its devices, so a runtime device override (/setdevices) starts every
-    #new set without stats. All devices of one instance are the same model, so hashrate and power
-    #of a sibling set scale per device. The seed is written like a fastlane value: 10 s of duration,
-    #so the first accepted live sample replaces it, and IsFL, so three rejected samples reset it
+    #Seed missing benchmarks of a new device set (e.g. after /setdevices) from a benchmarked set of
+    #the same model, scaled per device. Written like a fastlane value (10 s, IsFL), so live samples replace it
     $Seed_Candidates = @($AllMiners | Where-Object {$_.DeviceModel -ne "CPU" -and $_.DeviceModel -notmatch '-' -and $_.HashRates.PSObject.Properties.Name.Count -eq 1 -and $_.HashRates.PSObject.Properties.Value -contains $null})
     if ($Seed_Candidates.Count -and $Global:StatsCache.Count -and (Test-Path Variable:Global:GlobalCachedDevices)) {
         $Seed_Models = @{}
@@ -3392,7 +3357,7 @@ function Invoke-Core {
             foreach ($Seed_Item in $Seed_Index[$Seed_Group]) {
                 $Seed_Stat = $Global:StatsCache[$Seed_Item.Key]
                 if ($Seed_Stat -eq $null -or -not ([double]$Seed_Stat.Week -gt 0)) {continue}
-                # only a sibling of the current miner version: the version check further down removes an older seed again, which reseeds it every round
+                # current miner version only, an older seed would be removed and reseeded every round
                 if ("$($Seed_Stat.Version)" -ne $Seed_Version) {continue}
                 if (($Seed_Item.Devices -join '-') -eq ($Miner_Devices -join '-')) {continue}
                 if (@($Seed_Item.Devices | Where-Object {$Seed_Models[$_] -ne $Miner.DeviceModel}).Count) {continue}
@@ -3825,8 +3790,7 @@ function Invoke-Core {
                     $NeedsReset = $true
 
                 } elseif ($Global:StatsCache.ContainsKey($Miner_StatKey)) {
-                    # only an existing stat gets the version stamp: without one, the null
-                    # roundtrip below threw "The property 'Duration' cannot be found"
+                    # only an existing stat gets the version stamp (the roundtrip below needs its Duration)
 
                     $Miner_Version = $AllMiners_VersionCheck[$Miner.BaseName].Version
 
@@ -4005,12 +3969,12 @@ function Invoke-Core {
     #Open firewall ports for all miners
     if ($IsWindows) {
         try {
-            # gate on the module manifests: a Get-Command probe for Get-MpPreference/Get-NetFirewallRule autoloads the Defender and NetSecurity modules (~28 MB in-process, plus a persistent WinPS compat process under pwsh)
+            # gate on the module manifests: a Get-Command probe would autoload Defender and NetSecurity in-process
             if (Test-Path "$env:Windir\System32\WindowsPowerShell\v1.0\Modules\Defender\Defender.psd1") {
                 if (Test-Path "$env:Windir\System32\WindowsPowerShell\v1.0\Modules\NetSecurity\NetSecurity.psd1") {
                     if ($Global:MinerFirewalls -eq $null) {
                         $Global:MinerFirewalls = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
-                        # read the rules from the registry: Get-NetFirewallApplicationFilter would need NetSecurity in-process, the elevated helper below imports it in its own process
+                        # read the rules from the registry, so NetSecurity stays out of this process
                         $FwPrograms = Get-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Services\SharedAccess\Parameters\FirewallPolicy\FirewallRules" -ErrorAction Ignore
                         if ($FwPrograms) {
                             $FwPrefix = "$(Get-Location)\Bin\*"
@@ -4029,7 +3993,7 @@ function Invoke-Core {
                             Import-Module '$env:Windir\System32\WindowsPowerShell\v1.0\Modules\NetSecurity\NetSecurity.psd1'$(if ($Session.IsCore) { " -SkipEditionCheck" })
                             @('$($Miner_Paths -join "','")') | ForEach-Object {New-NetFirewallRule -DisplayName 'RainbowMiner' -Program `$_}
                         "
-                        # remember the attempted paths for this session: retrying a declined or failed elevation every round would nag or stall non-admin rigs (a missing rule is retried on the next start)
+                        # remember the attempted paths for this session, a declined elevation must not nag every round
                         [void]$Global:MinerFirewalls.UnionWith($Miner_Paths)
                         Start-Process (@{desktop = "powershell"; core = "pwsh"}.$PSEdition) -ArgumentList "-Command &{ $ScriptBlock }" -Verb runAs -WindowStyle Hidden
                     }
@@ -4107,12 +4071,9 @@ function Invoke-Core {
             return $true
         }
 
-        # Apply Watchdog filters. A timer carries the algorithm key of the round its miner was
-        # started in, and with pool alternates that is "PearlHash" while the pool wins the algorithm
-        # or "PearlHash-@Pearlhash" while another pool does - for the very same process. Compare
-        # with the -@<Pool> suffix stripped and on the pool name, so a failure at one pool does not
-        # exclude the miner at its alternate (and a stale timer cannot hit only every other round),
-        # and count distinct pool/algorithm pairs so two spellings of one failure are not two strikes
+        # Apply Watchdog filters. A timer keeps the algorithm key of its start round, which may carry
+        # a pool-alternate suffix: compare with -@<Pool> stripped and on the pool name, and count
+        # distinct pool/algorithm pairs, so one failure is not two strikes
         $Miner_WatchdogKeys = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
         foreach ($wdTimer in $Global:WatchdogTimers) {
             if ($wdTimer.MinerName -eq $Miner.Name -and $wdTimer.Kicked -lt $WDIntervalTime -and $wdTimer.Kicked -gt $WDResetTime) {
@@ -4185,10 +4146,8 @@ function Invoke-Core {
         if ($Miner.Status -eq [MinerStatus]::Running) {
             $m = $null
             foreach ($m in $Miners) {
-                # the algorithm keys are compared with the pool-alternate suffix stripped: the running
-                # miner keeps the spelling of the round it was started in ("PearlHash"), the candidate
-                # is emitted as "PearlHash-@Kryptex" once another pool wins the algorithm - identical
-                # arguments mean the identical process, and it must keep its hysteresis and first-rounds bonus
+                # compare algorithms with the pool-alternate suffix stripped: identical arguments are
+                # the identical process, which keeps its hysteresis and first-rounds bonus
                 if ($m.Name -eq $Miner.Name -and
                     $m.Path -eq $Miner.Path -and
                     $m.Arguments -eq $Miner.Arguments -and
@@ -4250,21 +4209,9 @@ function Invoke-Core {
     #Update the active miners
     $StopWatchSelect.Restart()
 
-    # $Global:ActiveMiners grows with every pool switch, because the pool is part of the arguments
-    # (idle entries are evicted after RBM_ACTIVEMINERS_MAXHOURS, default 24h, further down) - so the
-    # linear scan this replaces got slower the longer a session ran.
-    # the key is the same conjunction the scan tested: Compare-Object on the algorithms is an
-    # order insensitive, case insensitive comparison, and the hashtable is case insensitive too.
-    # every legacy match lands in the probe's bucket (algorithm and miner names never contain a
-    # pipe, so the join is unambiguous there), but Arguments is free text - the short in-bucket
-    # scan re-checks the scalar fields, so even a crafted "|" in Arguments cannot alias two
-    # different miners onto one key. buckets keep insertion order = list order, so the first
-    # bucket hit is the same miner the full scan found.
-    # the -@<Pool> suffix of a pool alternate key is stripped from the algorithm part: a miner
-    # restricted to one pool is emitted as "PearlHash" while that pool wins the algorithm and as
-    # "PearlHash-@Pearlhash" while another pool does, on the identical command line. Keyed
-    # verbatim, the two spellings were two miner objects, and every change of the winning pool
-    # stopped and restarted the very same process (and reset a running benchmark)
+    # index of $Global:ActiveMiners (case insensitive, sorted algorithms). Arguments is free text, so
+    # the in-bucket scan re-checks the fields. The -@<Pool> suffix is stripped: both spellings of a
+    # pool alternate run the identical command line and must stay one miner object
     $ActiveMiners_Index = @{}
     $m = $null
     foreach ($m in $Global:ActiveMiners) {
@@ -4483,10 +4430,8 @@ function Invoke-Core {
 
         $BestMiners = [System.Collections.ArrayList]::new()
 
-        # two passes over the already sorted list instead of a Compare-Object scan per device group.
-        # the sorted DeviceName join is exactly the set comparison Compare-Object did, so it is
-        # matched case insensitively, while the groups themselves come from Select-Object -Unique,
-        # which compares the arrays as they are - hence the ordinal set for the group keys
+        # two passes over the sorted list: the sorted DeviceName join is the set comparison (case
+        # insensitive), the group keys use an ordinal set like Select-Object -Unique
         $BestMiner_First = @{}
         $BestMiner_Seen  = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
 
@@ -4765,11 +4710,8 @@ function Invoke-Core {
     if ($IsWindows) {
         $Rogue_Procs = @(Get-CIMInstance CIM_Process | Select-Object ProcessId, ParentProcessId, ProcessName, ExecutablePath, CreationDate)
 
-        # only the main PID of a miner is registered: worker processes it forked
-        # (BzMiner v100+) live in the same folder and would be killed as rogue
-        # every round. Shield the whole descendant tree of the registered PIDs;
-        # a child must be younger than its parent, so a stale ParentProcessId of
-        # an orphan pointing at a recycled PID cannot shield it
+        # shield the descendant tree of the registered PIDs, forked workers would be killed as rogue;
+        # a child must be younger than its parent, so an orphan with a recycled parent PID is not shielded
         $Running_Tree = [System.Collections.Generic.HashSet[int]]::new($Running_ProcessIds)
         if ($Running_Tree.Count -gt 0) {
             $Rogue_Created = @{}
@@ -5408,10 +5350,8 @@ function Invoke-Core {
 
     if ($Global:Error.Count) {
         $logDate = Get-Date -Format "yyyy-MM-dd"
-        # one line per distinct message and position per round: a miner API that is not up yet
-        # answers every poll with the same refused connection and flooded the file
-        # a miner that has just been started refuses its API port until it is ready (a DAG build takes
-        # minutes): polls refused during the first five minutes of a miner are expected, not errors
+        # one line per distinct message and position per round; refused polls during the first
+        # five minutes of a miner are expected (API not up yet, e.g. DAG build)
         $errSkipPorts = @{}
         foreach ($errMiner in $Global:ActiveMiners) {
             if ($errMiner.Port -and $errMiner.StartTime -and $errMiner.StartTime -ne [DateTime]::MinValue -and ((Get-Date).ToUniversalTime() - $errMiner.StartTime).TotalSeconds -lt 300) {
@@ -5991,9 +5931,7 @@ function Stop-Core {
                 Invoke-OCDaemon -Cmd $Cmd > $null
             }
 
-            # Invoke-Exe starts tmux directly (no shell): neither a "2>/dev/null" nor
-            # the quotes around the format string would be interpreted - tmux would
-            # see them as arguments and fail. Its stderr is captured and dropped anyway
+            # Invoke-Exe starts tmux without a shell: no redirection, no quotes around the format string
             Invoke-Exe "tmux" -ArgumentList "list-sessions -F #{session_name}" -ExpandLines | Where-Object { $_ -match "($($WorkerName)_[a-z0-9_-]+)" } | ForEach-Object {
                 $SessionName = $Matches[1]       
                 Invoke-Exe "tmux" -ArgumentList "send-keys -t $SessionName C-c" > $null
@@ -6266,9 +6204,7 @@ function Get-ExactDeviceCovers {
         $Covers
     )
 
-    # depth first search over the device groups: every device must be covered exactly once.
-    # picking the lowest uncovered device first keeps the tree at the number of partial covers
-    # instead of the 2^groups the plain subset walk would produce
+    # depth first search over the device groups: every device covered exactly once, lowest uncovered first
 
     if ($NumCovered -eq $DeviceCount) {
         [void]$Covers.Add([Int[]]$Chosen.ToArray())
@@ -6309,10 +6245,8 @@ function Get-BestMinerDeviceCombos {
         # one entry per distinct DeviceName set, in first appearance order
         $Miners_Device_Groups = @($BestMiners | Select-Object DeviceName -Unique)
 
-        # the only combinations that survive are those whose groups tile the device set exactly:
-        # Compare-Object against the sorted unique device names is empty for no other case.
-        # degenerate inputs (a group without devices, or no device names at all) are not
-        # expressible that way, so they keep the original subset walk
+        # only combinations whose groups tile the device set exactly survive; degenerate inputs
+        # (a group without devices, no device names) keep the subset walk
         $Use_Combination_Walk = $BestMiners_DeviceNames.Count -eq 0
         if (-not $Use_Combination_Walk) {
             foreach ($Group in $Miners_Device_Groups) {
@@ -6331,10 +6265,8 @@ function Get-BestMinerDeviceCombos {
 
             if ($Miners_Device_Combos -eq $null) {
 
-                # Get-Combination hands its subsets out in the order Get-Member returns the 2^i
-                # property names, which is lexicographic over their decimal string, not numeric.
-                # that order decides the member order of every combination and with it the order
-                # miners are started in, so derive it the same way instead of assuming it
+                # Get-Combination emits subsets in Get-Member order of the 2^i names (lexicographic, not
+                # numeric), which decides the miner start order: derive it the same way
                 $Combination_Probe = [PSCustomObject]@{}
                 for ($i = 0; $i -lt $Miners_Device_Groups.Count; $i++) {
                     $Combination_Probe | Add-Member @{[Math]::Pow(2, $i) = $i}
@@ -6428,8 +6360,7 @@ function Set-MinerStats {
         if (($Miner.Status -eq [Minerstatus]::Running) -or $Miner.New) { #GetStatus() check?
             $Miner_PowerDraw = $Miner.GetPowerDraw()
 
-            # stall detection: a GPU miner whose cards sit at idle power while it still reports a hashrate is dead
-            # (seen with ccminer forks). Judged by sensor readings only, so rigs without measured power are skipped
+            # stall detection: a GPU miner reporting a hashrate at idle power is dead (measured power readings only)
             $Miner_PowerState = $null
             $Miner_PowerIdle  = $false
             $Miner_Stalled    = $false
@@ -6704,7 +6635,7 @@ function Invoke-ReportMinerStatus {
     }
     if (-not $ReportAPI) {$ReportAPI = @([PSCustomObject]@{match    = "rbminer.net";apiurl   = "https://api.rbminer.net/report.php"})}
 
-    # Create crash alerts - the crash counter may retain more than one hour when CrashTrackingWindowMinutes is larger, so keep the reported data at one hour
+    # Create crash alerts - report one hour, even if CrashTrackingWindowMinutes is longer
     $CrashTimeLimit = (Get-Date).AddHours(-1)
     $Crashes = @($Global:CrashCounter | Where-Object {$_.Timestamp -gt $CrashTimeLimit})
     $CrashData = $null
@@ -7455,7 +7386,7 @@ Function Write-ActivityLog {
 }
 
 function Clear-ExpiredAutoDisabled {
-    # expire auto-disable markers written by Write-ActivityLog - manual disables from the web UI carry no AutoDisabled field and stay until the user re-enables them
+    # expire auto-disable markers; manual disables (no AutoDisabled field) stay
     if (-not ($Session.Config.AutoDisableResetHours -gt 0) -or -not (Test-Path "Stats\Disabled")) {return}
     $ResetTime = (Get-Date).ToUniversalTime().AddHours(-$Session.Config.AutoDisableResetHours)
     foreach ($DisabledFile in @(Get-ChildItem "Stats\Disabled" -File -Filter "*.txt" -ErrorAction Ignore)) {
@@ -7710,7 +7641,7 @@ function Get-PowerPrice {
         try {
             $PPApiRequest = Invoke-RestMethodAsync "$($Session.Config.PowerPriceApi)" -timeout 10 -cycletime $cycletime -tag "ppapi" -Jobkey "powerpriceapi"
 
-            # the asyncloader keeps serving the cached payload when the endpoint goes down, so the catch below never fires on its own - check the job's last successful fetch instead
+            # the asyncloader serves the cached payload on failure: check the job's last successful fetch
             $PPApiJob = Get-UrlAsyncJob -Jobkey "powerpriceapi"
             if ($PPApiJob -and $PPApiJob.LastCacheWrite -and $PPApiJob.LastCacheWrite -lt (Get-Date).ToUniversalTime().AddSeconds(-[Math]::Max(3*$cycletime,900))) {
                 throw "no successful fetch since $($PPApiJob.LastCacheWrite) UTC"

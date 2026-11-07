@@ -1,6 +1,5 @@
 ﻿// RainbowMiner setup form renderer v1.0
-// Renders the setup form from /data/setupschema.json - adding a new config
-// option means adding one JSON entry instead of hand-writing form markup.
+// Renders the setup form from /data/setupschema.json.
 //
 // Item kinds:
 //   field      - one control (input of any type / select / range) in a row
@@ -8,9 +7,7 @@
 //   dynamic    - placeholder div filled at runtime (pools/devices lists)
 //   group      - wrapper div carrying visibility classes (is--client, ...)
 //   raw        - verbatim HTML passthrough
-//
-// All ids and names are preserved, so the page logic (loadconfig population,
-// bindToggle visibility, submit) works unchanged on the rendered form.
+// ids and names must stay stable: loadconfig, bindToggle and submit rely on them.
 
 "use strict";
 
@@ -37,8 +34,7 @@ const RbmSetup = (function () {
             case "range":
                 return '<input type="range" class="form-range"' + idname + attrString(item.attrs) + ">";
             default:
-                // control carries the literal input type (text, number,
-                // password, email, url, ...) as extracted from the markup
+                // control carries the literal input type (text, number, password, ...)
                 return '<input type="' + esc(item.control) + '" class="form-control"' + idname + attrString(item.attrs) + ">";
         }
     }

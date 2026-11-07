@@ -127,9 +127,7 @@ try {
 
             $UpdateProcess = Start-Process @Params
             $UpdateProcess.WaitForExit() > $null
-            # 7z exit code 1 = warnings only, exit code 2 can be caused by files that are
-            # write-locked by a running instance (legacy archives) - the extraction result
-            # is verified below, everything above 2 is a fatal extraction error
+            # 7z exit 1 = warnings, 2 may be write-locked files (result verified below), above 2 is fatal
             if ($UpdateProcess.ExitCode -gt 2) {
                 Write-Host "WARNING: extraction failed with exit code $($UpdateProcess.ExitCode)$(if ($Attempt -lt 2) {", retrying"})" -ForegroundColor Yellow
                 continue
@@ -196,9 +194,8 @@ try {
         if ($PreserveMiners) {$PreserveMiners | Foreach-Object {if (Test-Path "MinersOldVersions\$_") {Copy-Item "MinersOldVersions\$_" "Miners\$_" -Force}}}
 
         if ($IsWindows) {
-            # Handle write locks: the helper binaries are staged in .\Includes\dist by the
-            # archive and synced to their live positions here - the extracting 7z.exe has
-            # exited at this point, so even 7z.exe/7z.dll can be overwritten
+            # sync the helper binaries staged in .\Includes\dist: the extracting 7z.exe has exited,
+            # so even 7z.exe/7z.dll can be overwritten now
             try {
                 Update-HelperBinaries
             } catch {

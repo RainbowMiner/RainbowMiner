@@ -2,26 +2,11 @@
 cd /d %~dp0
 setlocal
 
-rem FixConsole.bat - set the default terminal application of the current Windows user
+rem FixConsole.bat - make the classic console host the default terminal of the current user
+rem (Windows Terminal ignores move/close/minimize and -windowstyle). StartWD*.bat relaunch
+rem themselves in conhost and do not need it. Per-user, no administrator rights needed.
 rem
-rem Windows 11 hosts every console window in Windows Terminal by default. Windows
-rem Terminal has known problems with classic console applications: the RainbowMiner
-rem window may ignore move, close or minimize and the -windowstyle of the start
-rem scripts is not applied reliably. This script switches the default back to the
-rem classic Windows Console Host (conhost).
-rem
-rem Only needed, if RainbowMiner is started with Start.bat, StartHidden.bat or
-rem StartInWin.bat. The watchdog start scripts StartWD.bat, StartWDHidden.bat and
-rem StartWDInWin.bat detect Windows 11 and relaunch themselves under the classic
-rem console host, on their own.
-rem
-rem Only the current user is affected, no administrator rights are needed.
-rem
-rem usage: FixConsole.bat [/f] [/r]
-rem
-rem   /f, /force     force, do not ask for confirmation
-rem   /r, /restore   undo, set the default terminal back to "Let Windows decide"
-rem   /h, /help, /?  show help
+rem usage: FixConsole.bat [/f] [/r]   /f = no confirmation, /r = back to "Let Windows decide"
 
 set "RBMRC=0"
 set "RBMKEY=HKCU\Console\%%%%Startup"

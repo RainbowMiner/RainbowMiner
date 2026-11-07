@@ -83,9 +83,9 @@ param(
     [Parameter(Mandatory = $false)]
     [Double]$DiskMinGB = 5.0, #enter a minimum hard drive disk space (in GB) for triggering a notification
     [Parameter(Mandatory = $false)]
-    [Double]$MinFreeMemoryGB = 1.5, #RAM in GB to keep free for the system and RainbowMiner. Algorithms with a known large memory footprint (RandomX family) are skipped on machines that cannot hold them in physical RAM (0=disable the check)
+    [Double]$MinFreeMemoryGB = 1.5, #RAM in GB to keep free, algorithms with a large memory footprint (RandomX family) are skipped if they do not fit (0=disable)
     [Parameter(Mandatory = $false)]
-    [String]$GPUReservedVRAMGB = "", #VRAM in GB reserved per GPU, subtracted before miners are matched against their memory requirements. Leave empty to auto-detect via nvidia-smi at start, 0 = no reservation, any other value = flat per-GPU reservation
+    [String]$GPUReservedVRAMGB = "", #VRAM in GB reserved per GPU before miners are matched against their memory needs: empty = auto-detect via nvidia-smi, 0 = none
     [Parameter(Mandatory = $false)]
     [Int]$MinerStatusMaxCrashesPerHour = 5, #enter the maximum crashes per hour allowed, before triggering a notification
     [Parameter(Mandatory = $false)]
@@ -364,7 +364,7 @@ param(
     [Parameter(Mandatory = $false)]
     [Int]$AutoDisableResetHours = 24, #if EnableAutoDisableMiners: re-enable an auto-disabled miner/algorithm after this many hours (0=never re-enable)
     [Parameter(Mandatory = $false)]
-    [Switch]$EnableStallDetection = $true, #if set to 1, a GPU miner that reports a hashrate while its GPUs sit at idle power for three rounds is stopped and counted as crashed (needs measured GPU power readings)
+    [Switch]$EnableStallDetection = $true, #if set to 1, a GPU miner reporting a hashrate at idle power for three rounds is stopped as crashed (needs measured power readings)
     [Parameter(Mandatory = $false)]
     [String]$ServerName = "", # if RunMode=client: this is the name of the main RainbowMiner server
     [Parameter(Mandatory = $false)]
@@ -434,12 +434,9 @@ $EnableMinerStatus = $true
 
 if ($MyInvocation.MyCommand.Path) {Set-Location (Split-Path $MyInvocation.MyCommand.Path)}
 
-# glibc keeps freed native memory in per-thread malloc arenas (up to eight per core), and with
-# RainbowMiner's runspaces that was about 500 MB of resident memory nothing used (2026-09-28:
-# 1481 -> 936 MB working set at one hour with MALLOC_ARENA_MAX=2). The arena limit itself must
-# come from the environment (glibc fixes it with the first extra arena, before this script runs);
-# from inside the process, malloc_trim hands the unused arena space back to the kernel, so the
-# core calls it once per round. musl and macOS have no glibc and are skipped
+# glibc keeps freed memory in per-thread malloc arenas. MALLOC_ARENA_MAX must come from the
+# environment (start scripts), in-process the core calls malloc_trim once per round.
+# musl and macOS have no glibc and are skipped
 if ([System.Environment]::OSVersion.Platform -eq "Unix") {
     try {
         Add-Type -Namespace RBM -Name Glibc -MemberDefinition '[DllImport("libc.so.6", EntryPoint = "mallopt")] public static extern int mallopt(int param, int value); [DllImport("libc.so.6", EntryPoint = "malloc_trim")] public static extern int malloc_trim(ulong pad);' -ErrorAction Stop
@@ -468,8 +465,8 @@ $Session.OpenCLPlatformSorting = @()
 #Add-Type -Path .\DotNet\OpenCL\*.cs
 #Add-Type -Path .\DotNet\Tools\RBMTools.cs
 
-# NetSecurity, Defender and NetTCPIP are not imported in-process (~37 MB): Defender exclusions are read via CIM,
-# firewall rules via the registry, and the elevated helpers that change them import the module in their own process
+# NetSecurity, Defender and NetTCPIP are not imported in-process: exclusions are read via CIM, firewall
+# rules via the registry, the elevated helpers import the module in their own process
 
 Import-Module .\Modules\API.psm1
 Import-Module .\Modules\Asyncloader.psm1
@@ -558,7 +555,7 @@ $MyCommandParameters | Foreach-Object {
 if ($IsWindows -and $Session.IsAdmin) {
     if (Test-Path "$env:Windir\System32\WindowsPowerShell\v1.0\Modules\Defender\Defender.psd1") {
         try {
-            # read the exclusion list via CIM: Get-MpPreference would load the Defender module in-process (and spawn a persistent WinPS compat process under pwsh)
+            # read the exclusion list via CIM: Get-MpPreference would load the Defender module in-process
             $MpPreference = Get-CimInstance -Namespace "root\Microsoft\Windows\Defender" -ClassName "MSFT_MpPreference" -ErrorAction Stop
             if ($MpPreference -and $MpPreference.ExclusionPath -notcontains (Convert-Path .)) {
                 Start-Process (@{desktop = "powershell"; core = "pwsh"}.$PSEdition) "-Command Import-Module '$env:Windir\System32\WindowsPowerShell\v1.0\Modules\Defender\Defender.psd1'$(if ($Session.IsCore) {" -SkipEditionCheck"}); Add-MpPreference -ExclusionPath '$(Convert-Path .)'" -Verb runAs -WindowStyle Hidden

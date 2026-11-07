@@ -958,12 +958,8 @@ public static class RBMToolBox
 #endif
 
     // 12. JSON serialization
-    // Compact single-pass writer over PSObject property views - no intermediate
-    // token tree, invariant culture, pure-ASCII output (non-ASCII is \u-escaped).
-    // The core emits bytes directly, so the byte variant never materializes a
-    // char string; the string variant is an ASCII decode of the same buffer.
-    // Output is parseable by ConvertFrom-Json and JSON.parse; NaN/Infinity are
-    // emitted bare like ConvertTo-Json does.
+    // Single-pass byte writer over PSObject property views: invariant culture,
+    // pure-ASCII output, NaN/Infinity bare like ConvertTo-Json.
     // capacity pre-sizes the buffer (pass the previous round's output length).
     public static string ConvertToJson(object obj, int depth = 10, int capacity = 0)
     {
@@ -989,9 +985,7 @@ public static class RBMToolBox
 
     private sealed class JsonByteWriter
     {
-        // one cached working buffer per thread: the serializers run back to back on the
-        // main loop, so a single slot turns the per-call multi-MB buffer into one stable
-        // long-lived allocation instead of fresh LOH garbage every round
+        // one cached buffer per thread instead of fresh LOH garbage every round
         [ThreadStatic] private static byte[] CachedBuf;
         private const int MaxCachedLength = 1 << 24; // don't keep a freak payload's buffer alive
 
@@ -1014,8 +1008,7 @@ public static class RBMToolBox
             Pos = 0;
         }
 
-        // hand the working buffer back for reuse; a skipped call (exception path
-        // without finally) only costs the reuse, never correctness
+        // hand the buffer back for reuse; a skipped call only costs the reuse
         public void Release()
         {
             byte[] buf = Buf;
@@ -1217,9 +1210,8 @@ public static class RBMToolBox
 
 }
 
-// Typed containers for the cached stats in $Global:StatsCache (_HashRate and _Profit): a PSCustomObject with ~27 note
-// properties costs ~4 KB per stat, these ~400 bytes. The types live once per process, so all runspaces share them.
-// Property order is the JSON order. Keep the property set fixed: Add-Member on an instance brings the per-object member table back.
+// Typed containers for the cached stats in $Global:StatsCache, a fraction of a PSCustomObject's size.
+// Property order is the JSON order. Keep the set fixed: Add-Member brings the per-object member table back.
 public class RBMMinerStat
 {
     public double Live { get; set; }
@@ -1320,9 +1312,8 @@ public static class RBMStatConverter
         return map;
     }
 
-    // copies the known properties of a ConvertFrom-Json object with PowerShell's own conversion rules (like a [Double]/[DateTime]/[TimeSpan] cast).
-    // Unknown properties are skipped, missing, null or unconvertible ones keep the default: a single bad field must never cost the whole stat,
-    // the PSCustomObject stats before tolerated them as well. Old version carry-overs wrote Duration as "@{Ticks=...}", that is repaired from Ticks.
+    // copies the known properties of a ConvertFrom-Json object with PowerShell's conversion rules. Bad or missing
+    // fields keep the default, so one bad field never costs the whole stat. A legacy "@{Ticks=...}" Duration is repaired.
     public static void Fill(object target, object source, Dictionary<string, PropertyInfo> props)
     {
         if (source == null) return;

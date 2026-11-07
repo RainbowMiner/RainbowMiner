@@ -56,8 +56,7 @@ $Pool_Request.PSObject.Properties.Value | ForEach-Object {
     $Pool_Symbol = ''
     $Pool_Port = [int]$_.port
     if ($Pool_Port -le 0) {
-        # the pool API stopped delivering stratum ports (2026-09): a pool entry
-        # without a port is unusable for miners and MiningRigRentals rejects it
+        # an entry without a stratum port is unusable for miners and MiningRigRentals
         [void]$Pool_NoPort.Add($Pool_Algorithm)
         return
     }

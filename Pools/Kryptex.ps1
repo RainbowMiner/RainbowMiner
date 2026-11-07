@@ -38,8 +38,7 @@ if (-not ($Pool_Request | Measure-Object).Count) {
 $Pool_Regions = @("eu","ru","sg","us")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
-# Kryptex lists Quantus Network as QTC, colliding with Qubitcoin (Qhash) in CoinsDB, and
-# calls its algorithm "Poseidon2"; translate by the unique rpc id to our QUAN/Quantus
+# Kryptex lists Quantus as QTC/Poseidon2 (QTC is Qubitcoin here): translate by rpc id to QUAN/Quantus
 [hashtable]$Pool_Xlat = @{
     "qtc" = [PSCustomObject]@{symbol = "QUAN"; algo = "Quantus"}
 }
@@ -70,15 +69,13 @@ $Pool_Request | ForEach-Object {
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
-    # the credential decides login and payout currency, in InfoOnly mode as well, so that
-    # a listing made with credentials (the MRR pool data) carries a usable User
+    # the credential decides login and payout currency, in InfoOnly mode as well (MRR pool data)
     $Pool_ExCurrency = $null
     $Pool_Wallet     = ""
 
     if ($Wallets.$Pool_Currency) {
         if ($Pool_DirectMining) {
-            # a pattern check instead of a [mailaddress] cast: the cast's exception is caught, but it
-            # stays in $Error and is written to errors_*.main.txt in every round
+            # pattern check instead of a [mailaddress] cast, whose caught exception still lands in $Error
             $Pool_ExCurrency = if ("$($Wallets.$Pool_Currency)" -match '^\s*[^@\s]+@[^@\s]+\s*$') {"BTC"} else {$Pool_Currency}
         } else {
             $Pool_ExCurrency = $Pool_Currency

@@ -91,9 +91,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         if ($networkHashrate -and $blockTime -and $reward) {
             $amountLive   = 86400 / $blockTime * $reward / $networkHashrate / $coinUnits
 
-            # price in satoshi per coin, like Get-PoolDataFromRequest delivers it: the Set-Stat call
-            # below divides the reward by 1e8 for both code paths (a plain BTC price here made every
-            # coin with network stats, e.g. PRL and QTC, 1e8 too cheap and never selected)
+            # price in satoshi per coin like Get-PoolDataFromRequest, Set-Stat below divides by 1e8 for both paths
             $lastSatPrice = if ($Global:Rates.$Pool_Currency) {
                 1 / $Global:Rates.$Pool_Currency * 1e8
             } elseif ($Pool_Request.markets.btc -and $Pool_Request.markets.price) {

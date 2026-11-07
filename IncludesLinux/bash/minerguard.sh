@@ -1,17 +1,8 @@
 #!/bin/sh
-#
-# minerguard.sh - stops a miner when RainbowMiner itself has gone away (POSIX sh)
-#
-# RainbowMiner starts every Linux miner inside a tmux or screen session, so the
-# miner is not its child and would keep running after a crash of the core. This
-# guard waits until either the miner or the controller exits; when the controller
-# is gone first, the miner is stopped the same way RainbowMiner stops it: Ctrl-C
-# into the session, then start-stop-daemon, then kill -9, then the session.
-#
+# minerguard.sh - stops a miner when RainbowMiner has gone away (POSIX sh): miners run in
+# tmux/screen, not as children, and would outlive a crashed core.
 # usage: minerguard.sh <controller_pid> <miner_pid> <miner_name> <tmux|screen> <session> <pidfile> [<ocdcmd_dir> <ocd_prefix>]
-#
-# With <ocdcmd_dir> the kill commands are handed to the ocdaemon (miners running as
-# root), otherwise they run directly.
+# with <ocdcmd_dir> the kill commands go through the ocdaemon (root miners)
 
 ctl="$1"; pid="$2"; name="$3"; tool="$4"; sess="$5"; pidfile="$6"; ocddir="$7"; ocdpre="$8"
 

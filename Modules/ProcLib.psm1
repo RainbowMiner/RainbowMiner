@@ -1,7 +1,5 @@
-﻿# Persistent runspace pool for the Windows background miner monitors: reusing
-# pooled runspaces caps the process-wide TypeTable count - one-runspace-per-start
-# jobs leaked dead TypeTables via the engine's binder call-site caches - and
-# needs no ThreadJob module (Windows PowerShell 5.1 ships without it)
+﻿# Persistent runspace pool for the Windows miner monitors: caps the TypeTable count that
+# one runspace per start would leak, and needs no ThreadJob module (missing on PS 5.1)
 $Script:MinerRSPool   = $null
 $Script:MinerRSScript = $null
 $Script:MinerRSCount  = 0
@@ -19,15 +17,9 @@ function Initialize-MinerRunspacePool {
         $MaxRS = 0
         if ("$($env:RBM_MINERPOOL_MAXTHREADS)" -match "^\d+$") {$MaxRS = [int]$env:RBM_MINERPOOL_MAXTHREADS}
         if ($MaxRS -lt 1) {$MaxRS = [Math]::Max(8, ($Global:GlobalCachedDevices | Measure-Object).Count + 2)}
-        # the (int,int) overload uses a default host on purpose: passing $Host
-        # would mirror every Write-Host of the process into the pipelines'
-        # information buffers (see Clear-APIServerStreams in API.psm1)
+        # default host on purpose: $Host would mirror every Write-Host into the pipelines' buffers
         $Script:MinerRSPool = [RunspaceFactory]::CreateRunspacePool(1, $MaxRS)
-        # idle runspaces above the minimum are closed after 15 minutes by
-        # default; the replacement opened by the next miner start leaves the
-        # old TypeTable behind, pinned by the binder call-site rule caches
-        # (memdump I, 2026-09-08). Keep them: an idle default runspace costs
-        # about 1 MB, the timer accepts at most 49 days
+        # keep idle runspaces: each replacement would leave a pinned TypeTable behind (timer max 49 days)
         $Script:MinerRSPool.CleanupInterval = [TimeSpan]::FromDays(30)
         $Script:MinerRSPool.Open()
         Write-Log "Created miner runspace pool with max $($MaxRS) runspaces"
@@ -1236,10 +1228,7 @@ function Stop-SubProcess {
                     }
                 }
             } elseif ($Job.ScreenCmd -eq "tmux") {
-                # no shell here: the argument string goes straight to tmux, so a
-                # ">/dev/null 2>&1" would arrive as extra arguments and tmux would bail
-                # out with "too many arguments" instead of killing the session. Invoke-Exe
-                # captures and drops stderr, which keeps a gone session quiet
+                # no shell: a redirection would reach tmux as extra arguments; Invoke-Exe drops stderr itself
                 $ArgumentList = "kill-session -t $($Job.ScreenName)"
                 if ($Session.Config.EnableMinersAsRoot -and (Test-OCDaemon)) {
                     $Cmd = "tmux $ArgumentList >/dev/null 2>&1"
@@ -1263,11 +1252,8 @@ function Stop-SubProcess {
     }
 }
 
-# In-process log tail for the Linux wrapper miners: their stdout lands in the
-# log file through tee (screen/tmux/console start paths) and the console parsers
-# in MinerAPIs read it from here, inside the core loop. It replaces the former
-# Scripts\Wrapper.ps1 Start-Job, which cost two pwsh child processes (the job
-# plus its Get-Content -Wait job) for every running wrapper miner.
+# In-process log tail for the Linux wrapper miners: tee writes their stdout to the log,
+# the MinerAPIs console parsers read it from here without extra pwsh processes
 class RBMLogTail {
     [String]$Path
     [Bool]$Closed = $false

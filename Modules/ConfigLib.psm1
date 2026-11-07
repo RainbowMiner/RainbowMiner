@@ -729,10 +729,8 @@ function Set-UserpoolsConfigDefault {
 #
 # Userpools helpers (Config\userpools.config.txt)
 #
-# The file is a JSON array; several entries may share one Name (one entry per coin,
-# algorithm and region). The User Pools page addresses entries by their array index
-# plus a per-entry hash, the flight sheet import of the Custom Miners page matches
-# by Name and Currency. Placeholders like $Wallet stay literal in the raw entries.
+# A JSON array, several entries may share one Name. Entries are addressed by index
+# plus a per-entry hash; placeholders like $Wallet stay literal.
 #
 
 function Test-ConfigManagedByServer {
@@ -848,8 +846,8 @@ function Set-UserpoolEntry {
         [Parameter(Mandatory = $False)]
         [Switch]$MatchExisting
     )
-    # add, replace or remove one entry of userpools.config.txt and return the index of the written entry (-1 after a delete).
-    # update/delete verify the Tag (hash of the entry the caller has seen); -MatchExisting replaces the first entry with the same Name and Currency, else appends.
+    # add, replace or remove one entry, returns its index (-1 after a delete). Update/delete verify
+    # the Tag; -MatchExisting replaces the first entry with the same Name and Currency
     if (-not (Test-Config "Userpools")) {throw "userpools.config.txt is not configured"}
     $Entries = [System.Collections.Generic.List[object]]::new()
     foreach ($e in @(Get-UserpoolEntries)) {[void]$Entries.Add($e)}
@@ -931,7 +929,7 @@ function Add-ConfigPoolName {
         [Parameter(Mandatory = $True)]
         [String]$Name
     )
-    # append a pool name to PoolName in config.txt; returns $true when the file was changed, $false when PoolName is empty (all pools allowed) or already contains the name
+    # append a pool name to PoolName in config.txt; $true if the file changed
     if (-not (Test-Config "Config")) {throw "config.txt is not configured"}
     $ConfigActual = Get-ConfigContent "Config"
     if (-not (Test-Config "Config" -Health) -or $ConfigActual -eq $null -or $ConfigActual -is [string]) {throw "config.txt could not be read"}
@@ -1090,9 +1088,7 @@ function Get-ConfigContent {
 }
 
 function Repair-ConfigNullFields {
-    # restore the "$Var" placeholder for null-valued config fields: nulls (from
-    # old files or server-pushed configs) bypass the type conversion on load
-    # and leak into $Session.Config
+    # restore the "$Var" placeholder for null fields, which would bypass the type conversion
     if ($PathToFile = Get-ConfigPath -ConfigName "Config") {
         if ($Preset = Get-ConfigContent "Config") {
             $Changed = $false
@@ -1188,7 +1184,7 @@ function Get-ServerConfig {
                 $Data = $Result.Content.$_.data
                 if ($_ -eq "config") {
                     $Preset = Get-ConfigContent "config"
-                    # ServerSSL and ServerCertHash describe this client's own way to the server: never taken from the server, an exclude list written before these keys existed does not know them
+                    # ServerSSL/ServerCertHash are this client's own way to the server: never taken from it
                     $Data.PSObject.Properties.Name | Where-Object {$ExcludeConfigVars -inotcontains $_ -and $_ -notin @("ServerSSL","ServerCertHash")} | Foreach-Object {$Preset | Add-Member $_ $Data.$_ -Force}
 
                     # add missing config values in case of server/client version mismatch

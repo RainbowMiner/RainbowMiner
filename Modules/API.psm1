@@ -75,7 +75,7 @@
     $Global:APIRunspacePool = [RunspaceFactory]::CreateRunspacePool(1, $MaxThreads, $initialSessionState, $Host)
     $Global:APIRunspacePool.Open()
 
-    # pass the text: AddScript parses it per thread anyway, a [ScriptBlock]::Create copy would stay alive in the script cache (~2.7 MB)
+    # pass the text: AddScript parses it per thread anyway, a [ScriptBlock]::Create copy would stay alive in the script cache
     $APIScript = Get-Content ".\Scripts\API.ps1" -Raw
 
     for($ThreadID = 0; $ThreadID -lt $MaxThreads; $ThreadID++) {

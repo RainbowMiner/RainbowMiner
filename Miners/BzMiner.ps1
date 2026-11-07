@@ -29,20 +29,9 @@ if ($IsLinux) {
 
 $ExcludePoolName = "prohashing|miningrigrentals"
 
-# v100.10 is a complete rewrite: dual mining and most of the v24 algorithms are gone,
-# the remaining ones are exactly what "bzminer --list-algos" reports for this build.
-# v100.13 brought the CryptoNight family back (cn/gpu for Conceal and Ryo plus the
-# classic variants); same names as in Xmrig, so the stats keys line up.
-# v100.16 adds cuda/opencl backends to randomx (and its rx/0, xmr, zeph, sal
-# aliases), but upstream calls that experimental and the shipped readme still says
-# RandomX cannot use a GPU - it stays CPU-only here until it has been benchmarked.
-# v100.20 adds quantus (Poseidon2 over Goldilocks, on LuckyPool and Kryptex stratum),
-# nexa on CPU and NVIDIA, and c29 - Tari's original Cuckaroo29. Careful with that one:
-# "c29" resolves to Cuckaroom29 in algorithms.json, so it mines as "cuckaroo29" here
-# and hands the miner its own name through Algorithm.
-# v100.23 raises the pearl dev fee to 2%, and AMD cards no longer need the HIP
-# drivers. Its auto-update option defaults to off, so the binary stays the one
-# RainbowMiner downloaded.
+# the list matches "bzminer --list-algos". RandomX stays CPU-only (GPU backends are experimental upstream).
+# "c29" resolves to Cuckaroom29 in algorithms.json, so Tari's c29 mines as "cuckaroo29" and passes
+# its own name through Algorithm
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cn-heavy/0";   MinMemGb = 3.3; Params = ""; Vendor = @("AMD","CPU","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0} #CryptoNightHeavy
     [PSCustomObject]@{MainAlgorithm = "cn-heavy/xhv"; MinMemGb = 3.3; Params = ""; Vendor = @("AMD","CPU","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0} #CryptoNightHeavyXhv/XHV
@@ -92,7 +81,7 @@ if ($InfoOnly) {
 
 if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name}
 
-# --disable_udp: since v100.13 every instance announces itself on UDP 4014 for the web UI farm view, not wanted for a managed miner
+# --disable_udp: no UDP 4014 farm view announcement from a managed miner
 $CommonParams =  "--config config_`$mport.txt --http_address 127.0.0.1 --http_port `$mport --no-watchdog --output log --no-color --logfile bzminer_`$mport.log --logfile-mode overwrite --disable_udp"
 
 foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {

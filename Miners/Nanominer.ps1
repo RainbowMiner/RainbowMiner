@@ -125,7 +125,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                         $First = $false
                     }
                     $Pool_Port = if ($Miner_Vendor -ne "CPU" -and $Pools.$MainAlgorithm_Norm.Ports -ne $null -and $Pools.$MainAlgorithm_Norm.Ports.GPU) {$Pools.$MainAlgorithm_Norm.Ports.GPU} else {$Pools.$MainAlgorithm_Norm.Port}
-                    # nanominer gets the worker as separate rigName - strip it from the User fallback (e.g. Kryptex "krx.../{workername}"), or the login carries the worker twice and the pool rejects the subscribe
+                    # the worker goes into rigName, strip it from the User fallback or the login carries it twice
                     $Wallet    = if ($Pools.$MainAlgorithm_Norm.Wallet) {$Pools.$MainAlgorithm_Norm.Wallet} else {$Pools.$MainAlgorithm_Norm.User -replace "[\./]\{workername[^\}]*\}$"}
 
                     $PaymentId = $null

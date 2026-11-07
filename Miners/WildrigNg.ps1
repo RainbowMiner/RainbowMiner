@@ -28,10 +28,8 @@ if ($IsLinux) {
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.0u-wildrigng/wildrig-ng-windows-1.0.0u.zip"
 }
 
-# wildrig-ng is the successor of wildrig-multi (Miners\WildRig.ps1): CUDA + OpenCL,
-# NVIDIA Pascal and newer, AMD Polaris (GCN4) and newer (GCN2/GCN3 for kawpow and
-# progpowz only, CDNA on Linux/ROCm), Intel Arc. The fees are the ones the miner
-# prints with --help.
+# successor of wildrig-multi: NVIDIA Pascal+, AMD GCN4+ (GCN2/3 for kawpow and progpowz only),
+# Intel Arc. Fees as printed by --help
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "autolykos2";  DAG = $true; MinMemGb = 2; Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 0.00; ExcludeAmdCapability = "GCN[123]"} #Autolykos2/ERG
     [PSCustomObject]@{MainAlgorithm = "kawpow";      DAG = $true;               Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 1.00; ExcludePoolName = "unMineable"} #KawPOW
@@ -39,7 +37,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "kawpow3g";    DAG = $true;               Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 1.00; ExcludePoolName = "unMineable"; Algorithm = "kawpow"} #KawPOW
     [PSCustomObject]@{MainAlgorithm = "kawpow4g";    DAG = $true;               Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 1.00; ExcludePoolName = "unMineable"; Algorithm = "kawpow"} #KawPOW
     [PSCustomObject]@{MainAlgorithm = "kawpow5g";    DAG = $true;               Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 1.00; ExcludePoolName = "unMineable"; Algorithm = "kawpow"} #KawPOW
-    [PSCustomObject]@{MainAlgorithm = "nexapow";     DAG = $true;               Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 1.00; ExcludeAmdCapability = "GCN[123]"; ExcludeNvCompute = "Pascal"} #NexaPow/NEXA - 1.0.0u never finishes the window table on Pascal (GTX1070: "blocked in the driver", watchdog restarts), Ampere works
+    [PSCustomObject]@{MainAlgorithm = "nexapow";     DAG = $true;               Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 1.00; ExcludeAmdCapability = "GCN[123]"; ExcludeNvCompute = "Pascal"} #NexaPow/NEXA - hangs on Pascal
     [PSCustomObject]@{MainAlgorithm = "octopus";     DAG = $true; MinMemGb = 4; Vendor = @("NVIDIA");               Params = ""; ExtendInterval = 3; DevFee = 0.00} #Octopus/CFX
     [PSCustomObject]@{MainAlgorithm = "pearlhash";                              Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; DevFee = 0.00; ExcludePoolName = "BaikalMine|F2pool|HeroMiners|K1Pool|K1PoolSolo|Kryptex|KryptexSolo|LuckyPool|Mining4people|RPlant|RPlantSolo|SuprNova|unMineable"; AmdCompute = "RDNA"} #Pearlhash/PRL, NVIDIA Pascal+ (except Tesla P100), AMD RDNA1-4, Intel Arc
     [PSCustomObject]@{MainAlgorithm = "poseidon2b";                             Vendor = @("AMD","NVIDIA");         Params = ""; ExtendInterval = 2; DevFee = 2.00; Algorithm = "noid"; AmdCompute = "RDNA"; ExcludeNvCompute = "Pascal"} #Noid/NOID, NVIDIA Volta+, AMD RDNA1-4
@@ -47,7 +45,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "qhash";                                  Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; DevFee = 2.00; FaultTolerance = 0.4; ExcludeAmdCapability = "GCN[123]"} #Qhash/QTC
     [PSCustomObject]@{MainAlgorithm = "quantus";                                Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 2; DevFee = 2.00; ExcludeAmdCapability = "GCN[123]"} #Quantus/QUAN
     [PSCustomObject]@{MainAlgorithm = "sha256d";                                Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; DevFee = 0.00; ExcludeAmdCapability = "GCN[123]"; NeverProfitable = $true} #SHA256d/BTC
-    [PSCustomObject]@{MainAlgorithm = "xelishashv3";                            Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 1.00; ExcludeAmdCapability = "GCN[123]"; ExcludePoolName = "unMineable"} #XelisHashV3/XEL - unMineable labels its jobs "xel/3", 1.0.0u only accepts "xel/v3" and ignores every job
+    [PSCustomObject]@{MainAlgorithm = "xelishashv3";                            Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 1.00; ExcludeAmdCapability = "GCN[123]"; ExcludePoolName = "unMineable"} #XelisHashV3/XEL - unMineable sends "xel/3" jobs, the miner wants "xel/v3"
 )
 
 # $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -70,12 +68,8 @@ if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVers
 
 foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
 
-    # --gpu-list takes the miner's own GPU numbers: the GPUs it enumerates, in PCI bus
-    # order. The other vendors are switched off per instance, so the numbers are the
-    # vendor-local bus order of every card of that vendor, selected or not - that is
-    # DeviceLib's BusId_Type_Vendor_Index. Integrated GPUs are skipped by the miner (no
-    # --gpu-allow-igpu), so Intel bus 00 iGPUs are left out and the cards behind them
-    # move up by their count (the bus 00 rule of BusId_Type_Mineable_Index).
+    # --gpu-list uses the vendor-local PCI bus order (BusId_Type_Vendor_Index). The miner skips
+    # integrated GPUs, so Intel bus 00 iGPUs are left out and the cards behind them move up
     $DeviceIndex = @{}
     $iGPUs = 0
     if ($Miner_Vendor -eq "INTEL") {

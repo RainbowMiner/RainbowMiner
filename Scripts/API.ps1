@@ -751,11 +751,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             Break
         }
         "/debug" {
-            # one run at a time: runs share the Logs\debug-<date> folder and the
-            # Data\gpu-*.txt files, so a second run empties the first one's zip,
-            # and each run holds an API thread for minutes. A client that gave up
-            # leaves its run going, so its retry would start the second run.
-            # A run that died midway is ignored after 30 minutes.
+            # one run at a time: runs share their output folder and hold an API thread
+            # for minutes. A run that died midway is ignored after 30 minutes
             $DebugNow = (Get-Date).ToUniversalTime()
             [System.Threading.Monitor]::Enter($API.SyncRoot)
             try {
@@ -778,11 +775,9 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             $DebugPath     = Join-Path (Resolve-Path ".\Logs") "debug-$DebugDate"
 
             $PurgeStrings  = [System.Collections.Generic.List[string]]::new()
-            # identity values (host/user names) are short and word-like: they may only
-            # match as whole tokens, or they corrupt other words (SrbMinerMulti!)
+            # short identity values match as whole tokens only, or they corrupt other words
             $PurgeStringsBounded = [System.Collections.Generic.List[string]]::new()
-            # route each secret by shape: short pure-word values are identity-like
-            # (account/worker names, simple passwords) and go into the bounded list
+            # short pure-word secrets go into the bounded list
             $AddPurgeString = {
                 param($Value)
                 if ($Value -match "^\w{1,15}$") {[void]$PurgeStringsBounded.Add($Value)} else {[void]$PurgeStrings.Add($Value)}
@@ -808,33 +803,23 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 }
             }
 
-            # a single alternation, longest strings first: the regex engine prefers the
-            # first-listed alternative per position, so substrings need no dedup pass
+            # one alternation, longest first, so substrings need no dedup pass
             $PurgeRegex = @(
                 @($PurgeStrings | Where-Object {$_ -and $_.Length -gt 2} | Select-Object -Unique | Sort-Object -Property {$_.Length} -Descending | Foreach-Object {[regex]::Escape($_)}) +
                 @($PurgeStringsBounded | Where-Object {$_ -and $_.Length -gt 2} | Select-Object -Unique | Sort-Object -Property {$_.Length} -Descending | Foreach-Object {"(?<!\w)$([regex]::Escape($_))(?!\w)"})
             ) -join "|"
 
-            # keep version numbers readable: first tag v-prefix/Version*-label (plain
-            # or JSON)/Unix/Windows version numbers with a sentinel char, then mask
-            # the remaining IPv4s (valid octets, no loopback, not in a table column =
-            # word + 2+ blanks), then strip the sentinel. -replace operator only: it
-            # is much faster here than [regex]::Replace or MatchEvaluator callbacks,
-            # and the protect alternation must start with rare characters (v/u/w) to
-            # keep the engine's prefix scan
+            # tag version numbers with a sentinel, mask the remaining IPv4s, strip the
+            # sentinel. -replace is much faster than [regex]::Replace here; the protect
+            # alternation starts with rare chars to keep the engine's prefix scan
             $ip_protect = '((?:v|version\w{0,30}"?[:=]\s{0,4}"?|unix\s{1,4}|windows\s{1,4})\d)(?=\d{0,2}(?:\.\d{1,3}){3}(?![\w.]))'
             $ip_regex   = '\b(?<!\.)(?<!\w[ \t]{2,40})(?!127\.)(?!0\.0\.0\.0(?![\w.]))(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}\b(?!\.)'
             $ip_mark    = [string][char]1
 
-            # the project's own public tokens must survive the purge: a config value
-            # equal to one of them (account name, pool password) would otherwise
-            # corrupt every mention of RainbowMiner.ps1, api.rbminer.net or the
-            # SRBMiner binaries - the sentinel breaks the purge match and is
-            # stripped together with the ip_protect marks at the end
+            # the sentinel protects the project's own names from a purge value equal to them
             $pub_protect = '((?:rainbow|srb|rb)m)(?=iner)'
 
-            # the "Server host:port" rule must not hit "--server <pool>:<port>" miner
-            # arguments - pools are public and needed for diagnosis
+            # keep "--server <pool>:<port>" miner arguments, pools are needed for diagnosis
             $MaskDebugText = {
                 param($Text)
                 $Text = $Text -replace $pub_protect,"`$1$ip_mark"
@@ -844,10 +829,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 $Text.Replace($ip_mark,"") -replace "([0-9a-f]+:){7}[0-9a-f]+","X:X:X:X:X:X:X:X"
             }
 
-            # a runaway miner log (e.g. a pool reconnect loop writing 150k lines a
-            # minute) can grow to hundreds of MB: keep its start (banner, arguments,
-            # pool setup) and the latest output. Masking a whole file that size takes
-            # minutes and about twice its size in memory, while holding an API thread
+            # a runaway miner log can reach hundreds of MB: keep only its head and tail
             $ReadDebugText = {
                 param($File)
                 if ($File.Length -le 4MB) {return Get-ContentByStreamReader $File}
@@ -900,9 +882,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 Out-File -InputObject (& $MaskDebugText ($UserConfig | ConvertTo-Json -Depth 10)) -FilePath $NewFile
             }
 
-            # generated miner start scripts (Linux screen/tmux only) - the essential
-            # artifact to diagnose miner start failures; they carry the full argument
-            # list incl. wallets, so they run through the same masking
+            # generated miner start scripts (Linux screen/tmux), masked like the logs
             @(Get-ChildItem ".\Data\pid\*.sh" -ErrorAction Ignore | Select-Object) + @(Get-ChildItem ".\Bin\*\*.sh" -ErrorAction Ignore | Select-Object) | Where-Object {$_.LastWriteTime -gt (Get-Date).AddDays(-2)} | Foreach-Object {
                 $LastWriteTime = $_.LastWriteTime
                 $NewFile = "$DebugPath\startsh_$($_.Directory.Name)_$($_.Name)"
@@ -1078,9 +1058,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
         }
         "/getdeviceconfig" {
             $Data = if ($API.AllDevices) {
-                # always report the selection of config.txt, never a runtime override set via
-                # /setdevices - the setup form writes its checkboxes back into config.txt, and a
-                # temporary override must not become permanent by pressing Save
+                # config.txt selection only: the setup form saves it back, a /setdevices
+                # override must not become permanent
                 $DeviceName_Config        = if ($Session.DeviceNameBase -ne $null) {$Session.DeviceNameBase} else {$Session.Config.DeviceName}
                 $ExcludeDeviceName_Config = if ($Session.ExcludeDeviceNameBase -ne $null) {$Session.ExcludeDeviceNameBase} else {$Session.Config.ExcludeDeviceName}
                 $GPUDevices = $API.AllDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -in @("AMD","INTEL","NVIDIA")}
@@ -1609,9 +1588,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             Break
         }
         "/getdevices" {
-            # Available and Active are only republished when the device set actually changes, so
-            # read the override from $API directly - otherwise it would lag behind a /setdevices
-            # call that happens to resolve to the very same devices
+            # read the override from $Session: Available/Active republish only on a device set change
             $Data = if ($API.DeviceSelection) {
                 ConvertTo-Json ([PSCustomObject]@{
                     Available = @($API.DeviceSelection.Available)
@@ -1626,9 +1603,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             $Error_Message = ""
             $Override = $null
 
-            # never probe $Parameters.<name> directly: every object carries an intrinsic Count
-            # member, so $Parameters.count would answer 1 on PS7 (and nothing on 5.1) although no
-            # count was sent at all. Ask the property list instead
+            # ask the property list: $Parameters.count hits the intrinsic Count member on PS7
             $Params_Sent = if ($Parameters) {@($Parameters.PSObject.Properties.Name)} else {@()}
 
             if (-not $API.DeviceSelection) {
@@ -1649,8 +1624,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                     }
                     $Devices_Keep = @($Devices_Gpu | Select-Object -First $Count_Wanted)
                 } elseif ($Count_Param -match '^[A-Za-z0-9_]+:\d+(\s*,\s*[A-Za-z0-9_]+:\d+)*$') {
-                    # count=<group>:<N>,..: per device group (the Model of /getdevices, incl. gpugroups
-                    # names), groups that are not named keep all their configured GPUs
+                    # count=<group>:<N>,..: per device group, unnamed groups keep all their GPUs
                     $Models_Avail = @($Devices_Gpu | Select-Object -ExpandProperty Model -Unique)
                     $Count_Groups = [ordered]@{}
                     foreach ($Count_Group in ($Count_Param -split '\s*,\s*')) {
@@ -1717,8 +1691,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             } else {
                 $Session.DeviceOverride = $Override
                 $API.SetDevices     = $true
-                # wrap in @() - a bare if-expression unwraps a single-element array to a scalar and
-                # an empty one to $null, which would make the answer change shape
+                # @() keeps the answer's shape for single-element and empty results
                 $Data = ConvertTo-Json ([PSCustomObject]@{
                     Success           = $true
                     DeviceName        = @(if ($Override) {$Override.DeviceName} else {$Session.DeviceNameBase})
@@ -1896,8 +1869,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 }
                 $Result = $null
                 try {
-                    # reject invalid target urls up front - an empty or relative url would create a
-                    # poisoned job in this server's asyncloader that fails on every cycle (issue #3052)
+                    # an invalid url would poison this server's asyncloader (#3052)
                     if ("$($Parameters.url)" -notmatch "^https?://") {throw "invalid url `"$($Parameters.url)`" received"}
                     $pbody = $null
                     if ($Parameters.body -match "^{.+}$") {
@@ -1907,11 +1879,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         $pbody_in = $null
                         Remove-Variable -Name pbody_in -ErrorAction Ignore
                     } elseif ($Parameters.body -match '^".*"$') {
-                        # the client serializes the body with ConvertTo-Json, so a string body (a
-                        # JSON-RPC payload such as the ZIL wallet balance) arrives as a quoted JSON
-                        # string. Decoding it once gives the raw string back; dropping it made the
-                        # job a bare GET and, through the shared jobkey, also stripped the body from
-                        # this server's own copy of the job
+                        # a string body arrives JSON-quoted by the client: decode it once
                         $pbody = $Parameters.body | ConvertFrom-Json -ErrorAction Ignore
                     }
                     $pheaders = $null
@@ -2346,7 +2314,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             Break
         }
         "/userpools" {
-            # raw entries of userpools.config.txt (the form edits the raw strings, placeholders like $Wallet stay literal) with the array index, a change tag and a status block
+            # raw entries of userpools.config.txt with array index, change tag and a status block
             $UpList = @()
             try {
                 $UpEntries  = @(Get-UserpoolEntries)
@@ -2392,8 +2360,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             Break
         }
         "/userpoolinfo" {
-            # lookups for the User Pools form (full algorithm list, coin database, regions, built-in pool names; cached per data file version)
-            # plus the live state of config.txt (PoolName, ExcludePoolName, server-managed files), which is read fresh on every call
+            # lookups for the User Pools form (cached per data file version) plus the live config.txt state
             $UpCacheTime = (Get-Date).ToUniversalTime()
             $UpLwt = @(@("coinsdb","algorithms","regions") | Foreach-Object {(Get-ChildItem ".\Data\$($_).json" -ErrorAction Ignore).LastWriteTimeUtc.Ticks}) -join "-"
             if (-not $APICacheDB.ContainsKey("userpoolinfo") -or $APICacheDB["userpoolinfo"].LastWrite -ne $UpLwt) {
@@ -2442,7 +2409,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 try {
                     $UpAction = "$($Parameters.Action)".Trim().ToLower()
                     if ($UpAction -notin @("add","update","delete","poolname","wallet")) {throw "Unknown action"}
-                    # the entries may come from the server while pools.config.txt and config.txt are still local: wallet and poolname stay possible then
+                    # server-managed entries with local pools/config files: wallet and poolname stay possible
                     if ($UpAction -in @("add","update","delete") -and (Test-ConfigManagedByServer "userpools")) {throw "userpools.config.txt is managed by the server $($Session.Config.ServerName)"}
                     if ($UpAction -eq "poolname" -and (Test-ConfigManagedByServer "config")) {throw "config.txt is managed by the server $($Session.Config.ServerName)"}
                     if ($UpAction -eq "wallet" -and (Test-ConfigManagedByServer "pools")) {throw "pools.config.txt is managed by the server $($Session.Config.ServerName)"}
@@ -2472,7 +2439,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         } else {
                             $UpIndex = Set-UserpoolEntry -Action add -Entry $UpEntry
                         }
-                        # the pools.config.txt section of the pool is created right away (Core would do it after the next round), the wallet only on request
+                        # create the pools.config.txt section now, the wallet only on request
                         if (Test-ConfigManagedByServer "pools") {
                             if (Get-Yes $Parameters.SetWallet) {$UpWarn += "pools.config.txt is managed by the server $($Session.Config.ServerName), the wallet was not written"}
                         } elseif (Get-Yes $Parameters.SetWallet) {
@@ -2515,13 +2482,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 # Otherwise, just return the contents of the file
                 $File = Get-ChildItem $Filename -ErrorAction Ignore
 
-                # --- static file caching ------------------------------------------------
-                # /vendor/ libraries live in versioned folders -> safe to cache forever.
-                # Own assets get a short freshness window plus a Last-Modified validator,
-                # so repeat visits revalidate with cheap 304 responses instead of full
-                # downloads. HTML is assembled from server side includes (multiple source
-                # files), so a single file date is no valid validator -> always no-cache.
-                # .ps1 endpoints are actions and must never be cached.
+                # caching: /vendor/ is versioned (forever), own assets short + Last-Modified,
+                # HTML is assembled from includes (no-cache), .ps1 endpoints never
                 if ($File.Extension -eq ".ps1") {
                     $CacheControl = "no-store"
                 } elseif ($Path -match '^/vendor/') {
@@ -2589,8 +2551,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             [void]$Response.Headers.Add("Content-Disposition", "attachment; filename=$($ContentFileName)")
         }
 
-        # cache policy: static files set $CacheControl above; everything else
-        # (all live API data endpoints) defaults to no-cache
+        # live API data defaults to no-cache
         [void]$Response.Headers.Add("Cache-Control", $(if ($CacheControl) {$CacheControl} else {"no-cache"}))
         if ($LastModified) {
             [void]$Response.Headers.Add("Last-Modified", $LastModified.ToString("R"))
@@ -2669,8 +2630,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
     if ($GCStopWatch.Elapsed.TotalSeconds -gt 120) {
         $GCRuns++
         if ($GCRuns -ge 10) {
-            # the per-round JSON payloads land on the large object heap - compact
-            # it once in a while, otherwise the freed blocks only fragment it
+            # compact the large object heap now and then against fragmentation
             [System.Runtime.GCSettings]::LargeObjectHeapCompactionMode = [System.Runtime.GCLargeObjectHeapCompactionMode]::CompactOnce
             $GCRuns = 0
         }

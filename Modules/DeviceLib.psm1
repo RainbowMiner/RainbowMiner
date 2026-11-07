@@ -133,10 +133,8 @@ function Get-Device {
                     $ErrorMessage = "Timeout"
                 } else {
                     try {
-                        # native libraries (e.g. Mesa probing DRM devices) may write to the job process' raw
-                        # stderr, which the job transport reports as an error - keep that off the console and
-                        # make sure a broken job still sets ErrorMessage, so the nvidia-smi fallback runs.
-                        # GetOpenCL.ps1 always emits its result object - a null result means the job broke
+                        # native libraries (e.g. Mesa) may write to the job's raw stderr: keep it off the console.
+                        # GetOpenCL.ps1 always emits a result, so null means the job broke -> nvidia-smi fallback
                         $GetOpenCL_JobErrors = $null
                         $GetOpenCL_Result = Receive-Job -Job $GetOpenCL_Job -ErrorAction SilentlyContinue -ErrorVariable GetOpenCL_JobErrors
                         if ($GetOpenCL_Result) {
@@ -384,10 +382,8 @@ function Get-Device {
                             if ($AmdModels.ContainsKey($Device.Model) -and $AmdModels[$Device.Model] -ne $AmdGb) {[void]$AmdModelsEx.Add($Device.Model)}
                             else {$AmdModels[$Device.Model]=$AmdGb}
                         }
-                        # lolMiner and Nanominer number discrete Intel cards along with AMD and NVIDIA, but neither
-                        # lists an integrated Intel GPU (always PCI bus 00): counting it would shift the indices of
-                        # every card behind it by one (magicminer 2026-10-14: lolMiner mined the RTX 3070 twice
-                        # and left GPU#00 idle)
+                        # lolMiner and Nanominer count discrete Intel cards with AMD and NVIDIA, but skip the
+                        # integrated Intel GPU (PCI bus 00): counting it would shift every following index by one
                         if ($Vendor_Name -in @("NVIDIA","AMD") -or ($Vendor_Name -eq "INTEL" -and $Device_OpenCL.PCIBusId -notmatch "(^|[^0-9A-F])00:[0-9A-F]{2}(\.[0-9A-F])?$")) {$Type_Mineable_Index."$($Device_OpenCL.Type)"++}
                         if ($Device_OpenCL.PCIBusId -match "([A-F0-9]+:[A-F0-9]+)$") {
                             $Device.BusId = $Matches[1]
@@ -2193,15 +2189,9 @@ function Reset-OCLocks {
 }
 
 function Update-DeviceVRAMReservation {
-    # Measure the real per-GPU VRAM reservation once at startup, BEFORE any miner
-    # is started. On Windows the WDDM/driver reservation is roughly constant per
-    # GPU (a few hundred MB, ~1GB on the display GPU), NOT proportional to the
-    # total memory - the static 0.865 factor in Test-VRAM overcharges big cards.
-    # Stores measured used memory + safety margin in ReservedVRAMGB on the device
-    # objects in $Global:GlobalCachedDevices. Implausible values (usable < 50% of
-    # total, e.g. an orphaned miner still holding VRAM after a crash restart)
-    # leave ReservedVRAMGB at $null, so all consumers keep the static arithmetic.
-    # Runs without $Session.Config (Start-Core) - Get-NvidiaSmi handles that.
+    # Measures the per-GPU VRAM reservation once at startup, before any miner runs: the driver
+    # reservation is roughly constant per GPU, so the static factor in Test-VRAM overcharges big cards.
+    # Implausible readings (usable < 50%) leave ReservedVRAMGB at $null -> static arithmetic.
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $false)]
@@ -2290,10 +2280,8 @@ param(
 }
 
 function Update-NvidiaOCMap {
-    # nvidia-settings numbers its [gpu:N] targets in X server order, which is not
-    # guaranteed to match RainbowMiner's device order. Ask the X server once for
-    # the PCI address and the perf levels of every GPU; without an X server the
-    # map stays empty and the old index based addressing is used unchanged
+    # nvidia-settings numbers [gpu:N] in X server order, not RainbowMiner's: map PCI address and
+    # perf levels once. Without an X server the map stays empty and index addressing is used
     $Global:NvidiaOCMap = @{}
     $Global:NvidiaSettingsAvailable = $false
     if (-not $IsLinux -or -not (Test-OCDaemon)) {return}
@@ -2368,9 +2356,8 @@ function Get-AmdOCHelper {
 }
 
 function Test-NvmlOC {
-    # LinuxOCMethod: "nvidia-settings" (default, unchanged behavior), "nvml" (always
-    # set core/memory offsets through NVML) or "auto" (NVML only if nvidia-settings
-    # cannot reach an X server). NVML needs root, so it only works with the ocdaemon
+    # LinuxOCMethod: "nvidia-settings" (default), "nvml" or "auto" (NVML only without an X server).
+    # NVML needs root, so it only works with the ocdaemon
     if (-not $IsLinux) {return $false}
     $Method = "$($Session.Config.LinuxOCMethod)".ToLower()
     if ($Method -notin @("nvml","auto")) {return $false}
@@ -2428,10 +2415,8 @@ function Get-DevicePowerState {
         [Parameter(Mandatory = $false)]
         [Int]$IdleUtilization = 20
     )
-    # judges the GPUs of a miner by their sensor readings only. IsReal is true when every device has a
-    # measured (not TDP-estimated) power draw and a reference power (nvidia-smi limits, else the TDP
-    # tables). IsIdle is true when the readings sum up to less than IdleRatio of the reference and no
-    # device reports a utilization above IdleUtilization - the state of a miner whose GPUs do nothing.
+    # IsReal: every device has a sensor (not TDP-estimated) power draw and a reference power.
+    # IsIdle: total draw below IdleRatio of the reference and no utilization above IdleUtilization.
     $Devices = @($Global:GlobalCachedDevices | Where-Object {$_.Type -eq "GPU" -and (-not $DeviceName -or $DeviceName -icontains $_.Name)})
 
     $PowerDraw   = [Double]0

@@ -92,9 +92,8 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$PoolCoins_Request.$
 	$Pool_TSL = $PoolCoins_Request.$Pool_CoinSymbol.timesincelast
 	
 	if (-not $InfoOnly) {
-		# the per-coin estimate follows the coin's difficulty and price, which for a thin coin
-		# can sit far above what the algorithm port actually paid (EPPE: 30x). Apply the 10x rule
-		# of Get-YiiMPValue here as well: cap the estimate at the port's actual_last24h
+		# a thin coin's estimate can sit far above what the port paid: like Get-YiiMPValue,
+		# cap an estimate above 10x at the port's actual_last24h
 		$Pool_Estimate  = [Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate
 		$Pool_Actual24h = if ($Pool_Request.$Pool_Algorithm.actual_last24h) {[Double]$Pool_Request.$Pool_Algorithm.actual_last24h / 1000} else {0}
 		if ($Pool_Actual24h -gt 0 -and $Pool_Estimate -gt $Pool_Actual24h * 10) {$Pool_Estimate = $Pool_Actual24h}

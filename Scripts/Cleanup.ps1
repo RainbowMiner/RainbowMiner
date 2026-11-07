@@ -1959,10 +1959,8 @@ try {
     }
 
     if ($Version -le (Get-Version "5.0.3.1")) {
-        # KawPow and the other ProgPow variants moved from Profile7 (core slightly up) to Profile8 (core +0).
-        # The algorithm entries are only moved while every Profile7 in ocprofiles.config.txt is still a
-        # shipped preset (the v5.0.3.1 table, the current one or an empty profile): a hand-tuned Profile7
-        # keeps mining, the new Profile8 presets would replace it with untested values.
+        # KawPow and the other ProgPow variants moved from Profile7 to Profile8. Only migrated while every
+        # Profile7 in ocprofiles.config.txt is still a shipped preset, a hand-tuned Profile7 keeps mining
         $Changes = 0
         $OCprofilesActual = Get-Content "$OCprofilesConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
         $OCprofilesSetup  = Get-ChildItemContent ".\Data\OCProfilesConfigDefault.ps1"

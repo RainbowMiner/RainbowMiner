@@ -96,9 +96,8 @@ $Payout_Currencies | Where-Object {
         $Request_Job = $null
         $Request_Ok  = $true
 
-        # 2Miners answers 404 for a wallet that has never mined on that pool (the usual case for the
-        # autoexchange logins): that is "no account", not an error. Park the async job for a day, so the
-        # asyncloader does not retry and log a failed request every cycle
+        # 404 = the wallet never mined on this pool (usual for autoexchange logins), not an error:
+        # park the async job for a day instead of retrying every cycle
         if (Test-Path Variable:Global:AsyncLoader) {
             $Request_Job = $AsyncLoader.Jobs.Values | Where-Object {$_.Url -eq $Request_Url} | Select-Object -First 1
             if ($Request_Job -and $Request_Job.Paused -and $Request_Job.Error -match ": 404 |\(404\)" -and $Request_Job.LastRequest -gt (Get-Date).ToUniversalTime().AddHours(-24)) {
