@@ -23,7 +23,7 @@ is_user_root() { [ "$(id -u)" -eq 0 ]; }
 # Powershell version
 pwsh_major_version="7"
 pwsh_minor_version="6"
-pwsh_build_version="6"
+pwsh_build_version="9"
 
 pwsh_version="${pwsh_major_version}.${pwsh_minor_version}.${pwsh_build_version}"
 
@@ -82,7 +82,7 @@ done
 if [ -n "$pwsh_version_wanted" ]; then
   case "$pwsh_version_wanted" in
     *[!0-9.]*|.*|*.|*..*)
-      echo "Error: invalid PowerShell version '$pwsh_version_wanted', expected e.g. 7.6.5"
+      echo "Error: invalid PowerShell version '$pwsh_version_wanted', expected e.g. 7.6.9"
       exit 1 ;;
   esac
   pwsh_version="$pwsh_version_wanted"
