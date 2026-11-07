@@ -106,38 +106,6 @@ param(
     [void]$Global:GlobalOCD.Add($Cmd)
 }
 
-function Write-OCDaemonResult {
-[cmdletbinding()]
-param(
-    [Parameter(Mandatory = $False, ValueFromPipeline = $True)]
-    $Output,
-    [Parameter(Mandatory = $False)]
-    [String]$Name = "OC"
-)
-    begin {
-        if (-not (Test-Path Variable:Global:GlobalOCDWarnings)) {$Global:GlobalOCDWarnings = @{}}
-        $Lines = [System.Collections.Generic.List[string]]::new()
-    }
-    process {
-        foreach ($Line in @("$Output" -split "\r?\n")) {
-            # nvidia-smi may report a refused setting with exit code 0, so match its texts, too
-            if ($Line -match "RBM_OC_FAIL|^\s*ERROR:|^\s*Unable to |^\s*Failed to |is not supported|Insufficient Permissions") {[void]$Lines.Add($Line.Trim())}
-        }
-    }
-    end {
-        if ($Global:GlobalOCDWarnings.Count -gt 500) {$Global:GlobalOCDWarnings.Clear()}
-        $Now = (Get-Date).ToUniversalTime()
-        foreach ($Line in ($Lines | Select-Object -Unique)) {
-            $Key = "$Name|$Line"
-            if (-not $Global:GlobalOCDWarnings.ContainsKey($Key) -or $Global:GlobalOCDWarnings[$Key] -lt $Now.AddHours(-1)) {
-                $Global:GlobalOCDWarnings[$Key] = $Now
-                Write-Log -Level Warn "$($Name): $($Line)"
-            }
-        }
-    }
-}
-
-
 function Invoke-OCDaemon {
 [cmdletbinding()]   
 param(
