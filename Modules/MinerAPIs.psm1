@@ -1110,8 +1110,14 @@ class Miner {
                 if ($DeviceVendor -eq "NVIDIA") {
                     Invoke-NvidiaSettings $NvCmd
                     if ($Global:IsLinux -or (Test-IsElevated)) {
-                        # nvidia-smi output is captured (Windows direct, Linux via ocdaemon) so a refusal reaches the log
-                        $NvSmiCmd | Foreach-Object {Invoke-NvidiaSmi -Arguments $_ -Runas | Write-OCResult -Name "OC $($this.Name)"}
+                        # nvidia-smi output is captured (Windows direct, Linux via ocdaemon) so a refusal reaches the log.
+                        # A card that refuses a lock reset cannot hold a lock: no warning, and the reset is skipped from now on
+                        if ($Script:NvNoLockReset -eq $null) {$Script:NvNoLockReset = @{}}
+                        $NvSmiCmd | Where-Object {-not $Script:NvNoLockReset.ContainsKey($_)} | Foreach-Object {
+                            $NvSmiOut = @(Invoke-NvidiaSmi -Arguments $_ -Runas)
+                            if ($_ -match '-r[gm]c$' -and "$NvSmiOut" -match 'is not supported') {$Script:NvNoLockReset[$_] = $true}
+                            else {$NvSmiOut | Write-OCResult -Name "OC $($this.Name)"}
+                        }
                         $NvSmiLocks | Foreach-Object {Set-OCLock -BusId $_.BusId -Index $_.Index -Model $_.Model -Miner $this.BaseName -LockCoreClock $_.LockCoreClock -LockMemoryClock $_.LockMemoryClock}
                     }
                 } elseif ($DeviceVendor -eq "AMD" -and $AmdCmd.Count) {
