@@ -1111,7 +1111,7 @@ class Miner {
                     Invoke-NvidiaSettings $NvCmd
                     if ($Global:IsLinux -or (Test-IsElevated)) {
                         # nvidia-smi output is captured (Windows direct, Linux via ocdaemon) so a refusal reaches the log
-                        $NvSmiCmd | Foreach-Object {Invoke-NvidiaSmi -Arguments $_ -Runas | Write-OCDaemonResult -Name "OC $($this.Name)"}
+                        $NvSmiCmd | Foreach-Object {Invoke-NvidiaSmi -Arguments $_ -Runas | Write-OCResult -Name "OC $($this.Name)"}
                         $NvSmiLocks | Foreach-Object {Set-OCLock -BusId $_.BusId -Index $_.Index -Model $_.Model -Miner $this.BaseName -LockCoreClock $_.LockCoreClock -LockMemoryClock $_.LockMemoryClock}
                     }
                 } elseif ($DeviceVendor -eq "AMD" -and $AmdCmd.Count) {

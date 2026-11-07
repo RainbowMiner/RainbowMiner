@@ -4679,7 +4679,7 @@ function Invoke-Core {
     # the OC reset of stopped miners is only queued: run it now, so that GPUs
     # without a follow-up miner do not keep the old clocks
     if ($IsLinux -and $Session.Config.EnableOCprofiles -and $Global:GlobalOCD.Count) {
-        Invoke-OCDaemon -FilePath ".\IncludesLinux\bash\oc_reset.sh" | Write-OCDaemonResult -Name "OC reset"
+        Invoke-OCDaemon -FilePath ".\IncludesLinux\bash\oc_reset.sh" | Write-OCResult -Name "OC reset"
     }
 
     #Kill maroding miners
@@ -4820,7 +4820,7 @@ function Invoke-Core {
                     }
                 } elseif ($Session.Config.EnableOCprofiles) {
                     $Miner.SetOCprofile($Session.Config, 500)
-                    if ($IsLinux) { Invoke-OCDaemon -Miner $Miner | Write-OCDaemonResult -Name "OC $($Miner.Name)" }
+                    if ($IsLinux) { Invoke-OCDaemon -Miner $Miner | Write-OCResult -Name "OC $($Miner.Name)" }
                 }
 
                 $Miner.SetStaticPort($Session.Config.StaticGPUMinerPort)
@@ -6869,7 +6869,7 @@ function Update-ActiveMiners {
             }
 
             Switch ("$($Miner_Status)") {
-                "Running"       {if ($Session.Config.EnableOCprofiles -and ($Miner.DeviceName -notlike "CPU*") -and ($Session.Config.OCResetInterval -gt 0) -and ($Miner.GetLastSetOCTime() -lt (Get-Date).AddSeconds(-$Session.Config.OCResetInterval).ToUniversalTime() -or $API.ApplyOC)) {$Miner.SetOCprofile($Session.Config,500);if ($IsLinux) {Invoke-OCDaemon -Miner $Miner | Write-OCDaemonResult -Name "OC $($Miner.Name)"};$API.ApplyOC=$false};$MinersUpdated++;Break}
+                "Running"       {if ($Session.Config.EnableOCprofiles -and ($Miner.DeviceName -notlike "CPU*") -and ($Session.Config.OCResetInterval -gt 0) -and ($Miner.GetLastSetOCTime() -lt (Get-Date).AddSeconds(-$Session.Config.OCResetInterval).ToUniversalTime() -or $API.ApplyOC)) {$Miner.SetOCprofile($Session.Config,500);if ($IsLinux) {Invoke-OCDaemon -Miner $Miner | Write-OCResult -Name "OC $($Miner.Name)"};$API.ApplyOC=$false};$MinersUpdated++;Break}
                 "RunningFailed" {$Miner.ResetMinerData();$MinersFailed++;if ($Miner.IsExclusiveMiner) {$ExclusiveMinersFailed++};Break}
             }
         }

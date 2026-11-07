@@ -2074,7 +2074,7 @@ param(
     }
 }
 
-function Write-OCDaemonResult {
+function Write-OCResult {
 [cmdletbinding()]
 param(
     [Parameter(Mandatory = $False, ValueFromPipeline = $True)]
@@ -2084,7 +2084,7 @@ param(
 )
     # here and not in OCDaemon.psm1, because that module is only loaded on Linux
     begin {
-        if (-not (Test-Path Variable:Global:GlobalOCDWarnings)) {$Global:GlobalOCDWarnings = @{}}
+        if (-not (Test-Path Variable:Global:GlobalOCWarnings)) {$Global:GlobalOCWarnings = @{}}
         $Lines = [System.Collections.Generic.List[string]]::new()
     }
     process {
@@ -2094,12 +2094,12 @@ param(
         }
     }
     end {
-        if ($Global:GlobalOCDWarnings.Count -gt 500) {$Global:GlobalOCDWarnings.Clear()}
+        if ($Global:GlobalOCWarnings.Count -gt 500) {$Global:GlobalOCWarnings.Clear()}
         $Now = (Get-Date).ToUniversalTime()
         foreach ($Line in ($Lines | Select-Object -Unique)) {
             $Key = "$Name|$Line"
-            if (-not $Global:GlobalOCDWarnings.ContainsKey($Key) -or $Global:GlobalOCDWarnings[$Key] -lt $Now.AddHours(-1)) {
-                $Global:GlobalOCDWarnings[$Key] = $Now
+            if (-not $Global:GlobalOCWarnings.ContainsKey($Key) -or $Global:GlobalOCWarnings[$Key] -lt $Now.AddHours(-1)) {
+                $Global:GlobalOCWarnings[$Key] = $Now
                 Write-Log -Level Warn "$($Name): $($Line)"
             }
         }
@@ -2202,11 +2202,11 @@ function Reset-OCLocks {
         if ($Index -ne $null) {
             $What = [System.Collections.Generic.List[string]]::new()
             if ($Lock.LockCoreClock -gt 0) {
-                Invoke-NvidiaSmi -Arguments "-i $($Index) -rgc" -Runas | Write-OCDaemonResult -Name "OC lock release"
+                Invoke-NvidiaSmi -Arguments "-i $($Index) -rgc" -Runas | Write-OCResult -Name "OC lock release"
                 [void]$What.Add("core $($Lock.LockCoreClock) MHz")
             }
             if ($Lock.LockMemoryClock -gt 0) {
-                Invoke-NvidiaSmi -Arguments "-i $($Index) -rmc" -Runas | Write-OCDaemonResult -Name "OC lock release"
+                Invoke-NvidiaSmi -Arguments "-i $($Index) -rmc" -Runas | Write-OCResult -Name "OC lock release"
                 [void]$What.Add("memory $($Lock.LockMemoryClock) MHz")
             }
             Write-Log -Level Info "Released the $($What -join ' and ') lock on $($Lock.Model) [$($BusId)] that $($Lock.Miner) left behind when the last session ended"
@@ -2216,7 +2216,7 @@ function Reset-OCLocks {
     }
     Save-OCLocks
     if ($Released -and $IsLinux) {
-        Invoke-OCDaemon | Write-OCDaemonResult -Name "OC lock release"
+        Invoke-OCDaemon | Write-OCResult -Name "OC lock release"
     }
 }
 
