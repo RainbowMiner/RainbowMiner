@@ -662,6 +662,7 @@
     "PRIV" = [PSCustomObject]@{Algo = "Yespower"; Name = "Privcy"; Symbol = "PRIV"}
     "PRKL" = [PSCustomObject]@{Algo = "Ethash"; Name = "Perkle"; Symbol = "PRKL"}
     "PRL" = [PSCustomObject]@{Algo = "PearlHash"; Name = "Pearl"; Symbol = "PRL"}
+    "PROX" = [PSCustomObject]@{Algo = "ECVRF"; Name = "Proxima"; Symbol = "PROX"}
     "PTC" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Pesetacoin"; Symbol = "PTC"}
     "PUG" = [PSCustomObject]@{Algo = "HoohashV1"; Name = "PugDAG"; Symbol = "PUG"}
     "PURA" = [PSCustomObject]@{Algo = "X11"; Name = "Pura"; Symbol = "PURA"}
@@ -778,6 +779,7 @@
     "SXC" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Sexcoin"; Symbol = "SXC"}
     "SYS" = [PSCustomObject]@{Algo = "SHA256d"; Name = "Syscoin"; Symbol = "SYS"}
     "TAFT" = [PSCustomObject]@{Algo = "Take2"; Name = "Cointaft"; Symbol = "TAFT"}
+    "TAPE" = [PSCustomObject]@{Algo = "Poseidon2b"; Name = "Retro Boomer"; Symbol = "TAPE"}
     "TCR" = [PSCustomObject]@{Algo = "MTPTcr"; Name = "Tecracoin"; Symbol = "TCR"}
     "TDC" = [PSCustomObject]@{Algo = "YespowerTIDE"; Name = "Tidecoin"; Symbol = "TDC"}
     "TENT" = [PSCustomObject]@{Algo = "Equihash24x5"; Name = "Tent"; Symbol = "TENT"}
