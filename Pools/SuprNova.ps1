@@ -62,9 +62,11 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "QTC"    ; port = @(5555,5557)                                   ; regions = @("eu","us-east","asia")}
     [PSCustomObject]@{symbol = "QUAN"   ; port = @(7072,7074)                                   ; regions = @("eu")}
     [PSCustomObject]@{symbol = "PRL"    ; port = @(3373,3374)                                   ; regions = @("eu","us-east","asia")}
+    [PSCustomObject]@{symbol = "PROX"   ; port = @(3355)                                        ; regions = @("eu","asia")}
 	[PSCustomObject]@{symbol = "RIC"    ; port = @(5000)                                        ; regions = @("eu")}
     [PSCustomObject]@{symbol = "RTM"    ; port = @(6273)                                        ; regions = @("eu")}
     [PSCustomObject]@{symbol = "RVN"    ; port = @(8888,8889)                                   ; regions = @("eu")}
+    [PSCustomObject]@{symbol = "TAPE"   ; port = @(3351)                                        ; regions = @("eu")}
     [PSCustomObject]@{symbol = "TSC"    ; port = @(3309)                                        ; regions = @("eu")}
     [PSCustomObject]@{symbol = "VELA"   ; port = @(7601,7604)                                   ; regions = @("eu")}
     [PSCustomObject]@{symbol = "VTC"    ; port = @(1777,1780)                                   ; regions = @("eu")}
