@@ -468,6 +468,8 @@
     "dynex": "DynexSolve",
     "dynexsolve": "DynexSolve",
     "eaglesong": "Eaglesong",
+    "ecvrf": "ECVRF",
+    "ecvrfed25519": "ECVRF",
     "electroneum": "CryptoNight",
     "equihash": "Equihash",
     "equihash125": "EquihashR25x4",
