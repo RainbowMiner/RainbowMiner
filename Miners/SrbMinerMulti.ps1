@@ -297,7 +297,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                 $DeviceParams = "$($DeviceParams) --randomx-use-1gb-pages"
             }
 
-            $All_MainAlgorithms = @(Get-PoolAlgorithmKeys -Pools $Pools -Algorithm $MainAlgorithm_Norm_0 -Model $Miner_Model -NoGPU:($Miner_Vendor -eq "CPU") -ExcludePoolName "$($_.ExcludePoolName)" -CoinSymbols @($_.CoinSymbols) -ExcludeYiimp:([bool]$_.ExcludeYiimp))
+            $All_MainAlgorithms = @(Get-PoolAlgorithmKeys -Pools $Pools -MinerName $Name -Algorithm $MainAlgorithm_Norm_0 -Model $Miner_Model -NoGPU:($Miner_Vendor -eq "CPU") -ExcludePoolName "$($_.ExcludePoolName)" -CoinSymbols @($_.CoinSymbols) -ExcludeYiimp:([bool]$_.ExcludeYiimp))
             $All_SecondAlgorithms = if ($SecondAlgorithm_Norm_0) {if ($Miner_Vendor -eq "CPU") {@($SecondAlgorithm_Norm_0,"$($SecondAlgorithm_Norm_0)-$($Miner_Model)")} else {@($SecondAlgorithm_Norm_0,"$($SecondAlgorithm_Norm_0)-$($Miner_Model)","$($SecondAlgorithm_Norm_0)-GPU")}} else {$null}
 
 		    foreach($MainAlgorithm_Norm in $All_MainAlgorithms) {

@@ -2966,6 +2966,10 @@ function Invoke-Core {
 
         $Pools_AltCount        = @{}
         $Pools_AltSeen         = @{}
+        # Extra slots are reserved only for miners explicitly allowed on a
+        # candidate pool but excluded by the primary pool. This prevents
+        # crowd-out without exploding the alternate pool collection.
+        $Pools_AltNamedSeen    = @{}
         $Global:PoolAlternates = @{}
 
         foreach ($Pool in $SortedPools) {
@@ -2977,6 +2981,7 @@ function Invoke-Core {
                 $Pools | Add-Member -MemberType NoteProperty -Name $Algorithm_Name -Value $Pool
                 if ($MaxPoolAlternates -gt 0) {
                     $Pools_AltCount[$Algorithm_Name] = 0
+                    $Pools_AltNamedSeen[$Algorithm_Name] = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
                     $Pool_Seen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
                     [void]$Pool_Seen.Add("$($Pool.Name)-$($Pool.Algorithm0)-$($Pool.CoinSymbol)")
                     $Pools_AltSeen[$Algorithm_Name] = $Pool_Seen
@@ -2985,9 +2990,32 @@ function Invoke-Core {
             }
 
             if ($MaxPoolAlternates -le 0) {continue}
-            if ($Pools_AltCount[$Algorithm_Name] -ge $MaxPoolAlternates) {continue}
-
             $Pool_Winner = $Pools.$Algorithm_Name
+
+            # Most miners only need the normal MaxPoolAlternates entries.
+            # When a pool explicitly permits miners barred by the primary,
+            # retain at most one additional ranked offering per such miner.
+            # This prevents allowlisted fallbacks getting crowded out by
+            # incompatible general pools, without materializing every pool.
+            $ExtraNamedMiners = @()
+            $CandidateRules = $Session.Config.Pools."$($Pool.Name)"
+            $NamedMiners = @($CandidateRules.MinerName) + @($Pool.MinerName) | Where-Object {$_} | Select-Object -Unique
+            if ($NamedMiners) {
+                $WinnerRules = $Session.Config.Pools."$($Pool_Winner.Name)"
+                foreach ($NamedMiner in $NamedMiners) {
+                    $CandidateAllows = (-not $CandidateRules.MinerName.Count -or $CandidateRules.MinerName -contains $NamedMiner) -and
+                                       (-not $Pool.MinerName.Count -or $Pool.MinerName -contains $NamedMiner) -and
+                                       ($CandidateRules.ExcludeMinerName -notcontains $NamedMiner) -and ($Pool.ExcludeMinerName -notcontains $NamedMiner)
+                    $WinnerRejects = ($WinnerRules.ExcludeMinerName -contains $NamedMiner) -or
+                                     ($Pool_Winner.ExcludeMinerName -contains $NamedMiner) -or
+                                     ($WinnerRules.MinerName.Count -and $WinnerRules.MinerName -notcontains $NamedMiner) -or
+                                     ($Pool_Winner.MinerName.Count -and $Pool_Winner.MinerName -notcontains $NamedMiner)
+                    if ($CandidateAllows -and $WinnerRejects -and -not $Pools_AltNamedSeen[$Algorithm_Name].Contains($NamedMiner)) {
+                        $ExtraNamedMiners += $NamedMiner
+                    }
+                }
+            }
+            if ($Pools_AltCount[$Algorithm_Name] -ge $MaxPoolAlternates -and -not $ExtraNamedMiners.Count) {continue}
 
             # an alternate must sit in the same priority tier as the winner, otherwise an
             # active rental, a focussed wallet or post-block mining could be undercut
@@ -3009,6 +3037,7 @@ function Invoke-Core {
                 $Global:PoolAlternates[$Algorithm_Name] = [System.Collections.Generic.List[string]]::new()
             }
             [void]$Global:PoolAlternates[$Algorithm_Name].Add($Pool_AltKey)
+            foreach ($NamedMiner in $ExtraNamedMiners) {[void]$Pools_AltNamedSeen[$Algorithm_Name].Add($NamedMiner)}
             $Pools_AltCount[$Algorithm_Name]++
         }
         

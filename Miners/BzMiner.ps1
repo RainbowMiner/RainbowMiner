@@ -118,7 +118,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
 
             $Miner_ExcludePoolName = @($ExcludePoolName,$_.ExcludePoolName | Where-Object {$_}) -join '|'
 
-            foreach($MainAlgorithm_Norm in @(Get-PoolAlgorithmKeys -Pools $Pools -Algorithm $MainAlgorithm_Norm_0 -Model $Miner_Model -ExcludePoolName $Miner_ExcludePoolName)) {
+            foreach($MainAlgorithm_Norm in @(Get-PoolAlgorithmKeys -Pools $Pools -MinerName $Name -Algorithm $MainAlgorithm_Norm_0 -Model $Miner_Model -ExcludePoolName $Miner_ExcludePoolName)) {
                 if (-not $Pools.$MainAlgorithm_Norm.Host) {continue}
 
                 if ($Miner_Vendor -ne "CPU") {

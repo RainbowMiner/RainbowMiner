@@ -69,7 +69,8 @@ function Test-PoolConstraint {
         $ExcludePoolName = "",
         $PoolName = "",
         $CoinSymbols = @(),
-        [Switch]$ExcludeYiimp
+        [Switch]$ExcludeYiimp,
+        $MinerName = ""
     )
     if (-not $Pool -or -not $Pool.Host) {return $false}
     # match Host AND Name, a pool's host need not contain its name (or is a bare IP)
@@ -77,6 +78,18 @@ function Test-PoolConstraint {
     if ($PoolName -and -not (($Pool.Host -match $PoolName) -or ($Pool.Name -match $PoolName))) {return $false}
     if ($CoinSymbols -and $Pool.CoinSymbol -notin $CoinSymbols) {return $false}
     if ($ExcludeYiimp -and $Session.YiimpPools -and $Session.YiimpPools.Contains("$($Pool.Name)")) {return $false}
+    # Pool-level miner rules must participate in fallback admission, not only
+    # in the later Core.psm1 candidate filter. Otherwise an excluded miner
+    # never sees an eligible alternate for the winning algorithm.
+    if ($MinerName) {
+        $PoolRules = $Session.Config.Pools."$($Pool.Name)"
+        if (($PoolRules.MinerName.Count -and $PoolRules.MinerName -notcontains $MinerName) -or
+            ($PoolRules.ExcludeMinerName.Count -and $PoolRules.ExcludeMinerName -contains $MinerName) -or
+            ($Pool.MinerName.Count -and $Pool.MinerName -notcontains $MinerName) -or
+            ($Pool.ExcludeMinerName.Count -and $Pool.ExcludeMinerName -contains $MinerName)) {
+            return $false
+        }
+    }
     $true
 }
 
@@ -90,7 +103,8 @@ function Get-PoolAlgorithmKeys {
         $ExcludePoolName = "",
         $PoolName = "",
         $CoinSymbols = @(),
-        [Switch]$ExcludeYiimp
+        [Switch]$ExcludeYiimp,
+        $MinerName = ""
     )
 
     $Keys = if ($NoGPU) {
@@ -100,7 +114,7 @@ function Get-PoolAlgorithmKeys {
     }
 
     # fast path. $CoinSymbols is tested truthy, not by .Count: @($null) has a Count of 1
-    if (-not ($ExcludePoolName -or $PoolName -or $CoinSymbols -or $ExcludeYiimp)) {return $Keys}
+    if (-not ($ExcludePoolName -or $PoolName -or $CoinSymbols -or $ExcludeYiimp -or $MinerName)) {return $Keys}
     if (-not $Session.Config.EnablePoolAlternates) {return $Keys}
     $MaxAlternates = [int]$Session.Config.MaxPoolAlternates
     if ($MaxAlternates -le 0) {return $Keys}
@@ -111,12 +125,12 @@ function Get-PoolAlgorithmKeys {
         [void]$Result.Add($Key)
         if (-not $Pools.$Key) {continue}
         # only fall back when the winning pool really fails this entry's constraint
-        if (Test-PoolConstraint $Pools.$Key -ExcludePoolName $ExcludePoolName -PoolName $PoolName -CoinSymbols $CoinSymbols -ExcludeYiimp:$ExcludeYiimp) {continue}
+        if (Test-PoolConstraint $Pools.$Key -ExcludePoolName $ExcludePoolName -PoolName $PoolName -CoinSymbols $CoinSymbols -ExcludeYiimp:$ExcludeYiimp -MinerName $MinerName) {continue}
         if (-not $Global:PoolAlternates.ContainsKey($Key)) {continue}
         $Found = 0
         foreach ($AltKey in $Global:PoolAlternates[$Key]) {
             if ($Found -ge $MaxAlternates) {break}
-            if (Test-PoolConstraint $Pools.$AltKey -ExcludePoolName $ExcludePoolName -PoolName $PoolName -CoinSymbols $CoinSymbols -ExcludeYiimp:$ExcludeYiimp) {
+            if (Test-PoolConstraint $Pools.$AltKey -ExcludePoolName $ExcludePoolName -PoolName $PoolName -CoinSymbols $CoinSymbols -ExcludeYiimp:$ExcludeYiimp -MinerName $MinerName) {
                 [void]$Result.Add($AltKey)
                 $Found++
             }
@@ -232,9 +246,9 @@ function Invoke-MinerFamily {
 
             $AlgoKeys = if ($SuffixMode -eq "ListGPU") { @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU") }
                         elseif ($SuffixMode -eq "ListCPU") { @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)") }
-                        elseif ($SuffixMode -eq "KeysNoGPU") { @(Get-PoolAlgorithmKeys -Pools $Pools -Algorithm $Algorithm_Norm_0 -Model $Miner_Model -NoGPU -ExcludePoolName "$($_.ExcludePoolName)") }
-                        elseif ($SuffixMode -eq "KeysCoin") { @(Get-PoolAlgorithmKeys -Pools $Pools -Algorithm $Algorithm_Norm_0 -Model $Miner_Model -ExcludePoolName "$($_.ExcludePoolName)" -CoinSymbols @($_.CoinSymbols)) }
-                        else { @(Get-PoolAlgorithmKeys -Pools $Pools -Algorithm $Algorithm_Norm_0 -Model $Miner_Model -ExcludePoolName "$($_.ExcludePoolName)") }
+                        elseif ($SuffixMode -eq "KeysNoGPU") { @(Get-PoolAlgorithmKeys -Pools $Pools -MinerName $Name -Algorithm $Algorithm_Norm_0 -Model $Miner_Model -NoGPU -ExcludePoolName "$($_.ExcludePoolName)") }
+                        elseif ($SuffixMode -eq "KeysCoin") { @(Get-PoolAlgorithmKeys -Pools $Pools -MinerName $Name -Algorithm $Algorithm_Norm_0 -Model $Miner_Model -ExcludePoolName "$($_.ExcludePoolName)" -CoinSymbols @($_.CoinSymbols)) }
+                        else { @(Get-PoolAlgorithmKeys -Pools $Pools -MinerName $Name -Algorithm $Algorithm_Norm_0 -Model $Miner_Model -ExcludePoolName "$($_.ExcludePoolName)") }
 
             foreach ($Algorithm_Norm in $AlgoKeys) {
                 if ($PerKeySB) { . $PerKeySB }
@@ -351,7 +365,7 @@ function Invoke-CustomMiner {
                     $CPUAffinity= if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity) {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity} elseif ($Session.Config.Miners."$Name-CPU".Affinity) {$Session.Config.Miners."$Name-CPU".Affinity} elseif ($Session.Config.CPUMiningAffinity) {$Session.Config.CPUMiningAffinity}
                 }
 
-                foreach ($Algorithm_Norm in @(Get-PoolAlgorithmKeys -Pools $Pools -Algorithm $Algorithm_Norm_0 -Model $Miner_Model -NoGPU:(-not $IsGPU) -ExcludePoolName $ExcludePoolName)) {
+                foreach ($Algorithm_Norm in @(Get-PoolAlgorithmKeys -Pools $Pools -MinerName $Name -Algorithm $Algorithm_Norm_0 -Model $Miner_Model -NoGPU:(-not $IsGPU) -ExcludePoolName $ExcludePoolName)) {
                     $Pool = $Pools.$Algorithm_Norm
                     if (-not $Pool.Host) {continue}
                     if ($ExcludePoolName -and $Pool.Host -match $ExcludePoolName) {continue}

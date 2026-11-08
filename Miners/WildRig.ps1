@@ -120,7 +120,7 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
 
             $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
-		    $All_Algorithms = @(Get-PoolAlgorithmKeys -Pools $Pools -Algorithm $Algorithm_Norm_0 -Model $Miner_Model -ExcludePoolName "$($_.ExcludePoolName)" -CoinSymbols @($_.CoinSymbols))
+		    $All_Algorithms = @(Get-PoolAlgorithmKeys -Pools $Pools -MinerName $Name -Algorithm $Algorithm_Norm_0 -Model $Miner_Model -ExcludePoolName "$($_.ExcludePoolName)" -CoinSymbols @($_.CoinSymbols))
 
 		    foreach($Algorithm_Norm in $All_Algorithms) {
                 if (-not $Pools.$Algorithm_Norm.Host) {continue}
