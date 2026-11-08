@@ -2965,6 +2965,8 @@ function Invoke-Core {
         $MaxPoolAlternates = if ($Session.Config.EnablePoolAlternates) {[int]$Session.Config.MaxPoolAlternates} else {0}
 
         $Pools_AltCount        = @{}
+        $Pools_AltNames        = @{}   # per algorithm: pool names already in the alternate list
+        $Pools_AltOthers       = @{}   # per algorithm: how many of them are not the winner's own pool
         $Pools_AltSeen         = @{}
         # miners that already got an extra alternate slot, per algorithm (see below)
         $Pools_AltNamedSeen    = @{}
@@ -2979,6 +2981,8 @@ function Invoke-Core {
                 $Pools | Add-Member -MemberType NoteProperty -Name $Algorithm_Name -Value $Pool
                 if ($MaxPoolAlternates -gt 0) {
                     $Pools_AltCount[$Algorithm_Name] = 0
+                    $Pools_AltNames[$Algorithm_Name] = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+                    $Pools_AltOthers[$Algorithm_Name] = 0
                     $Pools_AltNamedSeen[$Algorithm_Name] = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
                     $Pool_Seen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
                     [void]$Pool_Seen.Add("$($Pool.Name)-$($Pool.Algorithm0)-$($Pool.CoinSymbol)")
@@ -3009,7 +3013,14 @@ function Invoke-Core {
                     if ($CandidateAllows -and $WinnerRejects) {$ExtraNamedMiners += $NamedMiner}
                 }
             }
-            if ($Pools_AltCount[$Algorithm_Name] -ge $MaxPoolAlternates -and -not $ExtraNamedMiners.Count) {continue}
+            if ($Pools_AltCount[$Algorithm_Name] -ge $MaxPoolAlternates -and -not $ExtraNamedMiners.Count) {
+                # the first MaxPoolAlternates entries are taken as they come. Beyond that only a pool
+                # not yet in the list gets in, up to MaxPoolAlternates pools besides the winner's own:
+                # a pool that offers the algorithm for several coins (Kryptex XMR/ZEPH/XTM) would
+                # otherwise fill every slot and a miner the winner's pool rules reject never reaches
+                # another pool. Bounded by 2 x MaxPoolAlternates entries plus the named extras
+                if ($Pools_AltOthers[$Algorithm_Name] -ge $MaxPoolAlternates -or $Pools_AltNames[$Algorithm_Name].Contains($Pool.Name)) {continue}
+            }
 
             # an alternate must sit in the same priority tier as the winner, otherwise an
             # active rental, a focussed wallet or post-block mining could be undercut
@@ -3032,6 +3043,7 @@ function Invoke-Core {
             }
             [void]$Global:PoolAlternates[$Algorithm_Name].Add($Pool_AltKey)
             foreach ($NamedMiner in $ExtraNamedMiners) {[void]$Pools_AltNamedSeen[$Algorithm_Name].Add($NamedMiner)}
+            if ($Pools_AltNames[$Algorithm_Name].Add($Pool.Name) -and $Pool.Name -ne $Pool_Winner.Name) {$Pools_AltOthers[$Algorithm_Name]++}
             $Pools_AltCount[$Algorithm_Name]++
         }
         
