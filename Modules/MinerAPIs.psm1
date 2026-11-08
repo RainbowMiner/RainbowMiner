@@ -3700,6 +3700,11 @@ class TTminerWrapper : Miner {
         if ($MJob.HasMoreData) {
             $HashRate_Name = [String]$this.Algorithm[0]
 
+            # Epic Cash rotates its PoW per block: ProgPowEpic GPUs idle for minutes between jobs and the
+            # summary keeps repeating the last average, so the stale lines must count as samples as well,
+            # otherwise the watchdog stops a healthy miner. The dead-worker check below still covers crashes.
+            $Stale_Ok = $this.BaseAlgorithm -contains "ProgPowEpic"
+
             Read-MinerJobOutput $MJob | ForEach-Object {
                 $Line = $_ -replace "`n|`r", ""
                 $Line_Simple = $Line -replace "\x1B\[[0-?]*[ -/]*[@-~]", ""
@@ -3730,7 +3735,7 @@ class TTminerWrapper : Miner {
                                 Write-Log -Level Warn "$($this.Name): appears crashed (no share for $($LastShare_Sec)s, power $($PowerDraw)W vs. peak $($this.MaxPowerDraw)W) - restarting miner"
                                 $this.Restart = $true
                             }
-                        } elseif ($Line_Live) {
+                        } elseif ($Line_Live -or $Stale_Ok) {
                             if ($Line_Simple -match "\[A(\d+):R(\d+):S(\d+)") {
                                 $this.UpdateShares(0,[Double]$Matches[1],[Double]$Matches[2],[Double]$Matches[3])
                             }
