@@ -129,14 +129,17 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         $Pool_Pass = $_.pass -replace "{diff}","{diff:,`$difficulty}"
         $Port_Check = @{"tcp"=$false;"ssl"=$false}
         foreach ($Pool_Port in $Pool_Request.config.ports) {
-            $Proto = if ($Pool_Port.tls) {"ssl"} else {"tcp"}
-            if ($Port_Check[$Proto]) {
-                continue
-            }
+            # A single port may support both TCP and TLS. Expose both so that
+            # the configured SSL preference can choose the appropriate one.
+            $Protocols = if ($Pool_Port.tcp -and $Pool_Port.tls) {@("tcp","ssl")} elseif ($Pool_Port.tls) {@("ssl")} else {@("tcp")}
+            foreach ($Proto in $Protocols) {
+                if ($Port_Check[$Proto]) {
+                    continue
+                }
 
-            $Port_Check[$Proto] = $true
-            
-            foreach ($Pool_Stratum in $Pool_Request.config.stratum) {
+                $Port_Check[$Proto] = $true
+
+                foreach ($Pool_Stratum in $Pool_Request.config.stratum) {
                 [PSCustomObject]@{
                     Algorithm     = $Pool_Algorithm_Norm
 				    Algorithm0    = $Pool_Algorithm_Norm
@@ -152,7 +155,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                     User          = $Pool_User
                     Pass          = $Pool_Pass
                     Region        = Get-Region "$(if ($Pool_Stratum.flag) {$Pool_Stratum.flag} else {"eu"})"
-                    SSL           = $Pool_Port.tls
+                    SSL           = ($Proto -eq "ssl")
                     Updated       = $Stat.Updated
                     PoolFee       = $Pool_Fee
                     Workers       = $Pool_Data.Workers
@@ -173,6 +176,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                     Worker        = "{workername:$Worker}"
                     Email         = $Email
                 }
+            }
             }
         }
     }
