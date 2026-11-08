@@ -300,6 +300,12 @@ function Get-MinerVersion {
     [CmdletBinding()]
     param($Version)
     try {
+        # Prefer the GitHub release tag over archive filenames, which contain extra text.
+        if ($Version -match '(?i)/releases/download/v?([0-9][0-9a-z.]*)') {
+            $Version = $Matches[1]
+        } elseif ($Version -match '(?i)[/_-]v?([0-9]+(?:\.[0-9]+){1,3}[a-z]?[0-9]*)') {
+            $Version = $Matches[1]
+        }
         if ($Version -match "/v([0-9a-z.]+)-") {$Version = $Matches[1]}
         $Version = $Version -replace "[^0-9a-z.]" -replace "^[^0-9]+" -replace "(\d)[a-z]*v(\d)","`$1.`$2" -replace "(\d)[a-z]*r(\d)","`$1.`$2" -replace "^([0-9]+)$","`$1.0"
         if ($Version -notmatch "^[0-9.]+$") {
@@ -312,6 +318,8 @@ function Get-MinerVersion {
     } catch {
         $Version = "1.0"
     }
+    $UnfoldedVersion = $Version
+    try {
     if ("$($Version -replace "[^\.]")".Length -gt 3) {
         $VersionArray = $Version -split "\." | %{[int]::parse($_)}
         $x = 1000
@@ -323,6 +331,16 @@ function Get-MinerVersion {
 
     }
     [System.Version]$Version
+    } catch {
+        $Parts = $UnfoldedVersion -split "\."
+        for ($Count = [Math]::Min(4,$Parts.Count); $Count -ge 2; $Count--) {
+            $FallbackVersion = $null
+            if ([System.Version]::TryParse(($Parts | Select-Object -First $Count) -join ".", [ref]$FallbackVersion)) {
+                return $FallbackVersion
+            }
+        }
+        [System.Version]"1.0"
+    }
 }
 
 function Compare-Version {
