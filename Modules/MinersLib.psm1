@@ -78,10 +78,10 @@ function Test-PoolConstraint {
     if ($PoolName -and -not (($Pool.Host -match $PoolName) -or ($Pool.Name -match $PoolName))) {return $false}
     if ($CoinSymbols -and $Pool.CoinSymbol -notin $CoinSymbols) {return $false}
     if ($ExcludeYiimp -and $Session.YiimpPools -and $Session.YiimpPools.Contains("$($Pool.Name)")) {return $false}
-    # Pool-level miner rules must participate in fallback admission, not only
-    # in the later Core.psm1 candidate filter. Otherwise an excluded miner
-    # never sees an eligible alternate for the winning algorithm.
-    if ($MinerName) {
+    # pool-level miner rules, otherwise Core drops the miner for the winning pool and no alternate
+    # is ever offered. HasMinerExclusions is set by Core on every entry and false for most of them,
+    # so the config lookups are skipped in the common case
+    if ($MinerName -and $Pool.HasMinerExclusions) {
         $PoolRules = $Session.Config.Pools."$($Pool.Name)"
         if (($PoolRules.MinerName.Count -and $PoolRules.MinerName -notcontains $MinerName) -or
             ($PoolRules.ExcludeMinerName.Count -and $PoolRules.ExcludeMinerName -contains $MinerName) -or
@@ -111,6 +111,14 @@ function Get-PoolAlgorithmKeys {
         if ($Model) {@($Algorithm,"$($Algorithm)-$($Model)")} else {@($Algorithm)}
     } else {
         if ($Model) {@($Algorithm,"$($Algorithm)-$($Model)","$($Algorithm)-GPU")} else {@($Algorithm,"$($Algorithm)-GPU")}
+    }
+
+    # a miner name alone is a constraint only when a winning pool carries miner rules: keep the
+    # fast path for the thousands of calls per round that have no other constraint
+    if ($MinerName -and -not ($ExcludePoolName -or $PoolName -or $CoinSymbols -or $ExcludeYiimp)) {
+        $HasRules = $false
+        foreach ($Key in $Keys) {if ($Pools.$Key.HasMinerExclusions) {$HasRules = $true; break}}
+        if (-not $HasRules) {return $Keys}
     }
 
     # fast path. $CoinSymbols is tested truthy, not by .Count: @($null) has a Count of 1

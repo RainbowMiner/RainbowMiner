@@ -2966,9 +2966,7 @@ function Invoke-Core {
 
         $Pools_AltCount        = @{}
         $Pools_AltSeen         = @{}
-        # Extra slots are reserved only for miners explicitly allowed on a
-        # candidate pool but excluded by the primary pool. This prevents
-        # crowd-out without exploding the alternate pool collection.
+        # miners that already got an extra alternate slot, per algorithm (see below)
         $Pools_AltNamedSeen    = @{}
         $Global:PoolAlternates = @{}
 
@@ -2992,17 +2990,15 @@ function Invoke-Core {
             if ($MaxPoolAlternates -le 0) {continue}
             $Pool_Winner = $Pools.$Algorithm_Name
 
-            # Most miners only need the normal MaxPoolAlternates entries.
-            # When a pool explicitly permits miners barred by the primary,
-            # retain at most one additional ranked offering per such miner.
-            # This prevents allowlisted fallbacks getting crowded out by
-            # incompatible general pools, without materializing every pool.
+            # a pool that explicitly allows a miner the winner rejects gets one extra slot per such
+            # miner beyond MaxPoolAlternates, so general pools cannot crowd that fallback out.
+            # Only pools with an allow list enter the loop, the rest pay for two .Count checks
             $ExtraNamedMiners = @()
             $CandidateRules = $Session.Config.Pools."$($Pool.Name)"
-            $NamedMiners = @($CandidateRules.MinerName) + @($Pool.MinerName) | Where-Object {$_} | Select-Object -Unique
-            if ($NamedMiners) {
+            if ($CandidateRules.MinerName.Count -or $Pool.MinerName.Count) {
                 $WinnerRules = $Session.Config.Pools."$($Pool_Winner.Name)"
-                foreach ($NamedMiner in $NamedMiners) {
+                foreach ($NamedMiner in @($CandidateRules.MinerName) + @($Pool.MinerName)) {
+                    if (-not $NamedMiner -or $ExtraNamedMiners -contains $NamedMiner -or $Pools_AltNamedSeen[$Algorithm_Name].Contains($NamedMiner)) {continue}
                     $CandidateAllows = (-not $CandidateRules.MinerName.Count -or $CandidateRules.MinerName -contains $NamedMiner) -and
                                        (-not $Pool.MinerName.Count -or $Pool.MinerName -contains $NamedMiner) -and
                                        ($CandidateRules.ExcludeMinerName -notcontains $NamedMiner) -and ($Pool.ExcludeMinerName -notcontains $NamedMiner)
@@ -3010,9 +3006,7 @@ function Invoke-Core {
                                      ($Pool_Winner.ExcludeMinerName -contains $NamedMiner) -or
                                      ($WinnerRules.MinerName.Count -and $WinnerRules.MinerName -notcontains $NamedMiner) -or
                                      ($Pool_Winner.MinerName.Count -and $Pool_Winner.MinerName -notcontains $NamedMiner)
-                    if ($CandidateAllows -and $WinnerRejects -and -not $Pools_AltNamedSeen[$Algorithm_Name].Contains($NamedMiner)) {
-                        $ExtraNamedMiners += $NamedMiner
-                    }
+                    if ($CandidateAllows -and $WinnerRejects) {$ExtraNamedMiners += $NamedMiner}
                 }
             }
             if ($Pools_AltCount[$Algorithm_Name] -ge $MaxPoolAlternates -and -not $ExtraNamedMiners.Count) {continue}
