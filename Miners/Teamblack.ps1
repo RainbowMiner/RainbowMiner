@@ -146,7 +146,7 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
                         Path             = $Path
                         Arguments        = "--algo $($Algorithm_0)$(if ($Pools.$Algorithm_Norm.SSL) {" --ssl --ssl-verify-none"}) --hostname $($Pools.$Algorithm_Norm.Host) $(if ($Pools.$Algorithm_Norm.SSL) {"--ssl-port"} else {"--port"}) $($Pool_Port) --wallet $($Pool_Wallet) --worker-name $($Pools.$Algorithm_Norm.Worker)$($Pool_Passwords) $($Pool_Devices)$(if ($_.MainAlgorithm -eq "verthash") {" --verthash-data $($Miner_DatFile)"})$(if ($Miner_Vendor -eq "NVIDIA" -and $Xintensity -ge 1) {" --xintensity $($Xintensity)"})$(if ($LHRCUDA) {" --lhr-unlock [$($LHRCUDA)]"}) --api --api-port `$mport --no-ansi --no-cpu $($_.Params)"
                         HashRates        = [PSCustomObject]@{$Algorithm_Norm = $($Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week)}
-                        API              = "TBMiner"
+                        API              = if ($Algorithm_Norm_0 -eq "PearlHash") {"TeamblackWrapper"} else {"TBMiner"}
                         Port             = $Miner_Port
                         FaultTolerance   = $_.FaultTolerance
                         ExtendInterval   = $_.ExtendInterval

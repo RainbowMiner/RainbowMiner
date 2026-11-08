@@ -3471,7 +3471,31 @@ class TeamblackWrapper : Miner {
             Read-MinerJobOutput $MJob | ForEach-Object {
                 $Line = $_ -replace "`n|`r", ""
                 $Line_Simple = $Line -replace "\x1B\[[0-?]*[ -/]*[@-~]", ""
-                if ($Line_Simple -notmatch "GPU\d" -and $Line_Simple -match "([\d\s\./hkMGTPs]+?)(\d+)/(\d+)[/\s].*\([\d\.]+\)$") {
+                # TBMiner 2.45's PearlHash JSON API can overflow its 32-bit
+                # hashrate field. Read the miner's printed aggregate instead;
+                # do not infer a rate from the overflowed API value.
+                if ($HashRate_Name -eq "PearlHash" -and $Line_Simple -match '^\s+[\d.,]+\s+[kMGTP]?H/W\s+([\d.,]+)\s*([kMGTP]?H/s)\s+[\d.,]+\s*[kMGTP]?H/s\s+(\d+)/(\d+)/(\d+)\s+[\d.,]+%') {
+                    $HashRate_Value = [double]($Matches[1] -replace ',', '.')
+                    $HashRate_Unit = $Matches[2].ToUpperInvariant()
+                    $Accepted_Shares = [Int64]$Matches[3]
+                    $Rejected_Shares = [Int64]$Matches[4]
+                    $Stale_Shares = [Int64]$Matches[5]
+                    $HashRate_Multiplier = switch ($HashRate_Unit) {
+                        "KH/S" {1E+3}
+                        "MH/S" {1E+6}
+                        "GH/S" {1E+9}
+                        "TH/S" {1E+12}
+                        "PH/S" {1E+15}
+                        default {0}
+                    }
+                    $HashRate_Value *= $HashRate_Multiplier
+                    if ($HashRate_Value -gt 0 -and -not [double]::IsInfinity($HashRate_Value)) {
+                        $HashRate = [PSCustomObject]@{}
+                        $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+                        $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares,$Stale_Shares)
+                        $this.AddMinerData($Line_Simple,$HashRate)
+                    }
+                } elseif ($Line_Simple -notmatch "GPU\d" -and $Line_Simple -match "([\d\s\./hkMGTPs]+?)(\d+)/(\d+)[/\s].*\([\d\.]+\)$") {
                     $Accepted_Shares = [Int64]$Matches[2]
                     $Rejected_Shares = [Int64]$Matches[3]
 
