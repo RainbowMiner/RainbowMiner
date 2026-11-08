@@ -49,6 +49,13 @@ $Pools_Data = @(
     #[PSCustomObject]@{symbol = "XEL";   port = 2666; fee = 0.9; rpc = "xelis";      user = "{wallet}{=diff}.{worker}"; pass="x"}
 )
 
+# Different algorithms for the same coin must not share profitability history.
+$Pool_MultiAlgoCurrencies = @(
+    $Pools_Data | Group-Object symbol | Where-Object {
+        @($_.Group | ForEach-Object { [string]$_.algorithm } | Sort-Object -Unique).Count -gt 1
+    } | ForEach-Object { $_.Name }
+)
+
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
     $Pool_Coin          = Get-Coin $_.symbol -Algorithm $_.algorithm
     $Pool_Currency      = $_.symbol
@@ -81,6 +88,9 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         $timestamp  = Get-UnixTimestamp
 
         $Pool_StatFn = "$($Name)_$($Pool_Currency)_Profit"
+        if ($Pool_Currency -in $Pool_MultiAlgoCurrencies) {
+            $Pool_StatFn = "$($Name)_$($Pool_Currency)_$($Pool_Algorithm_Norm)_Profit"
+        }
         $Pool_Reward = "Live"
 
         $networkHashrate = [decimal]$Pool_Request.network.hashrate
