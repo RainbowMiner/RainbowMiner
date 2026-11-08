@@ -80,7 +80,8 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
 
         $timestamp  = Get-UnixTimestamp
 
-        $Pool_StatFn = "$($Name)_$($Pool_Currency)_Profit"
+        # a coin listed with several algorithms (XTM) gets one profit stat per algorithm
+        $Pool_StatFn = "$($Name)_$($Pool_Currency)$(if ($_.algorithm) {"_$($Pool_Algorithm_Norm)"})_Profit"
         $Pool_Reward = "Live"
 
         $networkHashrate = [decimal]$Pool_Request.network.hashrate
