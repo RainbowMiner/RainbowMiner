@@ -320,18 +320,18 @@ function Get-MinerVersion {
     }
     $UnfoldedVersion = $Version
     try {
-    if ("$($Version -replace "[^\.]")".Length -gt 3) {
-        $VersionArray = $Version -split "\." | %{[int]::parse($_)}
-        $x = 1000
-        for($i=$VersionArray.Count -2;$i -gt 2;$i--) {
-            $VersionArray[$i]*=$x
-            $x*=1000
+        if ("$($Version -replace "[^\.]")".Length -gt 3) {
+            $VersionArray = $Version -split "\." | %{[int]::parse($_)}
+            $x = 1000
+            for($i=$VersionArray.Count -2;$i -gt 2;$i--) {
+                $VersionArray[$i]*=$x
+                $x*=1000
+            }
+            $Version = "$(($VersionArray | Select-Object -First 3) -join ".").$(($VersionArray | Select-Object -Skip 3 | Measure-Object -Sum).Sum)"
         }
-        $Version = "$(($VersionArray | Select-Object -First 3) -join ".").$(($VersionArray | Select-Object -Skip 3 | Measure-Object -Sum).Sum)"
-
-    }
-    [System.Version]$Version
+        [System.Version]$Version
     } catch {
+        # a component that does not fit: keep the longest prefix that still parses
         $Parts = $UnfoldedVersion -split "\."
         for ($Count = [Math]::Min(4,$Parts.Count); $Count -ge 2; $Count--) {
             $FallbackVersion = $null
