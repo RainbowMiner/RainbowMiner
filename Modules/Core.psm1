@@ -4922,8 +4922,15 @@ function Invoke-Core {
                 $Miner_DeviceModel = $Miner.DeviceModel
                 $TimersToAdd = [System.Collections.Generic.List[PSCustomObject]]::new()
 
+                $Miner_Index = 0
+
                 foreach ($Miner_Algorithm in $Miner.Algorithm) {
-                    $Miner_Pool = $Pools.$Miner_Algorithm.Name
+                    # the miner keeps the pool of its start round and the round-end and stop checks match on
+                    # it: a pool-alternate key may be absent from this round's $Pools, which would leave the
+                    # timer without a pool name and the watchdog blind for this miner
+                    $Miner_Pool = "$($Miner.Pool[$Miner_Index])"
+                    if (-not $Miner_Pool) {$Miner_Pool = $Pools.$Miner_Algorithm.Name}
+                    $Miner_Index++
 
                     if (Test-Intersect @($Miner_Name,($Miner_Algorithm -replace '\-.*$'),$Miner_Pool) $Session.Config.ExcludeFromWatchdog) {
                         continue
