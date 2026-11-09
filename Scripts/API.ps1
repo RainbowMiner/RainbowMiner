@@ -655,9 +655,11 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             Break
         }
         "/minerstatsbackup" {
-            # Action=create|restore|delete (POST) or download (GET), Name=<backup zip name>
+            # Action=create|restore|delete (POST) or download (GET), Name=<backup zip name>,
+            # Mode=missing restores only the stats that do not exist today
             $BackupAction = "$($Parameters.Action)".Trim().ToLower()
             $BackupName   = "$($Parameters.Name)".Trim()
+            $BackupMode   = "$($Parameters.Mode)".Trim().ToLower()
             if ($BackupAction -eq "download") {
                 if ($BackupPath = Get-MinerStatsBackupPath -Name $BackupName) {
                     $Data = [System.IO.File]::ReadAllBytes($BackupPath)
@@ -675,7 +677,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 } else {
                     try {
                         if ($BackupAction -eq "create") {$Result = New-MinerStatsBackup}
-                        elseif ($BackupAction -eq "restore") {$Result = Restore-MinerStatsBackup -Name $BackupName}
+                        elseif ($BackupAction -eq "restore") {$Result = Restore-MinerStatsBackup -Name $BackupName -OnlyMissing:($BackupMode -eq "missing")}
                         elseif ($BackupAction -eq "delete") {Remove-MinerStatsBackup -Name $BackupName}
                         else {throw "Unknown action"}
                         $Success = $true
@@ -685,8 +687,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 }
                 $Data = ConvertTo-Json ([PSCustomObject]@{Success=$Success;Error=$ErrMsg;Result=$Result}) -Depth 10
             }
-            $BackupAction = $BackupName = $BackupPath = $Success = $ErrMsg = $Result = $null
-            Remove-Variable -Name BackupAction, BackupName, BackupPath, Success, ErrMsg, Result -ErrorAction Ignore
+            $BackupAction = $BackupName = $BackupMode = $BackupPath = $Success = $ErrMsg = $Result = $null
+            Remove-Variable -Name BackupAction, BackupName, BackupMode, BackupPath, Success, ErrMsg, Result -ErrorAction Ignore
             Break
         }
         "/minerstatsstale" {

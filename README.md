@@ -551,6 +551,11 @@ the web interface:
 - **Restore** replaces all current benchmarks with the ones from the backup. The current
   benchmarks are saved as a "before restore" backup first, so a restore can always be undone.
   RainbowMiner uses the restored benchmarks from the next round on, no restart needed
+- **Restore missing** adds only the benchmarks from the backup that do not exist today, e.g.
+  after a cleanup removed too much, and leaves the current benchmarks untouched (they are saved
+  as a "before restore" backup as well). Restored files keep their original date, so with
+  EnableAutoBenchmark a restored benchmark of a miner that was updated since the backup may be
+  benchmarked again - that is intended
 - restore and delete are blocked, while "APIlockConfig" is set to 1 in config.txt
 - **Clean up stale benchmarks** lists the benchmarks that cannot be used any more and that
   have not been updated for the given number of days (default 30): a device the system does

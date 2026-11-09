@@ -7,6 +7,9 @@
 <p class="text-muted small">
     The backups are stored in .\Stats\Backups. A restore replaces all current miner stats with the ones from the backup,
     the current stats are saved as a "before restore" backup first, so a restore can always be undone.
+    "Restore missing" adds only the stats from the backup that do not exist today and leaves the current ones untouched.
+    Restored files keep their original date, so with EnableAutoBenchmark a restored stat of a miner that was updated
+    since the backup may be benchmarked again.
 </p>
 
 <div class="d-flex align-items-center mb-2">
@@ -26,7 +29,7 @@
             <th data-field="Files" data-align="right" data-sortable="true">Stats</th>
             <th data-field="tSize" data-align="right">Size</th>
             <th data-field="Name">File</th>
-            <th data-field="tActions" data-align="right" data-min-width="120" data-formatter="formatMsbActions">Actions</th>
+            <th data-field="tActions" data-align="right" data-min-width="150" data-formatter="formatMsbActions">Actions</th>
         </tr>
     </thead>
 </table>
@@ -101,6 +104,7 @@
         return '<div class="btn-group btn-group-sm">' +
             '<a class="btn btn-outline-secondary" href="/minerstatsbackup?Action=download&Name=' + encodeURIComponent(item.Name) + '" title="Download"><i class="bi bi-download"></i></a>' +
             '<button type="button" class="btn btn-outline-primary msb-act-restore" data-name="' + n + '" title="Restore"><i class="bi bi-arrow-counterclockwise"></i></button>' +
+            '<button type="button" class="btn btn-outline-primary msb-act-restoremissing" data-name="' + n + '" title="Restore missing only"><i class="bi bi-file-earmark-plus"></i></button>' +
             '<button type="button" class="btn btn-outline-danger msb-act-delete" data-name="' + n + '" title="Delete"><i class="bi bi-trash"></i></button>' +
             '</div>';
     };
@@ -157,6 +161,11 @@
                     if (!confirm("Restore the miner stats from " + name + "?\n\nAll current miner stats will be replaced. They are saved as a \"before restore\" backup first.")) return;
                     const res = await postBackup({ Action: "restore", Name: name }, 'Restore');
                     if (res) rbmShowModal(res.Result.Files + ' miner stats have been restored from ' + name + '.' + (res.Result.Saved ? ' The previous stats were saved as ' + res.Result.Saved + '.' : '') + ' RainbowMiner uses them from the next round on.', 'Backup restored');
+                } else if (btn.classList.contains("msb-act-restoremissing")) {
+                    if (!guardWrite()) return;
+                    if (!confirm("Restore only the miner stats from " + name + " that are missing today?\n\nCurrent stats stay untouched; they are saved as a \"before restore\" backup first.")) return;
+                    const res = await postBackup({ Action: "restore", Mode: "missing", Name: name }, 'Restore missing');
+                    if (res) rbmShowModal(res.Result.Files + ' missing miner stats have been restored from ' + name + ', ' + res.Result.Skipped + ' existing stats were kept.' + (res.Result.Saved ? ' The previous stats were saved as ' + res.Result.Saved + '.' : '') + ' RainbowMiner uses the restored stats from the next round on.', 'Missing stats restored');
                 } else if (btn.classList.contains("msb-act-delete")) {
                     if (!guardWrite()) return;
                     if (!confirm("Delete the backup " + name + "?")) return;

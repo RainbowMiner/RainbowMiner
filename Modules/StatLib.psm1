@@ -965,7 +965,9 @@ function Restore-MinerStatsBackup {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [String]$Name
+        [String]$Name,
+        [Parameter(Mandatory = $false)]
+        [Switch]$OnlyMissing = $false
     )
 
     if (-not ($ZipPath = Get-MinerStatsBackupPath -Name $Name)) {throw "Backup $Name not found"}
@@ -977,6 +979,7 @@ function Restore-MinerStatsBackup {
 
     $Zip = $null
     $Restored = [System.Collections.Generic.List[string]]::new()
+    $Skipped = 0
     $Saved = $null
     try {
         $Zip = [System.IO.Compression.ZipFile]::OpenRead($ZipPath)
@@ -991,12 +994,16 @@ function Restore-MinerStatsBackup {
             $Saved = (New-MinerStatsBackup -Tag "beforerestore").Name
         }
 
-        foreach ($File in @([System.IO.Directory]::GetFiles($StatsPath, "*.txt") | Where-Object {$_ -match "_HashRate\.txt$"})) {
-            [System.IO.File]::Delete($File)
+        if (-not $OnlyMissing) {
+            foreach ($File in @([System.IO.Directory]::GetFiles($StatsPath, "*.txt") | Where-Object {$_ -match "_HashRate\.txt$"})) {
+                [System.IO.File]::Delete($File)
+            }
         }
 
         foreach ($Entry in $Entries) {
             $Target = [System.IO.Path]::Combine($StatsPath, $Entry.FullName)
+            # -OnlyMissing fills the gaps only, a stat that exists today is left as it is
+            if ($OnlyMissing -and [System.IO.File]::Exists($Target)) {$Skipped++; continue}
             $Source = $null
             $Output = $null
             try {
@@ -1022,8 +1029,12 @@ function Restore-MinerStatsBackup {
         [void](Get-StatFromFile -Path $Target -Name $Key -Cached -Check "Minute")
     }
 
-    Write-Log "Miner stats backup $Name restored with $($Restored.Count) files$(if ($Saved) {", previous stats saved as $Saved"})"
-    [PSCustomObject]@{Name = $Name; Files = $Restored.Count; Saved = $Saved}
+    if ($OnlyMissing) {
+        Write-Log "Miner stats backup $Name restored $($Restored.Count) missing files, $Skipped existing kept$(if ($Saved) {", previous stats saved as $Saved"})"
+    } else {
+        Write-Log "Miner stats backup $Name restored with $($Restored.Count) files$(if ($Saved) {", previous stats saved as $Saved"})"
+    }
+    [PSCustomObject]@{Name = $Name; Files = $Restored.Count; Skipped = $Skipped; Saved = $Saved}
 }
 
 function Remove-MinerStatsBackup {
