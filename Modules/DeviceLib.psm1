@@ -2034,7 +2034,14 @@ param(
             [void]$ArgumentsList.Add($arg)
         }
         [void]$ArgumentsList.Add("-i $($GoodDevices -join ",")")
-        $SMI_Result = Invoke-NvidiaSmi -Query $Query -Arguments $ArgumentsList -Runas:$Runas
+        $Global:GlobalNvidiaSMIFault = $null
+        $SMI_Result = @(Invoke-NvidiaSmi -Query $Query -Arguments $ArgumentsList -Runas:$Runas)
+        # a GPU that fell off the bus aborts the query: fewer rows than devices is a fault, too (read by Test-GPU)
+        $GoodDevices_Count = ($GoodDevices | Measure-Object).Count
+        if (-not $Global:GlobalNvidiaSMIFault -and $SMI_Result.Count -lt $GoodDevices_Count) {
+            $Global:GlobalNvidiaSMIFault = "nvidia-smi returned $($SMI_Result.Count) of $($GoodDevices_Count) GPUs"
+        }
+        $Global:GlobalNvidiaSMIFaultTime = (Get-Date).ToUniversalTime()
         $DeviceId = 0
         $Global:GlobalNvidiaSMIList | Foreach-Object {
             if ($_ -ne "error") {$SMI_Result[$DeviceId];$DeviceId++}
@@ -2045,7 +2052,14 @@ param(
         if ($Query) {
             $ArgumentsString = "$ArgumentsString --query-gpu=$($Query -join ',') --format=csv,noheader,nounits"
             $CsvParams =  @{Header = @($Query | Foreach-Object {$_ -replace "[^a-z_-]","_" -replace "_+","_"} | Select-Object)}
-            Invoke-Exe -FilePath $NVSMI -ArgumentList $ArgumentsString.Trim() -ExcludeEmptyLines -ExpandLines -Runas:$Runas | ConvertFrom-Csv @CsvParams | Foreach-Object {
+            $SMI_Lines = @(Invoke-Exe -FilePath $NVSMI -ArgumentList $ArgumentsString.Trim() -ExcludeEmptyLines -ExpandLines -Runas:$Runas)
+            # a lost GPU replaces the csv rows with a one-line message
+            $SMI_Fault = $SMI_Lines | Where-Object {$_ -match "GPU is lost|Unable to determine the device handle"} | Select-Object -First 1
+            if ($SMI_Fault) {
+                $Global:GlobalNvidiaSMIFault = "$SMI_Fault"
+                $SMI_Lines = @($SMI_Lines | Where-Object {$_ -notmatch "GPU is lost|Unable to determine the device handle"})
+            }
+            $SMI_Lines | ConvertFrom-Csv @CsvParams | Foreach-Object {
                 $obj = $_
                 $obj.PSObject.Properties.Name | Foreach-Object {
                     $v = $obj.$_
@@ -2562,14 +2576,33 @@ function Get-DeviceModelName {
 }
 
 function Test-GPU {
-    #$VideoCardsAvail = Get-GPUs
-    $GPUfail = 0
-    #Get-GPUobjects | Foreach-Object { if ( $VideoCardsAvail.DeviceID -notcontains $_.DeviceID ) { $GPUfail++ } }
-    if ($GPUfail -ge 1) {
-        Write-Log -Level Error "$($GPUfail) failing GPU(s)! PC will reboot in 5 seconds"
-        Start-Sleep 5
-        $reboot = @("-r", "-f", "-t", 0)
-        & shutdown $reboot        
+    # RebootOnGPUFailure: a GPU that fell off the bus makes nvidia-smi abort with "GPU is lost" or return
+    # fewer rows than devices. The per-round device query records that in $Global:GlobalNvidiaSMIFault,
+    # only a round without a query runs one here. Two consecutive faulty rounds reboot the rig.
+    $Devices = @($Global:GlobalCachedDevices | Where-Object {$_.Type -eq "GPU" -and $_.Vendor -eq "NVIDIA"})
+    if (-not $Devices.Count) {return}
+
+    if ($Script:GPUFaultRounds -eq $null) {$Script:GPUFaultRounds = 0;$Script:GPUFaultChecked = [DateTime]::MinValue}
+
+    if (-not (Test-Path Variable:Global:GlobalNvidiaSMIFaultTime) -or $Global:GlobalNvidiaSMIFaultTime -le $Script:GPUFaultChecked) {
+        Invoke-NvidiaSmi "index" -CheckForErrors > $null
+    }
+    $Script:GPUFaultChecked = (Get-Date).ToUniversalTime()
+
+    if ($Global:GlobalNvidiaSMIFault) {
+        $Script:GPUFaultRounds++
+        Write-Log -Level Warn "GPU failure detected: $($Global:GlobalNvidiaSMIFault)$(if ($Script:GPUFaultRounds -lt 2) {" (rebooting if it persists)"})"
+        if ($Script:GPUFaultRounds -ge 2) {
+            Write-Log -Level Error "$($Script:GPUFaultRounds) consecutive rounds with a failing GPU! Rebooting in 5 seconds"
+            Start-Sleep 5
+            try {
+                Invoke-Reboot
+            } catch {
+                Write-Log -Level Warn "Failed to reboot: $($_.Exception.Message)"
+            }
+        }
+    } else {
+        $Script:GPUFaultRounds = 0
     }
 }
 
