@@ -129,49 +129,52 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         $Pool_Pass = $_.pass -replace "{diff}","{diff:,`$difficulty}"
         $Port_Check = @{"tcp"=$false;"ssl"=$false}
         foreach ($Pool_Port in $Pool_Request.config.ports) {
-            $Proto = if ($Pool_Port.tls) {"ssl"} else {"tcp"}
-            if ($Port_Check[$Proto]) {
-                continue
-            }
+            # a port may serve plain TCP and TLS at once, emit both so the SSL preference can choose
+            $Protocols = @(if ($Pool_Port.tcp -or -not $Pool_Port.tls) {"tcp"}; if ($Pool_Port.tls) {"ssl"})
+            foreach ($Proto in $Protocols) {
+                if ($Port_Check[$Proto]) {
+                    continue
+                }
 
-            $Port_Check[$Proto] = $true
-            
-            foreach ($Pool_Stratum in $Pool_Request.config.stratum) {
-                [PSCustomObject]@{
-                    Algorithm     = $Pool_Algorithm_Norm
-				    Algorithm0    = $Pool_Algorithm_Norm
-                    CoinName      = $Pool_Coin.Name
-                    CoinSymbol    = $Pool_Currency
-                    Currency      = $Pool_Currency
-                    Price         = $Stat.$StatAverage #instead of .Live
-                    StablePrice   = $Stat.$StatAverageStable
-                    MarginOfError = $Stat.Week_Fluctuation
-                    Protocol      = "stratum+$($Proto)"
-                    Host          = "$(if ($Pool_Stratum.server) {$Pool_Stratum.server} else {$Pool_Stratum})"
-                    Port          = $Pool_Port.port
-                    User          = $Pool_User
-                    Pass          = $Pool_Pass
-                    Region        = Get-Region "$(if ($Pool_Stratum.flag) {$Pool_Stratum.flag} else {"eu"})"
-                    SSL           = $Pool_Port.tls
-                    Updated       = $Stat.Updated
-                    PoolFee       = $Pool_Fee
-                    Workers       = $Pool_Data.Workers
-                    Hashrate      = $Stat.HashRate_Live
-                    TSL           = $Pool_Data.TSL
-                    BLK           = $Stat.BlockRate_Average
-                    WTM           = $Pool_WTM
-                    EthMode       = $Pool_EthProxy
-                    Name          = $Name
-                    Penalty       = 0
-                    PenaltyFactor = 1
-				    Disabled      = $false
-				    HasMinerExclusions = $false
-                    Price_0       = 0.0
-				    Price_Bias    = 0.0
-				    Price_Unbias  = 0.0
-                    Wallet        = $Wallets.$Pool_Currency
-                    Worker        = "{workername:$Worker}"
-                    Email         = $Email
+                $Port_Check[$Proto] = $true
+
+                foreach ($Pool_Stratum in $Pool_Request.config.stratum) {
+                    [PSCustomObject]@{
+                        Algorithm     = $Pool_Algorithm_Norm
+                        Algorithm0    = $Pool_Algorithm_Norm
+                        CoinName      = $Pool_Coin.Name
+                        CoinSymbol    = $Pool_Currency
+                        Currency      = $Pool_Currency
+                        Price         = $Stat.$StatAverage #instead of .Live
+                        StablePrice   = $Stat.$StatAverageStable
+                        MarginOfError = $Stat.Week_Fluctuation
+                        Protocol      = "stratum+$($Proto)"
+                        Host          = "$(if ($Pool_Stratum.server) {$Pool_Stratum.server} else {$Pool_Stratum})"
+                        Port          = $Pool_Port.port
+                        User          = $Pool_User
+                        Pass          = $Pool_Pass
+                        Region        = Get-Region "$(if ($Pool_Stratum.flag) {$Pool_Stratum.flag} else {"eu"})"
+                        SSL           = ($Proto -eq "ssl")
+                        Updated       = $Stat.Updated
+                        PoolFee       = $Pool_Fee
+                        Workers       = $Pool_Data.Workers
+                        Hashrate      = $Stat.HashRate_Live
+                        TSL           = $Pool_Data.TSL
+                        BLK           = $Stat.BlockRate_Average
+                        WTM           = $Pool_WTM
+                        EthMode       = $Pool_EthProxy
+                        Name          = $Name
+                        Penalty       = 0
+                        PenaltyFactor = 1
+                        Disabled      = $false
+                        HasMinerExclusions = $false
+                        Price_0       = 0.0
+                        Price_Bias    = 0.0
+                        Price_Unbias  = 0.0
+                        Wallet        = $Wallets.$Pool_Currency
+                        Worker        = "{workername:$Worker}"
+                        Email         = $Email
+                    }
                 }
             }
         }
