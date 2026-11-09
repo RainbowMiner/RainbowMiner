@@ -316,6 +316,7 @@ of it at once. How the comparison price is calculated in detail, is explained in
 - **MinimumMiningIntervals** = minimum number of intervals a miner will run, before switching will be allowed [default=1]
 - **SwitchingPrevention** = finetune the switching prevention algorithm. Set to zero to disable [default=2]
 - **PoolSwitchingHysteresis** = prevention of pool-to-pool hopping: the higher, the less switching (in %, 0 to disable, can be overwritten per pool) [default=3]
+- **EnablePoolEndpointLatencySelection** = set to 1 to measure TCP connection latency of equivalent stratum endpoints and prefer a consistently faster endpoint for the *already selected* pool and coin. Default is off [default=0]. This does not compare different pools, coins, region-priority tiers, port modes, TCP/TLS variants or wallet identities, and does not override profitability or other pool-switching rules.
 - **MinerSwitchingHysteresis** = prevention of on-pool miner-to-miner hopping: the higher, the less switching (in %, 0 to disable) [default=3]
 - **EnableFastSwitching** = set to 1 to remove switching prevention completely. Expect a lot of switching [default=0]
 - **Delay** = extra delay in seconds, between switching to avoid blue screen [default=0]
@@ -327,6 +328,8 @@ of it at once. How the comparison price is calculated in detail, is explained in
 - **MaxAllowedLuck** = if luck (= time_since_last_block / time_to_find_one_block) is greater than that number, increase the penalty up to 100% (0=disable, inactive for solo pools) [default=3]
 - **MaxTimeSinceLastBlock** = if time_since_last_block is greater than that number, increase the penalty up to 100% (0=disable, time-units allowed in input, inactive for solo pools) [default=12h]
 - **ProfitSpikeProtection** = prevent profit files to be updated, if the actual value is greater than the avg. profit x this factor (0 to disable) [default=0]
+
+When `EnablePoolEndpointLatencySelection` is on, RainbowMiner probes only eligible alternate endpoints for offers that are currently being mined. It checks at most once every 180 seconds, using two TCP connection attempts per endpoint, and requires the alternative to be at least 30 ms **and** 30% faster on two consecutive checks. Following a latency-triggered switch, it enforces a 15-minute cooldown. The scan is bounded to four endpoints per group per pass (rotating through larger groups), 2.2 seconds per group and 2.5 seconds overall per selection cycle. A lone failed probe does not trigger a switch. This is a conservative connection-health preference, not a guarantee of increased mining rewards; share quality and pool profitability are tracked separately.
 
 ### Internet and network
 

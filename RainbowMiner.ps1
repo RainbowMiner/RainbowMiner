@@ -94,6 +94,7 @@ param(
     [Double]$SwitchingPrevention = 2, #zero does not prevent miners switching
     [Parameter(Mandatory = $false)]
     [Double]$PoolSwitchingHysteresis = 3, #switching prevention against pool-to-pool hopping, hysteresis offset in percent
+    [Switch]$EnablePoolEndpointLatencySelection = $false, #opt-in TCP latency preference for equivalent regional pool endpoints
     [Parameter(Mandatory = $false)]
     [Double]$MinerSwitchingHysteresis = 3, #switching prevention against on pool miner-to-miner hopping, hysteresis offset in percent
     [Parameter(Mandatory = $false)]

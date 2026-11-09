@@ -1,6 +1,8 @@
 ﻿using module .\MinerAPIs.psm1
 using module .\PauseMiners.psm1
 
+Import-Module (Join-Path $PSScriptRoot "PoolEndpointLatency.psm1")
+
 ##
 ## Core functions
 ##
@@ -2958,7 +2960,76 @@ function Invoke-Core {
                                 @{Expression={$Pools_PriceCmp["$($_.Name)-$($_.Algorithm0)-$($_.CoinSymbol)"]}; Descending=$true},
                                 @{Expression={$_.Region -eq $Session.Config.Region}; Descending=$true},
                                 @{Expression={$ix = $Session.Config.DefaultPoolRegion.IndexOf($_.Region);[int]($ix -ge 0)*(100-$ix)}; Descending=$true},
-                                @{Expression={$_.SSL -eq $Session.Config.Pools."$($_.Name)".SSL}; Descending=$true} | Foreach-Object { [void]$SortedPools.Add($_) }
+                                @{Expression={$_.SSL -eq $Session.Config.Pools."$($_.Name)".SSL}; Descending=$true},
+                                @{Expression={$_.Host}; Descending=$false},
+                                @{Expression={$_.Port}; Descending=$false} | Foreach-Object { [void]$SortedPools.Add($_) }
+
+        # Optional latency-aware selection can only replace the winner with an equivalent
+        # endpoint from the same offering. It never reorders pools/coins or region tiers.
+        if ($Session.Config.EnablePoolEndpointLatencySelection) {
+            $EndpointSelectionWatch = [Diagnostics.Stopwatch]::StartNew()
+            $EndpointAlgorithmsSeen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+            for ($ixEndpoint = 0; $ixEndpoint -lt $SortedPools.Count; $ixEndpoint++) {
+                $first = $SortedPools[$ixEndpoint]
+                if (-not $EndpointAlgorithmsSeen.Add("$($first.Algorithm)")) {continue}
+                if (-not $first.Host -or -not $first.Port) {continue}
+                $places = [System.Collections.Generic.List[int]]::new()
+                $candidates = [System.Collections.Generic.List[PSCustomObject]]::new()
+                for ($otherIx = $ixEndpoint; $otherIx -lt $SortedPools.Count; $otherIx++) {
+                    $other = $SortedPools[$otherIx]
+                    if ($other.Name -eq $first.Name -and $other.Algorithm -eq $first.Algorithm -and
+                        $other.Algorithm0 -eq $first.Algorithm0 -and $other.CoinSymbol -eq $first.CoinSymbol -and
+                        $other.Currency -eq $first.Currency -and $other.Region -eq $first.Region -and
+                        $other.SSL -eq $first.SSL -and $other.Protocol -eq $first.Protocol -and
+                        $other.User -eq $first.User -and $other.Pass -eq $first.Pass -and
+                        $other.EthMode -eq $first.EthMode -and
+                        $other.Port -eq $first.Port -and $other.Exclusive -eq $first.Exclusive -and
+                        $other.Idle -eq $first.Idle -and $other.PostBlockMining -eq $first.PostBlockMining -and
+                        $other.BenchmarkOnly -eq $first.BenchmarkOnly) {
+                        [void]$places.Add($otherIx)
+                        [void]$candidates.Add($other)
+                    }
+                }
+                if ($candidates.Count -lt 2) {continue}
+
+                # Probe only active offers; untouched alternatives and mining algorithms
+                # do not create a fleet-wide network-scan workload.
+                $currentEndpoint = ''
+                foreach ($running in $Global:ActiveMiners) {
+                    if ($running.Status -ne [MinerStatus]::Running) {continue}
+                    for ($runIx = 0; $runIx -lt $running.Pool.Count; $runIx++) {
+                        if (($running.Pool | Select-Object -Index $runIx) -ne $first.Name -or
+                            ($running.BaseAlgorithm | Select-Object -Index $runIx) -ne $first.Algorithm0 -or
+                            ($running.CoinSymbol | Select-Object -Index $runIx) -ne $first.CoinSymbol) {continue}
+                        foreach ($server in $candidates) {
+                            $endpointText = "$($server.Host):$($server.Port)"
+                            if ($running.Arguments -match [regex]::Escape($endpointText)) {
+                                $currentEndpoint = $endpointText
+                                break
+                            }
+                        }
+                        if ($currentEndpoint) {break}
+                    }
+                    if ($currentEndpoint) {break}
+                }
+                if (-not $currentEndpoint) {continue}
+
+                $RemainingBudget = [int](2500 - $EndpointSelectionWatch.ElapsedMilliseconds)
+                if ($RemainingBudget -lt 200) {continue}
+                $choice = Get-PoolEndpointChoice -Candidates $candidates.ToArray() -ActiveEndpoint $currentEndpoint -MaxProbeBudgetMs ([Math]::Min(2200,$RemainingBudget))
+                if (-not $choice -or -not $choice.Candidate) {continue}
+                if ($choice.Probed) {Write-Log "Endpoint health $($first.Name)/$($first.Algorithm)/$($first.CoinSymbol) active=${currentEndpoint}: $($choice.Reason)"}
+                $pos = $places.Where({$SortedPools[$_] -eq $choice.Candidate}) | Select-Object -First 1
+                if ($pos -ne $null -and $pos -ne $ixEndpoint) {
+                    $tmp = $SortedPools[$ixEndpoint]
+                    $SortedPools[$ixEndpoint] = $SortedPools[$pos]
+                    $SortedPools[$pos] = $tmp
+                    if ($choice.Switched) {
+                        Write-Log "Endpoint latency preference: $($first.Name)/$($first.Algorithm)/$($first.CoinSymbol): $($choice.Reason)"
+                    }
+                }
+            }
+        }
 
         # one ordered pass: the first entry per algorithm wins, later entries may become
         # alternates for miners that cannot use the winning pool
