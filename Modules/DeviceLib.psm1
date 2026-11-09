@@ -1102,6 +1102,8 @@ function Get-DeviceName {
 
             if ($Vendor -eq "NVIDIA") {
                 Invoke-NvidiaSmi "index","gpu_name","pci.device_id","pci.bus_id","driver_version" -CheckForErrors | ForEach-Object {
+                    # an empty row stands for a GPU nvidia-smi lists but cannot query
+                    if ($_.index -eq $null -or -not $_.gpu_name) {return}
                     $DeviceName = $_.gpu_name.Trim()
                     $SubId = if ($AdlResultSplit.Count -gt 1 -and $AdlResultSplit[1] -match "0x([A-F0-9]{4})") {$Matches[1]} else {"noid"}
                     if ($Vendor_Cards -and $Vendor_Cards.$DeviceName.$SubId) {$DeviceName = $Vendor_Cards.$DeviceName.$SubId}
@@ -1605,7 +1607,8 @@ function Update-DeviceInformation {
 
                 Invoke-NvidiaSmi "index","utilization.gpu","utilization.memory","temperature.gpu","power.draw","power.limit","fan.speed","pstate","clocks.current.graphics","clocks.current.memory","power.max_limit","power.default_limit" -CheckForErrors | ForEach-Object {
                     $Smi = $_
-                    $Devices | Where-Object Type_Vendor_Index -eq $DeviceId | Foreach-Object {
+                    # an empty row stands for a GPU nvidia-smi lists but cannot query: keep the last data
+                    if ($Smi.index -ne $null) {$Devices | Where-Object Type_Vendor_Index -eq $DeviceId | Foreach-Object {
                         $_.Data.Utilization       = if ($smi.utilization_gpu -ne $null) {$smi.utilization_gpu} else {100}
                         $_.Data.UtilizationMem    = $smi.utilization_memory
                         $_.Data.Temperature       = $smi.temperature_gpu
@@ -1622,7 +1625,7 @@ function Update-DeviceInformation {
 
                         if ($_.Data.PowerDefaultLimit) {$_.Data.PowerLimitPercent = [Math]::Floor(($_.Data.PowerLimit * 100) / $_.Data.PowerDefaultLimit)}
                         if (-not $_.Data.PowerDraw -and $Script:NvidiaCardsTDP."$($_.Model_Name)") {$_.Data.PowerDraw = $Script:NvidiaCardsTDP."$($_.Model_Name)" * ([double]$_.Data.PowerLimitPercent / 100) * ([double]$_.Data.Utilization / 100);$_.Data.PowerDrawEstimated = $true}
-                    }
+                    }}
                     $DeviceId++
                 }
             }
@@ -2036,15 +2039,17 @@ param(
         [void]$ArgumentsList.Add("-i $($GoodDevices -join ",")")
         $Global:GlobalNvidiaSMIFault = $null
         $SMI_Result = @(Invoke-NvidiaSmi -Query $Query -Arguments $ArgumentsList -Runas:$Runas)
-        # a GPU that fell off the bus aborts the query: fewer rows than devices is a fault, too (read by Test-GPU)
+        # a GPU that fell off the bus aborts or shortens the query: fewer usable rows than devices is a
+        # fault, too (read by Test-GPU). A row without a numeric index is a message, not a device
         $GoodDevices_Count = ($GoodDevices | Measure-Object).Count
-        if (-not $Global:GlobalNvidiaSMIFault -and $SMI_Result.Count -lt $GoodDevices_Count) {
-            $Global:GlobalNvidiaSMIFault = "nvidia-smi returned $($SMI_Result.Count) of $($GoodDevices_Count) GPUs"
+        $SMI_Rows = if ($Query -icontains "index") {@($SMI_Result | Where-Object {$_.index -ne $null}).Count} else {$SMI_Result.Count}
+        if (-not $Global:GlobalNvidiaSMIFault -and $SMI_Rows -lt $GoodDevices_Count) {
+            $Global:GlobalNvidiaSMIFault = "nvidia-smi returned $($SMI_Rows) of $($GoodDevices_Count) GPUs"
         }
         $Global:GlobalNvidiaSMIFaultTime = (Get-Date).ToUniversalTime()
         $DeviceId = 0
         $Global:GlobalNvidiaSMIList | Foreach-Object {
-            if ($_ -ne "error") {$SMI_Result[$DeviceId];$DeviceId++}
+            if ($_ -ne "error") {if ($SMI_Result[$DeviceId] -ne $null) {$SMI_Result[$DeviceId]} else {[PSCustomObject]@{}};$DeviceId++}
             else {[PSCustomObject]@{}}
         }
     } else {
@@ -2052,12 +2057,15 @@ param(
         if ($Query) {
             $ArgumentsString = "$ArgumentsString --query-gpu=$($Query -join ',') --format=csv,noheader,nounits"
             $CsvParams =  @{Header = @($Query | Foreach-Object {$_ -replace "[^a-z_-]","_" -replace "_+","_"} | Select-Object)}
-            $SMI_Lines = @(Invoke-Exe -FilePath $NVSMI -ArgumentList $ArgumentsString.Trim() -ExcludeEmptyLines -ExpandLines -Runas:$Runas)
-            # a lost GPU replaces the csv rows with a one-line message
-            $SMI_Fault = $SMI_Lines | Where-Object {$_ -match "GPU is lost|Unable to determine the device handle"} | Select-Object -First 1
-            if ($SMI_Fault) {
-                $Global:GlobalNvidiaSMIFault = "$SMI_Fault"
-                $SMI_Lines = @($SMI_Lines | Where-Object {$_ -notmatch "GPU is lost|Unable to determine the device handle"})
+            # a lost GPU adds a message line to the csv rows or replaces them: keep it out of the
+            # parser and record it for Test-GPU. With several columns every real row has a comma
+            $SMI_Lines = [System.Collections.Generic.List[string]]::new()
+            foreach ($SMI_Line in @(Invoke-Exe -FilePath $NVSMI -ArgumentList $ArgumentsString.Trim() -ExcludeEmptyLines -ExpandLines -Runas:$Runas)) {
+                if ($SMI_Line -match "GPU is lost|Unable to determine the device handle" -or ($Query.Count -gt 1 -and $SMI_Line -notmatch ",")) {
+                    if (-not $Global:GlobalNvidiaSMIFault) {$Global:GlobalNvidiaSMIFault = "$SMI_Line"}
+                } else {
+                    [void]$SMI_Lines.Add($SMI_Line)
+                }
             }
             $SMI_Lines | ConvertFrom-Csv @CsvParams | Foreach-Object {
                 $obj = $_
@@ -2589,7 +2597,13 @@ function Test-GPU {
     }
     $Script:GPUFaultChecked = (Get-Date).ToUniversalTime()
 
-    if ($Global:GlobalNvidiaSMIFault) {
+    if ($Script:GPUFaultBaseline -eq $null) {
+        # a GPU already missing at start is not recovered by another reboot: warn once, do not count it
+        $Script:GPUFaultBaseline = "$($Global:GlobalNvidiaSMIFault)"
+        if ($Script:GPUFaultBaseline) {Write-Log -Level Warn "GPU failure present at start, not rebooting for it: $($Script:GPUFaultBaseline)"}
+    }
+
+    if ($Global:GlobalNvidiaSMIFault -and "$($Global:GlobalNvidiaSMIFault)" -ne $Script:GPUFaultBaseline) {
         $Script:GPUFaultRounds++
         Write-Log -Level Warn "GPU failure detected: $($Global:GlobalNvidiaSMIFault)$(if ($Script:GPUFaultRounds -lt 2) {" (rebooting if it persists)"})"
         if ($Script:GPUFaultRounds -ge 2) {
