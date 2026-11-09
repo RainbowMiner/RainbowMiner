@@ -2958,7 +2958,9 @@ function Invoke-Core {
                                 @{Expression={$Pools_PriceCmp["$($_.Name)-$($_.Algorithm0)-$($_.CoinSymbol)"]}; Descending=$true},
                                 @{Expression={$_.Region -eq $Session.Config.Region}; Descending=$true},
                                 @{Expression={$ix = $Session.Config.DefaultPoolRegion.IndexOf($_.Region);[int]($ix -ge 0)*(100-$ix)}; Descending=$true},
-                                @{Expression={$_.SSL -eq $Session.Config.Pools."$($_.Name)".SSL}; Descending=$true} | Foreach-Object { [void]$SortedPools.Add($_) }
+                                @{Expression={$_.SSL -eq $Session.Config.Pools."$($_.Name)".SSL}; Descending=$true},
+                                @{Expression={$_.Host}; Descending=$false},
+                                @{Expression={$_.Port}; Descending=$false} | Foreach-Object { [void]$SortedPools.Add($_) }
 
         # one ordered pass: the first entry per algorithm wins, later entries may become
         # alternates for miners that cannot use the winning pool
