@@ -155,6 +155,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                         Pass          = $Pool_Pass
                         Region        = Get-Region "$(if ($Pool_Stratum.flag) {$Pool_Stratum.flag} else {"eu"})"
                         SSL           = ($Proto -eq "ssl")
+                        SSLSelfSigned = ($Proto -eq "ssl")
                         Updated       = $Stat.Updated
                         PoolFee       = $Pool_Fee
                         Workers       = $Pool_Data.Workers
