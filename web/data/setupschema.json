@@ -2385,6 +2385,32 @@
           }
         },
         {
+          "kind": "field",
+          "key": "EnablePoolLatencyPreference",
+          "id": "inputEnablePoolLatencyPreference",
+          "label": {
+            "html": "Pool latency preference",
+            "class": "col-sm-2 col-form-label"
+          },
+          "rowClasses": [],
+          "colClass": "col-sm-10",
+          "help": {
+            "html": "If a pool offers several hosts for the same region at the same price, prefer the host with the lowest measured connect latency. Hosts are probed in the background once per hour."
+          },
+          "control": "select",
+          "attrs": {},
+          "options": [
+            {
+              "value": "0",
+              "label": "Disable"
+            },
+            {
+              "value": "1",
+              "label": "Enable"
+            }
+          ]
+        },
+        {
           "kind": "inputgroup",
           "rowClasses": [],
           "label": {

@@ -439,3 +439,107 @@ function Get-BalancesPayouts {
         }
     }
 }
+#
+# Pool host latency (EnablePoolLatencyPreference)
+#
+# Offers of one pool that tie on price, region and SSL differ only by host. RBMLatency
+# measures their TCP connect time in the background, the result lives in
+# Data\poollatency.json and the pool sort prefers the lower value.
+#
+
+function Get-PoolLatency {
+    if ($Global:PoolLatency -eq $null) {
+        $Global:PoolLatency = @{}
+        if (Test-Path ".\Data\poollatency.json") {
+            try {
+                $Data = Get-ContentByStreamReader ".\Data\poollatency.json" | ConvertFrom-Json -ErrorAction Stop
+                foreach ($Entry in $Data.PSObject.Properties) {
+                    $Global:PoolLatency[$Entry.Name] = [PSCustomObject]@{ms = [double]$Entry.Value.ms; last = [double]$Entry.Value.last; fails = [int]$Entry.Value.fails; updated = [int64]$Entry.Value.updated}
+                }
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                Write-Log -Level Warn "Could not read Data\poollatency.json: $($_.Exception.Message)"
+            }
+        }
+    }
+    $Global:PoolLatency
+}
+
+function Start-PoolLatencyProbe {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $True)]
+        $Pools,
+        [Parameter(Mandatory = $False)]
+        [int]$Samples = 4,
+        [Parameter(Mandatory = $False)]
+        [int]$TimeoutMs = 1000
+    )
+    # only a host that competes with another host of the same offer needs a measurement
+    $Groups = @{}
+    foreach ($Pool in $Pools) {
+        $HostName = "$($Pool.Host)".ToLower()
+        if ($HostName -notmatch "^[a-z0-9.-]+$" -or -not $Pool.Port) {continue}
+        $Key = "$($Pool.Name)|$($Pool.Algorithm0)|$($Pool.CoinSymbol)|$($Pool.Currency)|$($Pool.Region)|$([int]$Pool.SSL)"
+        if (-not $Groups.ContainsKey($Key)) {$Groups[$Key] = @{}}
+        if (-not $Groups[$Key].ContainsKey($HostName)) {$Groups[$Key][$HostName] = [int]$Pool.Port}
+    }
+    $Endpoints = @{}
+    foreach ($Group in $Groups.Values) {
+        if ($Group.Count -lt 2) {continue}
+        foreach ($HostName in $Group.Keys) {
+            if (-not $Endpoints.ContainsKey($HostName)) {$Endpoints[$HostName] = "$($HostName):$($Group[$HostName])"}
+        }
+    }
+    if (-not $Endpoints.Count) {return 0}
+    if ([RBMLatency]::Start([string[]]@($Endpoints.Values), $Samples, $TimeoutMs, 4)) {$Endpoints.Count} else {0}
+}
+
+function Update-PoolLatency {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $False)]
+        $Results = $null
+    )
+    # merge the finished probes; the sort value moves only on a clear change, so jitter never flips a winner
+    if ($Results -eq $null) {$Results = [RBMLatency]::Collect()}
+    if (-not $Results.Count) {return 0}
+    $Latency = Get-PoolLatency
+    $Now = Get-UnixTimestamp
+    $Changed = 0
+    $Details = [System.Collections.Generic.List[string]]::new()
+    foreach ($Endpoint in @($Results.Keys | Sort-Object)) {
+        $HostName = $Endpoint -replace ":\d+$"
+        $Value = [double]$Results[$Endpoint]
+        $Entry = $Latency[$HostName]
+        if (-not $Entry) {
+            $Entry = [PSCustomObject]@{ms = 0.0; last = 0.0; fails = 0; updated = $Now}
+            $Latency[$HostName] = $Entry
+        }
+        $Entry.updated = $Now
+        if ($Value -gt 0) {
+            $Entry.last  = [Math]::Round($Value, 1)
+            $Entry.fails = 0
+            if ($Entry.ms -le 0 -or [Math]::Abs($Value - $Entry.ms) -ge [Math]::Max(10, 0.3 * $Entry.ms)) {
+                $Entry.ms = $Entry.last
+                $Changed++
+            }
+            [void]$Details.Add("$($HostName)=$([Math]::Round($Value))ms")
+        } else {
+            $Entry.last = -1
+            $Entry.fails++
+            # two misses an hour apart mark the host as down, a single one may be a hiccup
+            if ($Entry.fails -ge 2 -and $Entry.ms -ne -1) {
+                $Entry.ms = -1
+                $Changed++
+            }
+            [void]$Details.Add("$($HostName)=down")
+        }
+    }
+    foreach ($HostName in @($Latency.Keys)) {
+        if ($Latency[$HostName].updated -lt ($Now - 7*86400)) {$Latency.Remove($HostName)}
+    }
+    Set-ContentJson -PathToFile ".\Data\poollatency.json" -Data ([PSCustomObject]$Latency) -Quiet > $null
+    Write-Log "Pool latency: $($Results.Count) hosts probed, $($Changed) changed ($($Details -join ', '))"
+    $Changed
+}

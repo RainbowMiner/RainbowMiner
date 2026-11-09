@@ -324,6 +324,7 @@ of it at once. How the comparison price is calculated in detail, is explained in
 - **PoolAccuracyWeight** = adjust weight of pool accuracy on the profit comparison in % (0..100, 0=disable) [default=15]
 - **EnablePoolAlternates** = set to 1 to let a miner, that cannot use the most profitable pool of an algorithm, fall back to the best pool it can actually use (some miners only support an algorithm on certain pools) [default=1]
 - **MaxPoolAlternates** = if EnablePoolAlternates: maximum number of alternate pools offered per algorithm (0=disable) [default=2]
+- **EnablePoolLatencyPreference** = set to 1 to prefer the host with the lowest measured TCP connect latency, when a pool offers several hosts for the same region at the same price. The hosts are probed in the background once per hour, the result is kept in Data\poollatency.json. The preference never overrides the profit comparison or the region order [default=0]
 - **MaxAllowedLuck** = if luck (= time_since_last_block / time_to_find_one_block) is greater than that number, increase the penalty up to 100% (0=disable, inactive for solo pools) [default=3]
 - **MaxTimeSinceLastBlock** = if time_since_last_block is greater than that number, increase the penalty up to 100% (0=disable, time-units allowed in input, inactive for solo pools) [default=12h]
 - **ProfitSpikeProtection** = prevent profit files to be updated, if the actual value is greater than the avg. profit x this factor (0 to disable) [default=0]

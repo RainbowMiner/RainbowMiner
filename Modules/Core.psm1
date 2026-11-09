@@ -2951,16 +2951,48 @@ function Invoke-Core {
 
         Write-Log "Selecting best pool for each algorithm. "
         $SortedPools = [System.Collections.Generic.List[PSCustomObject]]::new()
-        $NewPools | Sort-Object @{Expression={$_.Exclusive -and -not $_.Idle}; Descending=$true}, 
-                                @{Expression={$Session.Config.Pools."$($_.Name)".FocusWallet -and $Session.Config.Pools."$($_.Name)".FocusWallet.Count -gt 0 -and $Session.Config.Pools."$($_.Name)".FocusWallet -icontains $_.Currency}; Descending=$true},
-                                @{Expression={$LockMiners -and $Session.LockMiners.Pools -icontains "$($_.Name)-$($_.Algorithm0)-$($_.CoinSymbol)"}; Descending=$true},
-                                @{Expression={$_.PostBlockMining}; Descending=$true},
-                                @{Expression={$Pools_PriceCmp["$($_.Name)-$($_.Algorithm0)-$($_.CoinSymbol)"]}; Descending=$true},
-                                @{Expression={$_.Region -eq $Session.Config.Region}; Descending=$true},
-                                @{Expression={$ix = $Session.Config.DefaultPoolRegion.IndexOf($_.Region);[int]($ix -ge 0)*(100-$ix)}; Descending=$true},
-                                @{Expression={$_.SSL -eq $Session.Config.Pools."$($_.Name)".SSL}; Descending=$true},
-                                @{Expression={$_.Host}; Descending=$false},
-                                @{Expression={$_.Port}; Descending=$false} | Foreach-Object { [void]$SortedPools.Add($_) }
+        $Pools_Latency = $null
+        if ($Session.Config.EnablePoolLatencyPreference) {
+            try {
+                if ($Session.PoolLatencyNext -eq $null) {$Session.PoolLatencyNext = [datetime]::MinValue}
+                Update-PoolLatency > $null
+                if ($Session.Timer -ge $Session.PoolLatencyNext -and -not [RBMLatency]::IsBusy) {
+                    $Session.PoolLatencyNext = $Session.Timer.AddMinutes(60)
+                    $Pools_LatencyCount = Start-PoolLatencyProbe -Pools $NewPools
+                    if ($Pools_LatencyCount) {
+                        Write-Log "Pool latency: probing $($Pools_LatencyCount) hosts"
+                        # a first start has no data yet: give the probe a moment, so the first selection is already the final one
+                        if (-not (Get-PoolLatency).Count) {
+                            $Pools_LatencyWait = 0
+                            while ([RBMLatency]::IsBusy -and $Pools_LatencyWait -lt 100) {Start-Sleep -Milliseconds 100; $Pools_LatencyWait++}
+                            Update-PoolLatency > $null
+                        }
+                    }
+                }
+                $Pools_Latency = Get-PoolLatency
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                Write-Log -Level Warn "Pool latency probe failed: $($_.Exception.Message)"
+            }
+        }
+
+        $Pools_SortKeys = @(
+            @{Expression={$_.Exclusive -and -not $_.Idle}; Descending=$true},
+            @{Expression={$Session.Config.Pools."$($_.Name)".FocusWallet -and $Session.Config.Pools."$($_.Name)".FocusWallet.Count -gt 0 -and $Session.Config.Pools."$($_.Name)".FocusWallet -icontains $_.Currency}; Descending=$true},
+            @{Expression={$LockMiners -and $Session.LockMiners.Pools -icontains "$($_.Name)-$($_.Algorithm0)-$($_.CoinSymbol)"}; Descending=$true},
+            @{Expression={$_.PostBlockMining}; Descending=$true},
+            @{Expression={$Pools_PriceCmp["$($_.Name)-$($_.Algorithm0)-$($_.CoinSymbol)"]}; Descending=$true},
+            @{Expression={$_.Region -eq $Session.Config.Region}; Descending=$true},
+            @{Expression={$ix = $Session.Config.DefaultPoolRegion.IndexOf($_.Region);[int]($ix -ge 0)*(100-$ix)}; Descending=$true},
+            @{Expression={$_.SSL -eq $Session.Config.Pools."$($_.Name)".SSL}; Descending=$true}
+        )
+        if ($Pools_Latency -and $Pools_Latency.Count) {
+            # lower connect latency first; an unmeasured host ranks behind the measured ones, a host that is down last
+            $Pools_SortKeys += @{Expression={$Pools_LatencyEntry = $Pools_Latency["$($_.Host)"]; if ($Pools_LatencyEntry -eq $null) {1e6} elseif ($Pools_LatencyEntry.ms -gt 0) {$Pools_LatencyEntry.ms} else {1e7}}; Descending=$false}
+        }
+        $Pools_SortKeys += @{Expression={$_.Host}; Descending=$false}
+        $Pools_SortKeys += @{Expression={$_.Port}; Descending=$false}
+        $NewPools | Sort-Object -Property $Pools_SortKeys | Foreach-Object { [void]$SortedPools.Add($_) }
 
         # one ordered pass: the first entry per algorithm wins, later entries may become
         # alternates for miners that cannot use the winning pool

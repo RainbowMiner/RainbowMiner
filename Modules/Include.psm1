@@ -125,6 +125,7 @@ function Set-OsFlags {
         }
 
         Initialize-DLLs -CSFileName "RBMToolBox.cs"
+        Initialize-DLLs -CSFileName "Latency.cs"
     }
 
     $Global:OsFlagsSet = $true

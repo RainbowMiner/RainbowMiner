@@ -1431,6 +1431,10 @@ The profit switcher can be controlled like follows. To be able to compare the po
   - alternates are only taken from pools of the same rank as the winner, so an exclusive rental (MiningRigRentals), a focussed wallet, a locked miner or post block mining is never undercut by an alternate
   - hashrates do not depend on the pool, so no additional benchmarks are needed
 
+- some pools offer several hosts for one region (e.g. a US east and a US west server). They tie on price, so the first in the list wins. With **EnablePoolLatencyPreference** set to 1, RainbowMiner measures the TCP connect latency of such hosts once per hour in the background and prefers the host with the lowest value
+  - the preference only decides among hosts of the same pool, region, SSL mode and price, it never overrides the profit comparison
+  - the stored value moves only on a clear change (at least 10 ms and 30%), so a running miner is not restarted for a few ms of jitter; a host that fails two probes in a row ranks last
+
 
 ### How can I make sure, my hand tuned config files in the Bin folders, will not be deleted during miner updates?
 
