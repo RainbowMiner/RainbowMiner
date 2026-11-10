@@ -495,6 +495,8 @@ function Set-PoolsConfigDefault {
             $Default = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = "0";Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";EnablePostBlockMining = "0";CoinSymbolPBM = "";DataWindow = "";StatAverage = "";StatAverageStable = "";MaxMarginOfError = "100";SwitchingHysteresis="";MaxAllowedLuck="";MaxTimeSinceLastBlock="";MaxTimeToFind="";Region="";SSL="";BalancesKeepAlive=""}
             $PoolsConfigDefault = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"
             $Pools = @(Get-ChildItem ".\Pools\*.ps1" -File | Select-Object -ExpandProperty BaseName | Where-Object {$_ -notin @("Userpools")})
+            # settings-only sections without a pool module, e.g. the Binance exchange API keys
+            $ConfigOnlyPools = @($PoolsConfigDefault.PSObject.Properties | Where-Object {$_.Value.ConfigOnly -and $_.Name -notin $Pools} | Foreach-Object {$_.Name})
 
             $Session.YiimpPools = @(Compare-Object $Pools @($PoolsConfigDefault.PSObject.Properties | Where-Object {$_.Value.Yiimp} | Foreach-Object {$_.Name}) -IncludeEqual -ExcludeDifferent | Foreach-Object {$_.InputObject})
 
@@ -510,8 +512,17 @@ function Set-PoolsConfigDefault {
             }
 
             if ($Pools.Count -gt 0 -or $Userpools.Count -gt 0) {
-                $Pools + $Userpools | Sort-Object -Unique | Foreach-Object {
+                $Pools + $Userpools + $ConfigOnlyPools | Sort-Object -Unique | Foreach-Object {
                     $Pool_Name = $_
+                    if ($Pool_Name -in $ConfigOnlyPools -and $Pool_Name -notin $Userpools) {
+                        $Setup_Content = [PSCustomObject]@{}
+                        foreach($SetupName in $PoolsConfigDefault.$Pool_Name.Fields.PSObject.Properties.Name) {
+                            $SetupValue = if ($Preset -and $Preset.$Pool_Name -and $Preset.$Pool_Name.$SetupName -ne $null) {$Preset.$Pool_Name.$SetupName} else {$PoolsConfigDefault.$Pool_Name.Fields.$SetupName}
+                            $Setup_Content | Add-Member $SetupName $SetupValue -Force
+                        }
+                        $Done | Add-Member $Pool_Name $Setup_Content
+                        return
+                    }
                     if ($Preset -and $Preset.PSObject.Properties.Name -icontains $Pool_Name) {
                         $Setup_Content = $Preset.$Pool_Name
                     } else {
