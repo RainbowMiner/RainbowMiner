@@ -50,7 +50,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "fishhash";        DAG = $true; MinMemGB = 5; Params = "";                     Vendor = @("NVIDIA")} #Fishhash/IRON from 2. April 2024
     [PSCustomObject]@{MainAlgorithm = "karlsenhashv2";                MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); Fee = 1.0} #KarlsenHashV2/KLS
     [PSCustomObject]@{MainAlgorithm = "nexapow";         DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); Fee = 2.0} #NexaPoW/NEXA
-    [PSCustomObject]@{MainAlgorithm = "octopus";         DAG = $true; MinMemGB = 4; Params = "";                     Vendor = @("NVIDIA"); Fee = 2.0; ZombieMode = @("NVIDIA")} #Octopus/CFX
+    [PSCustomObject]@{MainAlgorithm = "octopus";         DAG = $true; MinMemGB = 4; Params = "";                     Vendor = @("NVIDIA"); Fee = 2.0} #Octopus/CFX
     [PSCustomObject]@{MainAlgorithm = "KawPOW";          DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); Algorithm = "kawpow"; Fee = 1.0} #KawPOW
     [PSCustomObject]@{MainAlgorithm = "KawPOW2g";        DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); Algorithm = "kawpow"; Fee = 1.0; ExcludePoolName = "MiningRigRentals"} #KawPOW
     [PSCustomObject]@{MainAlgorithm = "KawPOW3g";        DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); Algorithm = "kawpow"; Fee = 1.0; ExcludePoolName = "MiningRigRentals"} #KawPOW
@@ -108,10 +108,10 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "karlsenhashv2";   DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); SecondaryAlgorithm = "sha256ton"; SecondaryPoolName = "Icemining"} #KarlsenHashV2/KLS + GRAM/CHAPA
     [PSCustomObject]@{MainAlgorithm = "karlsenhashv2";   DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); SecondaryAlgorithm = "sha3x"} #KarlsenHashV2/KLS + XTM
 
-    [PSCustomObject]@{MainAlgorithm = "octopus";         DAG = $true; MinMemGB = 4; Params = "";                     Vendor = @("NVIDIA"); SecondaryAlgorithm = "alephium"; Fee = 2.0; ZombieMode = @("NVIDIA")} #Octopus/CFX + ALPH
-    [PSCustomObject]@{MainAlgorithm = "octopus";         DAG = $true; MinMemGB = 4; Params = "";                     Vendor = @("NVIDIA"); SecondaryAlgorithm = "sha256ton"; Fee = 2.0; SecondaryPoolName = "Icemining"; ZombieMode = @("NVIDIA")} #Octopus/CFX + GRAM/CHAPA
-    [PSCustomObject]@{MainAlgorithm = "octopus";         DAG = $true; MinMemGB = 4; Params = "";                     Vendor = @("NVIDIA"); SecondaryAlgorithm = "sha3x"; Fee = 2.0; ZombieMode = @("NVIDIA")} #Octopus/CFX + XTM
-    [PSCustomObject]@{MainAlgorithm = "octopus";         DAG = $true; MinMemGB = 4; Params = "";                     Vendor = @("NVIDIA"); SecondaryAlgorithm = "sha512256d"; Fee = 2.0; ZombieMode = @("NVIDIA")} #Octopus/CFX + RXD
+    [PSCustomObject]@{MainAlgorithm = "octopus";         DAG = $true; MinMemGB = 4; Params = "";                     Vendor = @("NVIDIA"); SecondaryAlgorithm = "alephium"; Fee = 2.0} #Octopus/CFX + ALPH
+    [PSCustomObject]@{MainAlgorithm = "octopus";         DAG = $true; MinMemGB = 4; Params = "";                     Vendor = @("NVIDIA"); SecondaryAlgorithm = "sha256ton"; Fee = 2.0; SecondaryPoolName = "Icemining"} #Octopus/CFX + GRAM/CHAPA
+    [PSCustomObject]@{MainAlgorithm = "octopus";         DAG = $true; MinMemGB = 4; Params = "";                     Vendor = @("NVIDIA"); SecondaryAlgorithm = "sha3x"; Fee = 2.0} #Octopus/CFX + XTM
+    [PSCustomObject]@{MainAlgorithm = "octopus";         DAG = $true; MinMemGB = 4; Params = "";                     Vendor = @("NVIDIA"); SecondaryAlgorithm = "sha512256d"; Fee = 2.0} #Octopus/CFX + RXD
 )
 
 # $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
