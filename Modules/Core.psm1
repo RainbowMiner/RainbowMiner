@@ -1778,6 +1778,16 @@ function Invoke-Core {
                     foreach ($q in @("Currency","Host")) {
                         if ("$($UPool.$q)" -eq "") {$UPool.Enable = $false;Break}
                     }
+                    if ($UPool.Enable) {
+                        # a hand-edited file may carry a port description instead of a number: disable the entry rather than hand it to the miners
+                        $UPool_Port = 0
+                        if ([int]::TryParse("$($UPool.Port)".Trim(), [ref]$UPool_Port) -and $UPool_Port -ge 1 -and $UPool_Port -le 65535) {
+                            $UPool | Add-Member Port $UPool_Port -Force
+                        } else {
+                            Write-Log -Level Warn "Userpool $($UPool.Name): port `"$($UPool.Port)`" is not a number between 1 and 65535, the pool is disabled"
+                            $UPool.Enable = $false
+                        }
+                    }
                     $UPool
                 }) -Force
                 $CheckPools = $CheckUserPools = $true

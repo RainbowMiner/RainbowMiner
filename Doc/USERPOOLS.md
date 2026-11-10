@@ -127,7 +127,7 @@ Mandatory:
 | `Name` | the pool name: letters, digits and underscore, not the name of a built-in pool. All entries with the same name form one pool |
 | `Currency` | the currency the pool pays out, decides which wallet of the pool section is used. Empty = `CoinSymbol` |
 | `Host` | the stratum server address, without `stratum+tcp://` and without port |
-| `Port` | the stratum port |
+| `Port` | the stratum port, a number between 1 and 65535. Anything else (e.g. a pasted "3339 or 3340 for TLS") disables the entry with a warning in the log |
 
 Optional:
 
