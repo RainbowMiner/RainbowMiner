@@ -123,18 +123,16 @@ function Get-PoolAlgorithmKeys {
 
     # fast path. $CoinSymbols is tested truthy, not by .Count: @($null) has a Count of 1
     if (-not ($ExcludePoolName -or $PoolName -or $CoinSymbols -or $ExcludeYiimp -or $MinerName)) {return $Keys}
-    if (-not $Session.Config.EnablePoolAlternates) {return $Keys}
-    $MaxAlternates = [int]$Session.Config.MaxPoolAlternates
-    if ($MaxAlternates -le 0) {return $Keys}
-    if (-not $Global:PoolAlternates -or -not $Global:PoolAlternates.Count) {return $Keys}
+    $MaxAlternates = if ($Session.Config.EnablePoolAlternates -and $Global:PoolAlternates -and $Global:PoolAlternates.Count) {[int]$Session.Config.MaxPoolAlternates} else {0}
 
     $Result = [System.Collections.Generic.List[string]]::new()
     foreach ($Key in $Keys) {
-        [void]$Result.Add($Key)
-        if (-not $Pools.$Key) {continue}
-        # only fall back when the winning pool really fails this entry's constraint
-        if (Test-PoolConstraint $Pools.$Key -ExcludePoolName $ExcludePoolName -PoolName $PoolName -CoinSymbols $CoinSymbols -ExcludeYiimp:$ExcludeYiimp -MinerName $MinerName) {continue}
-        if (-not $Global:PoolAlternates.ContainsKey($Key)) {continue}
+        $Pool = $Pools.$Key
+        if (-not $Pool -or -not $Pool.Host) {[void]$Result.Add($Key); continue}
+        if (Test-PoolConstraint $Pool -ExcludePoolName $ExcludePoolName -PoolName $PoolName -CoinSymbols $CoinSymbols -ExcludeYiimp:$ExcludeYiimp -MinerName $MinerName) {[void]$Result.Add($Key); continue}
+        # the winning pool fails this entry's constraint: its key is dropped (the module checks
+        # match the host only and miss a pool excluded by name), the alternates take over
+        if ($MaxAlternates -le 0 -or -not $Global:PoolAlternates.ContainsKey($Key)) {continue}
         $Found = 0
         foreach ($AltKey in $Global:PoolAlternates[$Key]) {
             if ($Found -ge $MaxAlternates) {break}
