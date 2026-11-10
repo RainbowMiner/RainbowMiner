@@ -451,14 +451,36 @@ function formatRunningMiners(data) {
         if (!tOC.length) { tOC.push("-"); }
         item.tOC = tOC.join('<br />');
 
-        item.tActive = (item.RunningTime.Days ? item.RunningTime.Days + '.' : '') + (item.RunningTime.Hours < 10 ? '0' : '') + item.RunningTime.Hours + ':' + (item.RunningTime.Minutes < 10 ? '0' : '') + item.RunningTime.Minutes + ':' + (item.RunningTime.Seconds < 10 ? '0' : '') + item.RunningTime.Seconds
+        var rt = parseRunningTime(item.RunningTime)
+        item.tActiveSeconds = rt.TotalSeconds
+        item.tActive = (rt.Days ? rt.Days + '.' : '') + (rt.Hours < 10 ? '0' : '') + rt.Hours + ':' + (rt.Minutes < 10 ? '0' : '') + rt.Minutes + ':' + (rt.Seconds < 10 ? '0' : '') + rt.Seconds
     }
     return data;
 }
 
+// RunningTime arrives as a TimeSpan string "[d.]hh:mm:ss[.fffffff]", older servers sent an object
+function parseRunningTime(value) {
+    var total = 0
+    if (value && typeof value === "object") {
+        total = Number(value.TotalSeconds)
+    } else {
+        var m = /^(?:(\d+)\.)?(\d+):(\d+):(\d+)/.exec(String(value))
+        if (m) total = Number(m[1] || 0) * 86400 + Number(m[2]) * 3600 + Number(m[3]) * 60 + Number(m[4])
+    }
+    if (!isFinite(total) || total < 0) total = 0
+    total = Math.floor(total)
+    return {
+        TotalSeconds: total,
+        Days: Math.floor(total / 86400),
+        Hours: Math.floor(total % 86400 / 3600),
+        Minutes: Math.floor(total % 3600 / 60),
+        Seconds: total % 60
+    }
+}
+
 function sortRunningMinersByActive(a,b,rowA,rowB) {
-    var secA = typeof rowA.RunningTime.TotalSeconds !== "undefined"? Number(rowA.RunningTime.TotalSeconds) : 0
-    var secB = typeof rowA.RunningTime.TotalSeconds !== "undefined"? Number(rowB.RunningTime.TotalSeconds) : 0
+    var secA = Number(rowA.tActiveSeconds) || 0
+    var secB = Number(rowB.tActiveSeconds) || 0
     if (secA > secB) return 1
     if (secA < secB) return -1
     return 0
