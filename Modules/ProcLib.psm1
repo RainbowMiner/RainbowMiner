@@ -185,7 +185,7 @@ function Start-SubProcess {
     } elseif (($ShowMinerWindow -and -not $IsWrapper) -or -not $IsWindows) {
         Start-SubProcessInConsole -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -Executables $Executables -SetLDLIBRARYPATH:$SetLDLIBRARYPATH -Quiet:$Quiet -WinTitle $WinTitle
     } else {
-        Start-SubProcessInBackground -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -Executables $Executables -SetLDLIBRARYPATH:$SetLDLIBRARYPATH -Quiet:$Quiet -PipeToLog $PipeToLog
+        Start-SubProcessInBackground -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -Executables $Executables -SetLDLIBRARYPATH:$SetLDLIBRARYPATH -Quiet:$Quiet -PipeToLog $PipeToLog -IsWrapper $IsWrapper
     }
 }
 
@@ -216,7 +216,9 @@ function Start-SubProcessInBackground {
         [Parameter(Mandatory = $false)]
         [Switch]$Quiet = $false,
         [Parameter(Mandatory = $false)]
-        [Bool]$PipeToLog = $true
+        [Bool]$PipeToLog = $true,
+        [Parameter(Mandatory = $false)]
+        [Bool]$IsWrapper = $false
     )
 
     $Running = [System.Collections.Generic.List[int]]::new()
@@ -247,6 +249,7 @@ function Start-SubProcessInBackground {
         Comm                = $Comm
         CPUAffinity         = $CPUAffinity
         PipeToLog           = $PipeToLog
+        IsWrapper           = $IsWrapper
     })
     $Handle = $PS.BeginInvoke($InCol, $OutCol)
 

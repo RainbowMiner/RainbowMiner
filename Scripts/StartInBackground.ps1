@@ -1,4 +1,4 @@
-﻿param($ControllerProcessID, $WorkingDirectory, $FilePath, $ArgumentList, $LogPath, $EnvVars, $Priority, $CurrentPwd, $Comm = $null, $CPUAffinity = 0, $PipeToLog = $true)
+﻿param($ControllerProcessID, $WorkingDirectory, $FilePath, $ArgumentList, $LogPath, $EnvVars, $Priority, $CurrentPwd, $Comm = $null, $CPUAffinity = 0, $PipeToLog = $true, $IsWrapper = $false)
 
 $ControllerProcess = Get-Process -Id $ControllerProcessID -ErrorAction Ignore
 if ($ControllerProcess -eq $null) {return}
@@ -149,6 +149,7 @@ $MiningProcess.StartInfo = $psi
 # runspace crash the process (0xE0434352); it stays only as compile fallback.
 if (-not ("RBMOutputPump" -as [type])) {
     Add-Type -ErrorAction Ignore -TypeDefinition @'
+using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
@@ -156,6 +157,12 @@ using System.Threading;
 
 public class RBMOutputPump {
     public readonly ConcurrentQueue<string> Queue = new ConcurrentQueue<string>();
+    // a miner looping on an error prints the same line millions of times a
+    // minute: consecutive repeats are counted, not queued, and the queue is
+    // capped, so the output can never inflate the process faster than the
+    // monitor drains it
+    public int MaxQueue = 50000;
+    public int RepeatFlushMs = 10000;
     private int eof;
     private volatile bool stopped;
     private StreamReader stdout;
@@ -204,14 +211,47 @@ public class RBMOutputPump {
     // ends at EOF; disposed here because Process.Dispose leaves an accessed
     // stream open until the finalizer runs
     private void Read(StreamReader reader) {
+        string last = null;
+        long repeats = 0, dropped = 0;
+        int since = Environment.TickCount;
         try {
             string line;
-            while ((line = reader.ReadLine()) != null) { if (!stopped) Queue.Enqueue(line); }
+            while ((line = reader.ReadLine()) != null) {
+                if (stopped) continue;
+                if (line == last) {
+                    repeats++;
+                    // a marker now and then keeps a looping miner visible in the log
+                    if (Environment.TickCount - since >= RepeatFlushMs) FlushRepeats(ref repeats, ref since, ref dropped);
+                    continue;
+                }
+                if (repeats > 0) FlushRepeats(ref repeats, ref since, ref dropped);
+                last = line;
+                since = Environment.TickCount;
+                Enqueue(line, ref dropped);
+            }
         } catch {
         } finally {
             try { reader.Dispose(); } catch { }
         }
+        if (repeats > 0) FlushRepeats(ref repeats, ref since, ref dropped);
+        if (dropped > 0) Queue.Enqueue("[RBM] " + dropped + " lines dropped, the miner printed faster than the output is read");
         Interlocked.Increment(ref eof);
+    }
+
+    private void FlushRepeats(ref long repeats, ref int since, ref long dropped) {
+        Enqueue("[RBM] previous line repeated " + repeats + " times", ref dropped);
+        repeats = 0;
+        since = Environment.TickCount;
+    }
+
+    private void Enqueue(string line, ref long dropped) {
+        if (dropped > 0) {
+            // resume only once the monitor has caught up: one marker per burst, not per slot
+            if (Queue.Count > MaxQueue / 2) { dropped++; return; }
+            Queue.Enqueue("[RBM] " + dropped + " lines dropped, the miner printed faster than the output is read");
+            dropped = 0;
+        } else if (Queue.Count >= MaxQueue) { dropped++; return; }
+        Queue.Enqueue(line);
     }
 
     public void Detach() {
@@ -288,19 +328,21 @@ try {
     # Set-SubProcessPriority in ProcLib re-applies this to all discovered PIDs
     try {$MiningProcess.PriorityClass = [System.Diagnostics.ProcessPriorityClass]$PriorityClass} catch {}
 
-    # must never throw. Lines also go to the output stream for the *Wrapper APIs.
+    # must never throw. Lines go to the output stream only for the *Wrapper APIs,
+    # which parse them: nobody reads the stream of any other miner before the
+    # round ends, the lines would only pile up in the core process.
     # MaxLines per call keeps a flooding miner from starving the watch loop.
     # PipeToLog = false: the miner writes its log itself, the pipe is only drained
     $PipeLogPath = if ($PipeToLog) {$LogPath} else {""}
 
     $DrainToLog = {
-        param($Queue, $Path, $MaxLines = 10000)
+        param($Queue, $Path, $Emit, $MaxLines = 10000)
         $line  = $null
         $lines = New-Object System.Collections.Generic.List[string]
         while ($lines.Count -lt $MaxLines -and $Queue.TryDequeue([ref]$line)) {[void]$lines.Add($line)}
         if ($lines.Count) {
             if ($Path) {Add-Content -LiteralPath $Path -Value $lines -ErrorAction Ignore}
-            $lines
+            if ($Emit) {$lines}
         }
     }
 
@@ -324,7 +366,7 @@ try {
 
     do {
         $Done = $ControllerProcess.WaitForExit(1000)
-        try {& $DrainToLog $OutputQueue $PipeLogPath} catch {}
+        try {& $DrainToLog $OutputQueue $PipeLogPath $IsWrapper} catch {}
         if ($Done -and -not $MiningProcess.HasExited) {
             try {$MiningProcess.Kill()} catch {}
         }
@@ -355,7 +397,7 @@ try {
     # drain the tail until empty, time-bounded against a foreign writer
     $sw.Restart()
     do {
-        try {& $DrainToLog $OutputQueue $PipeLogPath} catch {}
+        try {& $DrainToLog $OutputQueue $PipeLogPath $IsWrapper} catch {}
     } while (-not $OutputQueue.IsEmpty -and $sw.Elapsed.TotalSeconds -lt 5)
 } finally {
     try {if (-not $MiningProcess.HasExited) {$MiningProcess.Kill()}} catch {}

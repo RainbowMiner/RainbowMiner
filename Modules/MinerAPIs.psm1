@@ -322,7 +322,11 @@ class Miner {
 
     EndOfRoundCleanup() {
         if ($Global:IsLinux -or ($this.API -notmatch "Wrapper")) {
-            if ($this.Job.XJob.HasMoreData) {Read-MinerJobOutput $this.Job.XJob > $null}
+            # the lines are discarded here: clear the collection instead of materializing it
+            if ($this.Job.XJob.HasMoreData) {
+                if ($this.Job.XJob.Output -is [System.Management.Automation.PSDataCollection[psobject]]) {$this.Job.XJob.Output.Clear()}
+                else {Read-MinerJobOutput $this.Job.XJob > $null}
+            }
         }
         if (($this.Speed_Live | Measure-Object -Sum).Sum) {$this.ZeroRounds = 0} else {$this.ZeroRounds++}
         $this.Rounds++
