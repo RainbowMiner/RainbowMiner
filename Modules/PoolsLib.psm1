@@ -479,10 +479,13 @@ function Start-PoolLatencyProbe {
     $Groups = @{}
     foreach ($Pool in $Pools) {
         $HostName = "$($Pool.Host)".ToLower()
-        if ($HostName -notmatch "^[a-z0-9.-]+$" -or -not $Pool.Port) {continue}
+        if ($HostName -notmatch "^[a-z0-9.-]+$") {continue}
+        # Skip pool metadata that describes ports rather than defining a valid TCP port.
+        $PortNumber = 0
+        if (-not [int]::TryParse("$($Pool.Port)", [ref]$PortNumber) -or $PortNumber -lt 1 -or $PortNumber -gt 65535) {continue}
         $Key = "$($Pool.Name)|$($Pool.Algorithm0)|$($Pool.CoinSymbol)|$($Pool.Currency)|$($Pool.Region)|$([int]$Pool.SSL)"
         if (-not $Groups.ContainsKey($Key)) {$Groups[$Key] = @{}}
-        if (-not $Groups[$Key].ContainsKey($HostName)) {$Groups[$Key][$HostName] = [int]$Pool.Port}
+        if (-not $Groups[$Key].ContainsKey($HostName)) {$Groups[$Key][$HostName] = $PortNumber}
     }
     $Endpoints = @{}
     foreach ($Group in $Groups.Values) {
