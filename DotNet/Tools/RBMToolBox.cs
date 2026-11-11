@@ -1245,6 +1245,9 @@ public class RBMMinerStat
     // self-heal of a wrong stat: the last rejected sample and how many rejected samples in a row agreed with it
     public double Failed_Value { get; set; }
     public int Failed_Streak { get; set; }
+    // the device model the value was measured on ("" in older files). Interned: a handful of models for thousands of stats
+    private string _DeviceModel;
+    public string DeviceModel { get { return _DeviceModel; } set { _DeviceModel = value == null ? null : string.Intern(value); } }
 
     private static readonly Dictionary<string, PropertyInfo> Props = RBMStatConverter.PropertyMap(typeof(RBMMinerStat));
 

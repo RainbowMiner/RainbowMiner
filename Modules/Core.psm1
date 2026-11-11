@@ -3408,7 +3408,8 @@ function Invoke-Core {
     }
 
     #Seed missing benchmarks of a new device set (e.g. after /setdevices) from a benchmarked set of
-    #the same model, scaled per device. Written like a fastlane value (10 s, IsFL), so live samples replace it
+    #the same model, scaled per device. Written like a fastlane value (10 s, IsFL), so live samples replace it.
+    #Only a stat that recorded the model it was measured on is a source: device names get renumbered
     $Seed_Candidates = @($AllMiners | Where-Object {$_.DeviceModel -ne "CPU" -and $_.DeviceModel -notmatch '-' -and $_.HashRates.PSObject.Properties.Name.Count -eq 1 -and $_.HashRates.PSObject.Properties.Value -contains $null})
     if ($Seed_Candidates.Count -and $Global:StatsCache.Count -and (Test-Path Variable:Global:GlobalCachedDevices)) {
         $Seed_Models = @{}
@@ -3440,6 +3441,7 @@ function Invoke-Core {
                 if ("$($Seed_Stat.Version)" -ne $Seed_Version) {continue}
                 if (($Seed_Item.Devices -join '-') -eq ($Miner_Devices -join '-')) {continue}
                 if (@($Seed_Item.Devices | Where-Object {$Seed_Models[$_] -ne $Miner.DeviceModel}).Count) {continue}
+                if ("$($Seed_Stat.DeviceModel)" -ne "$($Miner.DeviceModel)") {continue}
                 $Seed_IsFL = [bool]$Seed_Stat.IsFL
                 if ($Seed_Source -eq $null -or ($Seed_Source.IsFL -and -not $Seed_IsFL) -or ($Seed_Source.IsFL -eq $Seed_IsFL -and $Seed_Item.Devices.Count -gt $Seed_Source.Count)) {
                     $Seed_Source = [PSCustomObject]@{Key = $Seed_Item.Key; Count = $Seed_Item.Devices.Count; Week = [double]$Seed_Stat.Week; PowerDraw = [double]$Seed_Stat.PowerDraw_Average; Version = "$($Seed_Stat.Version)"; IsFL = $Seed_IsFL}
@@ -3457,6 +3459,7 @@ function Invoke-Core {
                          -FaultDetection $false `
                          -PowerDraw $Miner.PowerDraw `
                          -Sub $Global:DeviceCache.DevicesToVendors[$Miner.DeviceModel] `
+                         -DeviceModel $Miner.DeviceModel `
                          -Version $Seed_Source.Version `
                          -IsFastlaneValue `
                          -Quiet > $null
@@ -3552,6 +3555,7 @@ function Invoke-Core {
                                          -FaultDetection $false `
                                          -PowerDraw $Miner.PowerDraw `
                                          -Sub $Global:DeviceCache.DevicesToVendors[$Miner.DeviceModel] `
+                                         -DeviceModel $Miner.DeviceModel `
                                          -Version "$(Get-MinerVersion $Miner.Version)" `
                                          -IsFastlaneValue `
                                          -Quiet > $null
@@ -6480,7 +6484,7 @@ function Set-MinerStats {
                     if ($Miner_Benchmarking -and $Miner.CrashCount -ge $Session.Config.MaxCrashesDuringBenchmark) {$Miner_Speed = 0;$Miner.Speed_Live[$Miner_Index] = 0}
                 }
                 if ((-not $Miner_PowerIdle -or -not $Miner_Speed) -and ($Miner_Speed -or -not $Miner_Benchmarking -or $Miner.CrashCount -ge $Session.Config.MaxCrashesDuringBenchmark)) {
-                    $Stat = Set-Stat -Name "$($Miner.Name)_$($Miner_Algorithm -replace '\-.*$')_HashRate" -Value $Miner_Speed -Difficulty $Miner_Diff -Ratio $Miner.RejectedShareRatio[$Miner_Index] -Duration $StatSpan -FaultDetection $true -FaultTolerance $Miner.FaultTolerance -PowerDraw $Miner_PowerDraw -Sub $Global:DeviceCache.DevicesToVendors[$Miner.DeviceModel] -StartTime $Miner.StartTime -Version "$(Get-MinerVersion $Miner.Version)" -LogFile "$(Split-Path -Leaf $Miner.LogFile)" -Quiet:$($Quiet -or ($Miner.GetRunningTime() -lt (New-TimeSpan -Seconds 30)) -or $Miner.IsWrapper())
+                    $Stat = Set-Stat -Name "$($Miner.Name)_$($Miner_Algorithm -replace '\-.*$')_HashRate" -Value $Miner_Speed -Difficulty $Miner_Diff -Ratio $Miner.RejectedShareRatio[$Miner_Index] -Duration $StatSpan -FaultDetection $true -FaultTolerance $Miner.FaultTolerance -PowerDraw $Miner_PowerDraw -Sub $Global:DeviceCache.DevicesToVendors[$Miner.DeviceModel] -DeviceModel $Miner.DeviceModel -StartTime $Miner.StartTime -Version "$(Get-MinerVersion $Miner.Version)" -LogFile "$(Split-Path -Leaf $Miner.LogFile)" -Quiet:$($Quiet -or ($Miner.GetRunningTime() -lt (New-TimeSpan -Seconds 30)) -or $Miner.IsWrapper())
                     $Statset++
                 }
 

@@ -61,6 +61,8 @@ function Set-Stat {
         [Parameter(Mandatory = $false)]
         [String]$LogFile = "",
         [Parameter(Mandatory = $false)]
+        [String]$DeviceModel = "",
+        [Parameter(Mandatory = $false)]
         [Switch]$Quiet = $false,
         [Parameter(Mandatory = $false)]
         [Switch]$IsFastlaneValue = $false,
@@ -131,6 +133,7 @@ function Set-Stat {
                         IsFL               = [Bool]$Stat.IsFL
                         Failed_Value       = [Double]$Stat.Failed_Value
                         Failed_Streak      = [Int]$Stat.Failed_Streak
+                        DeviceModel        = [String]$Stat.DeviceModel
                         #Ratio_Average      = [Double]$Stat.Ratio_Average
                     }
                     Break
@@ -349,6 +352,8 @@ function Set-Stat {
                             IsFL               = $false
                             Failed_Value       = 0
                             Failed_Streak      = 0
+                            # only an accepted sample stamps the model: a rejected one leaves a stale value unconfirmed
+                            DeviceModel        = if ($DeviceModel) {$DeviceModel} else {$Stat.DeviceModel}
                             #Ratio_Average      = if ($Stat.Ratio_Average -gt 0) {[Math]::Round($Stat.Ratio_Average - $Span_Hour * ($Ratio - $Stat.Ratio_Average),4)} else {$Ratio}
                         }
                         Break
@@ -473,6 +478,7 @@ function Set-Stat {
                     IsFL               = $IsFastlaneValue
                     Failed_Value       = 0
                     Failed_Streak      = 0
+                    DeviceModel        = $DeviceModel
                     #Ratio_Average      = $Ratio
                 }
                 Break
@@ -588,6 +594,7 @@ function Set-Stat {
                     IsFL               = [Bool]$Stat.IsFL
                     Failed_Value       = [Double]$Stat.Failed_Value
                     Failed_Streak      = [Int]$Stat.Failed_Streak
+                    DeviceModel        = [String]$Stat.DeviceModel
                     #Ratio_Average      = [Double]$Stat.Ratio_Average
                 }
                 Break
