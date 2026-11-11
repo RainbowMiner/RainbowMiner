@@ -1214,6 +1214,23 @@ class BMiner : Miner {
 
 class BzMiner : Miner {
 
+    # bzminer refuses to start when the --config file is missing or empty, an empty
+    # JSON object keeps all defaults
+    [String]GetArguments() {
+        $Arguments = ([Miner]$this).GetArguments()
+        if ($Arguments -match '--config\s+(\S+)') {
+            $ConfigFile = Join-Path (Split-Path $this.Path) $Matches[1]
+            try {
+                if (-not (Test-Path $ConfigFile) -or -not (Get-Item $ConfigFile -ErrorAction Stop).Length) {
+                    Set-Content -Path $ConfigFile -Value "{}" -NoNewline -Encoding ASCII -Force -ErrorAction Stop
+                }
+            } catch {
+                Write-Log -Level Warn "Could not create $($ConfigFile) for $($this.Name): $($_.Exception.Message)"
+            }
+        }
+        return $Arguments
+    }
+
     [Void]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
         [void]$this.UpdateFromApi()
