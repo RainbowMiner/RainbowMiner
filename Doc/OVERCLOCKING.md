@@ -521,6 +521,25 @@ To see what the driver offers for a card and what RainbowMiner has recorded, run
 
     bash IncludesLinux/bash/amd_oc.sh --bus 03:00 --query
 
+**Optional fan-policy recovery after Linux AMD OC.** Certain AMDGPU firmware/driver
+combinations can lose the active fan target when an OverDrive clock/voltage table
+is committed. If a separate fan controller such as LACT owns the fan policy,
+an administrator may configure `RBM_AMD_OC_POST_HOOK` in the **privileged
+`ocdaemon` environment** to point to an absolute, trusted, executable script.
+Do not source this setting from miner inputs or user-editable RainbowMiner config.
+RainbowMiner passes `--bus BB:DD --core MHz --memory MHz --voltage mV`
+**after successful OC readback**, including on a profile reapply and on restoring
+a saved baseline. The hook should synchronize its own clock metadata to the
+verified readback **without writing a second OC**, then restore and verify the
+user's selected fan mode. It must exit nonzero if recovery fails. A failing hook
+marks the OC command as failed but does **not** undo an already committed GPU OC;
+operators should check the fan before permitting unattended mining. It does not
+run for a dry run, a rejected OC, unsupported OD layouts, or when unset. Currently
+the hook interface supports `core=max, mem=max, voltage=offset` AMD layouts.
+No LACT integration or firmware fan reset is built into RainbowMiner: those are
+controller- and driver-dependent operations and must be implemented/tested locally.
+Leave the setting unset on rigs that do not need this integration.
+
 ## AMD overclocking on Windows
 
 On Windows, AMD GPUs are overclocked through MSI Afterburner, like NVIDIA cards. As an

@@ -317,4 +317,23 @@ else
     rm -f -- "$state"
     note "restored: $summary perf=${base[perf]:-}"
 fi
+
+# Optional administrator-supplied integration hook for GPU controllers that
+# need their fan policy reapplied after an OverDrive commit. It runs only after
+# successful GPU readback; its environment is owned by the root ocdaemon.
+# Reapply on an unchanged managed profile too: some controllers lose fan policy
+# during miner switching even if the resulting clock values are identical.
+if ((rc == 0 && (managed_any || do_reset || ${#od_cmds[@]} || cap_change))) && \
+   [[ -n "${RBM_AMD_OC_POST_HOOK:-}" ]] &&
+   [[ "$core_mode" == max && "$mem_mode" == max && "$vo_mode" == offset ]]; then
+    if [[ "$RBM_AMD_OC_POST_HOOK" != /* || ! -x "$RBM_AMD_OC_POST_HOOK" ]]; then
+        err "the AMD OC post-hook must be an absolute executable path"
+    else
+        read_od
+        if ! "$RBM_AMD_OC_POST_HOOK" --bus "$bus" --core "$(cur_core)" \
+            --memory "$(cur_mem)" --voltage "$(cur_vo)"; then
+            err "the AMD OC post-hook failed (GPU OC was already applied; check fan state)"
+        fi
+    fi
+fi
 exit $rc
