@@ -286,12 +286,29 @@ restage() { # put the current values back into the staged table, so nothing half
     done >/dev/null 2>&1
 }
 
+# On supported AMD PMFW interfaces, preserve an explicitly disabled Zero RPM policy
+# immediately before each clock-table commit. The RX 7600/SMU13 can otherwise lose
+# fan1_target on a subsequent clock-only OverDrive commit, even when the current
+# Zero RPM setting already reads 0. Do not change an enabled Zero RPM policy or
+# affect GPUs without this driver interface. The opt-out is for compatibility.
+rearm_pmfw_fan_before_od() {
+    [[ "${RBM_AMD_FAN_REARM:-auto}" != off ]] || return 0
+    local zero_path="$dev/gpu_od/fan_ctrl/fan_zero_rpm_enable" current
+    [[ -r "$zero_path" ]] || return 0
+    current=$(awk '$1 == "FAN_ZERO_RPM_ENABLE:" {getline; print $1; exit}' "$zero_path")
+    [[ "$current" == 0 ]] || return 0
+    [[ -w "$zero_path" ]] || fail "firmware Zero RPM is disabled but not writable; refusing unsafe OC commit"
+    sysfs_write "$zero_path" 0 || fail "could not reassert Zero RPM disabled before OD commit"
+    sysfs_write "$zero_path" c || fail "could not commit Zero RPM policy before OD commit"
+}
+
 rc=0
 if ((${#od_cmds[@]})); then
     [[ -w "$od" && -w "$perf" ]] || fail "no write access to the OverDrive interface"
     if [[ "$(cur_perf)" != "manual" ]]; then
         sysfs_write "$perf" manual || fail "cannot set the performance level to manual"
     fi
+    rearm_pmfw_fan_before_od
     for c in "${od_cmds[@]}"; do
         if ! sysfs_write "$od" "$c"; then restage; fail "the driver refused '$c' ($summary)"; fi
     done
