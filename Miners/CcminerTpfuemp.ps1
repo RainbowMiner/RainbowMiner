@@ -14,14 +14,14 @@ $ManualUri = "https://github.com/tpfuemp/ccminer-tpfuemp/releases"
 $Port = "147{0:d2}"
 $DevFee = 0.0
 $Cuda = "11.8"
-$Version = "2026.10"
+$Version = "2026.11"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CcminerTpfuemp\ccminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2026.10-ccminertpfuemp/ccminer-tpfuemp-2026.10-linux-x64.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2026.11-ccminertpfuemp/ccminer-tpfuemp-2026.11-linux-x64.tar.gz"
 } else {
     $Path = ".\Bin\NVIDIA-CcminerTpfuemp\ccminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2026.10-ccminertpfuemp/ccminer-tpfuemp-2026.10-windows-x64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2026.11-ccminertpfuemp/ccminer-tpfuemp-2026.11-windows-x64.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -43,6 +43,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "minotaurx"; Params = "-a minotaurx"; ExtendInterval = 2} #MinotaurX/AVN
     [PSCustomObject]@{MainAlgorithm = "neoscryptxaya"; Params = "-a neoscrypt-xaya"; ExtendInterval = 2} #NeoScryptXaya/CHI
     [PSCustomObject]@{MainAlgorithm = "odocrypt"; Params = "-a odocrypt"; ExtendInterval = 2} #Odocrypt/DGB
+    [PSCustomObject]@{MainAlgorithm = "pearlhash"; Params = "-a pearlhash"; ExtendInterval = 2; ExcludePoolName = "^Pearlhash"} #PearlHash/PRL
     [PSCustomObject]@{MainAlgorithm = "power2b"; Params = "-a power2b"; ExtendInterval = 2} #Yespower2b/MBC
     [PSCustomObject]@{MainAlgorithm = "rinhash"; Params = "-a rinhash"; ExtendInterval = 2} #Rinhash/RIN
     [PSCustomObject]@{MainAlgorithm = "sha3t"; Params = "-a sha3t"; ExtendInterval = 2} #SHA3t/FJAR
