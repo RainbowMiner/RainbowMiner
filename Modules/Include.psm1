@@ -416,15 +416,18 @@ function Confirm-Version {
 function Get-ValueFromRequest {
     param($Request, [string]$Value, [hashtable]$Params = @{})
 
-    $val = $null
+    #walk the path from the response root; a missing step yields $null (an empty or failed response has no fields)
+    $val = $Request
     foreach ($data in $Value -split "\.") {
+        if ($null -eq $val) {return}
         if ($Params.Count) {
             foreach ($param in $Params.GetEnumerator()) {
                 $data = $data.Replace("`$$($param.Name)",$param.Value)
             }
         }
         if ($data -match '^(.+)\[([^\]]+)\]$') {
-            $val = if ($val -ne $null) {$val."$($Matches[1])"} else {$Request."$($Matches[1])"}
+            $val = $val."$($Matches[1])"
+            if ($null -eq $val) {return}
             $arrp = $Matches[2].Split("=",2)
             if ($arrp[0] -match '^\d+$') {
                 $val = $val[[int]$arrp[0]]
@@ -432,7 +435,7 @@ function Get-ValueFromRequest {
                 $val = $val | ?{$_."$($arrp[0])" -eq $arrp[1]}
             }
         } else {
-            $val = if ($val -ne $null) {$val.$data} else {$Request.$data}
+            $val = $val.$data
         }
     }
     $val
