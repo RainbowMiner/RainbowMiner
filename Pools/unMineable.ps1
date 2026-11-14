@@ -44,7 +44,7 @@ $Pools_Data = @(
     [PSCustomObject]@{algo = "equihash";   coin = "ZEC"; port = @(3333,4444); ethproxy = $null;           rpc = "equihash";   divisor = 1;   mh = 1e9; region = @("us","eu","asia")}
     [PSCustomObject]@{algo = "etchash";    coin = "ETC"; port = @(3333,4444); ethproxy = "ethstratumnh";  rpc = "etchash";    divisor = 1e6; mh = 1e6; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "ethash";     coin = "ETHW"; port = @(3333,4444); ethproxy = "ethstratumnh"; rpc = "ethash";     divisor = 1e6; mh = 1e6; region = @("us","ca","eu","asia")}
-    [PSCustomObject]@{algo = "fishhash";   coin = "IRON"; port = @(3333,4444); ethproxy = "stratum";      rpc = "fishhash";   divisor = 1;   mh = 1e12; region = @("us","eu","asia")}
+    #[PSCustomObject]@{algo = "fishhash";   coin = "IRON"; port = @(3333,4444); ethproxy = "stratum";      rpc = "fishhash";   divisor = 1;   mh = 1e12; region = @("us","eu","asia")} #fishhash hosts have no DNS record anymore, although the site still lists them 2026-11
     #[PSCustomObject]@{algo = "ghostrider"; coin = "RTM"; port = @(3333,4444); ethproxy = $null;           rpc = "ghostrider"; divisor = 1;   mh = 1e9; region = @("us","ca","eu","asia")} #ghostrider is gone from unMineable (hosts refuse connections, INACTIVE_ALGORITHM)
     #[PSCustomObject]@{algo = "kawpow";     coin = "RVN"; port = @(3333,4444); ethproxy = "stratum";       rpc = "kp";         divisor = 1e6; mh = 1e6; region = @("us","ca","eu","asia")} #kawpow is INACTIVE_ALGORITHM at the unMineable simulator api 2026-08
     [PSCustomObject]@{algo = "kheavyhash"; coin = "KAS"; port = @(3333,4444); ethproxy = $null;           rpc = "kheavyhash"; divisor = 1;   mh = 1e15; region = @("us","eu","asia")}
