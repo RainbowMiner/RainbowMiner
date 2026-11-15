@@ -309,6 +309,7 @@ The very same commands are available as buttons on the **Console** page of the w
 | `ResetProfit.bat`          | -                          | reset RainbowMiner's profit calculation                                                                                                                                 |
 | `TouchBenchmark.bat`       | -                          | avoid benchmark of new miners, will set the timestamp of all miner stat files to now                                                                                    |
 | `CopyGpuStats.bat`         | `./copygpustats.sh`        | copy the benchmarks of one GPU to another, e.g. when a card dropped out and the GPU numbers shifted (stop RainbowMiner first)                                           |
+| `RenumberGpuStats.bat`     | `./renumbergpustats.sh`    | renumber the benchmarks after cards were added, removed or moved to other slots (stop RainbowMiner first)                                                               |
 | `Stopp.bat`                | `./stopp.sh`               | halt RainbowMiner at once                                                                                                                                               |
   	
 
@@ -576,6 +577,15 @@ GPU#05 now shows up as GPU#03. Only the benchmarks of that single card are copie
 device combinations stay untouched, and replaced files are moved to
 `Stats\Miners-backup-<timestamp>`. Once the missing card is back, its original benchmarks
 are still there.
+
+If the rig was rebuilt for good - cards added, removed or moved to other slots - use
+`RenumberGpuStats.bat` (Windows) or `./renumbergpustats.sh` (Linux) instead. Stop RainbowMiner
+first and run it before the first start with the new layout. It asks for one entry per old
+GPU number: `old=new` renames, `old=x` drops the benchmarks of a removed card, e.g.
+`0=0,1=1,2=x,3=4` if GPU#02 was removed and GPU#03 now shows up as GPU#04. New cards need no
+entry, they will be benchmarked. The benchmarks of device combinations and the profit
+statistics are renamed as well, files naming a removed card are dropped, and every touched
+file is first moved to `Stats\Renumber-backup-<timestamp>`.
 
 ### Presets
 
