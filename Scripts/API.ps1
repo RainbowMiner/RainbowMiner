@@ -530,7 +530,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         if ($Type) {
                             $Value = Switch($Type) {
                                 "bool" {"$([int](Get-Yes $Value))"}
-                                "float" {"$([double]($Value -replace ",","." -replace "[^0-9`-`.]+"))"}
+                                "float" {ConvertTo-DecimalString $Value}
                                 "int" {"$([int]($Value -replace ",","." -replace "[^0-9`-`.]+"))"}
                                 "timespan" {"$($Value -replace ",","." -replace "[^0-9smhdw`.]+"  -replace "([A-Z])[A-Z]+","`$1")"}
                                 default {$Value}
@@ -566,12 +566,12 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                             @("Wallet","Penalty","MinHashrate","MinWorkers","MaxTimeToFind","PostBlockMining","MinProfitPercent","EnableAutoPool","Comment") | Foreach-Object {
                                 $Value = $Parameters."$($CoinSymbol)--$($_)"
                                 $Value = Switch ($_) {
-                                    "Penalty"          {"$([double]($Value -replace ",","." -replace "[^0-9`-`.]+"))"}
+                                    "Penalty"          {ConvertTo-DecimalString $Value}
                                     "MinHashrate"      {"$($Value -replace ",","." -replace "[^0-9kMGTPH`.]+" -replace "([A-Z]{2})[A-Z]+","`$1")"}
                                     "MinWorkers"       {"$($Value -replace ",","." -replace "[^0-9kMGTPH`.]+" -replace "([A-Z])[A-Z]+","`$1")"}
                                     "MaxTimeToFind"    {"$($Value -replace ",","." -replace "[^0-9smhdw`.]+"  -replace "([A-Z])[A-Z]+","`$1")"}
                                     "PostBlockMining"  {"$($Value -replace ",","." -replace "[^0-9smhdw`.]+"  -replace "([A-Z])[A-Z]+","`$1")"}
-                                    "MinProfitPercent" {"$([double]($Value -replace ",","." -replace "[^0-9`.]+"))"}
+                                    "MinProfitPercent" {(ConvertTo-DecimalString $Value) -replace "^-"}
                                     "EnableAutoPool"   {"$([int](Get-Yes $Value))"}
                                     default {$Value.Trim()}
                                 }

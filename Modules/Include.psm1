@@ -887,6 +887,21 @@ function ConvertFrom-Bytes {
     }
 }
 
+function ConvertTo-DecimalString {
+    param(
+        [Parameter(Mandatory = $false)]
+        $Value = ""
+    )
+    # a number as plain decimal text for the config files: casting a double to a string writes small values as 1E-06
+    $Value = "$Value".Trim() -replace ",","."
+    try {
+        if ($Value -notmatch "^[\+\-]?(\d+\.?\d*|\.\d+)[eE][\+\-]?\d+$") {$Value = $Value -replace "[^0-9\-\.]+"}
+        "$([decimal][double]$Value)"
+    } catch {
+        "0"
+    }
+}
+
 function ConvertFrom-Time {
     param(
         [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
