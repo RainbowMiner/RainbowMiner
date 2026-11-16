@@ -2225,7 +2225,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         $_
                     })
                     Algorithms = @(Get-MiningRigRentalConfigSections -ConfigName "MRRAlgorithms")
-                    Managed    = [ordered]@{Workers = (Test-ConfigManagedByServer "mrr"); Algorithms = (Test-ConfigManagedByServer "mrralgorithms")}
+                    Managed    = [ordered]@{Workers = (Test-ConfigManagedByServer "mrr"); Algorithms = (Test-ConfigManagedByServer "mrralgorithms"); Pool = (Test-ConfigManagedByServer "pools")}
                     ServerName = "$($Session.Config.ServerName)"
                     Pool       = [ordered]@{
                         Selected          = [bool]((-not $MrrSelected.Count -or $MrrSelected -icontains "MiningRigRentals") -and ($MrrExcluded -inotcontains "MiningRigRentals"))

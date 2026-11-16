@@ -10,8 +10,8 @@
 <div id="mrr-poolhint" class="alert alert-info" style="display:none"></div>
 
 <p class="text-muted small">
-    The MiningRigRentals section of pools.config.txt (page <a href="setuppools.html">Setup Pools</a>) holds the settings for all rigs.
-    Here they are refined: per worker name in mrr.config.txt and per algorithm in mrralgorithms.config.txt.
+    The MiningRigRentals section of pools.config.txt (tab "Pool settings") holds the settings for all rigs.
+    They are refined per worker name in mrr.config.txt and per algorithm in mrralgorithms.config.txt.
     A field that is left empty is not set at this level. If a parameter is set at more than one level, the algorithm wins over the worker, and the worker over pools.config.txt.
     All parameters are described in
     <a href="https://github.com/RainbowMiner/RainbowMiner/blob/master/Doc/MININGRIGRENTALS.md" target="_blank">Doc/MININGRIGRENTALS.md</a>.
@@ -20,6 +20,7 @@
 <ul class="nav nav-tabs mb-3" id="mrr-tabs">
     <li class="nav-item"><a class="nav-link active" href="#" data-tab="Workers">Workers <span class="badge bg-secondary" id="mrr-count-Workers"></span></a></li>
     <li class="nav-item"><a class="nav-link" href="#" data-tab="Algorithms">Algorithms <span class="badge bg-secondary" id="mrr-count-Algorithms"></span></a></li>
+    <li class="nav-item"><a class="nav-link" href="#" data-tab="Pool">Pool settings</a></li>
 </ul>
 
 <div id="mrr-pane-Workers">
@@ -64,6 +65,20 @@
     </div>
 </div>
 
+<div id="mrr-pane-Pool" style="display:none">
+    <p class="text-muted small">
+        The MiningRigRentals parameters of pools.config.txt. They apply to every worker and algorithm that has no own value.
+        The parameters that all pools share (Worker, Penalty, the algorithm, coin and miner filters) stay on the page <a href="setuppools.html">Setup Pools</a>.
+    </p>
+    <div id="mrr-pool-empty" class="text-muted small" style="display:none"></div>
+    <form id="mrr-pool-form" autocomplete="off" style="display:none">
+        <input type="hidden" name="ConfigName" value="Pools">
+        <input type="hidden" name="PoolName" value="MiningRigRentals">
+        <div id="mrr-pool-fields"></div>
+        <button type="submit" class="btn btn-primary" id="mrr-pool-save">Save</button>
+    </form>
+</div>
+
 <!-- Editor -->
 <div id="mrr-editor" class="card mt-3" style="display:none">
     <div class="card-header d-flex justify-content-between align-items-center">
@@ -90,6 +105,7 @@
 </div>
 
 <!-- End of page scripts -->
+<script src="/js/rbm-setup-1.0.js"></script>
 <script type="text/javascript">
 (function () {
     "use strict";
@@ -106,6 +122,13 @@
             ["Price", ["PriceFactor", "PriceFactorMin", "PriceFactorDecayPercent", "PriceFactorDecayTime", "PriceRiseExtensionPercent", "PriceModifierPercent"]]
         ]
     };
+    // the pool tab: the worker groups, framed by the parameters that exist in pools.config.txt only
+    const POOLGROUPS = [
+        ["Account", ["User", "API_Key", "API_Secret", "UseWorkerName", "ExcludeWorkerName", "ExcludeRentalId", "UseHost"]],
+        ["Operation", ["EnableMining", "EnableMaintenanceMode", "EnableRecoveryMode", "EnableAutoBenchmark", "UpdateInterval", "PauseBetweenRentals"]]
+    ].concat(GROUPS.Workers.map(g => [g[0], g[1].map(f => f === "AutoCreateMinProfitBTC" ? "AutoCreateMinCPUProfitBTC" : f)]), [
+        ["Messages to the renter", ["StartMessage", "ExtensionMessageTime", "ExtensionMessage", "DiffMessageTime", "DiffMessage", "PoolOfflineTime", "PoolOfflineRetryTime", "PoolOfflineMessage"]]
+    ]);
     // a field that is named differently in pools.config.txt
     const ALIAS = { Algorithms: { PriceModifierPercent: "AutoPriceModifierPercent" } };
     const HELP = {
@@ -122,10 +145,10 @@
     };
     const UNITS = { PriceFactorDecayTime: "s, m, h, d", DiffMessageTolerancyPercent: "%", PriceRiseExtensionPercent: "%", MaxMinHours: "hours", AutoCreateMinProfitBTC: "BTC", AutoBonusExtendTimes: "times" };
     const AVERAGES = ["Minute", "Minute_5", "Minute_10", "Hour", "Day", "ThreeDay", "Week"];
-    const FILES = { Workers: "mrr.config.txt", Algorithms: "mrralgorithms.config.txt" };
+    const FILES = { Workers: "mrr.config.txt", Algorithms: "mrralgorithms.config.txt", Pool: "pools.config.txt" };
     const CONFIGS = { Workers: "MRR", Algorithms: "MRRAlgorithms" };
 
-    const state = { data: null, locked: false, tab: "Workers", editing: null, limits: {} };
+    const state = { data: null, cfg: null, locked: false, tab: "Workers", editing: null, limits: {}, schema: null };
 
     const $ = (id) => document.getElementById(id);
     const fields = (kind) => (state.data && state.data.Fields && state.data.Fields[kind]) || {};
@@ -235,16 +258,16 @@
     function renderNotices() {
         const d = state.data || {};
         const box = $("mrr-managed");
-        const both = managed("Workers") && managed("Algorithms");
-        if (managed("Workers") || managed("Algorithms")) {
-            const files = both ? "mrr.config.txt and mrralgorithms.config.txt" : (managed("Workers") ? "mrr.config.txt" : "mrralgorithms.config.txt");
-            box.textContent = 'This rig is a client of the server "' + (d.ServerName || "") + '" and receives ' + files + ' from there. ' +
-                (both ? 'Both lists are read-only, edit them on the server.' : 'That list is read-only, edit it on the server.');
+        const files = ["Pool", "Workers", "Algorithms"].filter(managed).map(k => FILES[k]);
+        if (files.length) {
+            box.textContent = 'This rig is a client of the server "' + (d.ServerName || "") + '" and receives ' + files.join(", ") + ' from there. ' +
+                (files.length > 1 ? 'These files are read-only here, edit them on the server.' : 'This file is read-only here, edit it on the server.');
             box.style.display = "";
         } else {
             box.style.display = "none";
         }
         $("mrr-new").disabled = managed("Workers");
+        $("mrr-pool-save").disabled = managed("Pool");
 
         const hint = $("mrr-poolhint");
         const pool = d.Pool || {};
@@ -268,9 +291,70 @@
     function showTab(tab) {
         state.tab = tab;
         for (const a of $("mrr-tabs").querySelectorAll("a[data-tab]")) a.classList.toggle("active", a.dataset.tab === tab);
-        $("mrr-pane-Workers").style.display = tab === "Workers" ? "" : "none";
-        $("mrr-pane-Algorithms").style.display = tab === "Algorithms" ? "" : "none";
+        for (const pane of ["Workers", "Algorithms", "Pool"]) $("mrr-pane-" + pane).style.display = tab === pane ? "" : "none";
         $("mrr-new").style.display = tab === "Workers" ? "" : "none";
+    }
+
+    // ---------------------------------------------------------------- pool tab
+
+    // one field record like on the Setup Pools page: type rules and number limits come from the setup schema
+    function poolFieldRec(key, help, value) {
+        const rec = { key: key, id: "input" + key, name: key, help: help, value: value, type: "text" };
+        const schema = state.schema || { rules: [], limits: {} };
+        const rtype = RbmSetup.ruleType(key, schema.rules);
+        if (rtype) {
+            rec.type = rtype;
+        } else if (schema.limits && typeof schema.limits[key] !== "undefined") {
+            const lim = schema.limits[key];
+            rec.min = lim.min;
+            rec.max = lim.max;
+            rec.step = lim.step;
+            rec.append = lim.append;
+            rec.inputmode = "decimal";
+            if (lim.min !== null || lim.max !== null || lim.step !== null) rec.type = "number";
+        }
+        return rec;
+    }
+
+    async function loadPool() {
+        const form = $("mrr-pool-form");
+        const empty = $("mrr-pool-empty");
+        let result = null;
+        try {
+            const response = await fetch('/loadconfig?' + new URLSearchParams({ ConfigName: "Pools", PoolName: "MiningRigRentals" }));
+            result = await response.json();
+        } catch (error) {
+            console.error("loadconfig:", error);
+        }
+        const config = result && result.Config;
+        if (!config || typeof config !== "object") {
+            empty.textContent = "pools.config.txt has no section MiningRigRentals yet.";
+            empty.style.display = "";
+            form.style.display = "none";
+            return;
+        }
+        const setup = (result.Setup && result.Setup.Fields) || {};
+        const helps = (result.Setup && result.Setup.SetupFields) || {};
+        // the pool's own parameters only: no wallets and none of the parameters that all pools share
+        const own = Object.keys(config).filter(k => k in setup || k in fields("Workers"));
+        const groups = POOLGROUPS.map(g => [g[0], g[1].filter(f => own.includes(f))]);
+        const rest = own.filter(f => !groups.some(g => g[1].includes(f)));
+        if (rest.length) groups.push(["Other", rest]);
+        let html = "";
+        for (const [label, list] of groups) {
+            if (!list.length) continue;
+            html += '<h5 class="mt-4">' + esc(label) + '</h5>';
+            for (const f of list) html += RbmSetup.renderConfigField(poolFieldRec(f, helps[f] || HELP.Workers[f] || "", config[f]));
+        }
+        $("mrr-pool-fields").innerHTML = html;
+        empty.style.display = "none";
+        form.style.display = "";
+    }
+
+    function savePool(event) {
+        event.preventDefault();
+        if (!guardWrite("Pool")) return;
+        rbmSubmitConfig(event.target, state.cfg, async () => { await loadPool(); await loadData(); });
     }
 
     // ---------------------------------------------------------------- editor
@@ -466,14 +550,17 @@
 
     document.addEventListener("DOMContentLoaded", () => {
         ConfigLoader.whenReady().then(async function (cfg) {
+            state.cfg = cfg;
             state.locked = !!cfg.IsLocked;
             try {
                 const schema = await (await fetch('/data/setupschema.json')).json();
+                state.schema = schema.pools || null;
                 state.limits = (schema.pools && schema.pools.limits) || {};
             } catch (error) {
                 console.error("setupschema:", error);
             }
             await loadData();
+            await loadPool();
 
             $("mrr-tabs").addEventListener("click", (event) => {
                 const a = event.target.closest("a[data-tab]");
@@ -488,6 +575,7 @@
             $("mrr-algo-filter").addEventListener("input", renderAlgorithms);
             $("mrr-algo-changed").addEventListener("change", renderAlgorithms);
             $("mrr-form").addEventListener("submit", saveForm);
+            $("mrr-pool-form").addEventListener("submit", savePool);
             $("mrr-cancel").addEventListener("click", closeEditor);
             $("mrr-cancel-x").addEventListener("click", closeEditor);
             $("mrr-clear").addEventListener("click", clearForm);

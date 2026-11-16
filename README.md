@@ -387,7 +387,7 @@ The pages are grouped in the menu on the left.
 
 - **MRR Stats**: the statistics of your rigs at MiningRigRentals
 - **MRR Rigs**: your rigs at MiningRigRentals, with their current rentals (see [Doc/MININGRIGRENTALS.md](Doc/MININGRIGRENTALS.md))
-- **Setup MRR**: the per worker settings of `mrr.config.txt` and the per algorithm settings of `mrralgorithms.config.txt` as forms
+- **Setup MRR**: the per worker settings of `mrr.config.txt`, the per algorithm settings of `mrralgorithms.config.txt` and the MiningRigRentals parameters of `pools.config.txt` as forms
 
 **Links**
 

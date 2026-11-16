@@ -28,9 +28,10 @@ Use `"UseWorkerName"` and `"ExcludeWorkerName"` to decide which of them are offe
 that is how you rent out the GPUs but keep the CPU on normal profit switching, or the other
 way round.
 
-Both files have a form in the web interface: the page "Setup MRR" lists the workers and the
-algorithms, shows for every field the value that applies as long as it is left empty, and
-enables or disables an algorithm with one click. If a parameter is set at more than one
+All three levels have a form in the web interface: the page "Setup MRR" lists the workers and
+the algorithms, shows for every field the value that applies as long as it is left empty,
+enables or disables an algorithm with one click, and holds the parameters below on its tab
+"Pool settings". If a parameter is set at more than one
 level, the algorithm wins over the worker, and the worker over `pools.config.txt`.
 
 Changes to the config files are picked up while RainbowMiner runs, so a rental in progress
