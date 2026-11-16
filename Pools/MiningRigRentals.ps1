@@ -934,6 +934,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
             #double
             try {
                 $val = if ($MRRConfig.$RigName.$fld -ne $null -and $MRRConfig.$RigName.$fld -ne "") {$MRRConfig.$RigName.$fld} else {Get-Variable -Name $fld -ValueOnly -ErrorAction Ignore}
+                if ("$($val)" -match "\d[eE][\+\-]?\d") {$val = ConvertTo-DecimalString $val}
                 $val = "$($val)" -replace ",","." -replace "[^0-9\.\-]+"
                 $MRRConfig.$RigName | Add-Member $fld ([Double]$(if ($val.Length -le 1) {$val -replace "[^0-9]"} else {"$($val[0])$($val.Substring(1) -replace "[^0-9\.]")"})) -Force
             } catch {
