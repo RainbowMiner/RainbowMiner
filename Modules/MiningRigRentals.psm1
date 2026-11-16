@@ -1,4 +1,216 @@
-﻿function Set-MiningRigRentalConfigDefault {
+﻿function Get-MiningRigRentalConfigFields {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $False)]
+        [String]$ConfigName = "MRR"
+    )
+    # the parameters of one section of mrr.config.txt (per worker) or mrralgorithms.config.txt (per algorithm), in file order, each with its value type
+    if ($ConfigName -eq "MRRAlgorithms") {
+        [ordered]@{
+            Enable                          = "bool"
+            PriceModifierPercent            = "float"
+            PriceFactor                     = "float"
+            PriceFactorMin                  = "float"
+            PriceFactorDecayPercent         = "float"
+            PriceFactorDecayTime            = "timespan"
+            PriceRiseExtensionPercent       = "float"
+            AllowExtensions                 = "bool"
+            DiffMessageTolerancyPercent     = "float"
+        }
+    } else {
+        [ordered]@{
+            EnableAutoCreate                = "bool"
+            AutoCreateMinProfitPercent      = "float"
+            AutoCreateMinProfitBTC          = "float"
+            AutoCreateMaxMinHours           = "float"
+            AutoUpdateMinPriceChangePercent = "float"
+            AutoCreateAlgorithm             = "algorithms"
+            EnableAutoUpdate                = "bool"
+            EnableAutoExtend                = "bool"
+            EnableAutoExtendDifficultyCheck = "bool"
+            AutoExtendTargetPercent         = "float"
+            AutoExtendMaximumPercent        = "float"
+            AutoBonusExtendForHours         = "float"
+            AutoBonusExtendByHours          = "float"
+            AutoBonusExtendTimes            = "float"
+            EnableAutoPrice                 = "bool"
+            EnableMinimumPrice              = "bool"
+            EnableAutoAdjustMinHours        = "bool"
+            EnableUpdateTitle               = "bool"
+            EnableUpdateDescription         = "bool"
+            EnableUpdatePriceModifier       = "bool"
+            EnablePowerDrawAddOnly          = "bool"
+            AutoPriceModifierPercent        = "float"
+            PriceBTC                        = "float"
+            PriceFactor                     = "float"
+            PriceFactorMin                  = "float"
+            PriceFactorDecayPercent         = "float"
+            PriceFactorDecayTime            = "timespan"
+            PriceRiseExtensionPercent       = "float"
+            PowerDrawFactor                 = "float"
+            MinHours                        = "float"
+            MaxHours                        = "float"
+            MaxMinHours                     = "float"
+            AllowExtensions                 = "bool"
+            AllowRentalDuringPause          = "bool"
+            PriceCurrencies                 = "currencies"
+            Title                           = "string"
+            Description                     = "string"
+            ProfitAverageTime               = "average"
+            DiffMessageTolerancyPercent     = "float"
+        }
+    }
+}
+
+function ConvertTo-MiningRigRentalConfigValue {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $True)]
+        [String]$Name,
+        [Parameter(Mandatory = $False)]
+        $Value = "",
+        [Parameter(Mandatory = $False)]
+        [String]$ConfigName = "MRR"
+    )
+    # normalizes one value for its config file; the empty string stands for "not set here, use the next level"
+    $Value = "$Value".Trim()
+    if ($ConfigName -eq "MRRAlgorithms" -and $Name -eq "Enable") {
+        return "$([int]($Value -eq '' -or (Get-Yes $Value)))"
+    }
+    if ($Value -eq "") {return ""}
+    Switch ((Get-MiningRigRentalConfigFields $ConfigName)[$Name]) {
+        "bool" {
+            "$([int](Get-Yes $Value))"
+            Break
+        }
+        "float" {
+            # kept as plain decimal text: an exponent (1E-06) would be misread by the pool module
+            $Number = $Value -replace ",","." -replace "\s+"
+            if ($Number -notmatch "^[\+\-]?(\d+\.?\d*|\.\d+)$") {throw "$($Name): `"$($Value)`" is not a number"}
+            $Number -replace "^\+" -replace "^(\-?)\.",'${1}0.' -replace "\.$"
+            Break
+        }
+        "timespan" {
+            # a number with an optional unit; reduced to the first letter, because ConvertFrom-Time looks for m, h, d and w anywhere in the text
+            if ($Value -notmatch "^(\d+(?:[\.,]\d+)?)\s*([a-z]*)$") {throw "$($Name): `"$($Value)`" is not a time span, use e.g. 30m, 4h or 1.5d"}
+            $Number = $Matches[1] -replace ",","."
+            $Unit   = "$($Matches[2])".ToLower()
+            if ($Unit -ne "" -and $Unit[0] -notin @([char]"s",[char]"m",[char]"h",[char]"d",[char]"w")) {throw "$($Name): unknown time unit in `"$($Value)`", use s, m, h, d or w"}
+            "$($Number)$(if ($Unit -ne '') {$Unit[0]})"
+            Break
+        }
+        "currencies" {
+            $Valid = @("BTC","LTC","ETH","BCH","DOGE")
+            $List  = @($Value.ToUpper() -split "[,; ]+" | Where-Object {$_} | Select-Object -Unique)
+            $Wrong = @($List | Where-Object {$_ -notin $Valid})
+            if ($Wrong.Count) {throw "$($Name): unknown currency $($Wrong -join ', '), use $($Valid -join ', ')"}
+            @(@("BTC") + $List | Select-Object -Unique) -join ","
+            Break
+        }
+        "algorithms" {
+            @($Value -split "[,; ]+" | Where-Object {$_} | Foreach-Object {Get-Algorithm $_} | Select-Object -Unique) -join ","
+            Break
+        }
+        "average" {
+            $Match = @(@("Minute","Minute_5","Minute_10","Hour","Day","ThreeDay","Week") | Where-Object {$_ -ieq $Value})
+            if (-not $Match.Count) {throw "$($Name): use one of Minute, Minute_5, Minute_10, Hour, Day, ThreeDay, Week"}
+            $Match[0]
+            Break
+        }
+        default {$Value}
+    }
+}
+
+function Get-MiningRigRentalConfigSections {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $False)]
+        [String]$ConfigName = "MRR",
+        [Parameter(Mandatory = $False)]
+        [String[]]$Names = @()
+    )
+    # the raw sections of mrr.config.txt or mrralgorithms.config.txt, plus an empty one for every name in $Names that has no section yet; each with a change tag
+    $Fields = Get-MiningRigRentalConfigFields $ConfigName
+    $ConfigActual = if (Test-Config $ConfigName -Exists) {Get-ConfigContent $ConfigName} else {$null}
+    if ($ConfigActual -eq $null -or $ConfigActual -is [string] -or $ConfigActual -is [array]) {$ConfigActual = [PSCustomObject]@{}}
+    foreach ($SectionName in @(@($ConfigActual.PSObject.Properties.Name) + @($Names) | Where-Object {"$_" -ne ""} | Sort-Object -Unique)) {
+        $Property = $ConfigActual.PSObject.Properties[$SectionName]
+        $Section  = if ($Property -ne $null -and $Property.Value -ne $null -and $Property.Value -isnot [string] -and $Property.Value -isnot [array]) {$Property.Value} else {$null}
+        $Values   = [ordered]@{}
+        foreach ($Field in $Fields.Keys) {
+            $Values[$Field] = if ($Section -ne $null -and $Section.$Field -ne $null) {"$(@($Section.$Field) -join ',')".Trim()} elseif ($ConfigName -eq "MRRAlgorithms" -and $Field -eq "Enable") {"1"} else {""}
+        }
+        [PSCustomObject]@{
+            Name   = $(if ($Property -ne $null) {$Property.Name} else {$SectionName})
+            Exists = ($Property -ne $null)
+            Tag    = Get-ContentDataMD5hash($(if ($Section -ne $null) {$Section} else {''}))
+            Values = $Values
+        }
+    }
+}
+
+function Set-MiningRigRentalConfigSection {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $True)]
+        [String]$Name,
+        [Parameter(Mandatory = $False)]
+        [String]$ConfigName = "MRR",
+        [Parameter(Mandatory = $False)]
+        [ValidateSet("update","delete")]
+        [String]$Action = "update",
+        [Parameter(Mandatory = $False)]
+        $Data = $null,
+        [Parameter(Mandatory = $False)]
+        [String]$Tag = ""
+    )
+    # writes one section: update sets the fields contained in $Data, delete removes a worker section or resets an algorithm section
+    $FileName = if ($ConfigName -eq "MRRAlgorithms") {"mrralgorithms.config.txt"} else {"mrr.config.txt"}
+    $Name = "$Name".Trim()
+    if ($Name -notmatch "^[A-Za-z0-9\-_]+$") {throw "Invalid name: use letters, digits, minus and underscore only"}
+    if (-not (Test-Config $ConfigName)) {throw "$($FileName) is not available"}
+    $PathToFile = $Session.ConfigFiles[$ConfigName].Path
+
+    $ConfigActual = $null
+    if (Test-Path $PathToFile) {
+        $ConfigActual = Get-ConfigContent $ConfigName
+        if (-not $Session.ConfigFiles[$ConfigName].Healthy) {throw "$($FileName) is not valid JSON, repair it first"}
+    }
+    if ($ConfigActual -eq $null -or $ConfigActual -is [string] -or $ConfigActual -is [array]) {$ConfigActual = [PSCustomObject]@{}}
+    $ChangeTag = Get-ContentDataMD5hash($ConfigActual)
+
+    $Fields   = Get-MiningRigRentalConfigFields $ConfigName
+    $Property = $ConfigActual.PSObject.Properties[$Name]
+    $Section  = if ($Property -ne $null -and $Property.Value -ne $null -and $Property.Value -isnot [string] -and $Property.Value -isnot [array]) {$Property.Value} else {$null}
+    if ($Property -ne $null) {$Name = $Property.Name}
+
+    if ($ConfigName -eq "MRRAlgorithms" -and $Section -eq $null) {throw "There is no algorithm $($Name) in $($FileName)"}
+    if ($Tag -ne "" -and $Tag -ne (Get-ContentDataMD5hash($(if ($Section -ne $null) {$Section} else {''})))) {throw "$($Name) has been changed meanwhile, reload the page"}
+
+    if ($Action -eq "delete" -and $ConfigName -ne "MRRAlgorithms") {
+        if ($Property -ne $null) {[void]$ConfigActual.PSObject.Properties.Remove($Name)}
+    } else {
+        if ($Action -eq "update" -and ($Data -eq $null -or $Data -is [string] -or $Data -is [array])) {throw "No data received"}
+        if ($Section -eq $null) {$Section = [PSCustomObject]@{}}
+        foreach ($Field in $Fields.Keys) {
+            if ($Action -eq "delete") {
+                $Section | Add-Member $Field (ConvertTo-MiningRigRentalConfigValue -Name $Field -Value "" -ConfigName $ConfigName) -Force
+            } elseif ($Data.PSObject.Properties[$Field]) {
+                $Section | Add-Member $Field (ConvertTo-MiningRigRentalConfigValue -Name $Field -Value $Data.$Field -ConfigName $ConfigName) -Force
+            } elseif ($Section.$Field -eq $null) {
+                $Section | Add-Member $Field (ConvertTo-MiningRigRentalConfigValue -Name $Field -Value "" -ConfigName $ConfigName) -Force
+            }
+        }
+        $ConfigActual | Add-Member $Name $Section -Force
+    }
+
+    $Sorted = [PSCustomObject]@{}
+    $ConfigActual.PSObject.Properties.Name | Sort-Object | Foreach-Object {$Sorted | Add-Member $_ $ConfigActual.$_ -Force}
+    if (-not (Set-ContentJson -PathToFile $PathToFile -Data $Sorted -MD5hash $ChangeTag)) {throw "Could not write $($FileName)"}
+    $Name
+}
+
+function Set-MiningRigRentalConfigDefault {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $False)]
@@ -17,7 +229,8 @@
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
             $Preset_Copy = $Preset | ConvertTo-Json -Depth 10 -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
 
-            $Default = [PSCustomObject]@{EnableAutoCreate="";AutoCreateMinProfitPercent="";AutoCreateMinProfitBTC="";AutoCreateMaxMinHours="";AutoUpdateMinPriceChangePercent="";AutoCreateAlgorithm="";EnableAutoUpdate="";EnableAutoExtend="";EnableAutoExtendDifficultyCheck="";AutoExtendTargetPercent="";AutoExtendMaximumPercent="";AutoBonusExtendForHours="";AutoBonusExtendByHours="";AutoBonusExtendTimes="";EnableAutoPrice="";EnableMinimumPrice="";EnableAutoAdjustMinHours="";EnableUpdateTitle="";EnableUpdateDescription="";EnableUpdatePriceModifier="";EnablePowerDrawAddOnly="";AutoPriceModifierPercent="";PriceBTC="";PriceFactor="";PriceFactorMin="";PriceFactorDecayPercent="";PriceFactorDecayTime="";PriceRiseExtensionPercent="";PowerDrawFactor="";MinHours="";MaxHours="";MaxMinHours="";AllowExtensions="";AllowRentalDuringPause="";PriceCurrencies="";Title ="";Description="";ProfitAverageTime="";DiffMessageTolerancyPercent=""}
+            $Default = [PSCustomObject]@{}
+            foreach ($SetupName in (Get-MiningRigRentalConfigFields "MRR").Keys) {$Default | Add-Member $SetupName "" -Force}
             $Setup = Get-ChildItemContent ".\Data\MRRConfigDefault.ps1"
             
             foreach ($RigName in @(@($Setup.PSObject.Properties.Name | Select-Object) + @($Workers) | Select-Object -Unique)) {
@@ -65,7 +278,8 @@ function Set-MiningRigRentalAlgorithmsConfigDefault {
         try {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
             $Preset_Copy = $Preset | ConvertTo-Json -Depth 10 -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
-            $Default = [PSCustomObject]@{Enable="1";PriceModifierPercent="";PriceFactor="";PriceFactorMin="";PriceFactorDecayPercent="";PriceFactorDecayTime="";PriceRiseExtensionPercent="";AllowExtensions="";DiffMessageTolerancyPercent=""}
+            $Default = [PSCustomObject]@{}
+            foreach ($SetupName in (Get-MiningRigRentalConfigFields "MRRAlgorithms").Keys) {$Default | Add-Member $SetupName $(if ($SetupName -eq "Enable") {"1"} else {""}) -Force}
             $Setup = Get-ChildItemContent ".\Data\MRRAlgorithmsConfigDefault.ps1"
             $AllAlgorithms = Get-MiningRigRentalAlgos
             foreach ($Algorithm in $AllAlgorithms) {
@@ -119,7 +333,7 @@ function Update-MiningRigRentalAlgorithmsConfig {
                 PriceFactorDecayPercent = $null
                 PriceFactorDecayTime = $null
                 PriceRiseExtensionPercent = $null
-                DiffMessageTolerancyPercent = "$($AllAlgorithms.DiffMessageTolerancyPercent)".Trim()
+                DiffMessageTolerancyPercent = "$($AllAlgorithms.$a.DiffMessageTolerancyPercent)".Trim()
             }
 
             foreach ($Algo_Param in $EmptyObjectString) {

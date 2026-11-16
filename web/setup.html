@@ -108,7 +108,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 var serverconfigname = [];
                 var resultServerConfigName = result.ServerConfigName.split(/[,;]/);
-                ["algorithms","coins","config","customminers","miners","mrralgorithms","ocprofiles","pools","scheduler","userpools"].forEach(function (data) {
+                ["algorithms","coins","config","customminers","miners","mrr","mrralgorithms","ocprofiles","pools","scheduler","userpools"].forEach(function (data) {
                     var checked = resultServerConfigName.some(item => item.toLowerCase() === data.toLowerCase());
                     serverconfigname.push(setupCheckbox('serverconfig' + data, 'ServerConfigName[]', data, esc(data), checked))
                 })

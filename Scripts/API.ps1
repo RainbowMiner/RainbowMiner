@@ -2187,6 +2187,90 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             $Data = if ($Data) {ConvertTo-Json $Data -Depth 10} else {"[]"}
             break
         }
+        "/mrrconfig" {
+            # the sections of mrr.config.txt (per worker) and mrralgorithms.config.txt (per algorithm), plus the pools.config.txt values they override
+            $Data = "{}"
+            try {
+                $MrrPools  = if (Test-Config "Pools" -Exists) {Get-ConfigContent "Pools"} else {$null}
+                $MrrPool   = if ($MrrPools -ne $null -and $MrrPools -isnot [string]) {$MrrPools.MiningRigRentals} else {$null}
+                $MrrSetup  = (Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1").MiningRigRentals
+                $MrrFields = [ordered]@{Workers = (Get-MiningRigRentalConfigFields "MRR"); Algorithms = (Get-MiningRigRentalConfigFields "MRRAlgorithms")}
+
+                $MrrDefaults = [ordered]@{}
+                $MrrHelp     = [ordered]@{}
+                foreach ($MrrField in @(@($MrrFields.Workers.Keys) + @($MrrFields.Algorithms.Keys) + @("AutoCreateMinCPUProfitBTC") | Select-Object -Unique)) {
+                    $MrrDefaults[$MrrField] = if ($MrrPool -ne $null -and $MrrPool.$MrrField -ne $null) {"$($MrrPool.$MrrField)"} elseif ($MrrSetup.Fields.$MrrField -ne $null) {"$($MrrSetup.Fields.$MrrField)"} else {""}
+                    if ($MrrSetup.SetupFields.$MrrField -ne $null) {$MrrHelp[$MrrField] = "$($MrrSetup.SetupFields.$MrrField)"}
+                }
+
+                # the worker names of this rig, like the pool module builds them
+                $MrrWorker = "$($Session.Config.Pools.MiningRigRentals.Worker)".Trim()
+                if ($MrrWorker -eq "" -or $MrrWorker.StartsWith('$')) {$MrrWorker = "$($Session.Config.WorkerName)"}
+                $MrrLocal   = @(@($Session.Config.DeviceModel | Where-Object {$Session.Config.Devices.$_.Worker} | Foreach-Object {"$($Session.Config.Devices.$_.Worker)"}) + @($MrrWorker) | Where-Object {$_} | Select-Object -Unique)
+                $MrrUse     = @("$($MrrPool.UseWorkerName)" -split "[,; ]+" | Where-Object {$_} | Select-Object -Unique)
+                $MrrExclude = @("$($MrrPool.ExcludeWorkerName)" -split "[,; ]+" | Where-Object {$_} | Select-Object -Unique)
+
+                $MrrConfig   = if (Test-Config "Config" -Exists) {Get-ConfigContent "Config"} else {$null}
+                $MrrSelected = @(Get-ConfigPoolNames $MrrConfig)
+                $MrrExcluded = @(Get-ConfigPoolNames $MrrConfig -Field "ExcludePoolName")
+
+                $Data = ConvertTo-Json ([ordered]@{
+                    Fields     = $MrrFields
+                    Defaults   = $MrrDefaults
+                    Help       = $MrrHelp
+                    Workers    = @(Get-MiningRigRentalConfigSections -ConfigName "MRR" -Names $MrrLocal | Foreach-Object {
+                        $MrrIsLocal = [bool]($MrrLocal -icontains $_.Name)
+                        $_ | Add-Member Local $MrrIsLocal -Force
+                        $_ | Add-Member Used ($MrrIsLocal -and (-not $MrrUse.Count -or $MrrUse -icontains $_.Name) -and ($MrrExclude -inotcontains $_.Name)) -Force
+                        $_
+                    })
+                    Algorithms = @(Get-MiningRigRentalConfigSections -ConfigName "MRRAlgorithms")
+                    Managed    = [ordered]@{Workers = (Test-ConfigManagedByServer "mrr"); Algorithms = (Test-ConfigManagedByServer "mrralgorithms")}
+                    ServerName = "$($Session.Config.ServerName)"
+                    Pool       = [ordered]@{
+                        Selected          = [bool]((-not $MrrSelected.Count -or $MrrSelected -icontains "MiningRigRentals") -and ($MrrExcluded -inotcontains "MiningRigRentals"))
+                        HasCredentials    = [bool]("$($MrrPool.API_Key)".Trim() -ne "" -and "$($MrrPool.API_Secret)".Trim() -ne "")
+                        UseWorkerName     = $MrrUse
+                        ExcludeWorkerName = $MrrExclude
+                    }
+                }) -Depth 10 -Compress
+            } catch {
+                Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "[$ThreadID] Error reading the MRR config: $($_.Exception.Message)" -Append -Timestamp
+            }
+            $MrrPools = $MrrPool = $MrrSetup = $MrrFields = $MrrDefaults = $MrrHelp = $MrrField = $MrrWorker = $MrrLocal = $MrrUse = $MrrExclude = $MrrConfig = $MrrSelected = $MrrExcluded = $MrrIsLocal = $null
+            Break
+        }
+        "/savemrrconfig" {
+            # POST ConfigName=MRR|MRRAlgorithms, Action=update|delete, Name, [Tag], [Data=<fields json>]
+            $Success = $false
+            $ErrMsg  = ""
+            $MrrName = "$($Parameters.Name)".Trim()
+            $MrrConfigName = if ("$($Parameters.ConfigName)".Trim() -ieq "MRRAlgorithms") {"MRRAlgorithms"} else {"MRR"}
+            if ($API.LockConfig) {
+                $ErrMsg = "The configuration is locked (APIlockConfig in config.txt)"
+            } elseif (Test-ConfigManagedByServer $MrrConfigName.ToLower()) {
+                $ErrMsg = "$($MrrConfigName.ToLower()).config.txt is managed by the server $($Session.Config.ServerName)"
+            } else {
+                try {
+                    $MrrAction = "$($Parameters.Action)".Trim().ToLower()
+                    if ($MrrAction -notin @("update","delete")) {throw "Unknown action"}
+                    $MrrData = $null
+                    if ($MrrAction -eq "update") {
+                        if ("$($Parameters.Data)" -eq "") {throw "No data received"}
+                        $MrrData = $Parameters.Data | ConvertFrom-Json -ErrorAction Stop
+                    }
+                    $MrrName = Set-MiningRigRentalConfigSection -Name $MrrName -ConfigName $MrrConfigName -Action $MrrAction -Data $MrrData -Tag "$($Parameters.Tag)"
+                    $Success = $true
+                } catch {
+                    $Success = $false
+                    $ErrMsg = "$($_.Exception.Message)"
+                    Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "[$ThreadID] Error saving the MRR config: $($_.Exception.Message)" -Append -Timestamp
+                }
+            }
+            $Data = ConvertTo-Json ([PSCustomObject]@{Success=$Success;Error=$ErrMsg;Name="$MrrName"}) -Depth 10
+            $Success = $ErrMsg = $MrrName = $MrrConfigName = $MrrAction = $MrrData = $null
+            Break
+        }
         "/minerapis" {
             # class names of Modules\MinerAPIs.psm1 for the custom miner form (Wrapper first); cached per file version
             $APIsFile = ".\Modules\MinerAPIs.psm1"

@@ -239,6 +239,14 @@
         <a href="/mrrrigs">/mrrrigs</a>
         <p>Shows private rigs informations</p>
 
+        <h3>MRR Config</h3>
+        <a href="/mrrconfig">/mrrconfig</a>
+        <p>Returns the data of the Setup MRR page: Workers (sections of .\Config\mrr.config.txt plus the worker names of this rig, each with Exists, Local, Used, a change Tag and its raw Values) and Algorithms (sections of .\Config\mrralgorithms.config.txt), Fields (name and value type per list), Defaults (the values of the MiningRigRentals section of pools.config.txt), Help, Managed (Workers, Algorithms), ServerName and Pool (Selected, HasCredentials, UseWorkerName, ExcludeWorkerName)</p>
+
+        <h3>Save MRR Config</h3>
+        <a href="/savemrrconfig">/savemrrconfig</a>
+        <p>Update or delete one section of mrr.config.txt or mrralgorithms.config.txt. Send as POST request with the parameters ConfigName (MRR or MRRAlgorithms), Action (update or delete), Name (worker name or algorithm), Tag (optional, from /mrrconfig) and Data (the fields to set as JSON, an empty value removes the setting). Delete removes a worker section and resets an algorithm section. Returns Success, Error and Name.</p>
+
     </fieldset><fieldset>
         <legend>Command Resources</legend>
 

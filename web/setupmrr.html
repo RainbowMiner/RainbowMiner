@@ -1,0 +1,498 @@
+﻿<!--#include file="/parts/head.html" -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 id="title" data-navbaractive="navsetupmrr" class="h2">Setup MRR</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <button type="button" id="mrr-new" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg"></i> Add worker</button>
+    </div>
+</div>
+
+<div id="mrr-managed" class="alert alert-warning" style="display:none"></div>
+<div id="mrr-poolhint" class="alert alert-info" style="display:none"></div>
+
+<p class="text-muted small">
+    The MiningRigRentals section of pools.config.txt (page <a href="setuppools.html">Setup Pools</a>) holds the settings for all rigs.
+    Here they are refined: per worker name in mrr.config.txt and per algorithm in mrralgorithms.config.txt.
+    A field that is left empty is not set at this level. If a parameter is set at more than one level, the algorithm wins over the worker, and the worker over pools.config.txt.
+    All parameters are described in
+    <a href="https://github.com/RainbowMiner/RainbowMiner/blob/master/Doc/MININGRIGRENTALS.md" target="_blank">Doc/MININGRIGRENTALS.md</a>.
+</p>
+
+<ul class="nav nav-tabs mb-3" id="mrr-tabs">
+    <li class="nav-item"><a class="nav-link active" href="#" data-tab="Workers">Workers <span class="badge bg-secondary" id="mrr-count-Workers"></span></a></li>
+    <li class="nav-item"><a class="nav-link" href="#" data-tab="Algorithms">Algorithms <span class="badge bg-secondary" id="mrr-count-Algorithms"></span></a></li>
+</ul>
+
+<div id="mrr-pane-Workers">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle" id="mrr-table-Workers">
+            <thead>
+                <tr>
+                    <th>Worker</th>
+                    <th>Status</th>
+                    <th>Set for this worker</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<div id="mrr-pane-Algorithms" style="display:none">
+    <div class="row g-2 align-items-center mb-2">
+        <div class="col-sm-4"><input type="search" class="form-control form-control-sm" id="mrr-algo-filter" placeholder="Filter algorithms"></div>
+        <div class="col-auto">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="mrr-algo-changed">
+                <label class="form-check-label small" for="mrr-algo-changed">only disabled algorithms and algorithms with own settings</label>
+            </div>
+        </div>
+    </div>
+    <div id="mrr-algo-empty" class="text-muted small" style="display:none"></div>
+    <div class="table-responsive">
+        <table class="table table-hover table-sm align-middle" id="mrr-table-Algorithms">
+            <thead>
+                <tr>
+                    <th>Algorithm</th>
+                    <th class="text-center">Enabled</th>
+                    <th>Set for this algorithm</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Editor -->
+<div id="mrr-editor" class="card mt-3" style="display:none">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span id="mrr-editor-title"></span>
+        <button type="button" class="btn-close" id="mrr-cancel-x" aria-label="Close"></button>
+    </div>
+    <div class="card-body">
+        <form id="mrr-form" autocomplete="off">
+            <div class="row mb-3" id="mrr-name-row">
+                <label for="mrr-name" class="col-sm-3 col-form-label">Worker name</label>
+                <div class="col-sm-9">
+                    <input type="text" class="form-control" id="mrr-name" pattern="[A-Za-z0-9_\-]+" placeholder="rig01">
+                    <div class="form-text">The worker name of a rig: WorkerName of config.txt for the GPUs, the same name with cpu appended for the CPU, or the Worker of a device group in devices.config.txt. The names of this rig are listed automatically, add a name here only for another rig that receives this file.</div>
+                </div>
+            </div>
+            <div id="mrr-fields"></div>
+            <div class="d-flex flex-wrap gap-2">
+                <button type="submit" class="btn btn-primary" id="mrr-save">Save</button>
+                <button type="button" class="btn btn-secondary" id="mrr-cancel">Cancel</button>
+                <button type="button" class="btn btn-outline-secondary" id="mrr-clear">Empty all fields</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- End of page scripts -->
+<script type="text/javascript">
+(function () {
+    "use strict";
+
+    const GROUPS = {
+        Workers: [
+            ["Create and update rigs", ["EnableAutoCreate", "AutoCreateMinProfitPercent", "AutoCreateMinProfitBTC", "AutoCreateMaxMinHours", "AutoCreateAlgorithm", "EnableAutoUpdate", "AutoUpdateMinPriceChangePercent", "EnableUpdateTitle", "Title", "EnableUpdateDescription", "Description"]],
+            ["Price", ["EnableAutoPrice", "EnableMinimumPrice", "PriceBTC", "PriceFactor", "PriceFactorMin", "PriceFactorDecayPercent", "PriceFactorDecayTime", "PriceRiseExtensionPercent", "AutoPriceModifierPercent", "EnableUpdatePriceModifier", "PowerDrawFactor", "EnablePowerDrawAddOnly", "PriceCurrencies", "ProfitAverageTime"]],
+            ["Rental time", ["MinHours", "MaxHours", "MaxMinHours", "EnableAutoAdjustMinHours", "AllowExtensions", "AllowRentalDuringPause"]],
+            ["Automatic extension", ["EnableAutoExtend", "EnableAutoExtendDifficultyCheck", "AutoExtendTargetPercent", "AutoExtendMaximumPercent", "AutoBonusExtendForHours", "AutoBonusExtendByHours", "AutoBonusExtendTimes", "DiffMessageTolerancyPercent"]]
+        ],
+        Algorithms: [
+            ["General", ["Enable", "AllowExtensions", "DiffMessageTolerancyPercent"]],
+            ["Price", ["PriceFactor", "PriceFactorMin", "PriceFactorDecayPercent", "PriceFactorDecayTime", "PriceRiseExtensionPercent", "PriceModifierPercent"]]
+        ]
+    };
+    // a field that is named differently in pools.config.txt
+    const ALIAS = { Algorithms: { PriceModifierPercent: "AutoPriceModifierPercent" } };
+    const HELP = {
+        Workers: {
+            AutoCreateMinProfitBTC: "Minimum one-day revenue in BTC, for a rig to be autocreated on MRR. Exists per worker only: left empty, a CPU rig uses AutoCreateMinCPUProfitBTC of pools.config.txt and a GPU rig has no minimum.",
+            AutoBonusExtendTimes: "Limit the bonus extensions by AutoBonusExtendByHours to this number of times (0 = unlimited)",
+            DiffMessageTolerancyPercent: "Allowed tolerance above the maximum and below the minimum of the optimum difficulty (in percent, e.g. 15 means 15%)"
+        },
+        Algorithms: {
+            Enable: "Offer this algorithm at MiningRigRentals",
+            PriceModifierPercent: "Autoprice modifier in percent for this algorithm (e.g. +10 will increase the suggested price by 10%, allowed range -30 .. 30)",
+            AllowExtensions: "Allow renters to buy extensions for a rental of this algorithm"
+        }
+    };
+    const UNITS = { PriceFactorDecayTime: "s, m, h, d", DiffMessageTolerancyPercent: "%", PriceRiseExtensionPercent: "%", MaxMinHours: "hours", AutoCreateMinProfitBTC: "BTC", AutoBonusExtendTimes: "times" };
+    const AVERAGES = ["Minute", "Minute_5", "Minute_10", "Hour", "Day", "ThreeDay", "Week"];
+    const FILES = { Workers: "mrr.config.txt", Algorithms: "mrralgorithms.config.txt" };
+    const CONFIGS = { Workers: "MRR", Algorithms: "MRRAlgorithms" };
+
+    const state = { data: null, locked: false, tab: "Workers", editing: null, limits: {} };
+
+    const $ = (id) => document.getElementById(id);
+    const fields = (kind) => (state.data && state.data.Fields && state.data.Fields[kind]) || {};
+    const rows = (kind) => (state.data && Array.isArray(state.data[kind])) ? state.data[kind] : [];
+    const managed = (kind) => !!(state.data && state.data.Managed && state.data.Managed[kind]);
+    const yesNo = (v) => ["", "0", "no", "false"].includes(String(v).trim().toLowerCase()) ? "No" : "Yes";
+
+    function poolValue(kind, field) {
+        const defaults = (state.data && state.data.Defaults) || {};
+        const name = (ALIAS[kind] && ALIAS[kind][field]) || field;
+        return defaults[name] === undefined || defaults[name] === null ? "" : String(defaults[name]);
+    }
+
+    function helpText(kind, field) {
+        const help = (state.data && state.data.Help) || {};
+        return (HELP[kind] && HELP[kind][field]) || help[field] || help[(ALIAS[kind] && ALIAS[kind][field]) || field] || "";
+    }
+
+    function unitOf(kind, field) {
+        if (UNITS[field]) return UNITS[field];
+        const lim = state.limits[(ALIAS[kind] && ALIAS[kind][field]) || field];
+        return (lim && lim.append) ? lim.append : "";
+    }
+
+    // the fields of a section that are set at this level (Enable of an algorithm is shown in its own column)
+    function overrides(kind, item) {
+        const list = [];
+        for (const f of Object.keys(fields(kind))) {
+            if (kind === "Algorithms" && f === "Enable") continue;
+            const v = item.Values ? String(item.Values[f] === undefined || item.Values[f] === null ? "" : item.Values[f]) : "";
+            if (v !== "") list.push([f, v]);
+        }
+        return list;
+    }
+
+    function overridesHtml(kind, item) {
+        const list = overrides(kind, item);
+        if (!list.length) return '<span class="text-muted small">nothing, all values come from ' + (kind === "Algorithms" ? 'the worker or pools.config.txt' : 'pools.config.txt') + '</span>';
+        return list.map(([f, v]) => {
+            const type = fields(kind)[f];
+            const shown = type === "bool" ? yesNo(v) : (v.length > 40 ? v.slice(0, 40) + "..." : v);
+            return '<span class="badge border text-body fw-normal me-1 mb-1" title="' + esc(v) + '">' + esc(f) + ': <strong>' + esc(shown) + '</strong></span>';
+        }).join('');
+    }
+
+    // ---------------------------------------------------------------- tables
+
+    function renderWorkers() {
+        const list = rows("Workers");
+        const ro = managed("Workers");
+        $("mrr-count-Workers").textContent = list.length;
+        const html = list.map((item) => {
+            const n = esc(item.Name);
+            const badges = [];
+            if (item.Local && item.Used) badges.push('<span class="badge bg-success">this rig</span>');
+            else if (item.Local) badges.push('<span class="badge bg-warning text-dark" title="See UseWorkerName and ExcludeWorkerName of the MiningRigRentals pool">this rig, not offered</span>');
+            else badges.push('<span class="badge bg-secondary" title="No device of this rig uses this worker name">other rig</span>');
+            if (!item.Exists) badges.push('<span class="badge bg-info text-dark">no section yet</span>');
+            const hasOwn = overrides("Workers", item).length > 0;
+            const canDelete = !ro && item.Exists && (hasOwn || !item.Local);
+            return '<tr>' +
+                '<td><strong>' + n + '</strong></td>' +
+                '<td>' + badges.join(' ') + '</td>' +
+                '<td>' + overridesHtml("Workers", item) + '</td>' +
+                '<td class="text-end text-nowrap"><div class="btn-group btn-group-sm">' +
+                '<button type="button" class="btn btn-outline-primary" data-act="edit" data-kind="Workers" data-name="' + n + '" title="' + (ro ? "View" : "Edit") + '"><i class="bi bi-pencil"></i></button>' +
+                (canDelete ? '<button type="button" class="btn btn-outline-danger" data-act="delete" data-kind="Workers" data-name="' + n + '" title="' + (item.Local ? "Remove all settings of this worker" : "Delete this section") + '"><i class="bi bi-trash"></i></button>' : '') +
+                '</div></td></tr>';
+        }).join('');
+        $("mrr-table-Workers").querySelector("tbody").innerHTML = html || '<tr><td colspan="4" class="text-muted">No worker names found.</td></tr>';
+    }
+
+    function renderAlgorithms() {
+        const list = rows("Algorithms");
+        const ro = managed("Algorithms");
+        const filter = $("mrr-algo-filter").value.trim().toLowerCase();
+        const onlyChanged = $("mrr-algo-changed").checked;
+        $("mrr-count-Algorithms").textContent = list.length;
+        const empty = $("mrr-algo-empty");
+        if (!list.length) {
+            empty.textContent = "mrralgorithms.config.txt does not exist yet. RainbowMiner creates it with all algorithms of MiningRigRentals as soon as the pool MiningRigRentals is in use.";
+            empty.style.display = "";
+        } else {
+            empty.style.display = "none";
+        }
+        let shown = 0;
+        const html = list.map((item) => {
+            const enabled = String(item.Values.Enable) !== "0";
+            const hasOwn = overrides("Algorithms", item).length > 0;
+            if (filter && !item.Name.toLowerCase().includes(filter)) return '';
+            if (onlyChanged && enabled && !hasOwn) return '';
+            shown++;
+            const n = esc(item.Name);
+            return '<tr>' +
+                '<td>' + (enabled ? '<strong>' + n + '</strong>' : '<span class="text-muted text-decoration-line-through">' + n + '</span>') + '</td>' +
+                '<td class="text-center"><button type="button" class="btn btn-sm btn-link p-0" data-act="toggle" data-kind="Algorithms" data-name="' + n + '" title="' + (enabled ? "Enabled, click to disable" : "Disabled, click to enable") + '"' + (ro ? ' disabled' : '') + '>' +
+                (enabled ? '<i class="bi bi-check-circle-fill text-success"></i>' : '<i class="bi bi-dash-circle text-muted"></i>') + '</button></td>' +
+                '<td>' + overridesHtml("Algorithms", item) + '</td>' +
+                '<td class="text-end text-nowrap"><div class="btn-group btn-group-sm">' +
+                '<button type="button" class="btn btn-outline-primary" data-act="edit" data-kind="Algorithms" data-name="' + n + '" title="' + (ro ? "View" : "Edit") + '"><i class="bi bi-pencil"></i></button>' +
+                ((!ro && (hasOwn || !enabled)) ? '<button type="button" class="btn btn-outline-danger" data-act="delete" data-kind="Algorithms" data-name="' + n + '" title="Reset this algorithm: enabled, no own settings"><i class="bi bi-arrow-counterclockwise"></i></button>' : '') +
+                '</div></td></tr>';
+        }).join('');
+        $("mrr-table-Algorithms").querySelector("tbody").innerHTML = html || (list.length ? '<tr><td colspan="4" class="text-muted">No algorithm matches the filter.</td></tr>' : '');
+    }
+
+    function renderNotices() {
+        const d = state.data || {};
+        const box = $("mrr-managed");
+        const both = managed("Workers") && managed("Algorithms");
+        if (managed("Workers") || managed("Algorithms")) {
+            const files = both ? "mrr.config.txt and mrralgorithms.config.txt" : (managed("Workers") ? "mrr.config.txt" : "mrralgorithms.config.txt");
+            box.textContent = 'This rig is a client of the server "' + (d.ServerName || "") + '" and receives ' + files + ' from there. ' +
+                (both ? 'Both lists are read-only, edit them on the server.' : 'That list is read-only, edit it on the server.');
+            box.style.display = "";
+        } else {
+            box.style.display = "none";
+        }
+        $("mrr-new").disabled = managed("Workers");
+
+        const hint = $("mrr-poolhint");
+        const pool = d.Pool || {};
+        const msgs = [];
+        if (pool.Selected === false) msgs.push('The pool MiningRigRentals is not in use (see PoolName and ExcludePoolName in config.txt).');
+        if (pool.HasCredentials === false) msgs.push('API_Key and API_Secret of the pool MiningRigRentals are not set yet (page Setup Pools).');
+        if (msgs.length) {
+            hint.textContent = msgs.join(' ') + ' The settings below are stored, they take effect as soon as the pool is running.';
+            hint.style.display = "";
+        } else {
+            hint.style.display = "none";
+        }
+    }
+
+    function render() {
+        renderNotices();
+        renderWorkers();
+        renderAlgorithms();
+    }
+
+    function showTab(tab) {
+        state.tab = tab;
+        for (const a of $("mrr-tabs").querySelectorAll("a[data-tab]")) a.classList.toggle("active", a.dataset.tab === tab);
+        $("mrr-pane-Workers").style.display = tab === "Workers" ? "" : "none";
+        $("mrr-pane-Algorithms").style.display = tab === "Algorithms" ? "" : "none";
+        $("mrr-new").style.display = tab === "Workers" ? "" : "none";
+    }
+
+    // ---------------------------------------------------------------- editor
+
+    function fieldHtml(kind, field, type, value) {
+        const id = "mrr--" + field;
+        const pool = poolValue(kind, field);
+        const from = kind === "Algorithms" ? "worker or pools.config.txt" : "pools.config.txt";
+        const unit = unitOf(kind, field);
+        const help = helpText(kind, field);
+        let input;
+        if (type === "bool" && kind === "Algorithms" && field === "Enable") {
+            input = '<select class="form-select" id="' + id + '"><option value="1">Yes</option><option value="0">No</option></select>';
+        } else if (type === "bool") {
+            input = '<select class="form-select" id="' + id + '"><option value="">not set, use ' + from + (pool !== "" ? ' (' + yesNo(pool) + ')' : '') + '</option><option value="1">Yes</option><option value="0">No</option></select>';
+        } else if (type === "average") {
+            input = '<select class="form-select" id="' + id + '"><option value="">not set, use ' + from + (pool !== "" ? ' (' + esc(pool) + ')' : '') + '</option>' +
+                AVERAGES.map(a => '<option value="' + a + '">' + a + '</option>').join('') + '</select>';
+        } else {
+            const numeric = type === "float";
+            input = '<input type="text" class="form-control' + (type === "string" ? '' : ' font-monospace') + '" id="' + id + '"' + (numeric ? ' inputmode="decimal"' : '') +
+                ' placeholder="' + esc(pool !== "" ? pool : "not set") + '" value="' + esc(value) + '">';
+            if (unit) input = '<div class="input-group">' + input + '<span class="input-group-text">' + esc(unit) + '</span></div>';
+        }
+        return '<div class="row mb-3">' +
+            '<label for="' + id + '" class="col-sm-3 col-form-label text-break">' + esc(field) + '</label>' +
+            '<div class="col-sm-9">' + input + (help ? '<div class="form-text">' + esc(help) + '</div>' : '') + '</div></div>';
+    }
+
+    function openEditor(kind, item, isNew) {
+        const ro = managed(kind);
+        state.editing = { kind: kind, name: isNew ? "" : item.Name, tag: isNew ? "" : String(item.Tag || ""), isNew: !!isNew };
+        const all = fields(kind);
+        const values = (item && item.Values) || {};
+        const done = [];
+        let html = "";
+        const groups = GROUPS[kind].map(g => [g[0], g[1].filter(f => f in all)]);
+        const rest = Object.keys(all).filter(f => !groups.some(g => g[1].includes(f)));
+        if (rest.length) groups.push(["Other", rest]);
+        for (const [label, list] of groups) {
+            if (!list.length) continue;
+            html += '<h5 class="mt-4">' + esc(label) + '</h5>';
+            for (const f of list) { html += fieldHtml(kind, f, all[f], values[f] === undefined || values[f] === null ? "" : String(values[f])); done.push(f); }
+        }
+        $("mrr-fields").innerHTML = html;
+        for (const f of done) {
+            const el = $("mrr--" + f);
+            if (el.tagName === "SELECT") {
+                const v = values[f] === undefined || values[f] === null ? "" : String(values[f]);
+                if (all[f] === "bool") el.value = (kind === "Algorithms" && f === "Enable") ? (v === "0" ? "0" : "1") : (v === "" ? "" : (yesNo(v) === "Yes" ? "1" : "0"));
+                else el.value = AVERAGES.find(a => a.toLowerCase() === v.toLowerCase()) || "";
+            }
+            el.disabled = ro;
+        }
+        $("mrr-name-row").style.display = isNew ? "" : "none";
+        $("mrr-name").value = "";
+        $("mrr-name").required = !!isNew;
+        $("mrr-editor-title").textContent = isNew ? "New worker section in mrr.config.txt" :
+            (kind === "Workers" ? "Worker " : "Algorithm ") + item.Name + " in " + FILES[kind] + (ro ? " (managed by the server)" : "");
+        $("mrr-save").disabled = ro;
+        $("mrr-clear").style.display = ro ? "none" : "";
+        $("mrr-editor").style.display = "";
+        $("mrr-editor").scrollIntoView({ behavior: "smooth", block: "start" });
+        if (isNew) $("mrr-name").focus();
+    }
+
+    function closeEditor() {
+        $("mrr-editor").style.display = "none";
+        state.editing = null;
+    }
+
+    function readForm(kind) {
+        const data = {};
+        for (const f of Object.keys(fields(kind))) {
+            const el = $("mrr--" + f);
+            if (el) data[f] = String(el.value).trim();
+        }
+        return data;
+    }
+
+    function clearForm() {
+        if (!state.editing) return;
+        const kind = state.editing.kind;
+        for (const f of Object.keys(fields(kind))) {
+            const el = $("mrr--" + f);
+            if (el) el.value = (kind === "Algorithms" && f === "Enable") ? "1" : "";
+        }
+    }
+
+    // ---------------------------------------------------------------- load / save
+
+    async function loadData() {
+        try {
+            const response = await fetch('/mrrconfig');
+            const data = await response.json();
+            if (data && data.Fields) state.data = data;
+        } catch (error) {
+            console.error("mrrconfig:", error);
+        }
+        render();
+    }
+
+    async function postSave(params) {
+        const response = await fetch("/savemrrconfig", {
+            method: "POST",
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+            body: new URLSearchParams(params).toString()
+        });
+        return await response.json();
+    }
+
+    function guardWrite(kind) {
+        if (state.locked) {
+            rbmShowModal('To be able to save, manually set parameter "APIlockConfig" to "0" in config.txt', 'Warning: config lock is enabled');
+            return false;
+        }
+        if (managed(kind)) {
+            rbmShowModal('This rig receives ' + FILES[kind] + ' from the server. Edit it on the server instead.', 'Managed by the server');
+            return false;
+        }
+        return true;
+    }
+
+    async function send(kind, params, okTitle, okText, failTitle) {
+        try {
+            const res = await postSave(Object.assign({ ConfigName: CONFIGS[kind] }, params));
+            if (res.Success) {
+                if (okText) rbmShowModal(okText, okTitle);
+                await loadData();
+                return true;
+            }
+            rbmShowModal(res.Error || 'Something went wrong', failTitle);
+            await loadData();
+        } catch (error) {
+            console.error("savemrrconfig:", error);
+            rbmShowModal('The request failed: ' + error, failTitle);
+        }
+        return false;
+    }
+
+    async function saveForm(event) {
+        event.preventDefault();
+        const ed = state.editing;
+        if (!ed || !guardWrite(ed.kind)) return;
+        let name = ed.name;
+        if (ed.isNew) {
+            name = $("mrr-name").value.trim();
+            if (!/^[A-Za-z0-9_\-]+$/.test(name)) { rbmShowModal('The worker name may contain letters, digits, minus and underscore only.', 'Check the name'); return; }
+            if (rows("Workers").some(r => String(r.Name).toLowerCase() === name.toLowerCase())) { rbmShowModal('The worker ' + name + ' is in the list already, edit it there.', 'Check the name'); return; }
+        }
+        const params = { Action: "update", Name: name, Data: JSON.stringify(readForm(ed.kind)) };
+        if (ed.tag) params.Tag = ed.tag;
+        const ok = await send(ed.kind, params, 'Settings saved',
+            'The settings of ' + name + ' were written to ' + FILES[ed.kind] + '. RainbowMiner uses them at the next update of the MiningRigRentals rigs (see UpdateInterval, or "Run Rig-Updates" on the MRR Rigs page).',
+            'Settings NOT saved');
+        if (ok) closeEditor();
+    }
+
+    async function deleteSection(kind, item, btn) {
+        if (!guardWrite(kind)) return;
+        if (btn.dataset.armed !== "1") {
+            btn.dataset.armed = "1";
+            btn.dataset.text = btn.innerHTML;
+            btn.innerHTML = "Sure?";
+            setTimeout(() => { if (btn.dataset.armed === "1") { btn.dataset.armed = ""; btn.innerHTML = btn.dataset.text; } }, 5000);
+            return;
+        }
+        const text = kind === "Algorithms" ? 'The algorithm ' + item.Name + ' was reset: it is enabled and has no own settings any more.' :
+            (item.Local ? 'All settings of the worker ' + item.Name + ' were removed, it uses the values of pools.config.txt again.' : 'The section of the worker ' + item.Name + ' was removed from mrr.config.txt.');
+        const ok = await send(kind, { Action: "delete", Name: item.Name, Tag: item.Tag || "" }, kind === "Algorithms" ? 'Algorithm reset' : 'Worker settings removed', text, 'Nothing changed');
+        if (ok && state.editing && state.editing.kind === kind && state.editing.name === item.Name) closeEditor();
+    }
+
+    async function toggleAlgorithm(item) {
+        if (!guardWrite("Algorithms")) return;
+        const enable = String(item.Values.Enable) === "0" ? "1" : "0";
+        const ok = await send("Algorithms", { Action: "update", Name: item.Name, Tag: item.Tag || "", Data: JSON.stringify({ Enable: enable }) }, '', '', 'Algorithm NOT changed');
+        if (ok && state.editing && state.editing.kind === "Algorithms" && state.editing.name === item.Name) closeEditor();
+    }
+
+    function onTableClick(event) {
+        const btn = event.target.closest("button[data-act]");
+        if (!btn) return;
+        const kind = btn.dataset.kind;
+        const item = rows(kind).find(r => r.Name === btn.dataset.name);
+        if (!item) return;
+        if (btn.dataset.act === "edit") openEditor(kind, item, false);
+        else if (btn.dataset.act === "delete") deleteSection(kind, item, btn);
+        else if (btn.dataset.act === "toggle") toggleAlgorithm(item);
+    }
+
+    // ---------------------------------------------------------------- init
+
+    document.addEventListener("DOMContentLoaded", () => {
+        ConfigLoader.whenReady().then(async function (cfg) {
+            state.locked = !!cfg.IsLocked;
+            try {
+                const schema = await (await fetch('/data/setupschema.json')).json();
+                state.limits = (schema.pools && schema.pools.limits) || {};
+            } catch (error) {
+                console.error("setupschema:", error);
+            }
+            await loadData();
+
+            $("mrr-tabs").addEventListener("click", (event) => {
+                const a = event.target.closest("a[data-tab]");
+                if (!a) return;
+                event.preventDefault();
+                closeEditor();
+                showTab(a.dataset.tab);
+            });
+            $("mrr-new").addEventListener("click", () => { if (guardWrite("Workers")) openEditor("Workers", null, true); });
+            $("mrr-table-Workers").addEventListener("click", onTableClick);
+            $("mrr-table-Algorithms").addEventListener("click", onTableClick);
+            $("mrr-algo-filter").addEventListener("input", renderAlgorithms);
+            $("mrr-algo-changed").addEventListener("change", renderAlgorithms);
+            $("mrr-form").addEventListener("submit", saveForm);
+            $("mrr-cancel").addEventListener("click", closeEditor);
+            $("mrr-cancel-x").addEventListener("click", closeEditor);
+            $("mrr-clear").addEventListener("click", clearForm);
+        });
+    });
+})();
+</script>
+<!--#include file="/parts/foot.html" -->

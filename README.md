@@ -387,6 +387,7 @@ The pages are grouped in the menu on the left.
 
 - **MRR Stats**: the statistics of your rigs at MiningRigRentals
 - **MRR Rigs**: your rigs at MiningRigRentals, with their current rentals (see [Doc/MININGRIGRENTALS.md](Doc/MININGRIGRENTALS.md))
+- **Setup MRR**: the per worker settings of `mrr.config.txt` and the per algorithm settings of `mrralgorithms.config.txt` as forms
 
 **Links**
 
@@ -1093,6 +1094,9 @@ Example: everything stays as configured in pools.config.txt, except that the wor
       }
     }
 
+The file can be edited on the page "Setup MRR" of the web interface: every field shows the
+value of pools.config.txt that applies as long as it is left empty.
+
 The sections are created automatically for every worker name that RainbowMiner knows. These
 parameters can be set per worker (all of them are documented in
 [Doc/MININGRIGRENTALS.md](Doc/MININGRIGRENTALS.md)):
@@ -1117,6 +1121,8 @@ pools.config.txt for a CPU rig, and to no minimum at all for a GPU rig.
 ### Config\mrralgorithms.config.txt
 
 If pool MiningRigRentals is in use, this file contains per algorithm specific configuration parameters.
+It can be edited on the page "Setup MRR" of the web interface (tab "Algorithms"). A value that is set
+here wins over the same parameter in mrr.config.txt and pools.config.txt.
 
 - **Enable**: set to "0" in order to disable a specific algorithm for MiningRigRentals [default=1]
 - **PriceModifierPercent**: if set to a non-empty value, this will override the PriceModifierPercent parameter in pools.config.txt and/or mrr.config.txt for an algorithm
