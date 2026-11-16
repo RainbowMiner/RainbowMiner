@@ -234,6 +234,9 @@ if ($AllRigs_Request) {
         if (-not ($Rigs_Request = $AllRigs_Request | Where-Object description -match "\[$($Worker1)\]")) {continue}
 
         $AllowRentalDuringPause_Value  = if ($MRRConfig.$Worker1.AllowRentalDuringPause -ne $null -and $MRRConfig.$Worker1.AllowRentalDuringPause -ne "") {Get-Yes $MRRConfig.$Worker1.AllowRentalDuringPause} else {$AllowRentalDuringPause}
+        $AllowExtensions_Value         = if ($MRRConfig.$Worker1.AllowExtensions -ne $null -and $MRRConfig.$Worker1.AllowExtensions -ne "") {Get-Yes $MRRConfig.$Worker1.AllowExtensions} else {$AllowExtensions}
+        $EnableAutoExtend_Value        = if ($MRRConfig.$Worker1.EnableAutoExtend -ne $null -and $MRRConfig.$Worker1.EnableAutoExtend -ne "") {Get-Yes $MRRConfig.$Worker1.EnableAutoExtend} else {$EnableAutoExtend}
+        $EnableAutoExtendDifficultyCheck_Value = if ($MRRConfig.$Worker1.EnableAutoExtendDifficultyCheck -ne $null -and $MRRConfig.$Worker1.EnableAutoExtendDifficultyCheck -ne "") {Get-Yes $MRRConfig.$Worker1.EnableAutoExtendDifficultyCheck} else {$EnableAutoExtendDifficultyCheck}
 
         $RigInfo_CacheTime = 86400
 
@@ -426,12 +429,12 @@ if ($AllRigs_Request) {
                     }
 
                     $Rental_CheckForAutoExtend = ([double]$_.status.hours -lt 0.25) -and -not $Pool_RigStatus.extended
-                    $Rental_CheckForExtensionMessage = $AllowExtensions -and $($ExtensionMessageTime_Hours -gt 0) -and ($ExtensionMessage.Length -gt 3) -and ([double]$_.status.hours -lt $ExtensionMessageTime_Hours) -and -not $Pool_RigStatus.extensionmessagesent
+                    $Rental_CheckForExtensionMessage = $AllowExtensions_Value -and $($ExtensionMessageTime_Hours -gt 0) -and ($ExtensionMessage.Length -gt 3) -and ([double]$_.status.hours -lt $ExtensionMessageTime_Hours) -and -not $Pool_RigStatus.extensionmessagesent
 
                     try {
 
                         $Rental_Result_CacheTime  = [Math]::Max([double]$_.status.hours*3600 - 5*[Math]::Max($Session.CurrentInterval,$Session.Config.Interval),0)
-                        $Rental_Result_Force      = ($EnableAutoExtend -and $Rental_CheckForAutoExtend) -or $Rental_CheckForExtensionMessage -or -not $Rental_Result_CacheTime
+                        $Rental_Result_Force      = ($EnableAutoExtend_Value -and $Rental_CheckForAutoExtend) -or $Rental_CheckForExtensionMessage -or -not $Rental_Result_CacheTime
 
                         $Rental_Result_Saved = Get-MiningRigRentalStat $Worker1 $_.rental_id
 
@@ -518,7 +521,7 @@ if ($AllRigs_Request) {
                         }
                     }
 
-                    if ($EnableAutoExtend) {
+                    if ($EnableAutoExtend_Value) {
                         if ($Rental_CheckForAutoExtend) {
                             try {
                                 $Rental_SetStatus = $true
@@ -560,7 +563,7 @@ if ($AllRigs_Request) {
                                         $ExtendBy = [Math]::Min([double]$Rental_Result.length * $AutoExtendMaximumPercent_Value - $Rental_Extended + $Rental_ExtendedBonus,$ExtendBy)
                                     }
 
-                                    if ($EnableAutoExtendDifficultyCheck) {
+                                    if ($EnableAutoExtendDifficultyCheck_Value) {
                                         try {
                                             $Threads_Result = Invoke-MiningRigRentalRequest "/rig/$($Pool_RigId)/threads" $API_Key $API_Secret
                                             $Pool_Diff = ($Threads_Result.threads | Select-Object -First 1).difficulty.share -as [double]
@@ -1405,7 +1408,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
 
                                             $CreateRig["extensions"] = -not $EnableMaintenanceMode -and (($MRRConfig.$RigName.AllowExtensions -and $Session.Config.MRRAlgorithms.$Algorithm_Norm.AllowExtensions -eq $null) -or ($Session.Config.MRRAlgorithms.$Algorithm_Norm.AllowExtensions))
 
-                                            if ($RigRunMode -eq "create" -or $EnableUpdatePriceModifier) {
+                                            if ($RigRunMode -eq "create" -or $MRRConfig.$RigName.EnableUpdatePriceModifier) {
                                                 $CreateRig["price"]["btc"]["modifier"] = if ($Session.Config.MRRAlgorithms.$Algorithm_Norm.PriceModifierPercent -ne $null) {$Session.Config.MRRAlgorithms.$Algorithm_Norm.PriceModifierPercent} else {$RigModifier}
                                                 $CreateRig["price"]["btc"]["modifier"] = "$(if ($CreateRig["price"]["btc"]["modifier"] -gt 0) {"+"})$($CreateRig["price"]["btc"]["modifier"])"
                                             }
