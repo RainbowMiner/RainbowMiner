@@ -53,7 +53,15 @@ function Get-DeviceDebug {
 
     try {
         [OpenCl.Platform]::GetPlatformIDs() | ForEach-Object {
-            [OpenCl.Device]::GetDeviceIDs($_, [OpenCl.DeviceType]::All) | ForEach-Object {
+            $Platform_OpenCL = $_
+            $PlatformVendor = switch -Regex ([String]$Platform_OpenCL.Vendor) {
+                                    "Advanced Micro Devices" {"AMD"}
+                                    "Intel"  {"INTEL"}
+                                    "NVIDIA" {"NVIDIA"}
+                                    "AMD"    {"AMD"}
+                                    default {$Platform_OpenCL.Vendor -replace '\(R\)|\(TM\)|\(C\)' -replace '[^A-Z0-9]'}
+                        }
+            [OpenCl.Device]::GetDeviceIDs($Platform_OpenCL, [OpenCl.DeviceType]::All) | ForEach-Object {
                 $Device_OpenCL = $_ | ConvertTo-Json -Depth 10 | ConvertFrom-Json
 
                 $Device_Name = [String]$Device_OpenCL.Name -replace '\(TM\)|\(R\)'
@@ -75,6 +83,7 @@ function Get-DeviceDebug {
                 $Device = [PSCustomObject]@{
                     Index = [Int]$Index
                     PlatformId = [Int]$PlatformId
+                    Platform_Vendor = [String]$PlatformVendor
                     PlatformId_Index = [Int]$PlatformId_Index."$($PlatformId)"
                     Type_PlatformId_Index = [Int]$Type_PlatformId_Index."$($Device_OpenCL.Type)"."$($PlatformId)"
                     Vendor = [String]$Vendor_Name
@@ -115,6 +124,43 @@ function Get-DeviceDebug {
     }
     catch {
         Write-Host "OpenCL device detection has failed: $($_.Exception.Message)" -ForegroundColor Yellow
+    }
+
+    #re-index by the registered OpenCL platform order, so that the names match those of Get-Device in DeviceLib.psm1
+    try {
+        $OpenCL_Platforms = [System.Collections.Generic.List[string]]::new()
+        $ConfigSorting = $null
+        if (Test-Path ".\Config\config.txt") {
+            try {$ConfigSorting = (Get-Content ".\Config\config.txt" -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop).OpenCLPlatformSorting} catch {}
+        }
+        if ($ConfigSorting -is [string] -and $ConfigSorting -ne "`$OpenCLPlatformSorting") {
+            [regex]::split($ConfigSorting.Trim(),"\s*[,;]+\s*") | Foreach-Object {$_.ToUpper()} | Where-Object {$_ -in @("AMD","INTEL","NVIDIA")} | Foreach-Object {[void]$OpenCL_Platforms.Add($_)}
+        }
+        if (-not $OpenCL_Platforms.Count -and (Test-Path ".\Data\openclplatforms.json")) {
+            $Ocl = Get-Content ".\Data\openclplatforms.json" -Raw | ConvertFrom-Json -ErrorAction Ignore
+            $Ocl | Where-Object {$_} | Foreach-Object {[void]$OpenCL_Platforms.Add("$_")}
+        }
+        if ($OpenCL_Platforms.Count -and $Devices.Count) {
+            $Devices | Sort-Object {$_.Platform_Vendor -notin @("AMD","INTEL","NVIDIA")},PlatformId | Foreach-Object {
+                if ($OpenCL_Platforms -notcontains $_.Platform_Vendor) {[void]$OpenCL_Platforms.Add($_.Platform_Vendor)}
+            }
+            $Devices = @($Devices | Sort-Object {$OpenCL_Platforms.IndexOf($_.Platform_Vendor)},Index)
+            $Resorted = $false
+            $NewIndex = 0
+            foreach ($Device in $Devices) {
+                if ($Device.Index -ne $NewIndex) {
+                    $Resorted = $true
+                    $Device.Index = $NewIndex
+                    $Device.Name = ("{0}#{1:d2}" -f $Device.Type, $NewIndex).ToUpper()
+                }
+                $NewIndex++
+            }
+            if ($Resorted) {
+                Write-Host "The OpenCL platforms have changed from the initial run: devices are listed in the registered order ($($OpenCL_Platforms -join ','))." -ForegroundColor Yellow
+            }
+        }
+    } catch {
+        Write-Host "OpenCL platform sorting has failed: $($_.Exception.Message)" -ForegroundColor Yellow
     }
 
     #CPU detection
