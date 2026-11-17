@@ -18,10 +18,11 @@ param(
 
 $Pool_AllRegions = @("de","fr","es","fi","ru","ca","us","us2","us3","mx","br","kz","hk","kr","in","sg","tr","au")
 
-#new es
+$Pool_PearlRegions = @("de","fr","es","fi","ru","ca","us","us2","us3","br","hk","jp","sg","tr","au")
+$Pool_QtcRegions = @("de","fr","fi","ru","us","us2","us3","br","hk","jp","sg")
 
 [hashtable]$Pool_RegionsTable = @{}
-$Pool_AllRegions | Foreach-Object {
+@($Pool_AllRegions) + @("jp") | Foreach-Object {
     $Region = Switch ($_) {
         "us" {"uswest"}
         "us2" {"useast"}
@@ -32,19 +33,21 @@ $Pool_AllRegions | Foreach-Object {
 }
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "ALPH";  port = 1220; fee = 0.0; rpc = "alephium"; region = $Pool_AllRegions; pass = "x"}
+    [PSCustomObject]@{symbol = "ALPH";  port = 1220; fee = 0.9; rpc = "alephium"; region = $Pool_AllRegions; pass = "x"}
     [PSCustomObject]@{symbol = "BEAM";  port = 1130; fee = 0.9; rpc = "beam"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "CFX";   port = 1170; fee = 0.9; rpc = "conflux"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "ERG";   port = 1180; fee = 0.9; rpc = "ergo"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "ETC";   port = 1150; fee = 0.9; rpc = "etc"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "KAS";   port = 1206; fee = 0.9; rpc = "kaspa"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "XMR";   port = 1111; fee = 0.9; rpc = "monero"; region = $Pool_AllRegions}
-    [PSCustomObject]@{symbol = "PRL";   port = 1200; fee = 0.0; rpc = "pearl"; region = $Pool_AllRegions}
+    [PSCustomObject]@{symbol = "PRL";   port = 1200; fee = 0.0; rpc = "pearl"; region = $Pool_PearlRegions}
     [PSCustomObject]@{symbol = "QRL";   port = 1166; fee = 0.9; rpc = "qrl"; region = $Pool_AllRegions}
-    [PSCustomObject]@{symbol = "QUAI";  port = 1185; fee = 0.0; rpc = "quai"; region = $Pool_AllRegions}
+    [PSCustomObject]@{symbol = "QTC";   port = 1195; fee = 1.0; rpc = "qubitcoin"; region = $Pool_QtcRegions}
+    [PSCustomObject]@{symbol = "QUAI";  port = 1185; fee = 0.9; rpc = "quai"; region = $Pool_AllRegions}
+    [PSCustomObject]@{symbol = "QUAN";  port = 1155; fee = 1.0; rpc = "quantus"; region = $Pool_QtcRegions} #listed as QTC at the pool
     [PSCustomObject]@{symbol = "RVN";   port = 1140; fee = 0.9; rpc = "ravencoin"; region = $Pool_AllRegions; diffFactor = 4294967296}
     [PSCustomObject]@{symbol = "WART";  port = 1143; fee = 0.9; rpc = "warthog"; region = $Pool_AllRegions}
-    [PSCustomObject]@{symbol = "XEL";   port = 1225; fee = 0.0; rpc = "xelis"; region = $Pool_AllRegions}
+    [PSCustomObject]@{symbol = "XEL";   port = 1225; fee = 0.9; rpc = "xelis"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "ZANO";  port = 1110; fee = 0.9; rpc = "zano"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "ZEPH";  port = 1123; fee = 0.9; rpc = "zephyr"; region = $Pool_AllRegions}
 
