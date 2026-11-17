@@ -51,6 +51,7 @@ $Pools_Data = @(
     [PSCustomObject]@{algo = "nexapow";    coin = "NEXA"; port = @(3333,4444); ethproxy = $null;          rpc = "nexapow";    divisor = 1;   mh = 1e12; region = @("us","eu","asia")}
     [PSCustomObject]@{algo = "octopus";    coin = "CFX"; port = @(3333,4444); ethproxy = $null;           rpc = "octopus";    divisor = 1;   mh = 1e12; region = @("us","eu","asia")}
     [PSCustomObject]@{algo = "pearlhash";  coin = "PRL"; port = @(3333,4444); ethproxy = $null;           rpc = "pearlpow";   divisor = 1;   mh = 1e18; region = @("us","eu","asia"); rewardalgo = "pearlpow"}
+    [PSCustomObject]@{algo = "quantus";    coin = "QUAN"; port = @(3333,4444); ethproxy = $null;          rpc = "quantus";    divisor = 1;   mh = 1e12; region = @("us","eu","asia")}
     [PSCustomObject]@{algo = "randomx";    coin = "XMR"; port = @(3333,4444); ethproxy = $null;           rpc = "rx";         divisor = 1;   mh = 1e9; region = @("us","eu","asia")}    
     #[PSCustomObject]@{algo = "xelishashv3";coin = "XEL"; port = @(3333,4444); ethproxy = $null;           rpc = "xelishash";  divisor = 1;   mh = 1e9; region = @("us","eu","asia"); rewardalgo = "xelishash"} #xelishash is INACTIVE_ALGORITHM at the unMineable simulator api and the hosts refuse connections, although the site still lists it 2026-11
 )
