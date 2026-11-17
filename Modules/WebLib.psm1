@@ -406,7 +406,9 @@ Param(
     [Parameter(Mandatory = $False)]
         [switch]$ForceHttpClient,
     [Parameter(Mandatory = $False)]
-        [switch]$ForceIWR
+        [switch]$ForceIWR,
+    [Parameter(Mandatory = $False)]
+        [switch]$IPv4Fallback
 )
     if ($JobKey -and $JobData) {
         if (-not $ForceLocal -and $JobData.url -notmatch "^server://") {
@@ -501,7 +503,24 @@ Param(
 
     $ErrorMessage = ''
 
-    if (-not $ForceHttpClient -and -not $forceIWR -and $Session.EnableCurl) {
+    # A host with a dead IPv6 address lets the built-in clients run into the timeout, they walk the
+    # address list IPv6 first. Such a host is fetched with cURL over IPv4 for the rest of the session.
+    # $Session.IPv4FallbackHosts: 0 = use the fallback, else the unix time until the fallback is not tried again
+    $IPv4FallbackOk = -not $IPv4Fallback -and -not $ForceHttpClient -and -not $forceIWR -and $Session.Curl -and -not $Session.EnableCurl
+    if ($IPv4FallbackOk -and $Session.IPv4FallbackHosts -ne $null -and $Session.IPv4FallbackHosts.Count) {
+        [long]$HostState = 0
+        $RequestHost = try {([uri]$RequestUrl).Host} catch {""}
+        if ($RequestHost -and $Session.IPv4FallbackHosts.TryGetValue($RequestHost, [ref]$HostState)) {
+            if ($HostState -eq 0) {
+                $IPv4Fallback   = $true
+                $IPv4FallbackOk = $false
+            } elseif ($HostState -gt (Get-UnixTimestamp)) {
+                $IPv4FallbackOk = $false
+            }
+        }
+    }
+
+    if (-not $ForceHttpClient -and -not $forceIWR -and ($Session.EnableCurl -or $IPv4Fallback)) {
 
         $TmpFile = $null
 
@@ -571,7 +590,7 @@ Param(
                 }
             }
 
-            $CurlCommand = "$(if ($requestmethod -ne 'GET') {"-X $requestmethod"} else {"-G"}) `"$RequestUrl`" $CurlBody$CurlHeaders $useragent$curlproxy-m $($timeout+5)$(if (-not $NoExtraHeaderData) {" --compressed"}) --connect-timeout $timeout --ssl-allow-beast --ssl-no-revoke --max-redirs 5 -k -s -L -q -w `"#~#%{response_code}`""
+            $CurlCommand = "$(if ($requestmethod -ne 'GET') {"-X $requestmethod"} else {"-G"}) `"$RequestUrl`" $CurlBody$CurlHeaders $useragent$curlproxy$(if ($IPv4Fallback) {"-4 "})-m $($timeout+5)$(if (-not $NoExtraHeaderData) {" --compressed"}) --connect-timeout $timeout --ssl-allow-beast --ssl-no-revoke --max-redirs 5 -k -s -L -q -w `"#~#%{response_code}`""
 
             # curl bounds itself via "-m $($timeout+5)" - the hard WaitForExit kill
             # must fire after that, or slow-but-valid responses get cut off
@@ -894,6 +913,37 @@ Param(
             $ErrorMessage = "Could not receive data from $($RequestUrl)"
         }
         $Result = $null
+    }
+
+    if ($ErrorMessage -ne '' -and $IPv4FallbackOk -and ($StatusCode -eq 444 -or $StatusCode -eq 504)) {
+        $RequestHost = try {([uri]$RequestUrl).Host} catch {""}
+        $HasIPv4 = $HasIPv6 = $false
+        if ($RequestHost) {
+            try {
+                foreach ($Address in [System.Net.Dns]::GetHostAddresses($RequestHost)) {
+                    if ([System.Net.IPAddress]::IsLoopback($Address)) {$HasIPv4 = $HasIPv6 = $false; break}
+                    if ($Address.AddressFamily -eq [System.Net.Sockets.AddressFamily]::InterNetwork) {$HasIPv4 = $true}
+                    elseif ($Address.AddressFamily -eq [System.Net.Sockets.AddressFamily]::InterNetworkV6) {$HasIPv6 = $true}
+                }
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+            }
+        }
+        if ($HasIPv4 -and $HasIPv6) {
+            if ($Session.IPv4FallbackHosts -eq $null) {
+                $Session.IPv4FallbackHosts = [System.Collections.Concurrent.ConcurrentDictionary[string,long]]::new([System.StringComparer]::OrdinalIgnoreCase)
+            }
+            if ($Session.IPv4FallbackHosts.Count -ge 256) {$Session.IPv4FallbackHosts.Clear()}
+            try {
+                $Data = Invoke-GetUrl -url $RequestUrl -method $method -requestmethod $requestmethod -timeout $timeout -body $body -headers $headers -user $user -password $password -useragent $useragent -fixbigint $fixbigint -NoExtraHeaderData:$NoExtraHeaderData -IPv4Fallback
+                $ErrorMessage = ''
+                $Session.IPv4FallbackHosts[$RequestHost] = 0
+                Write-Log -Level Info "$($RequestHost) does not respond via IPv6, using cURL over IPv4 for this host from now on"
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                $Session.IPv4FallbackHosts[$RequestHost] = [long](Get-UnixTimestamp) + 3600
+            }
+        }
     }
 
     if ($ErrorMessage -eq '') {$Data}
