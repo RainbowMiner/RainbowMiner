@@ -17,7 +17,9 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "XMR";   port = 1111; fee = 0.9; rpc = "monero"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "PRL";   port = 1200; fee = 0.0; rpc = "pearl"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "QRL";   port = 1166; fee = 0.9; rpc = "qrl"; region = $Pool_AllRegions}
+    [PSCustomObject]@{symbol = "QTC";   port = 1195; fee = 1.0; rpc = "qubitcoin"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "QUAI";  port = 1185; fee = 0.0; rpc = "quai"; region = $Pool_AllRegions}
+    [PSCustomObject]@{symbol = "QUAN";  port = 1155; fee = 1.0; rpc = "quantus"; region = $Pool_AllRegions} #listed as QTC at the pool
     [PSCustomObject]@{symbol = "RVN";   port = 1140; fee = 0.9; rpc = "ravencoin"; region = $Pool_AllRegions; diffFactor = 4294967296}
     [PSCustomObject]@{symbol = "WART";  port = 1143; fee = 0.9; rpc = "warthog"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "XEL";   port = 1225; fee = 0.0; rpc = "xelis"; region = $Pool_AllRegions}
