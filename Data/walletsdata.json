@@ -27,15 +27,6 @@
         "divisor":  100000000
     },
     {
-        "symbol":  "BTG",
-        "match":  "^G",
-        "rpc":  "https://btgexplorer.com/api/v2/address/{w}?details=basic",
-        "address":  "address",
-        "balance":  "balance",
-        "received":  "totalReceived",
-        "divisor":  100000000
-    },
-    {
         "symbol":  "BTX",
         "match":  "^[s2]",
         "rpc":  "https://chainz.cryptoid.info/btx/api.dws?q=getbalance\u0026a={w}",
