@@ -369,6 +369,12 @@
         "UUpool" = [PSCustomObject]@{
             Currencies=@("VOLLAR")
         }
+        "VeinPool" = [PSCustomObject]@{
+            Currencies=@("PRL")
+        }
+        "VeinPoolSolo" = [PSCustomObject]@{
+            Currencies=@("PRL")
+        }
         "ViaBTC" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{"ETC-PaymentMode"="pplns";API_Key=""}
             SetupFields=[PSCustomObject]@{"ETC-PaymentMode" = "Enter your ETC-setup payment mode (pps, pplns or solo) for proper fee calculation";API_Key = "Enter your ViaBTC API key (adds your balance)"}
