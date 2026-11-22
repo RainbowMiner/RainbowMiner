@@ -78,11 +78,11 @@ operation and the remaining configuration files.
 
 ## REQUIRED PRE-REQUISITES
 
-**Important note: RainbowMiner recommends PowerShell 7.6.9 (LTS, supported until November 2028). PowerShell 7.2 still works, but is out of support since November 2024 and receives no more security fixes. The memory leak of the early 7.3/7.4 releases has been fixed long ago. On Linux, PowerShell 7.4 and newer needs glibc 2.27 or newer (Ubuntu 18.04+, Debian 10+), on 32-bit ARM glibc 2.35 or newer (Ubuntu 22.04+, Debian 12+). Older systems should stay on PowerShell 7.2.24.**
+**Important note: RainbowMiner recommends PowerShell 7.6.9 (LTS, supported until November 2028). PowerShell 7.2 still works, but is out of support since November 2024 and receives no more security fixes. The memory leak of the early 7.3/7.4 releases has been fixed long ago. On Linux, PowerShell 7.4 and newer needs glibc 2.27 or newer (Ubuntu 18.04+, Debian 10+), on 32-bit ARM glibc 2.35 or newer (Ubuntu 22.04+, Debian 12+). Older systems should stay on PowerShell 7.2.24. Windows 7 and 8.1 cannot run PowerShell 7.4 or newer either - install PowerShell 7.2.24 there.**
 
 ### Windows 7/8.1/10/11 pre-requisites
 
-1. Install PowerShell 7: [Download Installer for version 7.6.9](https://github.com/PowerShell/PowerShell/releases/download/v7.6.9/PowerShell-7.6.9-win-x64.msi)
+1. Install PowerShell 7: [Download Installer for version 7.6.9](https://github.com/PowerShell/PowerShell/releases/download/v7.6.9/PowerShell-7.6.9-win-x64.msi) (Windows 7/8.1: [version 7.2.24](https://github.com/PowerShell/PowerShell/releases/download/v7.2.24/PowerShell-7.2.24-win-x64.msi), the last series that runs there)
 2. Install Microsoft .NET Framework 4.7.2 or later: [Web Installer](https://www.microsoft.com/net/download/dotnet-framework-runtime)
 3. Install the GPU driver of your vendor. **The latest driver is not always the best one for
    mining**, and which one is right depends on your cards - a driver that runs your rig
@@ -92,10 +92,10 @@ operation and the remaining configuration files.
 
    These versions have been proven on older rigs and are a good starting point, if you are
    unsure or still run an older Windows:
-    - [Nvidia Driver Version v512.15 - Windows 10/11](https://international.download.nvidia.com/Windows/512.15/512.15-desktop-win10-win11-64bit-international-dch-whql.exe)
-    - [Nvidia Driver Version v471.41 - Windows 7,8,8.1](https://international.download.nvidia.com/Windows/471.41/471.41-desktop-win7-64bit-international-whql.exe) (the last series that supports Windows 7/8.1)
+    - [Nvidia Driver Version v522.25 - Windows 10/11](https://international.download.nvidia.com/Windows/522.25/522.25-desktop-win10-win11-64bit-international-dch-whql.exe) (the minimum for today's miners: it brings CUDA 11.8, which SRBMiner-Multi, OneZeroMiner and others need, and removes the LHR limit. RTX 40/50 cards need a newer driver)
+    - [Nvidia Driver Version v471.41 - Windows 7,8,8.1](https://international.download.nvidia.com/Windows/471.41/471.41-desktop-win7-64bit-international-whql.exe) (the last series that supports Windows 7/8.1. It stops at CUDA 11.4 - miners that need a newer CUDA are skipped)
     - [AMD Adrenalin 2022 Edition 22.3.2](https://drivers.amd.com/drivers/amd-software-adrenalin-edition-22.3.2-win10-win11-march24.exe)
-4. If your rig contains AMD graphic cards, RainbowMiner's overclocking features rely on MSI Afterburner, you should install and run it: [Download](http://download.msi.com/uti_exe//vga/MSIAfterburnerSetup.zip)
+4. If your rig contains AMD graphic cards, RainbowMiner's overclocking features use MSI Afterburner, you should install and run it: [Download](http://download.msi.com/uti_exe//vga/MSIAfterburnerSetup.zip). As an alternative, RainbowMiner can set the values through the AMD driver itself ("EnableOCWindowsAmd", see [Doc/OVERCLOCKING.md](Doc/OVERCLOCKING.md))
 5. For accurate power and clock values of your CPU, the [PawnIO driver](https://github.com/namazso/PawnIO.Setup/releases/latest/download/PawnIO_setup.exe) (https://pawnio.eu/) is needed. `Install.bat` installs it automatically - on an existing installation, run `Install.bat` once more, or download and start the installer by hand. Without it, RainbowMiner only sees the CPU load and estimates the power draw from the CPU's TDP. PawnIO replaces the old WinRing0 driver, which Windows now flags as malicious
 
 Finally: check, if Powershell 7 is in your PATH, because RainbowMiner will not run correctly, if the path to powershell is missing. Sometimes `C:\Program Files\PowerShell\7` has to be added manually to the PATH environment variable after installing PowerShell 7. Here is a nice tutorial, on how to add to PATH environment variable https://www.howtogeek.com/118594/how-to-edit-your-system-path-for-easy-command-line-access/amp/
@@ -114,7 +114,7 @@ Not needed for the watchdog start scripts `StartWD.bat`, `StartWDHidden.bat` and
 
 RainbowMiner needs PowerShell 7 - `install.sh` installs it - plus the GPU driver and OpenCL
 of your vendor. How to get those onto an Ubuntu/Debian rig, how to set the huge pages the
-CryptoNight and RandomX family needs, and how to enable the Nvidia cool-bits for
+RandomX family needs, and how to enable the Nvidia cool-bits for
 overclocking, is described in **[Doc/LINUX-PREREQUISITES.md](Doc/LINUX-PREREQUISITES.md)**.
 
 A complete walkthrough of a full rig setup, from the operating system to the autostart, is
@@ -156,19 +156,19 @@ chmod +x *.sh
 
 At the end of the install, you will be asked to start RainbowMiner.
 
-**If the installer fails to install PowerShell, this is the way to install it manually:**
+**If `install.sh` fails to install PowerShell, this is the way to install it manually:**
 
 Find the matching version of [PowerShell v7.6.9 for your system from here](https://github.com/PowerShell/PowerShell/releases/tag/v7.6.9) and download it to your machine.
 
 On Windows, just run the Installer
 
-On Linux: either use the GUI installer to install the package or do it manually, e.g. for Ubuntu:
+On Linux: either use the GUI installer to install the package or do it manually, e.g. for Ubuntu/Debian on x64 (ARM rigs take the `linux-arm64` or `linux-arm32` tar.gz from the same page):
 
-    # if not already done, download the package (use the "-lts" for LTS Linux or the second line for non-LTS)
+    # if not already done, download the package ("-lts" is the package of PowerShell's LTS channel, the second line the regular package - both install the same 7.6.9)
     wget https://github.com/PowerShell/PowerShell/releases/download/v7.6.9/powershell-lts_7.6.9-1.deb_amd64.deb
     #wget https://github.com/PowerShell/PowerShell/releases/download/v7.6.9/powershell_7.6.9-1.deb_amd64.deb
 
-    # install powershell package (use the "-lts" for LTS Linux or the second line for non-LTS)
+    # install powershell package
     dpkg -i powershell-lts_7.6.9-1.deb_amd64.deb
     #dpkg -i powershell_7.6.9-1.deb_amd64.deb
 
@@ -207,7 +207,7 @@ Optional: if you want RainbowMiner to be restarted automatically after a crash, 
 
 #### 4. Enter basic information
 
-- choose your rig's WorkerName [default=rainbowminer]
+- choose your rig's WorkerName [default=the name of your computer]
 - choose your RunMode:
   - **standalone** = all config locally and direct connect to pool APIs
   - **server** = act as server for many Clients, may also run as mining rig
@@ -224,11 +224,11 @@ Optional: if you want RainbowMiner to be restarted automatically after a crash, 
 
 - your btc-wallet address (one for general use, and one for [Nicehash](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1))
 - your [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069) credentials, if you plan to use this pool   
-- your region. Valid names are: US, Europe, Asia
+- your region, e.g. US, Europe, Asia - or closer to you, like USEast, USWest, Germany, UK, Russia, Brazil, Australia, SoutheastAsia (the setup lists all valid names)
 - your currencies. Valid currencies are: BTC, USD, EUR, GBP, ETC, ..
 - the pools you want to mine, as a comma separated list. 
 - the algorithms you want to mine, as a comma separated list.
-- the devices you want to use for mining. Valid descriptors are: gpu, cpu, nvidia, amd (RainbowMiner will show you, which devices are available on your machine)
+- the devices you want to use for mining. Valid descriptors are: gpu, cpu, nvidia, amd, intel (RainbowMiner will show you, which devices are available on your machine)
     or use your device names (without spaces, without leading geforce): gtx1070, gtx1080ti ..
 
 
@@ -278,6 +278,8 @@ The very same commands are available as buttons on the **Console** page of the w
 | Windows                    | Linux                      | Description                                                                                                                                                             |
 | -------------------------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Start.bat`                | `./start.sh`               | start RainbowMiner                                                                                                                                                      |
+| `StartHidden.bat`          | -                          | start RainbowMiner in a hidden window                                                                                                                                   |
+| `StartInWin.bat`           | -                          | start RainbowMiner in a normal, not maximized window                                                                                                                    |
 | -                          | `./start-screen.sh`        | start as Linux `screen`, connect to screen using `./show-screen.sh` or `screen -R RainbowMiner`, `Ctrl+A` then `d` to detach                                            |
 | -                          | `./show-screen.sh`         | reconnect to current RainbowMiner screen, `Ctrl+A` then `d` to detach                                                                                          |
 | -                          | `./start-tmux.sh`          | start as Linux `tmux`, connect to tmux session using `./show-tmux.sh` or `tmux attach-session -t RainbowMiner`, `Ctrl+B` then `d` to detach                                            |
@@ -290,13 +292,15 @@ The very same commands are available as buttons on the **Console** page of the w
 | -                          | `./startwd-tmux.sh`        | start with crash watchdog as Linux `tmux`, connect using `./show-tmux.sh`                                                                                               |
 | -                          | `./startwd-nohup.sh`       | start with crash watchdog as background job                                                                                                                             |
 | `Setup.bat`                | `./setup.sh`               | start RainbowMiner configuration                                                                                                                                        |
-| `Install.bat`              | `./install.sh`             | install pre-requisites + on linux: update powershell to the newest release with `./install.sh -pu`                                                                      |
+| `Install.bat`              | `./install.sh`             | install pre-requisites + on linux: update PowerShell to the recommended version with `./install.sh -pu`, or to a specific one with `./install.sh -pu=<version>`         |
 | `FixConsole.bat`           | -                          | Windows 11: switch the default terminal to the classic Windows Console Host, needed for `Start.bat`, not for `StartWD.bat` (`/f` = do not ask, `/r` = undo)             |
 | `InitServer.bat`           | `sudo ./initserver.sh`     | make this rig a server                                                                                                                                                  |
 | `InitClient.bat`           | `sudo ./initclient.sh`     | make this rig a client                                                                                                                                                  |
 | `InitStandalone.bat`       | `sudo ./initstandalone.sh` | make this rig a standalone machine                                                                                                                                      |
 | `GPUtest.bat`              | `sudo ./gputest.sh`        | create gputestresults.txt with tech details                                                                                                                             |
 | `Updater.bat`              | `./updater.sh`             | manually update to newest release of RainbowMiner. Make sure, you stop RainbowMiner before running this helper (see [Doc/UPDATE.md](Doc/UPDATE.md))                     |
+| `UpdateToMaster.bat`       | `./updatetomaster.sh`      | update to the current development state (GitHub master) instead of the newest release. Stop RainbowMiner first                                                          |
+| `Repair.bat`               | `./repair.sh`              | repair a broken installation: downloads the current release again and replaces the program files (`RepairHidden.bat` does the same in a hidden window)                  |
 | `ListDevices.bat`          | -                          | list all available devices                                                                                                                                              |
 | `MinerLog.bat`             | `./minerlog.sh`            | follow the output of the miners                                                                                                                                         |
 | -                          | `./rbmlog.sh`              | follow the RainbowMiner log (useful if RainbowMiner is running as background job)                                                                                       |
@@ -307,6 +311,8 @@ The very same commands are available as buttons on the **Console** page of the w
 | `ResetBenchmarkCPU.bat`    | -                          | reset all CPU benchmarks                                                                                                                                                |
 | `ResetBenchmarkNVIDIA.bat` | -                          | reset all NVIDIA benchmarks                                                                                                                                             |
 | `ResetProfit.bat`          | -                          | reset RainbowMiner's profit calculation                                                                                                                                 |
+| `ResetTotals.bat`          | -                          | delete the accumulated pool totals                                                                                                                                      |
+| `ResetWorkers.bat`         | `./resetworkers.sh`        | remove all offline workers from the central monitoring at rbminer.net                                                                                                   |
 | `TouchBenchmark.bat`       | -                          | avoid benchmark of new miners, will set the timestamp of all miner stat files to now                                                                                    |
 | `CopyGpuStats.bat`         | `./copygpustats.sh`        | copy the benchmarks of one GPU to another, e.g. when a card dropped out and the GPU numbers shifted (stop RainbowMiner first)                                           |
 | `RenumberGpuStats.bat`     | `./renumbergpustats.sh`    | renumber the benchmarks after cards were added, removed or moved to other slots (stop RainbowMiner first)                                                               |
@@ -396,7 +402,7 @@ The pages are grouped in the menu on the left.
 
 At the bottom of the menu, **Theme** switches between the daylight and the night color scheme.
 
-The web interface is reachable from other machines in your network, if "RemoteAPI" is set to 1 in config.txt. In that case, protect it with "APIauth", "APIuser" and "APIpassword", and restrict the access with "APIallowIPs".
+The web interface is reachable from other machines in your network, as soon as RainbowMiner has been started once as administrator on Windows (it then creates the URL reservation and the firewall rules for the API port; `InitServer.bat`, `InitClient.bat` and `InitStandalone.bat` do that, too). On Linux it always is. Protect it with "APIauth", "APIuser" and "APIpassword", and restrict the access with "APIallowIPs".
 
 ## CLIENT/SERVER NETWORKING
 
@@ -454,11 +460,11 @@ These are the client-fields to fill in the config.txt (or use the initscripts or
     "EnableServerDiscovery": "1",
     "ServerConfigName": "config,coins,pools",
     "EnableServerExcludeList": "0",
-    "ExcludeServerConfigVars": "WorkerName,DeviceName,ExcludeDeviceName,Proxy,APIPort,APIUser,APIPassword,APIAuth,MSIApath,NVSMIpath,CPUMiningThreads,CPUMiningAffinity,GPUMiningAffinity,ServerName,ServerPort,ServerUser,ServerPassword,EnableServerConfig,ServerConfigName,ExcludeServerConfigVars,RunMode,StartPaused",
+    "ExcludeServerConfigVars": "APIAuth,APIPassword,APIPort,APIUser,CPUMiningAffinity,CPUMiningThreads,DeviceName,EnableServerConfig,ExcludeDeviceName,ExcludeServerConfigVars,GPUMiningAffinity,GroupName,LinuxDisplay,LinuxXAuthority,MSIApath,NVSMIpath,Proxy,RunMode,ServerConfigName,ServerName,ServerPassword,ServerPort,ServerSSL,ServerCertHash,ServerUser,StartPaused,WorkerName,StaticCPUMinerPort,StaticGPUMinerPort,OpenCLPlatformSorting",
 
-If "EnableServerConfig" is set to "1", the client will try to download the config files specified with "ServerConfigName" from the server (config, coins, pools, algorithms, scheduler, mrralgorithms, userpools, customminers, miners, ocprofiles). If you want to provide the individual rig with specific config files, put them into a subdirectory `.\Config\<workername>` (linux: `./Config/<workername>`) . Use lowercase letters for the subdirectory `<workername>`.
+If "EnableServerConfig" is set to "1", the client will try to download the config files specified with "ServerConfigName" from the server (config, coins, pools, algorithms, scheduler, mrr, mrralgorithms, userpools, customminers, miners, ocprofiles). If you want to provide the individual rig with specific config files, put them into a subdirectory `.\Config\<workername>` (linux: `./Config/<workername>`) . Use lowercase letters for the subdirectory `<workername>`.
 Setting the field "EnableServerExcludeList" to "1" lets your client use the server's "ExcludeServerConfigVars" field, instead of the local one in config.txt.
-All variables defined in "ExcludeServerConfig" will not be overwritten by the server's values.
+All variables defined in "ExcludeServerConfigVars" will not be overwritten by the server's values. The list above is the default - best leave it as it is and only add to it.
 
 If "EnableServerPools" is set to "1", the client will download the server's pool and balance statistics and mine to exactly those pools (except for MiningRigRentals, which will always be handled locally).
 
@@ -468,7 +474,7 @@ Clients that reach the server over the internet should not use a forwarded API p
 
 ## POOLS
 
-RainbowMiner ships with a module for 70 pools. What each of them pays out, which wallet,
+RainbowMiner ships with a module for 67 pools. What each of them pays out, which wallet,
 username or API key it expects and how to set it up, is documented pool by pool in
 **[Doc/POOLS.md](Doc/POOLS.md)** - including the notes for NiceHash and for the pools that
 can pay out in currencies other than BTC.
@@ -525,7 +531,7 @@ The same can be done from a shell, which is handy over ssh. Every benchmark is o
 
 Examples:
 
-    NVIDIA-BzMiner-Autolykos2-kHeavyHash-GPU#00-GPU#01-GPU#04_Autolykos2_HashRate.txt
+    NVIDIA-Rigel-Autolykos2-Blake3Alephium-GPU#00-GPU#01-GPU#04_Autolykos2_HashRate.txt
     NVIDIA-BzMiner-GPU#03_NexaPoW_HashRate.txt
 
 So `rm -f *NexaPoW*HashRate.txt` re-benchmarks NexaPoW on every miner, and
@@ -607,18 +613,20 @@ The following miners can be fine tuned, using config files. Most of the config f
 
 | Minername        | Type   | Path                      | Configfile(s)                         | Documentation Link                                               |
 | ---------------- | ------ | ------------------------- | ------------------------------------- | ---------------------------------------------------------------- |
-| Xmrig            | CPU    | Bin\\ANY-Xmrig            | threads\_[algorithm]\_[hwsig].json     | https://xmrig.com/docs/miner/config                              |
+| Xmrig            | CPU    | Bin\\ANY-Xmrig            | threads\_[hwsig].json                  | https://xmrig.com/docs/miner/config                              |
 
 **Xmrig and the CPU threads.** Xmrig brings its own auto-configuration: on the first run of
 an algorithm, RainbowMiner lets it detect the optimal thread layout for your CPU and stores
-the result in `Bin\ANY-Xmrig\threads_<Algorithm>_<hardware signature>.json`. That file is
+the result in `Bin\ANY-Xmrig\threads_<hardware signature>.json` - one file per CPU, with one
+entry for each algorithm. That file is
 reused from then on, and it is also the reason why a CPU miner sometimes uses fewer threads
 than you configured - the detection decided so, not RainbowMiner.
 
 To change it, edit the thread list in that file. The entries are `[x, y]` pairs, where `x` is
-the number of mining threads on a core/thread and `y` its number, so adding pairs adds
-threads. If you break the file or want the detection back, simply delete it - it is rebuilt
-on the next start of that algorithm.
+the intensity of a mining thread (1 for most algorithms) and `y` the number of the CPU
+thread it runs on, so adding pairs adds
+threads. If you break the file or want the detection back, delete the algorithm's entry or
+simply the whole file - it is rebuilt on the next start of that algorithm.
 
 Note that `threads_*.json` is **not** one of the protected files, so a miner update discards
 your edits. To keep them, add a line `threads_*.json` to `Config\minerconfigfiles.txt` (see
@@ -633,28 +641,28 @@ that automatically from your CPUMiningThreads share of the machine's threads.
 
 ## ALGORITHMS
 
-RainbowMiner uses a built-in hash table to convert different algorithm names to unique and beautified, internal representations. Because of this, you do not have to care too much about how to write an algorithm, when directly editing the `Config\config.txt` or using command line parameters. E.g. cryptonight-v7, cryptonight/1, cryptonightv7 would all be converted to CryptonightV7.
+RainbowMiner uses a built-in hash table to convert different algorithm names to unique and beautified, internal representations. Because of this, you do not have to care too much about how to write an algorithm, when directly editing the `Config\config.txt` or using command line parameters. E.g. autolykos, autolykosv2 and ergo would all be converted to Autolykos2, and ghostrider or gr to Take2.
 
 ## Special notes for Equihash
 
-The different Equihash algorithms are distinguished using the following Parameters: (n, k). For example, the classic Equihash first used by Zcash used n = 200 and k = 9, so it became Equihash (200, 9). For BEAM and ZEL a new variant EquihashR has been introduced. These add an extra parameter (r).
+The different Equihash algorithms are distinguished using the following Parameters: (n, k). For example, the classic Equihash first used by Zcash used n = 200 and k = 9, so it became Equihash (200, 9). For BEAM and ZEL (today's Flux) a new variant EquihashR has been introduced. These add an extra parameter (r).
 
 The n, k and r values create enormous differences in the minimum memory requirement, and create enormous differences in how the actual mining software is coded in order to do the mining.
 
 RainbowMiner uses the following naming convention:
 - Equihash16x5 = Equihash (96, 5)
-- Equihash20x9 = Equihash (200, 9)
+- Equihash = Equihash (200, 9), e.g. ZEC - the classic one keeps its plain name
 - Equihash21x9 = Equihash (210, 9)
-- Equihash24x5 = Equihash (144,5), e.g. BTG
-- Equihash24x7 = Equihash (192,7), e.g. ZEROcoin
-- EquihashR25x4 = Equihash (125,4), e.g. ZelHash
-- EquihashR25x5 = Equihash (150,5), e.g. GRIMM
-- EquihashR25x5x3 = Equihash (150,5,3), e.g. BEAM
+- Equihash24x5 = Equihash (144,5), e.g. BTG - also known as Equihash144 or Zhash
+- Equihash24x7 = Equihash (192,7) - also known as Equihash192
+- EquihashR25x4 = Equihash (125,4), e.g. ZelHash (Flux)
+- EquihashR25x5 = Equihash (150,5)
+- EquihashR25x5x3 = Equihash (150,5,3), the former BeamHashII
 
 The new numbers (16x5, 20x9, ..) describe the number of bits matched in each round for the algorithm, and provide a relative measure of the "hardness" of the algorithm (the numbers can be calculated, using n and k: n/(k+1) )
 For EquihashR the parameter (r) will be added to the algorithm name. For r=0, nothing will be added. 
 
-RainbowMiner's built-in hash table makes it possible for you, to use many different algorithmnames. E.g. equihash-144_5, equihash1445, equihash-btg, equihash144btg will all be represented by Equihash24x5. BeamHash will be represented by EquihashR25x5x3
+RainbowMiner's built-in hash table makes it possible for you, to use many different algorithmnames. E.g. equihash144, equihash-144_5, equihash1445, equihash-btg and zhash will all be represented by Equihash24x5. BEAM's current algorithm BeamHash (beam, beamhash3) is represented by BeamHash3
 
 
 ## OVERCLOCKING
@@ -668,7 +676,8 @@ algorithm. There are two ways to do that, and only one of them can be active at 
   of your default profile ([C]onfiguration->[C]ommon).
 - **custom overclocking profiles** - RainbowMiner sets the values itself, from an unlimited
   number of freely named profiles in `ocprofiles.config.txt`. Recommended for rigs with more
-  than 6 or with mixed GPUs, Nvidia only. To enable, set "**EnableOCProfiles**" to "**1**"
+  than 6 or with mixed GPUs. Made for Nvidia, AMD cards need "EnableOCLinuxAmd" (Linux) or
+  "EnableOCWindowsAmd" (Windows) on top. To enable, set "**EnableOCProfiles**" to "**1**"
   ([C]onfiguration->[C]ommon).
 
 To use no overclocking at all, set both "**EnableOCProfiles**" and "**MSIAprofile**" to
@@ -710,7 +719,7 @@ Change this to control the setup behavior.
 
 - `"Enable"` setting this to "1" will force RainbowMiner to skip the import questionnaire during start. It will import all data and begin mining at once.
 - `"ConfigName"` define which of the config file's should be imported. A well approved combination would be `"Config,Coins,Pools"`. `"All"` will import all possible modules.
-- `"DeviceName"` define which devices RainbowMiner should use. Possible values are CPU, GPU, NVIDIA, AMD (and even GPU#00, GPU#01, ..). Leave empty to start without devices.
+- `"DeviceName"` define which devices RainbowMiner should use. Possible values are CPU, GPU, NVIDIA, AMD, INTEL (and even GPU#00, GPU#01, ..). Leave empty to start without devices.
 - `"WorkerName"` define the workername of the new rig. If left empty, the rig's machinename will be used as workername, automatically.
 
 
@@ -735,10 +744,10 @@ Config files are found in directory `Config`
 - mrralgorithms.config.txt = per algorithm settings for MiningRigRentals
 - ocprofiles.config.txt = setup custom overclocking profiles
 - scheduler.config.txt = different power prices and/or pause miners for defined timespans
-- autoexec.config.txt = add executables/commands to be executed when RainbowMiner starts
+- autoexec.txt = add executables/commands to be executed when RainbowMiner starts (plain text, one command per line)
 
 **Note: if you have not started the Start.bat yet, there will be no config files! Start it first!**
-**Config files are in JSON format. Look here to get an idea, how they work: https://www.tutorialspoint.com/json/index.htm**
+**Config files (all but autoexec.txt) are in JSON format. Look here to get an idea, how they work: https://www.tutorialspoint.com/json/index.htm**
 **Be careful, when editing these files. Every comma counts!**
 
 
@@ -942,7 +951,7 @@ This configuration would:
 - for custom overclocking Profile1 is used as default for this GPU type
 - set a power adjust factor of 87.5% to the Radeon RX 6600 XT (if RainbowMiner reported 120W with factor 100%, it will now show 120W x 87.5 / 100 = 105W)
 - the pool worker name for the RTX3060 will be set to "my3060". If used in combos, the individual worker names will be combined with _ (underscore)
-- the miners with LHR unlock (BzMiner, lolMiner, Nanominer, TeamBlackMiner and T-Rex) will be forced to use it for the RTX3060s, because "EnableLHR" is set to "1". Leave it empty for automatic use, set to "0" to not use it.
+- the miner T-Rex will be forced to use its LHR unlock for the RTX3060s, because "EnableLHR" is set to "1". Leave it empty for automatic use, set to "0" to not use it. All other miners detect LHR cards on their own.
 
 
 ### Config\gpugroups.config.txt
@@ -1002,27 +1011,29 @@ Globally define parameters for algorithms:
 Example:
 
     {
-      "X17": {
+      "KawPOW": {
           "Penalty": "10",
           "MinHashrate": "50GH",
+          "MinHashrateSolo": "0",
           "MinWorkers": "300",
           "MaxTimeToFind": "1.5h",
           "MSIAprofile": 4,
           "OCprofile": "Profile4",
-          "MinerName": "Gminer,CcminerTpruvot",
+          "MinerName": "SrbMinerMulti,Rigel",
           "ExcludeMinerName": ""
         }
     }
 
 This configuration would:
-- **Penalty**: reduce all X17 pool prices by a "Penalty" of 10%
-- **MinHashrate**: set a minimum X17 pool hashrate of 50 GH/s for a pool to be selected (units allowed: k=kilo, M=Mega, G=Giga, T=Tera, P=Peta)
-- **MinWorkers**: set the minimum pool workers mining X17 to 300 for a pool to be selected
+- **Penalty**: reduce all KawPOW pool prices by a "Penalty" of 10%
+- **MinHashrate**: set a minimum KawPOW pool hashrate of 50 GH/s for a pool to be selected (units allowed: k=kilo, M=Mega, G=Giga, T=Tera, P=Peta)
+- **MinHashrateSolo**: the same for solo pools, here without a minimum. MinHashrate itself is not applied to solo pools
+- **MinWorkers**: set the minimum pool workers mining KawPOW to 300 for a pool to be selected
 - **MaxTimeToFind**: set a maximum time to find for the next block of 1.5 hours (units allowed: s=seconds, m=minutes, h=hours)
 - **MSIAprofile**: set the MSI Afterburner overclocking profile to 4 (if MSIA is used)
 - **OCprofile**: set the overclocking profile to "Profile4" (if the RainbowMiner oc is used)
-- **MinerName**: only Gminer and CcminerTpruvot are allowed to mine X17 (leave empty for all X17 miners)
-- **ExcludeMinerName**: no excluded miners for X17 (in case you want to disable a specific miner for that algorithm, add it to this list)
+- **MinerName**: only SrbMinerMulti and Rigel are allowed to mine KawPOW (leave empty for all KawPOW miners)
+- **ExcludeMinerName**: no excluded miners for KawPOW (in case you want to disable a specific miner for that algorithm, add it to this list)
 
 Notes:
 - the overclocking profiles define the default for a specific algorithm
@@ -1049,7 +1060,7 @@ Example:
 
 This configuration would:
 - reduce all RVN pool coin prices by a "Penalty" of 10%
-- set a minimum RVN pool hashrate of 50 GH/s for a pool to be selected (units allowed: k=kilo, M=Mega, G=Giga, T=Tera, P=Peta)
+- set a minimum RVN pool hashrate of 50 GH/s for a pool to be selected (units allowed: k=kilo, M=Mega, G=Giga, T=Tera, P=Peta). Solo pools are not affected, they have their own field "MinHashrateSolo"
 - set the minimum pool workers mining RVN to 300 for a pool to be selected
 - set a maximum time to find for the next block of 1.5 hours (units allowed: s=seconds, m=minutes, h=hours)
 - define a global RVN wallet with value <YOUR_RAVENCOIN_ADDRESS>. Every occurrence of "$RVN" in pools.config.txt will be automatically substituted with this wallet.
@@ -1139,14 +1150,15 @@ to the profile name, and a complete example are documented in
 Define different power prices and/or pause miners for different timespans.
 
 - Name: a name of your choice for this timespan (optional, only for your own overview)
-- DayOfWeek: \*=all 0=Sunday 1=Monday 2=Tuesday 3=Wednesday 4=Thursday 5=Friday 6=Saturday
+- DayOfWeek: \*=all 0=Sunday 1=Monday 2=Tuesday 3=Wednesday 4=Thursday 5=Friday 6=Saturday, comma separated list allowed, e.g. "1,2,3" [default=\*]
+- Month: \*=all 1=January .. 12=December, comma separated list allowed, e.g. "11,12,1,2" [default=\*]
 - From: start of timespan, 24h notation HH:MM, e.g. 15:30
 - To: end of timespan, 24h notation HH:MM, e.g. 22:45
 - PowerPrice: power price for this timespan, leave empty for default powerprice
 - Pause: if set to "1", miners will be paused during this timespan
 - Enable: if set to "1", this timespan will be used
 - EnableUpdate: set to "1" to allow automatic updates during this timespan (and if EnableUpdateWhenScheduled is set to 1 in config.txt) [default=0]
-- EnableMiningHeatControl: set to "1" to allow mining heat control during this timespan (and if EnableMiningHeatControl is set to 1 in config.txt) [default=0]
+- EnableMiningHeatControl: set to "1" or "0" to switch the mining heat control on or off during this timespan, leave empty to use the EnableMiningHeatControl of config.txt [default=empty]
 - MiningHeatControl: set specific mining heat control value, during that timespan
 - PauseRentals: if set to "1", all unrented rigs will be paused during this timespan
 - MRRPriceFactor: set specific price factor for MiningRigRentals, during that timespan
@@ -1198,13 +1210,15 @@ an empty string matches no day at all.
 - On all other weekdays (dow=*), a power price of 0.15 will be used during 1am - 7:30am
 - During all other times, the default power price from config.txt will be used
 
-### Config\autoexec.config.txt
+### Config\autoexec.txt
 
-If you want RainbowMiner to start other commands before the mining begins, you may add them to file Config\autoexec.config.txt by following these rules:
+If you want RainbowMiner to start other commands before the mining begins, you may add them to file Config\autoexec.txt (Linux: Config/autoexec.txt) by following these rules:
 - one line, one command
 - command and path must be enclosed with doublequotes (")
 - arguments (if any) must follow after the closing doublequote of the command
-- a hashtag (#) marks the beginning of a comment, everything after it on the line will be ignored
+- a line that starts with a hashtag (#) is a comment. Do not put comments behind a command: everything after the closing doublequote is handed to the command as its arguments
+- if the same command with the same arguments is already running, it will be stopped first
+- all commands are stopped again, when RainbowMiner exits
 
 Example:
 
@@ -1213,16 +1227,17 @@ Example:
     # =====================
     # 
 
-    "C:\Qbundle\BlagoMiner\Blagominer_avx.exe" --argument1 whatsoever1
+    "C:\Tools\FanControl\fancontrol.exe" --argument1 whatsoever1
 
-.. would start Blagominer_avx.exe with arguments "--argument1 whatsoever1", setting the working directory to "C:\Qbundle\BlagoMiner"
+.. would start fancontrol.exe with arguments "--argument1 whatsoever1", setting the working directory to "C:\Tools\FanControl"
 
 ## FAQ
 
 ### How do I update RainbowMiner?
 
 Press [**U**] in the RainbowMiner window, as soon as a new release is available, or let
-RainbowMiner do it on its own (`"EnableAutoUpdate": "1"` in config.txt). If the automatic
+RainbowMiner do it on its own: `"EnableAutoUpdate"` is on by default, set it to `"0"` in
+config.txt, if you want to decide yourself. If the automatic
 update fails, stop RainbowMiner and run `Updater.bat` (Windows) or `./updater.sh` (Linux).
 
 The complete update procedure, including the manual fallback, is described in
@@ -1344,12 +1359,12 @@ Two things worth knowing while you test:
 
 Press windows key and type `schedule`, click on `Task Scheduler`
 
-`Create a basic task`
+`Create Task...` (not the basic task - only this dialog has the tabs)
 
 Tab "General":
 - check `Run only when user is logged in`
 - check `Run with highest privileges`
-- Configure for: `Windows Vista, Windows Server 2008`
+- Configure for: `Windows 10` (also the right choice on Windows 11)
 
 Tab "Trigger":
 - check `When I log in`
@@ -1381,6 +1396,8 @@ Use `startwd-screen.sh`, `startwd-tmux.sh` or `startwd-nohup.sh` instead, if you
 
 Where `PATH_TO_RAINBOWMINER` is the RainbowMiner installation directory.
 
+As an alternative, RainbowMiner can run as a systemd service, see [Doc/LINUX-SETUP-SHORTGUIDE.md](Doc/LINUX-SETUP-SHORTGUIDE.md#start-rainbowminer-as-a-systemd-service).
+
 ### How can I rent my rig to someone at [MiningRigRentals.com](https://www.miningrigrentals.com?ref=2598069)?
 
 Sign up at [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069), create your
@@ -1394,8 +1411,8 @@ The complete procedure and all pool parameters are documented in
 
 ### How can I quickly copy my current configuration to a new rig?
 
-RainbowMiner comes with easy setup configuration. Download a setup.json at http://localhost:4000/setup.json from your current rig, copy it into the new rig's RainbowMiner folder *before first start* (you may easily reset RainbowMiner by simply deleting the complete `".\Config"` folder). Now answer two inputs and off you go.
-More info can be [found here](https://github.com/RainbowMiner/RainbowMiner#copy-current-configuration-to-new-rigs).
+RainbowMiner comes with easy setup configuration. Download a setup.json at http://localhost:4000/setup.json from your current rig, copy it into the new rig's RainbowMiner folder *before first start* (you may easily reset RainbowMiner by simply deleting the complete `".\Config"` folder). At its first start RainbowMiner asks, if it should import the setup.json (with the autostart section of the setup.json enabled, it does not even ask) and off you go.
+More info can be found in section [COPY CURRENT CONFIGURATION TO NEW RIGS](#copy-current-configuration-to-new-rigs).
 
 ### How does the profit switcher work and how can I change it's behavior?
 
@@ -1425,14 +1442,16 @@ The profit switcher can be controlled like follows. To be able to compare the po
 - all prices will be decreased by a reverse exponential function, that will set hashrates into comparison to the maximum possible Algorithm+CoinSymbol hashrates
   *PfC* = *PfC* x ( 1 - (1 - (Hashrate/MaximumHashrate(Algorithm+CoinSymbol))^(**HashrateWeightStrength(%)**/100)) x (**HashrateWeight(%)**/100) )
 
-- if **MaxAllowedLuck** is set to a value greater than 0 (floating point, 1 equals to 100%, 1.2 equals to 120% ...)
+- if **MaxAllowedLuck** is set to a value greater than 0 (floating point, 1 equals to 100%, 1.2 equals to 120% ..., default is 3)
   - with *Luck* = *TimeSinceLast*/*TimeToFind*
-  - *PfC* = *PfC* / (*Luck* - **MaxAllowedLuck** + 1)
-  - ![image](https://user-images.githubusercontent.com/39437538/94287435-9462e180-ff56-11ea-8457-4f075689b612.png)
+  - if *Luck* is greater than **MaxAllowedLuck**, the pool's penalty rises exponentially: *Penalty(%)* = *Penalty(%)* + e^( 12 x (*Luck* - **MaxAllowedLuck**) ) - 1, reaching 100% at about 0.39 above the limit
+  - only for coins with a block time of 10 minutes or more, never for solo pools
 
-- if **MaxTimeSinceLastBlock** is greater than 0 (in seconds) and the pool's time since last block is greater than **MaxTimeSinceLastBlock**, the comparison price will be decreased:
-  - *PfC* =  *PfC* / ( (*PoolTimeSinceLastBlock* - **MaxTimeSinceLastBlock**)/3600 + 1 )
-  - ![image](https://user-images.githubusercontent.com/39437538/94286009-be1b0900-ff54-11ea-9d3e-b3211b3c3ab1.png)
+- if **MaxTimeSinceLastBlock** is greater than 0 (default is 12h) and the pool's time since last block is greater than **MaxTimeSinceLastBlock**, the pool's penalty rises exponentially, too:
+  - *Penalty(%)* = *Penalty(%)* + e^( (*PoolTimeSinceLastBlock* - **MaxTimeSinceLastBlock**)/120s ) - 1, reaching 100% about 9 minutes past the limit
+  - never for solo pools
+
+- both act on the pool's penalty, so they lower the price and the stable price of the pool alike. Both can be set for a single pool in pools.config.txt, too
 
 - all prices will be decreased by an inverse logarithmic function, depending on how far a pool is out of sync (current-time minus last-price-or-hashrate-update time)
 
@@ -1464,7 +1483,7 @@ The profit switcher can be controlled like follows. To be able to compare the po
 
 - If you want to add your own userdefined files, that should be kept from update to update, edit the file `Config\minerconfigfiles.txt` and add your files (wildcards are allowed), one at each row. Wildcards are allowed, paths and `.exe`/`.dll`/`.bin` are not, and a semicolon starts a comment.
 
-- if the automatic fails: when updating, RainbowMiner creates a backup folder that contains the full contents of the original. It is named like the original miner's folder, but date/time added with a dot (e.g. CryptoNight-SrbMiner.20181202_174533). A maximum of three backups is kept.
+- if the automatic protection fails: when updating a miner, RainbowMiner creates a backup folder that contains the full contents of the original, as long as "EnableMinerBackups" is set to "1" (the default). It is named like the original miner's folder, but date/time added with a dot (e.g. ANY-SRBMinerMulti.20261122_174533). A maximum of three backups is kept.
 
   
 ## CREDITS

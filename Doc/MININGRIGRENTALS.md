@@ -85,12 +85,12 @@ The following are the pool parameters:
 - **EnableAutoBenchmark**: Enable automatic benchmark of updated miners (it will mine to your wallets only, during benchmark), select the mode with AutoBenchmarkMode [default=0]. If the primary benchmark pool of an algorithm is not available, a fallback pool of a second provider is used; the same fallback is set as second pool on your MiningRigRentals rigs
 - **AutoBenchmarkMode**: Select mode for auto-benchmark, "all" benchmarks all algorithms, "updated" benchmarks only updated algorithms of an updated miner [default=updated]
 - **AutoExtendTargetPercent**: Extend rentals time, so that the total average hashrate is near this value in percent of advertised hashrate [default=100]
-- **AutoExtendMaximumPercent**: Extend rentals maximum to this value in percent of the rental time [default=100]
+- **AutoExtendMaximumPercent**: Extend rentals maximum to this value in percent of the rental time [default=30]
 - **AutoBonusExtendForHours**: Enter amount of hours, that you want to reward with an automatic bonus extension (e.g. 24) [default=0]
 - **AutoBonusExtendByHours**: Enter bonus extension in hours per each fully rented AutoBonusExtendForHours (e.g. 1) [default=0]
 - **AutoBonusExtendTimes**: Limit the maximum extensions by AutoBonusExtendByHours to a specific number of times (e.g. 1), 0=unlimited [default=0]
 - **AutoCreateMinProfitPercent**: Enter minimum profitability in percent compared to current best profit, for full rigs to be autocreated on MRR [default=50]
-- **AutoCreateMinCPUProfitBTC**: Enter minimum one-day revenue in BTC, for a CPU-only rig to be autocreated on MRR [default=0.00001]
+- **AutoCreateMinCPUProfitBTC**: Enter minimum one-day revenue in BTC, for a CPU-only rig to be autocreated on MRR [default=0.000001]
 - **AutoCreateMaxMinHours**: Enter the maximum hours for minimum rental time, for a rig to be autocreated on MRR [default=24]
 - **AutoCreateAlgorithm**: Algorithms that should always be autocreated on MRR, even if below the other limits [default=]
 - **AutoUpdateMinPriceChangePercent**: Enter minimum price change in percent, for a rig's price to be updated on MRR [default=3]
@@ -99,9 +99,9 @@ The following are the pool parameters:
 - **EnableAutoAdjustMinHours**: Automatically adjust minimum rental time (up to MaxMinHours), to satisfy the min. profit of 0.00001 BTC [default=1]
 - **EnableUpdateTitle**: Enable automatic updating of rig titles (disable, if you prefer to edit your rig titles online at MRR) [default=1]
 - **EnableUpdateDescription**: Enable automatic updating of rig descriptions (disable, if you prefer to edit your rig descriptions online at MRR) [default=1]
-- **EnableUpdatePriceModifier**: Enable automatic update of price modifier (disable, if you prefer to edit your modifiers online at MRR). Can be set globally in pools.config.txt (parameter **AutoPriceModifierPercent**) and specific for each algorithm in algorithms.config.txt (parameter **MRRPriceModifierPercent**) [default=0]
+- **EnableUpdatePriceModifier**: Enable automatic update of price modifier (disable, if you prefer to edit your modifiers online at MRR). Can be set globally in pools.config.txt (parameter **AutoPriceModifierPercent**) and specific for each algorithm in mrralgorithms.config.txt (parameter **PriceModifierPercent**) [default=0]
 - **AutoPriceModifierPercent**: Autoprice modifier in percent (e.g. +10 will increase all suggested prices by 10%, valid range is -30 .. 30) [default=0]
-- **UpdateInterval"*: Enter the interval time for create and update rigs on MRR (in seconds, verbose allowed, e.g. 1.5h = 1.5 hours, 30m = 30 minutes) [default=1h]
+- **UpdateInterval**: Enter the interval time for create and update rigs on MRR (in seconds, verbose allowed, e.g. 1.5h = 1.5 hours, 30m = 30 minutes) [default=30m]
 - **PriceBTC**: Fixed price in BTC (used, if EnableAutoPrice=0 or if the value is greater than the PriceFactor x revenue) [default=0]
 - **PriceFactor**: Enter profit multiplicator: minimum price = rig's average revenue x this multiplicator [default=1.8]
 - **PriceFactorMin**: Minimum profit multiplicator (only of use, if PriceFactorDecayPercent is greater than 0) [default=1.2]
@@ -117,18 +117,20 @@ The following are the pool parameters:
 - **AllowRentalDuringPause**: Allow rentals, even if the mining rig is in pause mode [default=0]
 - **PriceCurrencies**: List of accepted currencies (must contain BTC) [default=BTC]
 - **Title**: Title for autocreate, make sure it contains %algorithm% or %algorithmex% or %display%, and %rigid% (values will be substituted like that: %algorithm% with algorithm, %algorithmex% with algorithm plus coin info if needed, %coininfo% with eventual coin info, %display% with MRR specific display title, %rigid% with a unique rigid, %workername% with the workername, %type% with either CPU or GPU, %typecpu% with CPU or empty, %typegpu% with GPU or empty) [default=%algorithmex% mining with RainbowMiner rig %rigid%]
-- **Description**: Description for autocreate, %workername% will be substituted with rig's workername. Make sure you add [%workername%] (including the square brackets!) [default=Autostart mining with RainbowMiner (https://rbminer.net) on Windows. This rig is idle and will activate itself, as soon, as you rent it. [%workername%]]
+- **Description**: Description for autocreate, %workername% will be substituted with rig's workername. Make sure you add [%workername%] (including the square brackets!) [default=Autostart mining with RainbowMiner on Windows. This rig is idle and will activate itself, as soon, as you rent it. %workername%] ("on Linux" on a Linux rig)
 - **StartMessage**: Message, that will be sent to the renter at the start of the rental. See below for possible substitution variables.
 - **ExtensionMessageTime**: Send the ExtensionMessage to the renter, when the remaining rental time drops below this value (in seconds, verbose allowed, e.g. 1.5h = 1.5 hours, 30m = 30 minutes, set to 0 or empty to disable) [default=2h]
 - **ExtensionMessage**: Message, that will be sent to the renter, when remaining rental time drops below ExtensionMessageTime
 - **DiffMessageTime**: Send the DiffMessage to the renter, when the current difficulty stays out of the optimum difficulty for this time (in seconds, verbose allowed, e.g. 1.5h = 1.5 hours, 30m = 30 minutes, set to 0 or empty to disable) [default=15m]
 - **DiffMessageTolerancyPercent**: Allowed tolerance above the maximum and below the minimum of the optimum difficulty (in percent, e.g. 15 means 15%) [default=15]
 - **DiffMessage**: Message, that will be sent to the renter, if the current difficulty stays out of the optimum difficulty for DiffMessageTime. See below for possible substitution variables.
-- **PoolOfflineTime**: time a renter's pools has to be offline, until it is temporary disabled and the pool offline message is sent (in seconds, verbose allowed, e.g. 1.5h = 1.5 hours, 30m = 30 minutes) [default=3m]
+- **PoolOfflineTime**: time a renter's pools has to be offline, until it is temporary disabled and the pool offline message is sent (in seconds, verbose allowed, e.g. 1.5h = 1.5 hours, 30m = 30 minutes) [default=10m]
 - **PoolOfflineRetryTime**: time after which we will retry to connect to a disabled renter's pool (in seconds, verbose allowed, e.g. 1.5h = 1.5 hours, 30m = 30 minutes) [default=15m]
 - **PoolOfflineMessage**: Message, that will be sent to the renter, after a renter's pool has been offline for PoolOfflineTime
-- **ProfitAverageTime**: Enter the device profit moving average time period (Minute,Minute_5,Minute_10,Hour,Day,ThreeDay,Week), [default=Day]
-- **PauseBetweenRentals**: Disable rigs on MRR after a rental for some time (in seconds, verbose allowed, e.g. 1.5h = 1.5 hours, 30m = 30 minutes) [default=10m]
+- **ProfitAverageTime**: Enter the device profit moving average time period (Minute,Minute_5,Minute_10,Hour,Day,ThreeDay,Week), [default=Hour]
+- **PauseBetweenRentals**: Disable rigs on MRR after a rental for some time (in seconds, verbose allowed, e.g. 1.5h = 1.5 hours, 30m = 30 minutes) [default=2h]
+- **ExcludeRentalId**: In case of a rental dispute (wrong renter pool etc.), exclude these rentals by rental id, until they are cancelled. Leave empty for none [default=]
+- **UseHost**: Force the use of a specific MRR host (e.g. eu-de01, eu-ru01, us-central01). Leave empty for automatic selection [default=]
 - **EnableRecoveryMode**: if you have orphaned rigs due to empty description or if you have unintentionally removed the [%workername%] tag, set this to "1" and RainbowMiner will try to match all orphaned rigs to the unique rig titles and eventually recover the description. Since the recovery mode adds another pretty lengthy API call, make sure to disable (set "EnableRecoveryMode" to "0"), after all rigs have been recovered. [default=0]
 
 ### Substitution variables for StartMessage and DiffMessage
@@ -150,8 +152,8 @@ The following are the pool parameters:
 - set `"EnableAutoCreate": "1",`, to enable automatic creation of profitable rigs on MRR
 - the MRR suggested prices will be enabled, if `"EnableAutoPrice": "1",`
 - the MRR adjust % value is set by `"AutoPriceModifierPercent": "-10",`, (in this example it's -10%)
-- extensions can be (dis-)allowed per algorithm in algorithms.config.txt `"MRRAllowExtensions": "0",` (leave empty for the default in pools.config.txt)
-- the price adjust % can be set per algorithm in algorithms.config.txt `"MRRPriceModifierPercent": "-10",`
+- extensions can be (dis-)allowed per algorithm in mrralgorithms.config.txt `"AllowExtensions": "0",` (leave empty for the default in pools.config.txt)
+- the price adjust % can be set per algorithm in mrralgorithms.config.txt `"PriceModifierPercent": "-10",`
 - the MRR minimum price will be automatically set, if `"EnableMinimumPrice": "1",` (recommended!)
 - if MRR suggested prices are disabled (`"EnableAutoPrice": "0",`)
   - either the rig's price will set to your rig's average profit x `"PriceFactor"`

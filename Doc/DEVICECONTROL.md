@@ -37,7 +37,7 @@ Contents
    The **Available** list is what you can address, each entry with the **Selector** to
    address it by.
 
-   If the rig runs with **RemoteAPI** and **APIauth**, the API answers every request
+   If the rig is reachable from the network and runs with **APIauth**, the API answers every request
    without credentials with `401 Unauthorized` - also on localhost. Add your **APIuser**
    and **APIpassword** to this and all following calls, e.g.
    `curl -u user:pass http://localhost:4000/getdevices`.
@@ -190,12 +190,12 @@ the garage gets warmer.
 
 First make the rig reachable. In **Config > Setup**, section **API**, set:
 
-- **RemoteAPI** = `1`, so the API listens on the network and not only on localhost.
 - **APIauth** = `1`, plus **APIuser** and **APIpassword**.
 - **APIallowIPs** = the address of your Home Assistant host, e.g. `10.0.0.5`.
 
-On Windows, `RemoteAPI` needs the firewall rule and URL reservation that RainbowMiner
-creates when it runs as administrator once. Then restart RainbowMiner and check from the
+On Windows, the API only listens on the network (and not just on localhost), once the
+firewall rule and URL reservation exist, that RainbowMiner creates when it runs as
+administrator once. On Linux it always does. Then restart RainbowMiner and check from the
 Home Assistant host that `curl -u user:pass http://10.0.0.50:4000/getdevices` answers.
 
 Now add the command to `configuration.yaml`:

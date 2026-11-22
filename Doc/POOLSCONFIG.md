@@ -148,7 +148,7 @@ Set the parameter(s) to "0", to disable the feature(s) for that pool.
 
 ## Change a pool's time frame (data window)
 
-To override the default data window "average2e" of the YiiMP based pools (Hashcryptos,Zpool) the parameter "DataWindow" can be added to the pool's configuration record. 
+To override the default data window "estimate_current" of the YiiMP based pools (Hashcryptos, Zpool, ZpoolCoins) the parameter "DataWindow" can be added to the pool's configuration record. 
 Possible values are:
 
 - estimate_current (=default): the pool's current calculated profitability-estimation (more switching, relies on the honesty of the pool)
@@ -243,7 +243,7 @@ To force mining to pool's wallets, you may add the wallet's currencies to field 
 Example:
 
     "Nanopool": {
-        "ETC": "0x012031012301230123012301230",
+        "XMR": "<YOUR_XMR_ADDRESS>",
         "ERG": "$ERG",
         "User": "$UserName",
         "Worker": "$WorkerName",
@@ -253,21 +253,21 @@ Example:
         "ExcludeCoin": "",
         "CoinSymbol": "",
         "ExcludeCoinSymbol": "",
-        "FocusWallet": "ETC,ERG"
+        "FocusWallet": "XMR,ERG"
     }
 
-This example will focus mining operations to pool Nanopool, comparing this pool's profitability of ETC and ERG, only. No other pool will be mined.
+This example will focus mining operations to pool Nanopool, comparing this pool's profitability of XMR and ERG, only. No other pool will be mined.
 
 ## Allow mining algorithm when pool hashrate equals to 0
 
-All pool modules contain a check for an algorithm hashrate to be greater than 0. If you want to mine a special currency, even if you are the only miner (e.g. solo mining on GosxSolo), set field "AllowZero" to "1":
+All pool modules contain a check for an algorithm hashrate to be greater than 0. If you want to mine a special currency, even if you are the only miner (e.g. solo mining on 2MinersSolo), set field "AllowZero" to "1":
 
 Example:
 
-    "GosxSolo": {
-        "SUQA": "<YOUR_SUQA_ADDRESS>",
+    "2MinersSolo": {
+        "RVN": "<YOUR_RVN_ADDRESS>",
         "Worker": "$WorkerName",
-        "FocusWallet": "SUQA",
+        "FocusWallet": "RVN",
         "AllowZero": "1"
     }
 
@@ -320,3 +320,11 @@ Pools** in the web interface, click the "+" in front of the pool/algorithm row a
 
 The same parameter helps when a pool's nearest stratum is unreachable from your location: if
 a miner logs nothing but connection timeouts against one host, force a different region here.
+
+## More fields of a pool
+
+- **MinerName** / **ExcludeMinerName**: comma separated list of miners, that are allowed / not allowed to mine at this pool. Leave empty for all miners.
+- **MaxTimeToFind**: the maximum time to find the next block at this pool (units allowed: s=seconds, m=minutes, h=hours). Leave empty for no limit.
+- **MaxMarginOfError**: the maximum fluctuation of the pool's prices in percent (0..100), that is deducted from the price for the profit comparison. "0" disables that deduction [default=100, Nicehash 0].
+- **SSL**: override the global "SSL" of config.txt for this pool: 0=prefer non-SSL, 1=prefer SSL, 2=SSL only. Leave empty to use the global setting.
+- **BalancesKeepAlive**: the maximum time of mining inactivity, until the pool purges an account (units allowed, e.g. "7d", default unit is seconds). Leave empty for never.

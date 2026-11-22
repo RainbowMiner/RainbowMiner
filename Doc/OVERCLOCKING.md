@@ -34,7 +34,7 @@ There are two ways to adjust overclocking values in RainbowMiner:
   - to enable, set "**EnableOCProfiles**" to "**1**" ([C]onfiguration->[C]ommon)
   - custom profiles have freely defined names (it differs from option 1!)
   - **important:** set a default profile for each GPU group ([C]onfiguration->[D]evices). Use the name of the profiles (look into ocprofiles.config.txt, if in doubt)
-  - independent of MSI Afterburner
+  - Nvidia: independent of MSI Afterburner. AMD: the profiles are applied through MSI Afterburner on Windows, or through the AMD driver itself with "EnableOCWindowsAmd" (Windows) or "EnableOCLinuxAmd" (Linux), see below
 
 If you do not want to use the overclocking features in RainbowMiner: set both, "**EnableOCProfiles**" and "**MSIAprofile**", to "**0**" ([C]onfiguration->[C]ommon)
 
@@ -55,17 +55,17 @@ The differences:
 |                                              | MSIAprofiles | ocprofiles |
 | -------------------------------------------- | :----------: | :--------: |
 | Can handle parallel miners on different GPUs |      no      |     yes    |
-| Depends on Afterburner                       |      yes     |     no     |
+| Depends on Afterburner                       |      yes     | Nvidia: no, AMD: only without EnableOCWindowsAmd |
 | Depends on nvidiaInspector                   |      no      |     yes    |
 | Speed with more than 6 GPU                   |     slow     |    fast    |
 | Works for Nvidia                             |      yes     |     yes    |
-| Works for AMD                                |      yes     |     no     |
+| Works for AMD                                |      yes     | yes (Afterburner, EnableOCWindowsAmd or EnableOCLinuxAmd) |
 | max. number of profiles                      |       5      |  unlimited |
 | Individual profile names                     |      no      |     yes    |
 
 > I set the ocprofile to a clock and then set it different within AF under the same profile number
 
-- MSI Afterburner profiles are fixed to a maximum of five and are selected by their number 1 to 5 in parameter "MSIAprofile" in miners.config.txt
+- MSI Afterburner profiles are fixed to a maximum of five and are selected by their number 1 to 5 in parameter "MSIAprofile" in miners.config.txt, or per algorithm in algorithms.config.txt
 - ocprofiles are unlimited in amount, you decide what their names are. RainbowMiner comes with preset profiles named "Profile0" to "Profile8" (see [The default profiles](#the-default-profiles)). The profile is being selected by the full name in parameter "OCprofile" in miners.config.txt (for example "Profile2")
 
 > My overclocking settings do not work on Linux
@@ -86,7 +86,7 @@ Overclocking option, recommended for **unique GPU mining rigs with maximum 6 GPU
 
 ### Introduction
 
-MSI Afterburner allows to configure up to five profiles. Each of which defines the exact overclocking parameters for any number of GPU. RainbowMiner will never change these values, but it can be defined for miners/algorithms/devices, that another profile than the default should be used during mining (miners.config.txt, fields "MSIAprofile"). RainbowMiner comes with some miner/algorithm presets, already.
+MSI Afterburner allows to configure up to five profiles. Each of which defines the exact overclocking parameters for any number of GPU. RainbowMiner will never change these values, but it can be defined for miners/algorithms/devices, that another profile than the default should be used during mining (miners.config.txt and algorithms.config.txt, fields "MSIAprofile"). RainbowMiner comes with presets for most algorithms, already.
 
 ### Enable Profile Switching
 
@@ -97,10 +97,12 @@ By default, the profile switching is disabled. To enable MSI Afterburner profile
 
 ### Explanation of operation
 
-RainbowMiner's default setup has already preset some Profile fields for the following algorithms (miners.config.txt, fields "MSIAprofile"):
-- ClaymoreEthash-Keccak, NeoScrypt => Profile 3
-- Lyra2Re2, Lyra2z, X16r, X16s => Profile 4
-- ClaymoreEthash-Blake2s, ClaymoreEthash-Pascal => Profile 5
+RainbowMiner's default setup has already preset the Profile fields for most algorithms (algorithms.config.txt, fields "MSIAprofile"). The numbers follow the custom overclocking presets Profile1 to Profile4 (see [The default profiles](#the-default-profiles)):
+- Allium, Qubit => Profile 1
+- Autolykos2, NexaPow, BeamHash3 and other memory-hungry algorithms => Profile 2
+- Equihash family, NeoScrypt => Profile 3
+- kHeavyHash, the Blake family, SHA512256d, X16r family, Lyra2z and other core-only algorithms => Profile 4
+- the Ethash, KawPow/ProgPow and Cuckoo families have no preset and use your default profile
 
 Remember: **no overclocking values will be changed by RainbowMiner!** It will switch your preset profiles, only.
 
@@ -108,9 +110,9 @@ I recommend you set the following profile setup in MSI Afterburner, so that you 
 
 - Profile 1: no oc (e.g. +0/+0)
 - Profile 2: max. core / max. memory oc (e.g. +100/+400), good for most miners
-- Profile 3: max. core / half memory oc (e.g. +100/+200), recm. for claymore ethash-keccak, neoscrypt
-- Profile 4: max. core / low memory oc (e.g. +100/-500), recm. for lyra2re2, lyra2z, x16r, x16s
-- Profile 5: max. core / reduced memory oc (e.g. +100/+350), recm. for claymore ethash-blake2s, claymore ethash-pascal
+- Profile 3: max. core / half memory oc (e.g. +100/+200), recm. for the Equihash family, neoscrypt
+- Profile 4: max. core / low memory oc (e.g. +100/-500), recm. for core-only algorithms like kheavyhash, blake3, x16r, lyra2z
+- Profile 5: max. core / reduced memory oc (e.g. +100/+350), free for your own use, no algorithm is preset to it
 
 Be careful when playing with OC, since this can damage your devices. RainbowMiner will not be responsible, if you kill your devices.
 
