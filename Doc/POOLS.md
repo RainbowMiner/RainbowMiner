@@ -33,7 +33,7 @@ Click a pool for its notes - what it pays out, and what it needs from you.
 <details><summary>Hashpool</summary> https://hashpool.com/ no auto-exchange, a separate wallet address is needed for each coin you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>HashVault</summary> https://hashvault.pro/ no auto-exchange, dedicated to cryptonight mining, a separate wallet address is needed for each coin you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>Hellominer</summary> https://hellominer.com/ no auto-exchange, a separate wallet address is needed for each coin you want to mine. Set in pools configuration or edit pools.config.txt</details>
-<details><summary>HeroMiners</summary> https://herominers.com/ no auto-exchange, a separate wallet address is needed for each coin (ETC, BEAM, GRIN, Monero, Haven, Conceal, Cortex and more) you want to mine. Set in pools configuration or edit pools.config.txt</details>
+<details><summary>HeroMiners</summary> https://herominers.com/ pays in the mined coin, a separate wallet address is needed for each coin (ALPH, ERG, ETC, KAS, XMR, PRL, QTC, QUAN, RVN, XEL, ZEPH and more) you want to mine. Pearl, Quantus and Qubitcoin can be auto-exchanged to BTC or XMR, see the notes below. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>K1Pool</summary> https://k1pool.com/invite/016079e6c5 no auto-exchange, many currencies including XEL. Set your account wallet ID for coins to mine in pools.config.txt</details>
 <details><summary>K1PoolSolo</summary> https://k1pool.com/invite/016079e6c5 solo mining, no auto-exchange, many currencies. Set your account wallet ID for coins to mine in pools.config.txt</details>
 <details><summary>Kryptex</summary> https://pool.kryptex.com/?ref=15aa84c0 auto-exchange and coin mining, many currencies including ALPH and NEXA. Set your account email, mining username for all coins or wallets for specific coins to mine in pools.config.txt</details>
@@ -104,6 +104,34 @@ old addresses. To mine on the alias only, clear the per-coin wallet fields **and
 Two more notes: the `"<COIN>-Params"` fields are not used by the unMineable module, and a
 *mining key* is not the same thing as an alias - a mining key replaces the `COIN:ADDRESS`
 part of the classic format, whereas the alias belongs into `"User"`.
+</details>
+<details><summary>Notes for HeroMiners</summary>
+
+HeroMiners chooses the payout currency by the address you mine to. Enter the coin's own
+address to be paid in that coin, or a BTC or Monero address to have the pool exchange your
+earnings automatically. The address always goes under the key of the **mined** coin, in the
+HeroMiners section of `pools.config.txt`:
+
+    "HeroMiners": {
+        "QTC": "<YOUR_XMR_ADDRESS>",
+        ...
+    }
+
+| mined coin | key in pools.config.txt | auto-exchange to |
+|------------|-------------------------|------------------|
+| Pearl      | `PRL`                   | BTC, XMR         |
+| Quantus    | `QUAN`                  | BTC, XMR         |
+| Qubitcoin  | `QTC`                   | XMR              |
+
+Exchange payouts run once a day, with a minimum of 0.0011 BTC or 0.1 XMR; payouts in the mined
+coin are more frequent. The current list is shown on the HeroMiners start page.
+
+Put such an address into the HeroMiners section only, never as a global wallet for that coin
+in `coins.config.txt`: every other pool would pick it up as well, and they do not exchange.
+
+HeroMiners lists Quantus as QTC, the same ticker as Qubitcoin. RainbowMiner calls Quantus
+**QUAN**, so `QTC` always means Qubitcoin. To mine nothing but one of these coins, add
+`"FocusWallet": "QTC"` (or `QUAN`, `PRL`) to the section.
 </details>
 <details><summary>Notes for the pools Hashcryptos, HashPool, MinerRocks, Mining4people, Ravenminer and Zpool</summary>
   
