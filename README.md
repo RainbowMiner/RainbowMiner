@@ -29,7 +29,7 @@ Features: easy setup wizard with ad-hoc working default (no editing of files nee
 - **Integrate your own miner programs as custom miners, compatible with HiveOS flight sheets (see [Doc/CUSTOMMINERS.md](Doc/CUSTOMMINERS.md))**
 - **Let your home automation switch GPUs on and off with one HTTP call, e.g. by room temperature (see [Doc/DEVICECONTROL.md](Doc/DEVICECONTROL.md))**
 - **Profit calculation, including real cost of electricity per miner**
-- **Uses the top actual available miner programs (Bminer, Ccminer, Claymore, CryptoDredge, Dstm, EnemyZ, Ewbf, Gminer, NBminer, Sgminer, SrbMiner, T-Rex, Xmrig and many more)**
+- **Uses today's top miner programs, kept up to date with every release: BzMiner, Gminer, lolMiner, miniZ, OneZeroMiner, Rigel, SRBMiner-MULTI, TeamBlackMiner, TeamRedMiner, T-Rex, WildRig Multi and WildRig-NG for GPUs, cpuminer-opt (JayDDee and RPlant), SRBMiner-MULTI and XMRig for CPUs, plus specialized miners like Firominer and ccminer-tpfuemp - more than 100 miner modules in total, each in the build that fits the device**
 - **Easy setup wizard with ad-hoc working default - click Start.bat and off you go (RainbowMiner will ask for your credentials, no hassle with editing configuration files)**
 - **Client\Server networking for multiple rigs - minimizes internet traffic and avoids pool bans**
 - **Scheduler for different power prices and/or pause during specific timespans**
@@ -41,7 +41,7 @@ Features: easy setup wizard with ad-hoc working default (no editing of files nee
 - **Unlimited custom overclocking profiles per miner/algorithm**
 - **Easy overclocking of GPUs (memory, core, power limit, and voltage)**
 - **Switch MSI Afterburner profiles per miner/algorithm**
-- **Includes [OhGodAnETHlargementPill](https://bitcointalk.org/index.php?topic=3370685.0)**
+- **Includes [OhGodAnETHlargementPill](https://bitcointalk.org/index.php?topic=3370685.0) for GDDR5X cards (GTX 1080, GTX 1080 Ti, Titan Xp) on Ethash, Etchash, UbqHash, Verthash and MTP (opt-in)**
 - **Very low CPU usage to increase CPU mining profit**
 - **Pause mining without exiting the RainbowMiner**
 - **Full automatic update**
@@ -240,7 +240,7 @@ Optional: if you want RainbowMiner to be restarted automatically after a crash, 
 ### Done!
 
 <details><summary>Valid poolnames</summary>2Miners, 2MinersAE, 2MinersSolo, Abelpool, AccPool, Acepool, BaikalMine, BaikalMinePPS, BaikalMineSolo, C3pool, CpuPool, Crazypool, DeepMinerZ, DeepMinerZSolo, EpicMine, Ethwmine, F2pool, FlockPool, Gtpool, Hashcryptos, Hashpool, HashVault, Hellominer, HeroMiners, K1Pool, K1PoolSolo, Kryptex, KryptexSolo, LeafPool, LuckPool, LuckyPool, Luxor, MinerRocks, Mining4people, Mining4peopleSolo, MiningDutch, MiningRigRentals, Mintpond, Molepool, MoneroOcean, Nanopool, Neuropool, <a href="https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1">Nicehash</a>, Pearlhash, Poolin, RaptoreumZone, Ravenminer, RavenminerSolo, RPlant, RPlantSolo, SoloPool, Sunpool, SupportXmr, SuprNova, <a href="https://unmineable.com/?ref=U-TEMDPF">unMineable</a>, UUpool, ViaBTC, Vipor, ViporSolo, WhatToMine, WoolyPooly, WoolyPoolySolo, XdagOrg, XdagOrgSolo, YadaMiners, Zpool, ZpoolCoins</details>
-<details><summary>Valid algorithms</summary> Balloon, Bitcore, Blakecoin, Blake2s, BlakeVanilla, C11, Cortex, CryptoNightV8, Cuckaroo29, Cuckaroo29s, Ethash, X11, Decred, Equihash, Equihash144, Equihash192, Equihash-BTG, Groestl, Hex, HMQ1725, HSR, JHA, Keccak, Lbry, Lyra2RE2, Lyra2z, MyriadGroestl, NeoScrypt, Pascal, Phi, Phi2, Polytimos, Quark, Qubit, Scrypt, SHA256, Sib, Skunk, Skein, Tensority, Timetravel, Tribus, Veltor, X11, X12, X11evo, X16R, X16S, X17, X18, X21s, X22i, Yescrypt and many more: https://rbminer.net/algorithms/</details>
+<details><summary>Valid algorithms</summary> Autolykos2, BeamHash3, Blake2b, Blake3Alephium, Cuckatoo31, DynexSolve, Eaglesong, Equihash, Equihash144 (Zhash), Equihash192, EtcHash, Ethash, EvrProgPow, FiroPoW, Flex, Groestl, Hoohash, JanusHash, KawPOW, kHeavyHash, MeowPow, Meraki, MinotaurX, NeoScrypt, NexaPoW, Octopus, PearlHash, ProgPoWZ, Qhash, Quantus, RandomX, Rinhash, Scrypt, SHA256d, SHA3x, SHA512256d, Take2 (Ghostrider), VerusHash, VertHash, X11, XelisHashV3, Yescrypt, YescryptR16, YescryptR32, Yespower, YespowerR16, YespowerTIDE and many more: https://rbminer.net/algorithms/</details>
 
 ## HOTKEYS
 
@@ -506,9 +506,6 @@ which devices, and how RainbowMiner reads its hashrate.
   **Miners** page of the web interface
 - a GPU miner that keeps reporting a hashrate while its GPUs sit at idle power is stopped
   and counted as crashed (**EnableStallDetection**, needs measured GPU power readings)
-- the miner Excavator mines on NiceHash pool, only
-- miners Excavator & Excavator1.4.4 run in their own miner window, even if you select to hide
-  miner windows
 
 ### Repeating a single benchmark
 
@@ -610,7 +607,6 @@ The following miners can be fine tuned, using config files. Most of the config f
 
 | Minername        | Type   | Path                      | Configfile(s)                         | Documentation Link                                               |
 | ---------------- | ------ | ------------------------- | ------------------------------------- | ---------------------------------------------------------------- |
-| SrbMiner         | AMD    | Bin\\Cryptonight-Srbminer | config\_[algorithm]-[devicemodel].txt | https://bitcointalk.org/index.php?topic=3167363.0                |
 | Xmrig            | CPU    | Bin\\ANY-Xmrig            | threads\_[algorithm]\_[hwsig].json     | https://xmrig.com/docs/miner/config                              |
 
 **Xmrig and the CPU threads.** Xmrig brings its own auto-configuration: on the first run of
@@ -820,86 +816,80 @@ Each miner can be configured by it's own section, in the miners.config.txt
 Example:
 
     {
-        "CcminerAlexis78-NVIDIA":  [
+        "SrbMinerMulti-NVIDIA":  [
                                 {
-                                    "MainAlgorithm":  "c11",
+                                    "MainAlgorithm":  "KawPOW",
                                     "SecondaryAlgorithm":  "",
-                                    "Params":  "-i 21",
+                                    "Params":  "--gpu-intensity 24",
                                     "MSIAprofile":  "",
                                     "OCprofile": "",
                                     "Difficulty": ""
                                 },
                                 {
-                                    "MainAlgorithm":  "keccak",
-                                    "SecondaryAlgorithm":  "",
-                                    "Params":  "-m 2 -i 19,29",
-                                    "MSIAprofile":  "",
+                                    "MainAlgorithm":  "Autolykos2",
+                                    "SecondaryAlgorithm":  "HeavyHash",
+                                    "Params":  "",
+                                    "MSIAprofile":  "2",
                                     "OCprofile": "",
                                     "Difficulty": ""
                                 }
                             ],
-       "CcminerAlexis78-GTX1070":  [
+        "SrbMinerMulti-RTX3070":  [
                                 {
-                                    "MainAlgorithm":  "c11",
+                                    "MainAlgorithm":  "KawPOW",
                                     "SecondaryAlgorithm":  "",
-                                    "Params":  "-i 21",
+                                    "Params":  "--gpu-intensity 26",
                                     "MSIAprofile":  "",
                                     "OCprofile": "Profile1",
                                     "Difficulty": ""
-                                },
+                                }
+                            ],
+        "lolminer-GTX1080":  [
                                 {
-                                    "MainAlgorithm":  "keccak",
+                                    "MainAlgorithm":  "EtcHash",
                                     "SecondaryAlgorithm":  "",
-                                    "Params":  "-m 2 -i 19,29",
+                                    "Params":  "--mt 1",
                                     "MSIAprofile":  "",
                                     "OCprofile": "",
                                     "Difficulty": ""
                                 }
                             ],
-        "Sgminer-AMD":  [
+        "Xmrig-CPU":  [
                                 {
-                                    "MainAlgorithm":  "lyra2rev2",
+                                    "MainAlgorithm":  "RandomX",
                                     "SecondaryAlgorithm":  "",
-                                    "Params":  "--gpu-threads 2 --worksize 128 --intensity d",
+                                    "Params":  "--randomx-1gb-pages",
                                     "MSIAprofile":  "",
                                     "OCprofile": "",
-                                    "Difficulty": ""
-                                },
-                                {
-                                    "MainAlgorithm":  "neoscrypt",
-                                    "SecondaryAlgorithm":  "",
-                                    "Params":  "--gpu-threads 1 --worksize 64 --intensity 15",
-                                    "MSIAprofile":  "",
-                                    "OCprofile": "",
-                                    "Difficulty": "1000"
+                                    "Difficulty": "50000"
                                 }
                             ],
-        "Trex":  [
+        "Gminer":  [
                                 {
-                                    "MainAlgorithm":  "\*",
+                                    "MainAlgorithm":  "*",
                                     "SecondaryAlgorithm":  "",
                                     "Params":  "",
                                     "MSIAprofile":  "",
                                     "Penalty": "12.5",
                                     "Difficulty": ""
                                 }
-                            ]                                                                
+                            ]
     }
 
-.. this adds extra command line parameters "-i 21" and "-m 2 -i 19,29" to
+.. this adds extra command line parameters, profiles and difficulties to
 
-- "CcminerAlexis78-NVIDIA": miner CcminerAlexis78 in LegacyMining mode, mine on all selected nvidia GPU, Algorithms c11 and keccak
-- "CcminerAlexis78-GTX1070": miner CcminerAlexis78 in non-LegacyMining mode on selected GPU devices with model name GTX1070, Algorithms c11 and keccak
-- "CcminerAlexis78-GTX1070": miner will use custom overclocking profile "Profile1"
-- "Sgminer-AMD": miner Sgminer in LegacyMining mode, mine on all selected amd GPU, Algorithms c11 and keccak
-- "MainAlgorithm": algorithm, for which the extra configuration will be used
-- "SecondaryAlgorithm": secondary algorithm, for which the extra configuration will be used (used for dual-mining Claymore, Excavator)
+- "SrbMinerMulti-NVIDIA": miner SrbMinerMulti with MiningMode "legacy", mining on all selected NVIDIA GPUs: parameter "--gpu-intensity 24" for KawPOW, MSI Afterburner profile 2 for the Autolykos2 + HeavyHash dual mining
+- "SrbMinerMulti-RTX3070": miner SrbMinerMulti with MiningMode "device" or "combo", on the selected GPUs with model name RTX3070: parameter "--gpu-intensity 26" for KawPOW, and the custom overclocking profile "Profile1"
+- "lolminer-GTX1080": miner lolMiner on the selected GPUs with model name GTX1080: memory tweak "--mt 1" for EtcHash
+- "Xmrig-CPU": miner Xmrig on the CPU: 1 GB huge pages and a static pool difficulty of 50000 for RandomX
+- "MainAlgorithm": algorithm, for which the extra configuration will be used ("*" = all algorithms of that miner)
+- "SecondaryAlgorithm": secondary algorithm, for which the extra configuration will be used (dual mining, e.g. Autolykos2 + HeavyHash with SrbMinerMulti, or Autolykos2 + SHA512256d with Rigel). Leave empty for single-algorithm mining
 - "Params": these are the extra parameters, that will be added to the miner call
 - "MSIAprofile": desired MSI Afterburner profile
+- "OCprofile": desired custom overclocking profile
+- "Difficulty": static pool difficulty
 
-.. this adds a Penalty of 12.5% to all algorithms used by Trex
-
-.. this adds a static pool difficulty of 1000 to Sgminer's Neoscrypt
+.. this adds a Penalty of 12.5% to all algorithms used by Gminer
 
 To *remove* a certain parameter from the RainbowMiner's miner commandline, use the `#`-method:
 
@@ -920,10 +910,10 @@ Example:
     {
       "RTX3060": [
         {
-          "Algorithm": "Ethash,x16r",
+          "Algorithm": "KawPOW,Autolykos2",
           "ExcludeAlgorithm": "",
           "MinerName": "",
-          "ExcludeMinerName": "ClaymoreEthash",
+          "ExcludeMinerName": "Nanominer",
           "DisableDualMining": "1",
           "DefaultOCprofile": "Profile1",
           "PowerAdjust": "100",
@@ -931,7 +921,7 @@ Example:
           "EnableLHR": "1"
         }
       ],
-      "R290X": [
+      "RX6600XT": [
         {
           "Algorithm": "",
           "ExcludeAlgorithm": "",
@@ -943,16 +933,16 @@ Example:
           "Worker": "",
           "EnableLHR": ""
         }
-      ]      
+      ]
     }
 
 This configuration would:
-- bind all RTX3060 in the system to Ethash and X16R mining, only, excluding the ClaymoreEthash miner
+- bind all RTX3060 in the system to KawPOW and Autolykos2 mining, only, excluding the Nanominer miner
 - by setting the flag "DisableDualMining" to "1", all dual-algorithm miners are removed from this device's list.
 - for custom overclocking Profile1 is used as default for this GPU type
-- set a power adjust factor of 87.5% to the Radeon R290X (if RainbowMiner reported 250W with factor 100%, it will now show 250W x 87.5 / 100 = 175W)
+- set a power adjust factor of 87.5% to the Radeon RX 6600 XT (if RainbowMiner reported 120W with factor 100%, it will now show 120W x 87.5 / 100 = 105W)
 - the pool worker name for the RTX3060 will be set to "my3060". If used in combos, the individual worker names will be combined with _ (underscore)
-- the miners Trex and Teamblack will be forced to use LHR magic for the RTX3060s, because "EnableLHR" is set to "1". Leave it empty for automatic use, set to "0" to not use it.
+- the miners with LHR unlock (BzMiner, lolMiner, Nanominer, TeamBlackMiner and T-Rex) will be forced to use it for the RTX3060s, because "EnableLHR" is set to "1". Leave it empty for automatic use, set to "0" to not use it.
 
 
 ### Config\gpugroups.config.txt

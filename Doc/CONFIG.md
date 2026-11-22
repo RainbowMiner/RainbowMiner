@@ -168,7 +168,7 @@ Note: RainbowMiner uses two lists of unprofitable algorithms. The lists are both
 
 ## Select miners
 
-- **MinerName** = list of miner you want to use for mining (see directory Miners, without .ps1, e.g. CcminerAlexis78.ps1 -> CcminerAlexis78)
+- **MinerName** = list of miner you want to use for mining (see directory Miners, without .ps1, e.g. SrbMinerMulti.ps1 -> SrbMinerMulti)
 - **ExcludeMinerName** = list of miner names you want to exclude from mining
 - **ExcludeMinersWithFee** = exclude all miners, that have a developer fee built-in [default=0]
 - **PreferMinerName** = list of miner names that you prefer (see PreferMinerMargin)
