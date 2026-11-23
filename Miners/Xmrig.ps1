@@ -254,8 +254,8 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cn-lite/1";                  MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "cn-pico";                    MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "cn-pico/tlo";                MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA")}
-    [PSCustomObject]@{MainAlgorithm = "flex";                       MinMemGb = 1;   Params = ""; ExtendInterval = 3; Vendor = @("CPU"); ForceMO = $true}
-    [PSCustomObject]@{MainAlgorithm = "ghostrider";                 MinMemGb = 1;   Params = ""; ExtendInterval = 3; Vendor = @("CPU"); FaultTolerance = 8; UseMO = $true}
+    [PSCustomObject]@{MainAlgorithm = "flex";                       MinMemGb = 1;   Params = ""; ExtendInterval = 3; Vendor = @("CPU"); ForceMO = $true; ArmNeedsAES = $true}
+    [PSCustomObject]@{MainAlgorithm = "ghostrider";                 MinMemGb = 1;   Params = ""; ExtendInterval = 3; Vendor = @("CPU"); FaultTolerance = 8; UseMO = $true; ArmNeedsAES = $true}
     [PSCustomObject]@{MainAlgorithm = "kawpow";        DAG = $true; MinMemGb = 3;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","INTEL","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "kawpow2g";      DAG = $true; MinMemGb = 3;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","INTEL","NVIDIA"); Algorithm = "kawpow"}
     [PSCustomObject]@{MainAlgorithm = "kawpow3g";      DAG = $true; MinMemGb = 3;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","INTEL","NVIDIA"); Algorithm = "kawpow"}
@@ -289,6 +289,9 @@ if ($InfoOnly) {
     }
     return
 }
+
+# the software AES path of some algorithms fails the xmrig self-test on ARM CPUs without the AES crypto extension
+$ArmNoAES = $IsLinux -and ($Global:GlobalCPUInfo.Vendor -eq "ARM" -or $Global:GlobalCPUInfo.Features.ARM) -and -not $Global:GlobalCPUInfo.Features.aes
 
 $Cuda = $null
 if ($Session.Config.CUDAVersion) {
@@ -336,7 +339,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
             if ($Miner_PlatformId -isnot [int]) {return}
         }
 
-        $Commands | Where-Object {$_.Vendor -icontains $Miner_Vendor -and ($_.Vendor -ne "NVIDIA" -or $_.MainAlgorithm -ne "rx/grft" -or $Uri -match "\ddev")} | ForEach-Object {
+        $Commands | Where-Object {$_.Vendor -icontains $Miner_Vendor -and (-not $_.ArmNeedsAES -or -not $ArmNoAES) -and ($_.Vendor -ne "NVIDIA" -or $_.MainAlgorithm -ne "rx/grft" -or $Uri -match "\ddev")} | ForEach-Object {
             $First = $True
 
             $Algorithm = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
