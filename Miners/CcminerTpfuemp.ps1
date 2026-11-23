@@ -14,14 +14,14 @@ $ManualUri = "https://github.com/tpfuemp/ccminer-tpfuemp/releases"
 $Port = "147{0:d2}"
 $DevFee = 0.0
 $Cuda = "11.8"
-$Version = "2026.11"
+$Version = "2026.11.1"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CcminerTpfuemp\ccminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2026.11-ccminertpfuemp/ccminer-tpfuemp-2026.11-linux-x64.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2026.11.1-ccminertpfuemp/ccminer-tpfuemp-2026.11.1-linux-x64.tar.gz"
 } else {
     $Path = ".\Bin\NVIDIA-CcminerTpfuemp\ccminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2026.11-ccminertpfuemp/ccminer-tpfuemp-2026.11-windows-x64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2026.11.1-ccminertpfuemp/ccminer-tpfuemp-2026.11.1-windows-x64.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
