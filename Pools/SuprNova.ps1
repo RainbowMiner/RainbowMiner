@@ -55,6 +55,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "JUNO"   ; port = @(8383)                                        ; regions = @("eu","us-east")}
     [PSCustomObject]@{symbol = "KRX"    ; port = @([PSCustomObject]@{CPU=@(4401);GPU=@(4404)})  ; regions = @("eu","us-east")}
     [PSCustomObject]@{symbol = "LPEPE"  ; port = @(3633,3634)                                   ; regions = @("eu","asia")}
+    [PSCustomObject]@{symbol = "NEB"    ; port = @(7801,7804)                                   ; regions = @("eu")}
     [PSCustomObject]@{symbol = "NOID"   ; port = @(3337)                                        ; regions = @("eu","us-east")}
     [PSCustomObject]@{symbol = "NPT"    ; port = @([PSCustomObject]@{CPU=@(3832);GPU=@(3833)})  ; regions = @("eu")}
     [PSCustomObject]@{symbol = "OBTC"   ; port = @([PSCustomObject]@{CPU=@(4074);GPU=@(4075)})  ; regions = @("eu")}
