@@ -17,14 +17,14 @@ $ManualUri = "https://github.com/bzminer/bzminer/releases"
 $Port = "332{0:d2}"
 $DevFee = 0.5
 $Cuda = "11.2"
-$Version = "100.83"
+$Version = "100.84"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-BzMiner\bzminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v100.83-bzminer/bzminer_v100.83_linux.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v100.84-bzminer/bzminer_v100.84_linux.tar.gz"
 } else {
     $Path = ".\Bin\GPU-BzMiner\bzminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v100.83-bzminer/bzminer_v100.83_windows.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v100.84-bzminer/bzminer_v100.84_windows.zip"
 }
 
 $ExcludePoolName = "prohashing|miningrigrentals"
@@ -59,6 +59,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "randomx";              MinMemGb = 2; Params = ""; Vendor = @("CPU");                  ExtendInterval = 2; Fee = 1.0} #RandomX/XMR
     [PSCustomObject]@{MainAlgorithm = "verus";                MinMemGb = 1; Params = ""; Vendor = @("CPU");                  ExtendInterval = 2; Fee = 1.0} #VerusHash/VRSC
     [PSCustomObject]@{MainAlgorithm = "warthog";              MinMemGb = 2; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 2.0; WithCPU = $true; NoCPUMining = $true} #JanusHash/WART, needs GPU and CPU together
+    [PSCustomObject]@{MainAlgorithm = "x16rv2";               MinMemGb = 1; Params = ""; Vendor = @("AMD","CPU","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0} #X16rv2/BCBO
     [PSCustomObject]@{MainAlgorithm = "xelis";                MinMemGb = 2; Params = ""; Vendor = @("AMD","CPU","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0} #XelisHashV3/XEL
 )
 
