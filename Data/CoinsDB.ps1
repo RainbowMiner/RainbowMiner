@@ -581,6 +581,7 @@
     "NBX" = [PSCustomObject]@{Algo = "CryptoNightLiteV7"; Name = "NibbleClassic"; Symbol = "NBX"}
     "NBXC" = [PSCustomObject]@{Algo = "CryptoNightConceal"; Name = "NibbleNibble"; Symbol = "NBXC"}
     "NBY" = [PSCustomObject]@{Algo = "NeoScrypt"; Name = "Neobytes"; Symbol = "NBY"}
+    "NEB" = [PSCustomObject]@{Algo = "NebHash"; Name = "Neural Engine Byte"; Symbol = "NEB"}
     "NEET" = [PSCustomObject]@{Algo = "Scrypt"; Name = "Neetcoin"; Symbol = "NEET"}
     "NENG" = [PSCustomObject]@{Algo = "Scrypt"; Name = "NewenglandCoin"; Symbol = "NENG"}
     "NEOX" = [PSCustomObject]@{Algo = "KawPOW"; Name = "Neoxa"; Symbol = "NEOX"}
