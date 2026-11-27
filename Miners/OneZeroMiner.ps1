@@ -12,23 +12,23 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.De
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-OneZero\onezerominer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.8.6-onezerominer/onezerominer-linux-1.8.6.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.8.7-onezerominer/onezerominer-linux-1.8.7.tar.gz"
 } else {
     $Path = ".\Bin\GPU-OneZero\onezerominer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.8.6-onezerominer/onezerominer-win64-1.8.6.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.8.7-onezerominer/onezerominer-win64-1.8.7.zip"
 }
 
 $ManualUri = "https://github.com/OneZeroMiner/onezerominer/releases"
 $Port = "370{0:d2}"
 $DevFee = 3.0
 $Cuda = "11.8"
-$Version = "1.8.6"
+$Version = "1.8.7"
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptix"; Params = ""; ExtendInterval = 3; Fee = @{NVIDIA=2.0}; Vendor = @("NVIDIA")} #CryptixOX8/CPAY
     [PSCustomObject]@{MainAlgorithm = "dynex"; Params = ""; ExtendInterval = 5; Fee = @{NVIDIA=2.0}; Vendor = @("NVIDIA")} #DynexSolve/DNX
     [PSCustomObject]@{MainAlgorithm = "parano1d"; Params = ""; Fee = @{NVIDIA=1.0}; Vendor = @("NVIDIA")} #Poseidon2b/NOID, since v1.8.2
-    [PSCustomObject]@{MainAlgorithm = "pearlhash"; Params = ""; Fee = @{NVIDIA=1.0}; Vendor = @("NVIDIA"); ExcludeCompute = @("Pascal"); ExcludePoolName = "^Pearlhash"} #PearlHash/PRL, Hopper/Blackwell since v1.7.7, Volta since v1.8.2
+    [PSCustomObject]@{MainAlgorithm = "pearlhash"; Params = ""; Fee = @{NVIDIA=1.0}; Vendor = @("NVIDIA"); ExcludePoolName = "^Pearlhash"} #PearlHash/PRL, Hopper/Blackwell since v1.7.7, Volta since v1.8.2, Pascal/non-tensor Turing since v1.8.7
     [PSCustomObject]@{MainAlgorithm = "qhash"; Params = ""; ExtendInterval = 2; Fee = @{NVIDIA=3.0}; Vendor = @("NVIDIA"); FaultTolerance = 0.4} #Qhash/QBC
     [PSCustomObject]@{MainAlgorithm = "quantus"; Params = ""; ExtendInterval = 2; Fee = @{NVIDIA=2.0}; Vendor = @("NVIDIA")} #Quantus/QUAN, Pascal to Blackwell since v1.7.8
     [PSCustomObject]@{MainAlgorithm = "xelis"; Params = ""; ExtendInterval = 3; Fee = @{NVIDIA=2.0;AMD=2.0}; Vendor = @("AMD","NVIDIA")} #XelisHashV3/XEL
