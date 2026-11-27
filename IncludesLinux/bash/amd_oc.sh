@@ -295,6 +295,29 @@ if ((${#od_cmds[@]})); then
     for c in "${od_cmds[@]}"; do
         if ! sysfs_write "$od" "$c"; then restage; fail "the driver refused '$c' ($summary)"; fi
     done
+    # RDNA3 PMFW fan persistence: with SMU firmware newer than the driver interface
+    # (e.g. fw if 0x40 vs driver 0x35), a clock-only OverDrive commit drops the active
+    # fan policy (the firmware reverts to boot zero-RPM/default curve) while the sysfs
+    # readbacks still show the programmed curve. Re-stage the current fan curve and
+    # zero-RPM state so the single commit below carries the fan features explicitly.
+    # Fan-only writes; the clock/voltage values staged above are unchanged. Cards
+    # without gpu_od/fan_ctrl (RDNA2 and older) are skipped.
+    fc="$dev/gpu_od/fan_ctrl"
+    if [[ -d "$fc" ]]; then
+        while read -r line; do
+            if [[ "$line" =~ ^([0-9]+):\ ([0-9]+)C\ ([0-9]+)% ]]; then
+                if ! sysfs_write "$fc/fan_curve" "${BASH_REMATCH[1]} ${BASH_REMATCH[2]} ${BASH_REMATCH[3]}"; then
+                    restage; fail "cannot re-stage the fan curve before the commit"
+                fi
+            fi
+        done < <(sed -n '/^OD_FAN_CURVE:/,/^OD_RANGE:/p' "$fc/fan_curve" 2>/dev/null)
+        zr=$(sed -n '2p' "$fc/fan_zero_rpm_enable" 2>/dev/null)
+        if [[ "$zr" =~ ^[01]$ ]]; then
+            if ! sysfs_write "$fc/fan_zero_rpm_enable" "$zr"; then
+                restage; fail "cannot re-stage the zero-RPM state before the commit"
+            fi
+        fi
+    fi
     if ! sysfs_write "$od" c; then restage; fail "the driver refused the commit ($summary)"; fi
     read_od
     if [[ -n "$want_core" && "$(cur_core)" != "$want_core" ]]; then err "core clock readback $(cur_core) differs from $want_core"; fi
