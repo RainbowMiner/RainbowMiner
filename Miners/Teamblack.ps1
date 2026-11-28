@@ -12,7 +12,7 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.De
 
 $ManualURI = "https://github.com/sp-hash/TeamBlackMiner"
 $Port = "365{0:d2}"
-$Version = "2.46"
+$Version = "2.49"
 
 if ($IsLinux) {
     $Path     = ".\Bin\GPU-Teamblack\TBMiner"
@@ -20,7 +20,7 @@ if ($IsLinux) {
 
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.46-teamblack/TeamBlackMiner_2_46_Ubuntu_22_04_Cuda_12_9.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.49-teamblack/TeamBlackMiner_2_49_Ubuntu_22_04_Cuda_12_9.tar.gz"
             Cuda = "12.9"
             Linux = "Ubuntu 22.04"
         }
@@ -32,7 +32,7 @@ if ($IsLinux) {
 
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.46-teamblack/TeamBlackMiner_2_46_cuda_12.9.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.49-teamblack/TeamBlackMiner_2_49_cuda_12.9.7z"
             Cuda = "12.9"
         }
     )
@@ -60,6 +60,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "pearlhash";                     Params = ""; MinMemGb = 2;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; Algorithm = "pearl"; ExcludePoolName = "^Pearlhash"} #PearlHash/PRL
     [PSCustomObject]@{MainAlgorithm = "progpowepic";     DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; Algorithm = "epicpow"} #ProgPowEpic/EPIC
     [PSCustomObject]@{MainAlgorithm = "progpowz";        DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5} #ProgPowZ/ZANO
+    [PSCustomObject]@{MainAlgorithm = "quantus";                      Params = ""; MinMemGb = 2;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; DevFee = 0.5} #Quantus/QUAN
     [PSCustomObject]@{MainAlgorithm = "verthash";                     Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5} #Verthash/VTC
 )
 
